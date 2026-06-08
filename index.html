@@ -767,8 +767,28 @@
       return;
     }
 
-    overlay.classList.add('show');
-    overlay.addEventListener('click', () => overlay.classList.remove('show'), { once: true });
+    const btn = form.querySelector('.btn-submit');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    fetch('https://formspree.io/f/xpqeraow', {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'Accept': 'application/json' }
+    })
+    .then(res => {
+      if (res.ok) {
+        overlay.classList.add('show');
+        form.reset();
+      } else {
+        alert('Erro ao enviar. Tente novamente.');
+      }
+    })
+    .catch(() => alert('Erro de conexão. Tente novamente.'))
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>Enviar Briefing';
+    });
   });
 
   form.querySelectorAll('input[type="text"], textarea').forEach(el => {
