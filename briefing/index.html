@@ -33,13 +33,31 @@
 
     /* ── HEADER ── */
     .site-header {
-      background: linear-gradient(135deg, var(--c950) 0%, var(--c900) 100%);
+      background: linear-gradient(135deg, var(--c950) 0%, var(--c900) 45%, var(--c800) 100%);
+      background-size: 200% 200%;
+      animation: gradientShift 12s ease infinite;
       padding: 48px 24px 40px;
       text-align: center;
       border-bottom: 1px solid var(--c800);
       position: relative;
       overflow: hidden;
     }
+    @keyframes gradientShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    /* brilho extra de degradê no topo */
+    .site-header::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 60%;
+      background: linear-gradient(180deg, rgba(157,78,221,0.28) 0%, rgba(123,44,191,0.1) 40%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .logo-wrap, .header-title, .header-sub { position: relative; z-index: 1; }
     .site-header::before {
       content: '';
       position: absolute;
