@@ -591,6 +591,20 @@
       padding: 24px;
     }
     .success-overlay.show { display: flex; }
+    .success-close {
+      margin-top: 28px;
+      background: transparent;
+      border: 1px solid var(--c700);
+      border-radius: 10px;
+      color: var(--c100);
+      font-family: var(--font);
+      font-size: 0.9375rem;
+      font-variation-settings: 'wght' 500;
+      padding: 12px 28px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .success-close:hover { background: rgba(90,24,154,0.25); border-color: var(--c500); }
     .success-card {
       background: var(--c900);
       border: 1px solid var(--c700);
@@ -993,6 +1007,7 @@
     </div>
     <h2 class="success-title">Briefing enviado!</h2>
     <p class="success-text">Recebemos suas respostas com sucesso. Em breve entraremos em contato para dar início ao seu projeto.</p>
+    <button type="button" class="success-close" onclick="document.getElementById('successOverlay').classList.remove('show')">Fechar</button>
   </div>
 </div>
 
@@ -1171,9 +1186,17 @@
   nenhum.addEventListener('change', () => { if (nenhum.checked) checkboxes.forEach(c => c.checked = false); });
   checkboxes.forEach(c => { c.addEventListener('change', () => { if (c.checked) nenhum.checked = false; }); });
 
+  // ── BLOQUEIA ENTER (exceto textarea) ──
+  document.getElementById('briefingForm').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+    }
+  });
+
   // ── SUBMIT ──
   document.getElementById('briefingForm').addEventListener('submit', e => {
     e.preventDefault();
+    if (currentStep !== 4) return;  // só envia na última etapa
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.textContent = 'Enviando...';
