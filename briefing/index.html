@@ -1108,6 +1108,20 @@
     fileInput.value = '';
   }
 
+  // limpa estado visual extra (cores, imagens) — usado após enviar
+  function clearExtras() {
+    selectedColors.clear();
+    customColors.length = 0;
+    document.querySelectorAll('.color-swatch.selected').forEach(s => s.classList.remove('selected'));
+    document.getElementById('customColorsRow').innerHTML = '';
+    document.getElementById('q11CoresInput').value = '';
+    preview.innerHTML = '';
+    fileInput.value = '';
+    const q12g = document.getElementById('q12-group');
+    if (q12g) q12g.style.outline = 'none';
+    document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+  }
+
   // ── STEP MANAGEMENT ──
   const STEP_LABELS = ['Seus dados', 'Sobre o Negócio', 'Registro', 'Serviços'];
   let currentStep = 1;
@@ -1142,6 +1156,11 @@
         el.classList.remove('invalid');
         if (!el.value.trim()) { el.classList.add('invalid'); valid = false; }
       });
+      const emailEl = document.getElementById('email');
+      if (emailEl.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value.trim())) {
+        emailEl.classList.add('invalid');
+        valid = false;
+      }
     }
 
     if (step === 2) {
@@ -1210,6 +1229,7 @@
       if (res.ok) {
         document.getElementById('successOverlay').classList.add('show');
         e.target.reset();
+        clearExtras();
         showStep(1);
       } else {
         alert('Erro ao enviar. Tente novamente.');
