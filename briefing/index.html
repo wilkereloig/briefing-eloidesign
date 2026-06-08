@@ -996,9 +996,15 @@
             <label class="option-item"><input type="checkbox" name="q18" value="landing_page"><span>Landing page</span></label>
             <label class="option-item"><input type="checkbox" name="q18" value="ecommerce"><span>E-commerce (loja virtual)</span></label>
             <label class="option-item"><input type="checkbox" name="q18" value="aplicativo"><span>Aplicativo</span></label>
+            <label class="option-item"><input type="checkbox" name="q18" value="gestao_redes"><span>Gestão de redes sociais</span></label>
+            <label class="option-item"><input type="checkbox" name="q18" value="embalagem"><span>Embalagens e rótulos</span></label>
+            <label class="option-item"><input type="checkbox" name="q18" value="papelaria"><span>Papelaria (cartão, envelope, etc.)</span></label>
             <label class="option-item"><input type="checkbox" name="q18" value="sinalizacao"><span>Sinalização (fachada, placas, totens, adesivos)</span></label>
             <label class="option-item"><input type="checkbox" name="q18" value="video_motion"><span>Vídeo e motion graphics</span></label>
+            <label class="option-item"><input type="checkbox" name="q18" value="fotografia"><span>Fotografia / banco de imagens</span></label>
             <label class="option-item"><input type="checkbox" name="q18" value="impressos"><span>Materiais impressos adicionais</span></label>
+            <label class="option-item"><input type="checkbox" name="q18" value="outro" id="outro-check"><span>Outro</span></label>
+            <input type="text" id="outro-input" name="q18_outro" placeholder="Conte qual serviço você tem em mente..." style="display:none; margin-top:2px">
             <label class="option-item"><input type="checkbox" name="q18" value="nenhum" id="nenhum-check"><span>Nenhum por enquanto</span></label>
           </div>
         </div>
@@ -1140,6 +1146,8 @@
     document.getElementById('q11CoresInput').value = '';
     preview.innerHTML = '';
     fileInput.value = '';
+    const oi = document.getElementById('outro-input');
+    if (oi) { oi.style.display = 'none'; oi.value = ''; }
     const q12g = document.getElementById('q12-group');
     if (q12g) q12g.style.outline = 'none';
     document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
@@ -1222,11 +1230,26 @@
     showStep(fromStep - 1, 'back');
   }
 
-  // ── CHECKBOX NENHUM ──
+  // ── CHECKBOX NENHUM + OUTRO ──
   const nenhum = document.getElementById('nenhum-check');
+  const outroCheck = document.getElementById('outro-check');
+  const outroInput = document.getElementById('outro-input');
   const checkboxes = document.querySelectorAll('input[name="q18"]:not(#nenhum-check)');
-  nenhum.addEventListener('change', () => { if (nenhum.checked) checkboxes.forEach(c => c.checked = false); });
+
+  nenhum.addEventListener('change', () => {
+    if (nenhum.checked) {
+      checkboxes.forEach(c => c.checked = false);
+      outroInput.style.display = 'none';
+      outroInput.value = '';
+    }
+  });
   checkboxes.forEach(c => { c.addEventListener('change', () => { if (c.checked) nenhum.checked = false; }); });
+
+  outroCheck.addEventListener('change', () => {
+    outroInput.style.display = outroCheck.checked ? 'block' : 'none';
+    if (!outroCheck.checked) outroInput.value = '';
+    else outroInput.focus();
+  });
 
   // ── BLOQUEIA ENTER (exceto textarea) ──
   document.getElementById('briefingForm').addEventListener('keydown', e => {
