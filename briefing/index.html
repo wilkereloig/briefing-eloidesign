@@ -836,16 +836,9 @@
           <!-- Q10 — REFERÊNCIAS VISUAIS -->
           <div class="field">
             <label>Tem alguma referência visual que você gosta?</label>
-            <p class="field-help">Marcas, cores, logos ou estilos que te agradam — mesmo de outros segmentos. Anexe prints ou cole links. <span class="opt">Não tem referência? Sem problema, pule à vontade.</span></p>
+            <p class="field-help">Marcas, cores, logos ou estilos que te agradam — mesmo de outros segmentos. Descreva e cole links (site, Instagram, Pinterest). <span class="opt">Não tem referência? Sem problema, pule à vontade.</span></p>
             <textarea id="q10" name="q10_descricao" placeholder="Descreva marcas, estilos, paletas, estética..."></textarea>
-            <div class="upload-area" id="uploadArea">
-              <input type="file" name="q10_imagens" accept="image/*" multiple id="fileInput">
-              <div class="upload-icon">🖼</div>
-              <div class="upload-text">Arraste imagens ou clique para anexar</div>
-              <div class="upload-hint">PNG, JPG, WEBP — até 5 arquivos</div>
-            </div>
-            <div class="upload-preview" id="uploadPreview"></div>
-            <input type="url" name="q10_link" placeholder="Link de referência (site ou Instagram)" style="margin-top:4px">
+            <input type="text" name="q10_link" placeholder="Cole links de referência (site, Instagram, Pinterest...)" style="margin-top:4px">
           </div>
 
           <!-- Q11 — CORES QUE NÃO QUER -->
@@ -1113,38 +1106,13 @@
     box.classList.toggle('show');
   }
 
-  // ── FILE UPLOAD PREVIEW ──
-  const fileInput = document.getElementById('fileInput');
-  const preview = document.getElementById('uploadPreview');
-  fileInput.addEventListener('change', () => {
-    preview.innerHTML = '';
-    const files = Array.from(fileInput.files).slice(0, 5);
-    files.forEach((file, i) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const item = document.createElement('div');
-        item.className = 'upload-preview-item';
-        item.innerHTML = `<img src="${e.target.result}" alt="ref ${i+1}"><button type="button" onclick="removeFile(${i})">✕</button>`;
-        preview.appendChild(item);
-      };
-      reader.readAsDataURL(file);
-    });
-  });
-
-  function removeFile(idx) {
-    preview.innerHTML = '';
-    fileInput.value = '';
-  }
-
-  // limpa estado visual extra (cores, imagens) — usado após enviar
+  // ── INFO TOOLTIP (cores) — limpa estado visual após enviar ──
   function clearExtras() {
     selectedColors.clear();
     customColors.length = 0;
     document.querySelectorAll('.color-swatch.selected').forEach(s => s.classList.remove('selected'));
     document.getElementById('customColorsRow').innerHTML = '';
     document.getElementById('q11CoresInput').value = '';
-    preview.innerHTML = '';
-    fileInput.value = '';
     const oi = document.getElementById('outro-input');
     if (oi) { oi.style.display = 'none'; oi.value = ''; }
     const q12g = document.getElementById('q12-group');
