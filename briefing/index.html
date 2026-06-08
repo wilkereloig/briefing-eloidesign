@@ -250,6 +250,19 @@
       color: var(--c100);
     }
     .field label .req { color: var(--c500); margin-left: 2px; }
+    .field-help {
+      font-size: 0.8125rem;
+      font-variation-settings: 'wght' 400;
+      color: var(--c300);
+      opacity: 0.75;
+      line-height: 1.5;
+      margin-top: -2px;
+      margin-bottom: 2px;
+    }
+    .field-help .opt {
+      color: var(--c500);
+      font-variation-settings: 'wght' 600;
+    }
 
     .field input[type="text"],
     .field input[type="email"],
@@ -700,7 +713,7 @@
     </svg>
   </div>
   <h1 class="header-title">Briefing de Identidade Visual</h1>
-  <p class="header-sub">Preencha com cuidado — essas informações guiam toda a criação da sua marca.</p>
+  <p class="header-sub">Relaxa — não existe resposta certa ou errada. Conte o que souber, do seu jeito. Se travar em alguma pergunta, pode pular: a gente conversa sobre isso depois. 💜</p>
 </header>
 
 <!-- PROGRESS -->
@@ -774,47 +787,56 @@
 
           <div class="field">
             <label for="q2">O que a empresa faz?<span class="req">*</span></label>
+            <p class="field-help">Explique como se estivesse contando para um amigo. Que produto vende ou serviço presta? Em que mercado atua?</p>
             <textarea id="q2" name="q2" placeholder="Produto, serviço, segmento de mercado..." required></textarea>
           </div>
 
           <div class="field">
             <label for="q3">Qual é a missão e os valores da empresa?</label>
+            <p class="field-help">Por que a empresa existe, além de dar lucro? No que ela acredita? <span class="opt">Se nunca parou pra pensar nisso, tudo bem deixar em branco.</span></p>
             <textarea id="q3" name="q3" placeholder="O que a empresa acredita? Para onde quer ir?"></textarea>
           </div>
 
           <div class="field">
             <label for="q4">Quem é o cliente ideal?<span class="req">*</span></label>
+            <p class="field-help">Imagine a pessoa perfeita comprando de você: idade, onde mora, do que gosta, como vive. Quanto mais detalhe, melhor.</p>
             <textarea id="q4" name="q4" placeholder="Idade, perfil, estilo de vida, interesses..." required></textarea>
           </div>
 
           <div class="field">
             <label for="q5">Onde esse público está?</label>
+            <p class="field-help">Eles te encontram na rua, no Google, no Instagram? Onde passam o tempo? <span class="opt">Não sabe ao certo? Pode pular.</span></p>
             <textarea id="q5" name="q5" placeholder="Presença local, online, redes sociais predominantes..."></textarea>
           </div>
 
           <div class="field">
             <label for="q6">Quem são os principais concorrentes?</label>
+            <p class="field-help">Outras marcas que disputam o mesmo cliente. <span class="opt">Se não conhece nenhum de cabeça, deixe em branco.</span></p>
             <input type="text" id="q6" name="q6" placeholder="Cite 2 ou 3 nomes, links ou referências">
           </div>
 
           <div class="field">
             <label for="q7">O que diferencia essa empresa da concorrência?</label>
+            <p class="field-help">Por que alguém escolheria você e não o concorrente? Pode ser preço, atendimento, qualidade, história... <span class="opt">Se não souber, a gente descobre juntos.</span></p>
             <textarea id="q7" name="q7" placeholder="Qual é o diferencial real que justifica a escolha pelo seu negócio?"></textarea>
           </div>
 
           <div class="field">
             <label for="q8">Se a marca fosse uma pessoa, como ela seria?</label>
+            <p class="field-help">Séria ou divertida? Sofisticada ou descontraída? Fala formal ou como amigo? <span class="opt">Sem pressão — responda no feeling.</span></p>
             <textarea id="q8" name="q8" placeholder="Personalidade, tom de voz, jeito de se comunicar..."></textarea>
           </div>
 
           <div class="field">
             <label for="q9">Que sentimento a marca deve transmitir?</label>
+            <p class="field-help">O que você quer que a pessoa sinta ao ver sua marca? Uma ou duas palavras já bastam.</p>
             <input type="text" id="q9" name="q9" placeholder="Ex: confiança, modernidade, aconchego, irreverência...">
           </div>
 
           <!-- Q10 — REFERÊNCIAS VISUAIS -->
           <div class="field">
             <label>Tem alguma referência visual que você gosta?</label>
+            <p class="field-help">Marcas, cores, logos ou estilos que te agradam — mesmo de outros segmentos. Anexe prints ou cole links. <span class="opt">Não tem referência? Sem problema, pule à vontade.</span></p>
             <textarea id="q10" name="q10_descricao" placeholder="Descreva marcas, estilos, paletas, estética..."></textarea>
             <div class="upload-area" id="uploadArea">
               <input type="file" name="q10_imagens" accept="image/*" multiple id="fileInput">
@@ -829,6 +851,7 @@
           <!-- Q11 — CORES QUE NÃO QUER -->
           <div class="field">
             <label>Tem alguma cor ou estilo que definitivamente NÃO quer?</label>
+            <p class="field-help">Às vezes é mais fácil dizer o que NÃO combina com você. Clique nas cores que quer evitar. <span class="opt">Se tanto faz, é só não clicar em nenhuma.</span></p>
             <div class="color-palette-wrap">
               <p class="color-palette-label">Clique nas cores que não quer na marca:</p>
               <div class="color-grid" id="colorGrid"></div>
