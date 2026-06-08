@@ -35,6 +35,16 @@
       overflow: hidden;
     }
 
+    /* degrade do topo */
+    body::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 45%;
+      background: linear-gradient(180deg, rgba(157,78,221,0.28) 0%, rgba(123,44,191,0.12) 35%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
     /* glow de fundo */
     body::before {
       content: '';
