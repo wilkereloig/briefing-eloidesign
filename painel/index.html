@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Briefings — ELOI Design Studio</title>
+  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --c950:#10002B; --c900:#240046; --c800:#3C096C; --c700:#5A189A;
+      --c600:#7B2CBF; --c500:#9D4EDD; --c300:#C77DFF; --c100:#E0AAFF;
+      --white:#fff; --font:'carbona-variable', sans-serif;
+      --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+    }
+    body { font-family:var(--font); background:var(--c950); color:var(--white); min-height:100vh; line-height:1.6; }
+
+    /* ── AURORA ── */
+    .aurora { position:fixed; inset:-20%; z-index:0; pointer-events:none; filter:blur(80px) saturate(140%); opacity:0.55; }
+    .blob { position:absolute; border-radius:50%; mix-blend-mode:screen; }
+    .blob.b1 { width:40%; height:45%; left:5%; top:2%; background:radial-gradient(circle,#9D4EDD,transparent 70%); animation:d1 20s ease-in-out infinite; }
+    .blob.b2 { width:44%; height:50%; right:3%; top:-8%; background:radial-gradient(circle,#7B2CBF,transparent 70%); animation:d2 24s ease-in-out infinite; }
+    .blob.b3 { width:36%; height:44%; left:34%; bottom:2%; background:radial-gradient(circle,#C77DFF,transparent 70%); animation:d3 17s ease-in-out infinite; }
+    @keyframes d1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(26%,18%) scale(1.2)} }
+    @keyframes d2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-22%,20%) scale(1.15)} }
+    @keyframes d3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(20%,-22%) scale(1.25)} }
+
+    .wrap { position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:32px 24px 80px; }
+
+    /* ── LOGIN ── */
+    .login { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; position:relative; z-index:1; }
+    .login-card { background:rgba(36,0,70,0.6); border:1px solid var(--c800); border-radius:20px; padding:48px 40px; max-width:380px; width:100%; text-align:center; backdrop-filter:blur(8px); }
+    .login-card svg { width:150px; margin-bottom:28px; }
+    .login-card h1 { font-size:1.25rem; font-variation-settings:'wght' 600; margin-bottom:20px; }
+    .login-card input { width:100%; background:var(--c950); border:1px solid var(--c800); border-radius:10px; color:#fff; font-family:var(--font); font-size:0.95rem; padding:13px 16px; outline:none; transition:border-color .2s, box-shadow .2s; }
+    .login-card input:focus { border-color:var(--c500); box-shadow:0 0 0 3px rgba(157,78,221,.2); }
+    .login-card button { width:100%; margin-top:14px; background:var(--c700); color:#fff; border:none; border-radius:10px; font-family:var(--font); font-size:0.95rem; font-variation-settings:'wght' 600; padding:14px; cursor:pointer; transition:background .2s; }
+    .login-card button:hover { background:var(--c600); }
+    .login-err { color:var(--bad); font-size:0.85rem; margin-top:12px; min-height:1.2em; }
+
+    /* ── HEADER ── */
+    .top { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; gap:16px; flex-wrap:wrap; }
+    .top svg { width:140px; }
+    .top h1 { font-size:1.05rem; font-variation-settings:'wght' 500; color:var(--c100); }
+    .count-badge { background:var(--c700); color:#fff; font-size:0.8rem; font-variation-settings:'wght' 700; padding:4px 12px; border-radius:99px; }
+
+    /* ── LIST ── */
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+    .card { background:rgba(36,0,70,0.55); border:1px solid var(--c800); border-radius:16px; padding:22px; cursor:pointer; transition:border-color .2s, transform .15s, background .2s; }
+    .card:hover { border-color:var(--c500); transform:translateY(-2px); background:rgba(45,0,85,0.7); }
+    .card-empresa { font-size:1.05rem; font-variation-settings:'wght' 600; margin-bottom:4px; }
+    .card-nome { font-size:0.85rem; color:var(--c300); margin-bottom:14px; }
+    .card-meta { display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:var(--c300); opacity:.8; }
+    .card-tag { background:var(--c800); padding:3px 10px; border-radius:99px; font-variation-settings:'wght' 600; }
+    .card-mini-colors { display:flex; gap:4px; margin-top:12px; }
+    .card-mini-colors span { width:16px; height:16px; border-radius:4px; border:1px solid rgba(255,255,255,.15); }
+
+    .empty-state { text-align:center; padding:80px 24px; color:var(--c300); }
+    .empty-state .ic { font-size:3rem; margin-bottom:16px; opacity:.5; }
+
+    /* ── DETAIL ── */
+    .detail { display:none; }
+    .detail.show { display:block; }
+    .list-view.hide { display:none; }
+    .back-btn { display:inline-flex; align-items:center; gap:8px; background:transparent; border:1px solid var(--c800); color:var(--c100); font-family:var(--font); font-size:0.9rem; padding:10px 18px; border-radius:10px; cursor:pointer; margin-bottom:24px; transition:border-color .2s, background .2s; }
+    .back-btn:hover { border-color:var(--c500); background:rgba(90,24,154,.2); }
+
+    .detail-head { background:rgba(36,0,70,0.6); border:1px solid var(--c800); border-radius:18px; padding:28px 30px; margin-bottom:20px; }
+    .detail-head h2 { font-size:1.6rem; font-variation-settings:'wght' 700; letter-spacing:-.02em; margin-bottom:6px; }
+    .detail-head .sub { color:var(--c300); font-size:0.9rem; margin-bottom:16px; }
+    .contact-row { display:flex; gap:20px; flex-wrap:wrap; font-size:0.875rem; }
+    .contact-row a, .contact-row span { color:var(--c100); text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+    .contact-row a:hover { color:var(--c300); }
+
+    .actions { display:flex; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; gap:8px; border:none; border-radius:10px; font-family:var(--font); font-size:0.9rem; font-variation-settings:'wght' 600; padding:12px 22px; cursor:pointer; transition:background .2s, transform .15s; }
+    .btn-primary { background:var(--c700); color:#fff; }
+    .btn-primary:hover { background:var(--c600); transform:translateY(-1px); }
+    .btn-ghost { background:transparent; color:var(--c100); border:1px solid var(--c800); }
+    .btn-ghost:hover { border-color:var(--c500); background:rgba(90,24,154,.2); }
+
+    .section { background:rgba(36,0,70,0.45); border:1px solid var(--c800); border-radius:16px; padding:24px 28px; margin-bottom:18px; }
+    .section h3 { font-size:0.78rem; text-transform:uppercase; letter-spacing:.1em; color:var(--c500); font-variation-settings:'wght' 700; margin-bottom:18px; }
+    .qa { margin-bottom:18px; }
+    .qa:last-child { margin-bottom:0; }
+    .qa-q { font-size:0.8rem; color:var(--c300); font-variation-settings:'wght' 600; margin-bottom:3px; }
+    .qa-a { font-size:0.95rem; white-space:pre-wrap; color:var(--white); }
+    .qa-a.empty { color:var(--c300); opacity:.45; font-style:italic; }
+
+    /* ── COLOR PALETTE ── */
+    .palette { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:14px; }
+    .swatch { border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.12); }
+    .swatch-color { height:80px; }
+    .swatch-info { padding:8px 10px; background:rgba(0,0,0,.25); }
+    .swatch-name { font-size:0.82rem; font-variation-settings:'wght' 600; }
+    .swatch-hex { font-size:0.72rem; color:var(--c300); font-family:monospace; text-transform:uppercase; }
+    .palette-note { font-size:0.85rem; color:var(--c100); background:rgba(248,113,113,.12); border:1px solid rgba(248,113,113,.3); border-radius:10px; padding:12px 16px; margin-top:16px; }
+
+    /* ── BRIEF NATURAL ── */
+    .brief-box { white-space:pre-wrap; font-size:0.95rem; line-height:1.7; color:var(--white); background:var(--c950); border:1px solid var(--c800); border-radius:12px; padding:22px; max-height:480px; overflow:auto; }
+
+    /* ── PENDÊNCIAS ── */
+    .pend-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+    .pend-item { display:flex; gap:12px; align-items:flex-start; font-size:0.9rem; background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.25); border-radius:10px; padding:12px 14px; }
+    .pend-item .pic { color:var(--warn); flex-shrink:0; font-size:1rem; line-height:1.4; }
+    .pend-ok { color:var(--ok); font-size:0.9rem; display:flex; gap:10px; align-items:center; }
+
+    .toast { position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--c700); color:#fff; padding:14px 26px; border-radius:12px; font-size:0.9rem; font-variation-settings:'wght' 600; box-shadow:0 10px 30px rgba(0,0,0,.4); z-index:50; transition:transform .35s cubic-bezier(.34,1.56,.64,1); }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+
+    @media (max-width:600px){ .detail-head{padding:22px} .section{padding:18px 18px} }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login" id="loginView">
+  <div class="login-card">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750.94 177.34" aria-label="ELOI"><path fill="#fff" d="M29.56,169.41c-9.77-5.29-17.14-12.61-22.11-21.99-4.97-9.37-7.45-20.22-7.45-32.56s2.52-24.03,7.57-33.64c5.05-9.61,12.41-17.02,22.11-22.23,9.69-5.2,21.42-7.81,35.2-7.81s25.11,2.49,34.48,7.45c9.37,4.97,16.5,12.01,21.39,21.15,4.88,9.13,7.41,19.94,7.57,32.44v5.77c0,.96-.08,1.92-.24,2.88H15.86l.48-19.46h87.47l-11.29,12.02c.64-8.65.04-15.86-1.8-21.63-1.84-5.77-4.97-10.13-9.37-13.1-4.41-2.96-10.06-4.45-16.94-4.45-7.53,0-13.58,1.8-18.14,5.41-4.57,3.6-7.81,8.29-9.73,14.06s-2.88,12.34-2.88,19.7c0,8.33,1.24,15.42,3.72,21.27,2.48,5.85,6.17,10.25,11.05,13.22,4.88,2.97,10.85,4.45,17.9,4.45,7.53,0,13.61-1.4,18.26-4.2,4.64-2.8,7.69-6.37,9.13-10.69h33.16c-2.88,12.98-9.65,22.87-20.3,29.68-10.66,6.81-24.47,10.21-41.45,10.21-13.94,0-25.79-2.64-35.56-7.93Z"/><path fill="#fff" d="M192.12,170.01c-6.97-3.44-12.1-8.97-15.38-16.58-3.29-7.61-4.93-17.66-4.93-30.16V34.36h-43.49V6.97h54.79c5.44,0,9.73.72,12.86,2.16,3.12,1.44,5.41,3.72,6.85,6.85s2.16,7.41,2.16,12.86v96.6c0,5.29.56,9.53,1.68,12.74,1.12,3.21,3.12,5.61,6.01,7.21,2.88,1.6,6.89,2.4,12.01,2.4h31.24v27.39h-37.25c-10.73,0-19.58-1.72-26.55-5.17Z"/><path fill="#fff" d="M300.97,169.29c-9.53-5.37-16.7-12.77-21.51-22.23-4.81-9.45-7.21-20.5-7.21-33.16s2.4-23.23,7.21-32.68c4.81-9.45,12.02-16.82,21.63-22.11,9.61-5.29,21.3-7.93,35.08-7.93s25.43,2.64,34.96,7.93c9.53,5.29,16.74,12.66,21.63,22.11,4.88,9.45,7.33,20.35,7.33,32.68s-2.44,23.71-7.33,33.16c-4.89,9.45-12.1,16.86-21.63,22.23-9.53,5.37-21.19,8.05-34.96,8.05s-25.67-2.68-35.2-8.05ZM358.88,140.46c5.05-6.17,7.57-15.02,7.57-26.55,0-7.37-1.12-13.66-3.36-18.86-2.25-5.2-5.61-9.21-10.09-12.01-4.49-2.8-10.17-4.21-17.06-4.21-9.93,0-17.42,3.05-22.47,9.13-5.04,6.09-7.57,14.74-7.57,25.95,0,7.69,1.12,14.18,3.36,19.46,2.24,5.29,5.6,9.33,10.09,12.13,4.48,2.81,10.01,4.21,16.58,4.21,10.25,0,17.9-3.08,22.95-9.25Z"/><path fill="#fff" d="M415.71,147.78h48.3v-67.04h-43.01v-27.39h54.31c5.61,0,9.97.68,13.1,2.04,3.12,1.36,5.37,3.6,6.73,6.73,1.36,3.12,2.04,7.49,2.04,13.1v72.57h43.97v27.39h-125.44v-27.39ZM462.81,31.6c-3.69-3.12-5.53-7.73-5.53-13.82s1.8-10.57,5.41-13.46c3.61-2.88,9.01-4.33,16.22-4.33s12.57,1.44,16.1,4.33c3.52,2.88,5.29,7.37,5.29,13.46s-1.77,10.69-5.29,13.82c-3.53,3.12-8.89,4.69-16.1,4.69s-12.42-1.56-16.1-4.69Z"/></svg>
+    <h1>Painel de Briefings</h1>
+    <input type="password" id="pwInput" placeholder="Senha de acesso" autocomplete="current-password">
+    <button onclick="login()">Entrar</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- AURORA (painel) -->
+<div class="aurora" id="auroraBg" style="display:none"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+
+<!-- PAINEL -->
+<div class="wrap" id="panelView" style="display:none">
+  <div class="top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750.94 177.34" aria-label="ELOI"><path fill="#fff" d="M29.56,169.41c-9.77-5.29-17.14-12.61-22.11-21.99-4.97-9.37-7.45-20.22-7.45-32.56s2.52-24.03,7.57-33.64c5.05-9.61,12.41-17.02,22.11-22.23,9.69-5.2,21.42-7.81,35.2-7.81s25.11,2.49,34.48,7.45c9.37,4.97,16.5,12.01,21.39,21.15,4.88,9.13,7.41,19.94,7.57,32.44v5.77c0,.96-.08,1.92-.24,2.88H15.86l.48-19.46h87.47l-11.29,12.02c.64-8.65.04-15.86-1.8-21.63-1.84-5.77-4.97-10.13-9.37-13.1-4.41-2.96-10.06-4.45-16.94-4.45-7.53,0-13.58,1.8-18.14,5.41-4.57,3.6-7.81,8.29-9.73,14.06s-2.88,12.34-2.88,19.7c0,8.33,1.24,15.42,3.72,21.27,2.48,5.85,6.17,10.25,11.05,13.22,4.88,2.97,10.85,4.45,17.9,4.45,7.53,0,13.61-1.4,18.26-4.2,4.64-2.8,7.69-6.37,9.13-10.69h33.16c-2.88,12.98-9.65,22.87-20.3,29.68-10.66,6.81-24.47,10.21-41.45,10.21-13.94,0-25.79-2.64-35.56-7.93Z"/><path fill="#fff" d="M192.12,170.01c-6.97-3.44-12.1-8.97-15.38-16.58-3.29-7.61-4.93-17.66-4.93-30.16V34.36h-43.49V6.97h54.79c5.44,0,9.73.72,12.86,2.16,3.12,1.44,5.41,3.72,6.85,6.85s2.16,7.41,2.16,12.86v96.6c0,5.29.56,9.53,1.68,12.74,1.12,3.21,3.12,5.61,6.01,7.21,2.88,1.6,6.89,2.4,12.01,2.4h31.24v27.39h-37.25c-10.73,0-19.58-1.72-26.55-5.17Z"/><path fill="#fff" d="M300.97,169.29c-9.53-5.37-16.7-12.77-21.51-22.23-4.81-9.45-7.21-20.5-7.21-33.16s2.4-23.23,7.21-32.68c4.81-9.45,12.02-16.82,21.63-22.11,9.61-5.29,21.3-7.93,35.08-7.93s25.43,2.64,34.96,7.93c9.53,5.29,16.74,12.66,21.63,22.11,4.88,9.45,7.33,20.35,7.33,32.68s-2.44,23.71-7.33,33.16c-4.89,9.45-12.1,16.86-21.63,22.23-9.53,5.37-21.19,8.05-34.96,8.05s-25.67-2.68-35.2-8.05ZM358.88,140.46c5.05-6.17,7.57-15.02,7.57-26.55,0-7.37-1.12-13.66-3.36-18.86-2.25-5.2-5.61-9.21-10.09-12.01-4.49-2.8-10.17-4.21-17.06-4.21-9.93,0-17.42,3.05-22.47,9.13-5.04,6.09-7.57,14.74-7.57,25.95,0,7.69,1.12,14.18,3.36,19.46,2.24,5.29,5.6,9.33,10.09,12.13,4.48,2.81,10.01,4.21,16.58,4.21,10.25,0,17.9-3.08,22.95-9.25Z"/><path fill="#fff" d="M415.71,147.78h48.3v-67.04h-43.01v-27.39h54.31c5.61,0,9.97.68,13.1,2.04,3.12,1.36,5.37,3.6,6.73,6.73,1.36,3.12,2.04,7.49,2.04,13.1v72.57h43.97v27.39h-125.44v-27.39ZM462.81,31.6c-3.69-3.12-5.53-7.73-5.53-13.82s1.8-10.57,5.41-13.46c3.61-2.88,9.01-4.33,16.22-4.33s12.57,1.44,16.1,4.33c3.52,2.88,5.29,7.37,5.29,13.46s-1.77,10.69-5.29,13.82c-3.53,3.12-8.89,4.69-16.1,4.69s-12.42-1.56-16.1-4.69Z"/></svg>
+    <div style="display:flex;align-items:center;gap:12px">
+      <h1>Briefings recebidos</h1>
+      <span class="count-badge" id="countBadge">0</span>
+    </div>
+  </div>
+
+  <!-- LISTA -->
+  <div class="list-view" id="listView"></div>
+
+  <!-- DETALHE -->
+  <div class="detail" id="detailView"></div>
+</div>
+
+<div class="toast" id="toast">Copiado!</div>
+
+<script>
+const SUPA_URL = 'https://nlamznxoocmygfvnqcns.supabase.co';
+const FN = SUPA_URL + '/functions/v1/get-briefings';
+let BRIEFINGS = [];
+
+// ── mapa hex → nome ──
+const COLOR_NAMES = {
+  '#E91E8C':'Magenta','#E91E63':'Rosa','#FF69B4':'Rosa-pink','#EC407A':'Rosa',
+  '#D32F2F':'Vermelho','#F44336':'Vermelho','#B71C1C':'Vermelho-escuro',
+  '#FFD700':'Amarelo-ouro','#FFC107':'Amarelo','#FFEB3B':'Amarelo-claro',
+  '#E8651A':'Laranja','#FF9800':'Laranja','#FF5722':'Laranja-forte',
+  '#C1440E':'Terracota','#5D4037':'Marrom','#795548':'Marrom-claro',
+  '#8BC34A':'Verde-claro','#388E3C':'Verde','#4CAF50':'Verde','#00897B':'Verde-água','#009688':'Verde-água',
+  '#4FC3F7':'Azul-claro','#2196F3':'Azul','#03A9F4':'Azul-céu','#3F51B5':'Índigo','#1A237E':'Azul-marinho',
+  '#8B00FF':'Violeta','#9C27B0':'Roxo','#673AB7':'Roxo-profundo',
+  '#757575':'Cinza','#9E9E9E':'Cinza-claro','#607D8B':'Cinza-azulado',
+  '#111111':'Preto','#000000':'Preto','#FFFFFF':'Branco','#F5F5F5':'Off-white'
+};
+function colorName(hex){ return COLOR_NAMES[hex.toUpperCase()] || 'Cor personalizada'; }
+
+// ── mapas de valores ──
+const MAP = {
+  q12:{criacao:'Empresa nova — criação do zero', rebranding:'Rebranding — renovar marca existente', atualizacao:'Atualização de logo'},
+  q13:{sim:'Sim', nao:'Não', em_processo:'Em processo'},
+  q14:{sim:'Sim', nao:'Não', em_processo:'Em processo', nao_sei:'Não sabe o que é'},
+  q15:{sim:'Sim', nao:'Não', nao_sei:'Não sabe o que é'},
+  q16:{sim:'Sim', nao:'Não', sem_site:'Não tem site'},
+  q17:{todas:'Sim, em todas', algumas:'Sim, em algumas', nao:'Não'},
+  q18:{site_institucional:'Site institucional', landing_page:'Landing page', ecommerce:'E-commerce', aplicativo:'Aplicativo', embalagem:'Embalagens e rótulos', papelaria:'Papelaria', sinalizacao:'Sinalização', video_motion:'Vídeo e motion', fotografia:'Fotografia', impressos:'Materiais impressos', outro:'Outro', nenhum:'Nenhum'}
+};
+function mapVal(field,val){
+  if(!val) return '';
+  const m = MAP[field]; if(!m) return val;
+  return String(val).split(',').map(v=>m[v.trim()]||v.trim()).join(', ');
+}
+
+// ── LOGIN ──
+function login(){
+  const pw = document.getElementById('pwInput').value;
+  const err = document.getElementById('loginErr');
+  err.textContent = 'Entrando...';
+  fetch(FN, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw}) })
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(data => {
+      BRIEFINGS = data.briefings || [];
+      sessionStorage.setItem('eloi_pw', pw);
+      document.getElementById('loginView').style.display='none';
+      document.getElementById('panelView').style.display='block';
+      document.getElementById('auroraBg').style.display='block';
+      renderList();
+    })
+    .catch(s => { err.textContent = s===401 ? 'Senha incorreta.' : 'Erro ao carregar. Tente de novo.'; });
+}
+document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') login(); });
+
+// auto-login se senha na sessão
+const savedPw = sessionStorage.getItem('eloi_pw');
+if(savedPw){ document.getElementById('pwInput').value = savedPw; login(); }
+
+// ── LISTA ──
+function renderList(){
+  document.getElementById('detailView').classList.remove('show');
+  document.getElementById('listView').classList.remove('hide');
+  document.getElementById('countBadge').textContent = BRIEFINGS.length;
+  const lv = document.getElementById('listView');
+  if(!BRIEFINGS.length){ lv.className='list-view'; lv.innerHTML = '<div class="empty-state"><div class="ic">📭</div>Nenhum briefing recebido ainda.</div>'; return; }
+  lv.className = 'list-view grid';
+  lv.innerHTML = BRIEFINGS.map((b,i)=>{
+    const cores = (b.q11_cores||'').split(',').map(c=>c.trim()).filter(Boolean).slice(0,6);
+    const dots = cores.map(c=>`<span style="background:${esc(c)}"></span>`).join('');
+    const dt = b.created_at ? new Date(b.created_at).toLocaleDateString('pt-BR') : '';
+    return `<div class="card" onclick="openDetail(${i})">
+      <div class="card-empresa">${esc(b.q1||b.nome||'Sem nome')}</div>
+      <div class="card-nome">${esc(b.nome||'')}</div>
+      <div class="card-meta"><span class="card-tag">${esc(mapVal('q12',b.q12)||'—')}</span><span>${dt}</span></div>
+      ${dots?`<div class="card-mini-colors">${dots}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── DETALHE ──
+function openDetail(i){
+  const b = BRIEFINGS[i];
+  const dv = document.getElementById('detailView');
+  document.getElementById('listView').classList.add('hide');
+  dv.classList.add('show');
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  const cores = (b.q11_cores||'').split(',').map(c=>c.trim()).filter(Boolean);
+  const swatches = cores.map(c=>`<div class="swatch"><div class="swatch-color" style="background:${esc(c)}"></div><div class="swatch-info"><div class="swatch-name">${esc(colorName(c))}</div><div class="swatch-hex">${esc(c)}</div></div></div>`).join('');
+
+  const qa = (f,label)=>{ const val = MAP[f]?mapVal(f,b[f]):b[f]; return `<div class="qa"><div class="qa-q">${esc(label)}</div><div class="qa-a ${val?'':'empty'}">${val?esc(val):'— não respondido'}</div></div>`; };
+
+  const dt = b.created_at ? new Date(b.created_at).toLocaleString('pt-BR') : '';
+  const wa = (b.whatsapp||'').replace(/\D/g,'');
+  const waLink = wa.length>=10 ? `https://wa.me/55${wa}` : '#';
+
+  dv.innerHTML = `
+    <button class="back-btn" onclick="renderList()">← Voltar à lista</button>
+    <div class="detail-head">
+      <h2>${esc(b.q1||b.nome||'Briefing')}</h2>
+      <div class="sub">Recebido em ${dt}</div>
+      <div class="contact-row">
+        <span>👤 ${esc(b.nome||'—')}</span>
+        ${b.email?`<a href="mailto:${esc(b.email)}">✉️ ${esc(b.email)}</a>`:''}
+        ${wa.length>=10?`<a href="${waLink}" target="_blank">💬 ${esc(b.whatsapp)}</a>`:(b.whatsapp?`<span>💬 ${esc(b.whatsapp)} ⚠️</span>`:'')}
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="copyAll(${i})">📋 Copiar tudo (para IA)</button>
+      <button class="btn btn-ghost" onclick="copyBrief(${i})">📝 Copiar briefing</button>
+      <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir / PDF</button>
+    </div>
+
+    <div class="section">
+      <h3>📌 Pendências e pontos a confirmar</h3>
+      ${renderPend(b)}
+    </div>
+
+    <div class="section">
+      <h3>✨ Briefing — versão para criação</h3>
+      <div class="brief-box" id="briefBox">${esc(gerarBrief(b))}</div>
+    </div>
+
+    <div class="section">
+      <h3>🎨 Cores que o cliente NÃO quer</h3>
+      ${cores.length?`<div class="palette">${swatches}</div>`:'<div class="qa-a empty">Nenhuma cor marcada.</div>'}
+      ${b.q11_texto?`<div class="palette-note"><strong>Estilos a evitar:</strong> ${esc(b.q11_texto)}</div>`:''}
+    </div>
+
+    <div class="section">
+      <h3>🏢 Sobre o negócio</h3>
+      ${qa('q1','Nome da empresa / marca')}
+      ${qa('q2','O que a empresa faz')}
+      ${qa('q3','Missão e valores')}
+      ${qa('q4','Cliente ideal')}
+      ${qa('q5','Onde o público está')}
+      ${qa('q6','Concorrentes')}
+      ${qa('q7','Diferencial')}
+      ${qa('q8','Personalidade da marca')}
+      ${qa('q9','Sentimento a transmitir')}
+    </div>
+
+    <div class="section">
+      <h3>🖼️ Referências</h3>
+      ${qa('q10_descricao','Descrição')}
+      ${qa('q10_link','Links')}
+    </div>
+
+    <div class="section">
+      <h3>⚖️ Registro e legal</h3>
+      ${qa('q12','Tipo de projeto')}
+      ${qa('q13','CNPJ registrado')}
+      ${qa('q14','Registro INPI')}
+      ${qa('q15','Pesquisa de anterioridade')}
+      ${qa('q16','Domínio de site')}
+      ${qa('q17','Redes sociais com o nome')}
+    </div>
+
+    <div class="section">
+      <h3>🚀 Serviços de interesse</h3>
+      ${qa('q18','Serviços')}
+      ${b.q18_outro?qa('q18_outro','Outro'):''}
+    </div>
+  `;
+}
+
+// ── PENDÊNCIAS ──
+function pendencias(b){
+  const out = [];
+  if(!b.q6) out.push('Concorrentes não informados — perguntar quem o cliente considera concorrência direta.');
+  if(!b.q10_descricao && !b.q10_link) out.push('Nenhuma referência visual enviada — pedir 3 a 5 imagens ou perfis que o cliente admira.');
+  if(!b.q3) out.push('Missão e valores em branco — explorar em conversa para dar direção ao conceito.');
+  if(!b.q5) out.push('Não informou onde o público está — confirmar canais (Instagram, indicação, local...).');
+  if(!b.q7) out.push('Diferencial não informado — entender o que faz o cliente ser escolhido.');
+  if(b.q14==='nao'||b.q14==='nao_sei') out.push('Marca NÃO registrada no INPI — orientar sobre registro para proteger o nome.');
+  if(b.q15==='nao'||b.q15==='nao_sei') out.push('Pesquisa de anterioridade não feita — verificar disponibilidade do nome antes de finalizar.');
+  if(b.q16==='sem_site'||b.q16==='nao') out.push('Sem domínio/site — sugerir registro de domínio junto ao projeto.');
+  const wa = (b.whatsapp||'').replace(/\D/g,'');
+  if(b.whatsapp && wa.length<10) out.push('WhatsApp parece incompleto ('+b.whatsapp+') — confirmar número com DDD.');
+  if(!b.q11_cores && !b.q11_texto) out.push('Não indicou cores/estilos a evitar — confirmar restrições visuais.');
+  return out;
+}
+function renderPend(b){
+  const p = pendencias(b);
+  if(!p.length) return '<div class="pend-ok">✅ Briefing completo — nenhuma pendência crítica detectada.</div>';
+  return '<ul class="pend-list">'+p.map(x=>`<li class="pend-item"><span class="pic">⚠️</span><span>${esc(x)}</span></li>`).join('')+'</ul>';
+}
+
+// ── BRIEF NATURAL ──
+function gerarBrief(b){
+  const L=[];
+  const empresa = b.q1||b.nome||'Cliente';
+  L.push(`BRIEFING DE IDENTIDADE VISUAL — ${empresa}`);
+  L.push('');
+  L.push(`Cliente: ${b.nome||'—'} | ${b.email||'—'} | ${b.whatsapp||'—'}`);
+  if(b.q12) L.push(`Tipo de projeto: ${mapVal('q12',b.q12)}`);
+  L.push('');
+  if(b.q2){ L.push('O NEGÓCIO'); L.push(b.q2); L.push(''); }
+  if(b.q3){ L.push('MISSÃO E VALORES'); L.push(b.q3); L.push(''); }
+  if(b.q4){ L.push('PÚBLICO-ALVO'); L.push(b.q4); L.push(''); }
+  if(b.q5){ L.push('ONDE O PÚBLICO ESTÁ'); L.push(b.q5); L.push(''); }
+  if(b.q6 || b.q7){ L.push('MERCADO E DIFERENCIAL'); if(b.q6)L.push('Concorrentes: '+b.q6); if(b.q7)L.push('Diferencial: '+b.q7); L.push(''); }
+  if(b.q8 || b.q9){ L.push('PERSONALIDADE DA MARCA'); if(b.q8)L.push('Tom: '+b.q8); if(b.q9)L.push('Sentimentos: '+b.q9); L.push(''); }
+  const cores=(b.q11_cores||'').split(',').map(c=>c.trim()).filter(Boolean);
+  if(cores.length || b.q11_texto){
+    L.push('DIREÇÃO VISUAL');
+    if(cores.length) L.push('Cores a EVITAR: '+cores.map(c=>colorName(c)+' ('+c+')').join(', '));
+    if(b.q11_texto) L.push('Estilos a evitar: '+b.q11_texto);
+    if(b.q10_descricao) L.push('Referências: '+b.q10_descricao);
+    if(b.q10_link) L.push('Links: '+b.q10_link);
+    L.push('');
+  }
+  L.push('REGISTRO E LEGAL');
+  L.push(`CNPJ: ${mapVal('q13',b.q13)||'—'} | INPI: ${mapVal('q14',b.q14)||'—'} | Anterioridade: ${mapVal('q15',b.q15)||'—'} | Domínio: ${mapVal('q16',b.q16)||'—'} | Redes: ${mapVal('q17',b.q17)||'—'}`);
+  L.push('');
+  if(b.q18){ L.push('SERVIÇOS DE INTERESSE'); L.push(mapVal('q18',b.q18)+(b.q18_outro?', '+b.q18_outro:'')); L.push(''); }
+  const p=pendencias(b);
+  if(p.length){ L.push('PONTOS A CONFIRMAR COM O CLIENTE'); p.forEach(x=>L.push('- '+x)); }
+  return L.join('\n');
+}
+
+// ── COPIAR ──
+function copyBrief(i){ copyText(gerarBrief(BRIEFINGS[i]), 'Briefing copiado!'); }
+function copyAll(i){
+  const b=BRIEFINGS[i];
+  let t = gerarBrief(b) + '\n\n=== INSTRUÇÃO PARA IA ===\n';
+  t += 'Com base no briefing acima, gere conceitos criativos de identidade visual: territórios de marca, direções de logo, paleta de cores (respeitando as cores a evitar), tipografia sugerida e tom visual. Seja específico e ofereça 3 caminhos distintos.';
+  copyText(t, 'Copiado! Cole numa IA.');
+}
+function copyText(t, msg){
+  navigator.clipboard.writeText(t).then(()=>showToast(msg)).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); showToast(msg);
+  });
+}
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+// ── util ──
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+</script>
+</body>
+</html>

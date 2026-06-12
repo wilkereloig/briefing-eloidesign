@@ -1284,26 +1284,53 @@
     btn.disabled = true;
     btn.textContent = 'Enviando...';
 
-    fetch('https://formspree.io/f/xpqeraow', {
-      method: 'POST',
-      body: new FormData(e.target),
-      headers: { 'Accept': 'application/json' }
-    })
-    .then(res => {
-      if (res.ok) {
-        document.getElementById('successOverlay').classList.add('show');
-        e.target.reset();
-        clearExtras();
-        showStep(1);
-      } else {
-        alert('Erro ao enviar. Tente novamente.');
-      }
-    })
-    .catch(() => alert('Erro de conexão. Tente novamente.'))
-    .finally(() => {
-      btn.disabled = false;
-      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar Briefing';
+    // monta objeto a partir do form (q18 múltiplo vira lista separada por vírgula)
+    const fd = new FormData(e.target);
+    const obj = {};
+    fd.forEach((v, k) => {
+      if (k === 'q10_imagens') return; // ignora (removido)
+      obj[k] = (obj[k] !== undefined && obj[k] !== '') ? obj[k] + ', ' + v : v;
     });
+
+    const SUPA_URL = 'https://nlamznxoocmygfvnqcns.supabase.co';
+    const SUPA_KEY = 'sb_publishable_QkKAqMUIklyCSj_3DAKA6g_mtEw2vhR';
+
+    // grava no Supabase (painel) + envia ao Formspree (email) em paralelo
+    const toSupabase = fetch(SUPA_URL + '/rest/v1/briefings', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ ...obj, raw: obj })
+    });
+
+    const toFormspree = fetch('https://formspree.io/f/xpqeraow', {
+      method: 'POST',
+      body: fd,
+      headers: { 'Accept': 'application/json' }
+    });
+
+    Promise.allSettled([toSupabase, toFormspree])
+      .then(([supa, form]) => {
+        const supaOk = supa.status === 'fulfilled' && supa.value.ok;
+        const formOk = form.status === 'fulfilled' && form.value.ok;
+        if (supaOk || formOk) {
+          document.getElementById('successOverlay').classList.add('show');
+          e.target.reset();
+          clearExtras();
+          showStep(1);
+        } else {
+          alert('Erro ao enviar. Tente novamente.');
+        }
+      })
+      .catch(() => alert('Erro de conexão. Tente novamente.'))
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Enviar Briefing';
+      });
   });
 
   // ── REMOVE INVALID ON INPUT ──
