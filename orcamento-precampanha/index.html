@@ -106,14 +106,17 @@
     @media(max-width:600px){.section{padding:24px 22px}.rules{grid-template-columns:1fr}.cover{padding:48px 16px 36px}}
 
     @media print{
-      body{background:#fff;color:#1a1a1a}
-      .aurora,.actions{display:none!important}
-      .section{background:#faf7ff;border:1px solid #e0d5f0;break-inside:avoid}
-      .cover h1,.section h2 .n,.eyebrow{color:#5A189A}
-      .lead,.deliv li,.invest td{color:#1a1a1a}
-      .cover .sub,.invest .item-desc,.terms .t b,.note{color:#3C096C}
-      .cover .logo path{fill:#3C096C!important}
-      .logo-tag{color:#3C096C!important}
+      @page{margin:10mm}
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+      html,body{background:#10002B!important;color:#fff!important}
+      /* glow estático lembrando a aurora (animação não imprime) */
+      body{background-image:
+        radial-gradient(58% 42% at 18% 5%,rgba(157,78,221,.32),transparent 60%),
+        radial-gradient(55% 42% at 88% 0%,rgba(123,44,191,.26),transparent 60%)!important}
+      .actions,.aurora{display:none!important}
+      .section{background:rgba(36,0,70,.55)!important;border:1px solid var(--c800)!important;break-inside:avoid}
+      .cover .logo path{fill:#fff!important}
+      .logo-tag{color:#fff!important}
     }
   </style>
 </head>
