@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orçamento Inteligente — ELOI Design Studio</title>
+  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;--c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;--white:#fff;--font:'carbona-variable',sans-serif;
+      --ras:#9ca3af;--env:#60a5fa;--apr:#4ade80;--rec:#f87171}
+    body{font-family:var(--font);background:var(--c950);color:var(--white);min-height:100vh;line-height:1.6}
+    .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(80px) saturate(140%);opacity:.5}
+    .blob{position:absolute;border-radius:50%;mix-blend-mode:screen}
+    .blob.b1{width:40%;height:45%;left:5%;top:2%;background:radial-gradient(circle,#9D4EDD,transparent 70%);animation:d1 20s ease-in-out infinite}
+    .blob.b2{width:44%;height:50%;right:3%;top:-8%;background:radial-gradient(circle,#7B2CBF,transparent 70%);animation:d2 24s ease-in-out infinite}
+    @keyframes d1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24%,16%) scale(1.2)}}
+    @keyframes d2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20%,18%) scale(1.15)}}
+
+    /* login */
+    .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
+    .login-card{background:rgba(36,0,70,.6);border:1px solid var(--c800);border-radius:20px;padding:44px 40px;max-width:380px;width:100%;text-align:center;backdrop-filter:blur(8px)}
+    .login-card h1{font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:20px}
+    .login-card input{width:100%;background:var(--c950);border:1px solid var(--c800);border-radius:10px;color:#fff;font-family:var(--font);font-size:.95rem;padding:13px 16px;outline:none}
+    .login-card input:focus{border-color:var(--c500);box-shadow:0 0 0 3px rgba(157,78,221,.2)}
+    .login-card button{width:100%;margin-top:14px;background:var(--c700);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:.95rem;font-variation-settings:'wght' 600;padding:14px;cursor:pointer}
+    .login-card button:hover{background:var(--c600)}
+    .err{color:#f87171;font-size:.85rem;margin-top:12px;min-height:1.2em}
+
+    .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:32px 24px 80px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+    .top-left{display:flex;align-items:center;gap:14px}
+    .top h1{font-size:1rem;color:var(--c100);font-variation-settings:'wght' 500}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .back{color:var(--c300);text-decoration:none;font-size:.85rem;border:1px solid var(--c800);padding:8px 14px;border-radius:8px;transition:border-color .2s}
+    .back:hover{border-color:var(--c500)}
+    .btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:10px;font-family:var(--font);font-size:.9rem;font-variation-settings:'wght' 600;padding:11px 20px;cursor:pointer;transition:background .2s,transform .15s;text-decoration:none}
+    .btn-primary{background:var(--c700);color:#fff}.btn-primary:hover{background:var(--c600);transform:translateY(-1px)}
+    .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .btn-ghost{background:transparent;color:var(--c100);border:1px solid var(--c800)}.btn-ghost:hover{border-color:var(--c500)}
+    .btn-danger{background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.4)}.btn-danger:hover{background:rgba(248,113,113,.12)}
+
+    /* layout */
+    .cols{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
+    @media(max-width:880px){.cols{grid-template-columns:1fr}}
+    .panel{background:rgba(36,0,70,.55);border:1px solid var(--c800);border-radius:16px;padding:22px 22px 24px}
+    .panel + .panel{margin-top:18px}
+    .panel h2{font-size:.95rem;color:var(--c100);font-variation-settings:'wght' 600;margin-bottom:14px;letter-spacing:.01em}
+
+    .field{margin-bottom:14px}
+    .field:last-child{margin-bottom:0}
+    .field label{display:block;font-size:.8rem;color:var(--c100);margin-bottom:6px;font-variation-settings:'wght' 500}
+    .field input,.field select,.field textarea{width:100%;background:var(--c950);border:1px solid var(--c800);border-radius:9px;color:#fff;font-family:var(--font);font-size:.92rem;padding:11px 14px;outline:none}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--c500);box-shadow:0 0 0 3px rgba(157,78,221,.2)}
+    .field textarea{min-height:64px;resize:vertical}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    @media(max-width:560px){.two,.three{grid-template-columns:1fr}}
+
+    /* catalog selection */
+    .cat-group{margin-bottom:18px}
+    .cat-group:last-child{margin-bottom:0}
+    .cat-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--c300);font-variation-settings:'wght' 700;margin-bottom:9px}
+    .svc{display:grid;grid-template-columns:22px 1fr auto;gap:12px;align-items:center;padding:11px 13px;border:1px solid var(--c800);border-radius:11px;margin-bottom:8px;cursor:pointer;transition:border-color .15s,background .15s}
+    .svc:hover{border-color:var(--c600)}
+    .svc.on{border-color:var(--c500);background:rgba(157,78,221,.12)}
+    .svc input[type=checkbox]{width:18px;height:18px;accent-color:var(--c500);cursor:pointer}
+    .svc .nm{font-size:.92rem;font-variation-settings:'wght' 500}
+    .svc .pr{font-size:.78rem;color:var(--c300)}
+    .svc-right{display:flex;align-items:center;gap:10px}
+    .qty{width:60px;background:var(--c950);border:1px solid var(--c800);border-radius:8px;color:#fff;font-family:var(--font);font-size:.85rem;padding:7px 8px;text-align:center;outline:none}
+    .qty:focus{border-color:var(--c500)}
+    .qty:disabled{opacity:.35}
+
+    /* summary (sticky) */
+    .summary{position:sticky;top:24px}
+    .sum-line{display:flex;justify-content:space-between;gap:12px;font-size:.86rem;padding:7px 0;border-bottom:1px solid rgba(60,9,108,.6)}
+    .sum-line .v{color:var(--c100);font-variation-settings:'wght' 600;white-space:nowrap}
+    .sum-line.neg .v{color:var(--apr)}
+    .sum-line.muted{color:var(--c300)}
+    .sum-empty{color:var(--c300);font-size:.86rem;padding:8px 0}
+    .sum-total{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 6px}
+    .sum-total span{font-size:.9rem;color:var(--c300)}
+    .sum-total strong{font-size:1.5rem;color:#fff;font-variation-settings:'wght' 700}
+    .sum-sub{font-size:.74rem;color:var(--c300);opacity:.8;text-align:right;margin-bottom:16px}
+
+    /* catalog editor modal */
+    .modal{display:none;position:fixed;inset:0;background:rgba(16,0,43,.92);z-index:60;overflow:auto;padding:32px 20px}
+    .modal.show{display:block}
+    .modal-card{background:var(--c900);border:1px solid var(--c700);border-radius:18px;max-width:820px;margin:0 auto;padding:28px 30px}
+    .modal-card h2{font-size:1.2rem;font-variation-settings:'wght' 700;margin-bottom:6px}
+    .modal-card .sub{font-size:.82rem;color:var(--c300);margin-bottom:18px}
+    .erow{display:grid;grid-template-columns:1.6fr 1fr 90px 70px 56px 60px 34px;gap:8px;align-items:center;margin-bottom:8px}
+    .erow input,.erow select{background:var(--c950);border:1px solid var(--c800);border-radius:8px;color:#fff;font-family:var(--font);font-size:.82rem;padding:8px 9px;outline:none;width:100%}
+    .erow input:focus,.erow select:focus{border-color:var(--c500)}
+    .erow .ck{display:flex;justify-content:center}
+    .erow .ck input{width:17px;height:17px;accent-color:var(--c500);padding:0}
+    .erow .del{background:transparent;border:1px solid var(--c800);color:#f87171;border-radius:8px;cursor:pointer;font-size:.95rem;padding:7px 0}
+    .ehead{display:grid;grid-template-columns:1.6fr 1fr 90px 70px 56px 60px 34px;gap:8px;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--c300);margin-bottom:7px;padding:0 2px}
+    @media(max-width:680px){.ehead{display:none}.erow{grid-template-columns:1fr 1fr;border:1px solid var(--c800);border-radius:10px;padding:10px;margin-bottom:12px}}
+    .modal-actions{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:18px}
+
+    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--c700);color:#fff;padding:13px 24px;border-radius:12px;font-size:.9rem;font-variation-settings:'wght' 600;z-index:90;transition:transform .35s cubic-bezier(.34,1.56,.64,1);max-width:90vw;text-align:center}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+    .loading{text-align:center;color:var(--c300);padding:40px}
+  </style>
+</head>
+<body>
+<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span></div>
+
+<!-- LOGIN -->
+<div class="login" id="loginView">
+  <div class="login-card">
+    <h1>Orçamento Inteligente</h1>
+    <input type="password" id="pw" placeholder="Senha de acesso">
+    <button onclick="entrar()">Entrar</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="wrap" id="appView" style="display:none">
+  <div class="top">
+    <div class="top-left">
+      <a class="back" href="/admin/">← Admin</a>
+      <h1>Orçamento inteligente</h1>
+    </div>
+    <div class="top-actions">
+      <a class="btn btn-ghost" href="/painel-orcamentos/">Ver orçamentos ↗</a>
+      <button class="btn btn-ghost" onclick="abrirCatalogo()">⚙ Catálogo</button>
+    </div>
+  </div>
+
+  <div class="cols">
+    <!-- ESQUERDA: dados + serviços + ajustes -->
+    <div>
+      <div class="panel">
+        <h2>Dados do orçamento</h2>
+        <div class="two">
+          <div class="field"><label>Cliente</label><input id="f_cliente" placeholder="Nome do cliente"></div>
+          <div class="field"><label>Título</label><input id="f_titulo" placeholder="Ex: Identidade + landing"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Serviços</h2>
+        <div id="catBox"><div class="loading">Carregando catálogo…</div></div>
+      </div>
+
+      <div class="panel">
+        <h2>Ajustes</h2>
+        <div class="three">
+          <div class="field">
+            <label>Complexidade</label>
+            <select id="m_complex" onchange="calc()"></select>
+          </div>
+          <div class="field">
+            <label>Urgência</label>
+            <select id="m_urgencia" onchange="calc()"></select>
+          </div>
+          <div class="field">
+            <label>Desconto (%)</label>
+            <input id="m_desconto" type="number" min="0" max="100" step="1" value="0" oninput="calc()">
+          </div>
+        </div>
+        <div class="field" style="margin-top:4px"><label>Observações (vão para o orçamento)</label><textarea id="f_obs" placeholder="Condições, prazos, escopo…"></textarea></div>
+      </div>
+    </div>
+
+    <!-- DIREITA: resumo sticky -->
+    <div>
+      <div class="panel summary">
+        <h2>Resumo</h2>
+        <div id="sumLines"><div class="sum-empty">Selecione serviços para montar o orçamento.</div></div>
+        <div class="sum-total"><span>Total</span><strong id="sumTotal">R$ 0,00</strong></div>
+        <div class="sum-sub" id="sumSub"></div>
+        <button class="btn btn-primary" id="genBtn" style="width:100%;justify-content:center" onclick="gerar()" disabled>Gerar orçamento</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CATÁLOGO -->
+<div class="modal" id="catModal">
+  <div class="modal-card">
+    <h2>Catálogo de serviços</h2>
+    <div class="sub">Edite preços, unidades e ordem. Mudanças refletem no calculador na hora.</div>
+    <div class="ehead">
+      <span>Nome</span><span>Categoria</span><span>Preço-base</span><span>Unidade</span><span>Ordem</span><span>Ativo</span><span></span>
+    </div>
+    <div id="editBox"></div>
+    <button class="btn btn-ghost" style="margin-top:6px" onclick="addLinhaCatalogo()">+ Adicionar serviço</button>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="fecharCatalogo()">Fechar</button>
+      <button class="btn btn-primary" onclick="salvarCatalogo()">Salvar catálogo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Salvo!</div>
+
+<script>
+const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/orcamentos';
+let PW = '';
+let CATALOG = [];                 // serviços do banco
+const SEL = {};                   // id -> qty (serviços selecionados)
+
+// multiplicadores (mudam raro; editar aqui se precisar)
+const COMPLEX = [
+  {key:'simples', label:'Simples', m:1.0},
+  {key:'media',   label:'Média',   m:1.4},
+  {key:'alta',    label:'Alta',    m:1.8},
+];
+const URGENCIA = [
+  {key:'normal',   label:'Normal',           m:1.0},
+  {key:'expressa', label:'Expressa (curto)', m:1.3},
+];
+
+function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function call(action, payload){
+  const r = await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:PW,action,...payload})});
+  if(!r.ok) throw r.status;
+  return r.json();
+}
+
+// ── LOGIN ──
+function entrar(){
+  PW = document.getElementById('pw').value;
+  const err=document.getElementById('err'); err.textContent='Entrando…';
+  call('catalog_list',{}).then(d=>{
+    CATALOG = d.servicos||[];
+    sessionStorage.setItem('eloi_pw', PW);
+    document.getElementById('loginView').style.display='none';
+    document.getElementById('appView').style.display='block';
+    initSelects();
+    renderCatalog();
+    calc();
+  }).catch(s=>{ err.textContent = s===401 ? 'Senha incorreta.' : 'Erro ao carregar.'; });
+}
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')entrar()});
+const saved = sessionStorage.getItem('eloi_pw');
+if(saved){ document.getElementById('pw').value=saved; entrar(); }
+
+function initSelects(){
+  const sc=document.getElementById('m_complex');
+  sc.innerHTML = COMPLEX.map(c=>`<option value="${c.key}">${c.label}${c.m!==1?' ×'+c.m:''}</option>`).join('');
+  const su=document.getElementById('m_urgencia');
+  su.innerHTML = URGENCIA.map(u=>`<option value="${u.key}">${u.label}${u.m!==1?' ×'+u.m:''}</option>`).join('');
+}
+
+// ── RENDER CATÁLOGO (seleção) ──
+function renderCatalog(){
+  const box=document.getElementById('catBox');
+  const ativos = CATALOG.filter(s=>s.ativo!==false);
+  if(!ativos.length){ box.innerHTML='<div class="sum-empty">Catálogo vazio. Use ⚙ Catálogo para adicionar serviços.</div>'; return; }
+  const cats=[]; const byCat={};
+  ativos.forEach(s=>{ const c=s.categoria||'Outros'; if(!byCat[c]){byCat[c]=[];cats.push(c);} byCat[c].push(s); });
+  box.innerHTML = cats.map(c=>`
+    <div class="cat-group">
+      <div class="cat-title">${esc(c)}</div>
+      ${byCat[c].map(s=>{
+        const on = SEL[s.id]!=null;
+        const qty = on ? SEL[s.id] : 1;
+        return `<label class="svc ${on?'on':''}" data-id="${s.id}">
+          <input type="checkbox" ${on?'checked':''} onchange="toggle('${s.id}',this.checked)">
+          <span><span class="nm">${esc(s.nome)}</span><br><span class="pr">${brl(s.preco_base)} / ${esc(s.unidade||'un')}</span></span>
+          <span class="svc-right">
+            <input class="qty" type="number" min="1" step="1" value="${qty}" ${on?'':'disabled'} onclick="event.preventDefault()" oninput="setQty('${s.id}',this.value)">
+          </span>
+        </label>`;
+      }).join('')}
+    </div>`).join('');
+}
+function toggle(id,on){
+  if(on) SEL[id] = SEL[id]||1; else delete SEL[id];
+  renderCatalog(); calc();
+}
+function setQty(id,v){
+  const q=Math.max(1,Math.floor(Number(v)||1));
+  if(SEL[id]!=null) SEL[id]=q;
+  calc();
+}
+
+// ── CÁLCULO ──
+function curMult(){
+  const ck=document.getElementById('m_complex').value;
+  const uk=document.getElementById('m_urgencia').value;
+  const c=COMPLEX.find(x=>x.key===ck)||COMPLEX[0];
+  const u=URGENCIA.find(x=>x.key===uk)||URGENCIA[0];
+  const desc=Math.min(100,Math.max(0,Number(document.getElementById('m_desconto').value)||0));
+  return {c,u,desc};
+}
+function montar(){
+  // retorna {linhas:[{nome,valor}], baseSubtotal, total, c,u,desc}
+  const linhas=[];
+  let base=0;
+  CATALOG.forEach(s=>{
+    if(SEL[s.id]==null) return;
+    const qty=SEL[s.id];
+    const val=Number(s.preco_base)*qty;
+    base+=val;
+    const nm = qty>1 ? `${s.nome} × ${qty}` : s.nome;
+    linhas.push({nome:nm, valor:val});
+  });
+  const {c,u,desc}=curMult();
+  const afterC = base*c.m;
+  const afterU = afterC*u.m;
+  const afterD = afterU*(1-desc/100);
+  const ajustes=[];
+  if(c.m!==1) ajustes.push({nome:`Complexidade ${c.label} (×${c.m})`, valor:afterC-base});
+  if(u.m!==1) ajustes.push({nome:`Urgência ${u.label} (×${u.m})`, valor:afterU-afterC});
+  if(desc>0)  ajustes.push({nome:`Desconto ${desc}%`, valor:afterD-afterU});
+  return {linhas, ajustes, base, total:afterD, c,u,desc};
+}
+function calc(){
+  const r=montar();
+  const sl=document.getElementById('sumLines');
+  const genBtn=document.getElementById('genBtn');
+  if(!r.linhas.length){
+    sl.innerHTML='<div class="sum-empty">Selecione serviços para montar o orçamento.</div>';
+    document.getElementById('sumTotal').textContent=brl(0);
+    document.getElementById('sumSub').textContent='';
+    genBtn.disabled=true;
+    return;
+  }
+  let html = r.linhas.map(l=>`<div class="sum-line"><span>${esc(l.nome)}</span><span class="v">${brl(l.valor)}</span></div>`).join('');
+  if(r.ajustes.length){
+    html += `<div class="sum-line muted"><span>Subtotal</span><span class="v">${brl(r.base)}</span></div>`;
+    html += r.ajustes.map(a=>`<div class="sum-line ${a.valor<0?'neg':''}"><span>${esc(a.nome)}</span><span class="v">${a.valor<0?'−':'+'} ${brl(Math.abs(a.valor))}</span></div>`).join('');
+  }
+  sl.innerHTML=html;
+  document.getElementById('sumTotal').textContent=brl(r.total);
+  const n=r.linhas.length;
+  document.getElementById('sumSub').textContent = `${n} ${n===1?'serviço':'serviços'} selecionado${n===1?'':'s'}`;
+  genBtn.disabled=false;
+}
+
+// ── GERAR ORÇAMENTO ──
+function gerar(){
+  const r=montar();
+  if(!r.linhas.length) return;
+  const itens = r.linhas.concat(r.ajustes).map(l=>({nome:l.nome, valor:Math.round(l.valor*100)/100}));
+  const cliente=document.getElementById('f_cliente').value.trim();
+  let titulo=document.getElementById('f_titulo').value.trim();
+  if(!titulo){ titulo = r.linhas.length===1 ? r.linhas[0].nome : r.linhas.length+' serviços'; }
+  const obsBase=document.getElementById('f_obs').value.trim();
+  const ajusteTxt = `Complexidade: ${r.c.label} (×${r.c.m}) · Urgência: ${r.u.label} (×${r.u.m})${r.desc>0?` · Desconto: ${r.desc}%`:''}`;
+  const observacoes = (obsBase ? obsBase+'\n\n' : '') + 'Gerado pelo orçamento inteligente. ' + ajusteTxt;
+  const o={
+    cliente: cliente||null,
+    titulo,
+    status:'rascunho',
+    itens,
+    valor_total: Math.round(r.total*100)/100,
+    observacoes,
+    link:null,
+  };
+  const btn=document.getElementById('genBtn'); btn.disabled=true; btn.textContent='Gerando…';
+  call('create',{orcamento:o}).then(()=>{
+    toast('Orçamento criado! Veja em "Ver orçamentos".');
+    // reset seleção
+    Object.keys(SEL).forEach(k=>delete SEL[k]);
+    document.getElementById('f_cliente').value='';
+    document.getElementById('f_titulo').value='';
+    document.getElementById('f_obs').value='';
+    document.getElementById('m_desconto').value='0';
+    document.getElementById('m_complex').value=COMPLEX[0].key;
+    document.getElementById('m_urgencia').value=URGENCIA[0].key;
+    renderCatalog(); calc();
+  }).catch(()=>{ toast('Erro ao gerar orçamento.'); })
+    .finally(()=>{ btn.textContent='Gerar orçamento'; });
+}
+
+// ── EDITOR DE CATÁLOGO ──
+function abrirCatalogo(){
+  renderEditor();
+  document.getElementById('catModal').classList.add('show');
+}
+function fecharCatalogo(){ document.getElementById('catModal').classList.remove('show'); }
+function edRow(s){
+  s=s||{};
+  const div=document.createElement('div');
+  div.className='erow';
+  div.dataset.id=s.id||'';
+  div.innerHTML=`
+    <input class="e-nome" placeholder="Nome do serviço" value="${esc(s.nome||'')}">
+    <input class="e-cat" placeholder="Categoria" value="${esc(s.categoria||'')}">
+    <input class="e-preco" type="number" step="0.01" placeholder="0" value="${s.preco_base!=null?s.preco_base:''}">
+    <input class="e-unid" placeholder="un" value="${esc(s.unidade||'un')}">
+    <input class="e-ordem" type="number" step="1" placeholder="0" value="${s.ordem!=null?s.ordem:0}">
+    <span class="ck"><input class="e-ativo" type="checkbox" ${s.ativo!==false?'checked':''}></span>
+    <button class="del" type="button" title="Excluir" onclick="delLinhaCatalogo(this)">✕</button>`;
+  return div;
+}
+function renderEditor(){
+  const box=document.getElementById('editBox'); box.innerHTML='';
+  CATALOG.slice().sort((a,b)=>(a.ordem||0)-(b.ordem||0)).forEach(s=>box.appendChild(edRow(s)));
+}
+function addLinhaCatalogo(){
+  const box=document.getElementById('editBox');
+  const maxOrd = CATALOG.reduce((m,s)=>Math.max(m,s.ordem||0),0);
+  box.appendChild(edRow({ordem:maxOrd+10, unidade:'un', ativo:true}));
+}
+function delLinhaCatalogo(btn){
+  const row=btn.closest('.erow'); const id=row.dataset.id;
+  if(id){
+    if(!confirm('Excluir este serviço do catálogo?')) return;
+    call('catalog_delete',{id}).then(()=>{ row.remove(); toast('Serviço excluído.'); })
+      .catch(()=>toast('Erro ao excluir.'));
+  } else {
+    row.remove();
+  }
+}
+async function salvarCatalogo(){
+  const rows=[...document.querySelectorAll('#editBox .erow')];
+  const jobs=[];
+  rows.forEach(r=>{
+    const nome=r.querySelector('.e-nome').value.trim();
+    if(!nome) return; // ignora linha vazia
+    const servico={
+      id: r.dataset.id||undefined,
+      nome,
+      categoria: r.querySelector('.e-cat').value.trim()||null,
+      preco_base: Number(r.querySelector('.e-preco').value)||0,
+      unidade: r.querySelector('.e-unid').value.trim()||'un',
+      ordem: Number(r.querySelector('.e-ordem').value)||0,
+      ativo: r.querySelector('.e-ativo').checked,
+    };
+    jobs.push(call('catalog_save',{servico}));
+  });
+  try{
+    await Promise.all(jobs);
+    const d=await call('catalog_list',{});
+    CATALOG=d.servicos||[];
+    // limpa seleções de serviços que sumiram
+    Object.keys(SEL).forEach(id=>{ if(!CATALOG.some(s=>s.id===id)) delete SEL[id]; });
+    renderCatalog(); calc(); fecharCatalogo();
+    toast('Catálogo salvo!');
+  }catch(_){ toast('Erro ao salvar catálogo.'); }
+}
+
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
+</script>
+</body>
+</html>
