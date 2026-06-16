@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Orçamentos — ELOI Design Studio</title>
+  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;--c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;--white:#fff;--font:'carbona-variable',sans-serif;
+      --ras:#9ca3af;--env:#60a5fa;--apr:#4ade80;--rec:#f87171}
+    body{font-family:var(--font);background:var(--c950);color:var(--white);min-height:100vh;line-height:1.6}
+    .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(80px) saturate(140%);opacity:.5}
+    .blob{position:absolute;border-radius:50%;mix-blend-mode:screen}
+    .blob.b1{width:40%;height:45%;left:5%;top:2%;background:radial-gradient(circle,#9D4EDD,transparent 70%);animation:d1 20s ease-in-out infinite}
+    .blob.b2{width:44%;height:50%;right:3%;top:-8%;background:radial-gradient(circle,#7B2CBF,transparent 70%);animation:d2 24s ease-in-out infinite}
+    @keyframes d1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24%,16%) scale(1.2)}}
+    @keyframes d2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20%,18%) scale(1.15)}}
+
+    /* login */
+    .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
+    .login-card{background:rgba(36,0,70,.6);border:1px solid var(--c800);border-radius:20px;padding:44px 40px;max-width:380px;width:100%;text-align:center;backdrop-filter:blur(8px)}
+    .login-card h1{font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:20px}
+    .login-card input{width:100%;background:var(--c950);border:1px solid var(--c800);border-radius:10px;color:#fff;font-family:var(--font);font-size:.95rem;padding:13px 16px;outline:none}
+    .login-card input:focus{border-color:var(--c500);box-shadow:0 0 0 3px rgba(157,78,221,.2)}
+    .login-card button{width:100%;margin-top:14px;background:var(--c700);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:.95rem;font-variation-settings:'wght' 600;padding:14px;cursor:pointer}
+    .login-card button:hover{background:var(--c600)}
+    .err{color:#f87171;font-size:.85rem;margin-top:12px;min-height:1.2em}
+
+    .wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:32px 24px 80px}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+    .top-left{display:flex;align-items:center;gap:14px}
+    .top h1{font-size:1rem;color:var(--c100);font-variation-settings:'wght' 500}
+    .back{color:var(--c300);text-decoration:none;font-size:.85rem;border:1px solid var(--c800);padding:8px 14px;border-radius:8px;transition:border-color .2s}
+    .back:hover{border-color:var(--c500)}
+    .btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:10px;font-family:var(--font);font-size:.9rem;font-variation-settings:'wght' 600;padding:11px 20px;cursor:pointer;transition:background .2s,transform .15s}
+    .btn-primary{background:var(--c700);color:#fff}.btn-primary:hover{background:var(--c600);transform:translateY(-1px)}
+    .btn-ghost{background:transparent;color:var(--c100);border:1px solid var(--c800)}.btn-ghost:hover{border-color:var(--c500)}
+    .btn-danger{background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.4)}.btn-danger:hover{background:rgba(248,113,113,.12)}
+
+    /* list */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+    .card{background:rgba(36,0,70,.55);border:1px solid var(--c800);border-radius:16px;padding:22px;cursor:pointer;transition:border-color .2s,transform .15s,background .2s}
+    .card:hover{border-color:var(--c500);transform:translateY(-2px);background:rgba(45,0,85,.7)}
+    .card .cli{font-size:.82rem;color:var(--c300);margin-bottom:3px}
+    .card .tit{font-size:1.05rem;font-variation-settings:'wght' 600;margin-bottom:12px}
+    .card .row{display:flex;justify-content:space-between;align-items:center}
+    .card .valor{font-size:1.15rem;font-variation-settings:'wght' 700;color:var(--c100)}
+    .badge{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-variation-settings:'wght' 700;padding:3px 10px;border-radius:99px}
+    .badge.rascunho{background:rgba(156,163,175,.2);color:var(--ras)}
+    .badge.enviado{background:rgba(96,165,250,.2);color:var(--env)}
+    .badge.aprovado{background:rgba(74,222,128,.2);color:var(--apr)}
+    .badge.recusado{background:rgba(248,113,113,.2);color:var(--rec)}
+    .card .dt{font-size:.75rem;color:var(--c300);opacity:.7;margin-top:10px}
+    .empty{text-align:center;padding:70px 24px;color:var(--c300)}
+    .empty .ic{font-size:2.6rem;opacity:.5;margin-bottom:14px}
+
+    /* modal form */
+    .modal{display:none;position:fixed;inset:0;background:rgba(16,0,43,.9);z-index:60;overflow:auto;padding:32px 20px}
+    .modal.show{display:block}
+    .form-card{background:var(--c900);border:1px solid var(--c700);border-radius:18px;max-width:680px;margin:0 auto;padding:30px 32px}
+    .form-card h2{font-size:1.25rem;font-variation-settings:'wght' 700;margin-bottom:20px}
+    .field{margin-bottom:16px}
+    .field label{display:block;font-size:.82rem;color:var(--c100);margin-bottom:6px;font-variation-settings:'wght' 500}
+    .field input,.field select,.field textarea{width:100%;background:var(--c950);border:1px solid var(--c800);border-radius:9px;color:#fff;font-family:var(--font);font-size:.92rem;padding:11px 14px;outline:none}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--c500);box-shadow:0 0 0 3px rgba(157,78,221,.2)}
+    .field textarea{min-height:70px;resize:vertical}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:560px){.two{grid-template-columns:1fr}}
+    .itens-head{display:flex;justify-content:space-between;align-items:center;margin:6px 0 10px}
+    .itens-head .lbl{font-size:.82rem;color:var(--c100);font-variation-settings:'wght' 600}
+    .item-row{display:grid;grid-template-columns:1fr 130px 32px;gap:8px;margin-bottom:8px}
+    .item-row input{padding:9px 12px}
+    .item-del{background:transparent;border:1px solid var(--c800);color:#f87171;border-radius:8px;cursor:pointer;font-size:1rem}
+    .add-item{background:transparent;border:1px dashed var(--c700);color:var(--c100);border-radius:8px;padding:8px;width:100%;cursor:pointer;font-family:var(--font);font-size:.85rem}
+    .total-line{text-align:right;font-size:1.1rem;font-variation-settings:'wght' 700;color:var(--c100);margin:10px 0 18px}
+    .form-actions{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:8px}
+    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--c700);color:#fff;padding:13px 24px;border-radius:12px;font-size:.9rem;font-variation-settings:'wght' 600;z-index:90;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+    .toast.show{transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span></div>
+
+<!-- LOGIN -->
+<div class="login" id="loginView">
+  <div class="login-card">
+    <h1>Painel de Orçamentos</h1>
+    <input type="password" id="pw" placeholder="Senha de acesso">
+    <button onclick="entrar()">Entrar</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div class="wrap" id="panelView" style="display:none">
+  <div class="top">
+    <div class="top-left">
+      <a class="back" href="/admin/">← Admin</a>
+      <h1>Orçamentos</h1>
+    </div>
+    <button class="btn btn-primary" onclick="abrirNovo()">+ Novo orçamento</button>
+  </div>
+  <div id="listView" class="grid"></div>
+</div>
+
+<!-- MODAL FORM -->
+<div class="modal" id="modal">
+  <div class="form-card">
+    <h2 id="formTitle">Novo orçamento</h2>
+    <input type="hidden" id="f_id">
+    <div class="two">
+      <div class="field"><label>Cliente</label><input id="f_cliente" placeholder="Nome do cliente"></div>
+      <div class="field"><label>Status</label>
+        <select id="f_status">
+          <option value="rascunho">Rascunho</option>
+          <option value="enviado">Enviado</option>
+          <option value="aprovado">Aprovado</option>
+          <option value="recusado">Recusado</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Título do orçamento</label><input id="f_titulo" placeholder="Ex: Identidade de campanha 2026"></div>
+
+    <div class="itens-head"><span class="lbl">Itens</span></div>
+    <div id="itensBox"></div>
+    <button class="add-item" type="button" onclick="addItem()">+ Adicionar item</button>
+    <div class="total-line">Total: <span id="totalView">R$ 0,00</span></div>
+
+    <div class="field"><label>Link da proposta (opcional)</label><input id="f_link" placeholder="https://eloidesign.com.br/..."></div>
+    <div class="field"><label>Observações</label><textarea id="f_obs" placeholder="Notas internas, condições, prazos..."></textarea></div>
+
+    <div class="form-actions">
+      <button class="btn btn-danger" id="delBtn" onclick="excluir()" style="display:none">Excluir</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvar()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Salvo!</div>
+
+<script>
+const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/orcamentos';
+let ORCS = [];
+let PW = '';
+
+function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function call(action, payload){
+  const r = await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:PW,action,...payload})});
+  if(!r.ok) throw r.status;
+  return r.json();
+}
+
+// ── LOGIN ──
+function entrar(){
+  PW = document.getElementById('pw').value;
+  const err=document.getElementById('err'); err.textContent='Entrando...';
+  call('list',{}).then(d=>{
+    ORCS = d.orcamentos||[];
+    sessionStorage.setItem('eloi_pw', PW);
+    document.getElementById('loginView').style.display='none';
+    document.getElementById('panelView').style.display='block';
+    render();
+  }).catch(s=>{ err.textContent = s===401 ? 'Senha incorreta.' : 'Erro ao carregar.'; });
+}
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')entrar()});
+const saved = sessionStorage.getItem('eloi_pw');
+if(saved){ document.getElementById('pw').value=saved; entrar(); }
+
+// ── LISTA ──
+function render(){
+  const lv=document.getElementById('listView');
+  if(!ORCS.length){ lv.className=''; lv.innerHTML='<div class="empty"><div class="ic">💰</div>Nenhum orçamento ainda. Clique em "+ Novo orçamento".</div>'; return; }
+  lv.className='grid';
+  lv.innerHTML = ORCS.map((o,i)=>{
+    const dt = o.created_at ? new Date(o.created_at).toLocaleDateString('pt-BR') : '';
+    const st = o.status||'rascunho';
+    return `<div class="card" onclick="abrirEdit(${i})">
+      <div class="cli">${esc(o.cliente||'—')}</div>
+      <div class="tit">${esc(o.titulo||'Sem título')}</div>
+      <div class="row"><span class="valor">${brl(o.valor_total)}</span><span class="badge ${st}">${st}</span></div>
+      <div class="dt">${dt}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── ITENS ──
+function itemRow(nome,valor){
+  const div=document.createElement('div');
+  div.className='item-row';
+  div.innerHTML=`<input placeholder="Descrição do item" value="${esc(nome||'')}" oninput="calcTotal()">
+    <input type="number" step="0.01" placeholder="Valor" value="${valor!=null?valor:''}" oninput="calcTotal()">
+    <button class="item-del" type="button" onclick="this.parentNode.remove();calcTotal()">✕</button>`;
+  return div;
+}
+function addItem(nome,valor){ document.getElementById('itensBox').appendChild(itemRow(nome,valor)); calcTotal(); }
+function calcTotal(){
+  let t=0;
+  document.querySelectorAll('#itensBox .item-row').forEach(r=>{ t += Number(r.querySelectorAll('input')[1].value)||0; });
+  document.getElementById('totalView').textContent = brl(t);
+  return t;
+}
+function lerItens(){
+  return [...document.querySelectorAll('#itensBox .item-row')].map(r=>{
+    const ins=r.querySelectorAll('input');
+    return { nome: ins[0].value, valor: Number(ins[1].value)||0 };
+  }).filter(x=>x.nome||x.valor);
+}
+
+// ── MODAL ──
+function abrirNovo(){
+  document.getElementById('formTitle').textContent='Novo orçamento';
+  document.getElementById('f_id').value='';
+  document.getElementById('f_cliente').value='';
+  document.getElementById('f_titulo').value='';
+  document.getElementById('f_status').value='rascunho';
+  document.getElementById('f_link').value='';
+  document.getElementById('f_obs').value='';
+  document.getElementById('itensBox').innerHTML='';
+  addItem();
+  document.getElementById('delBtn').style.display='none';
+  calcTotal();
+  document.getElementById('modal').classList.add('show');
+}
+function abrirEdit(i){
+  const o=ORCS[i];
+  document.getElementById('formTitle').textContent='Editar orçamento';
+  document.getElementById('f_id').value=o.id;
+  document.getElementById('f_cliente').value=o.cliente||'';
+  document.getElementById('f_titulo').value=o.titulo||'';
+  document.getElementById('f_status').value=o.status||'rascunho';
+  document.getElementById('f_link').value=o.link||'';
+  document.getElementById('f_obs').value=o.observacoes||'';
+  document.getElementById('itensBox').innerHTML='';
+  const itens = Array.isArray(o.itens)?o.itens:[];
+  if(itens.length) itens.forEach(it=>addItem(it.nome,it.valor)); else addItem();
+  document.getElementById('delBtn').style.display='inline-flex';
+  calcTotal();
+  document.getElementById('modal').classList.add('show');
+}
+function fecharModal(){ document.getElementById('modal').classList.remove('show'); }
+
+function salvar(){
+  const o={
+    id: document.getElementById('f_id').value || undefined,
+    cliente: document.getElementById('f_cliente').value,
+    titulo: document.getElementById('f_titulo').value,
+    status: document.getElementById('f_status').value,
+    itens: lerItens(),
+    valor_total: calcTotal(),
+    link: document.getElementById('f_link').value,
+    observacoes: document.getElementById('f_obs').value,
+  };
+  const action = o.id ? 'update' : 'create';
+  call(action,{orcamento:o}).then(()=>refresh('Orçamento salvo!')).catch(()=>toast('Erro ao salvar.'));
+}
+function excluir(){
+  const id=document.getElementById('f_id').value;
+  if(!id) return;
+  if(!confirm('Excluir este orçamento? Não dá pra desfazer.')) return;
+  call('delete',{id}).then(()=>refresh('Orçamento excluído.')).catch(()=>toast('Erro ao excluir.'));
+}
+function refresh(msg){
+  call('list',{}).then(d=>{ ORCS=d.orcamentos||[]; render(); fecharModal(); toast(msg); });
+}
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+</script>
+</body>
+</html>
