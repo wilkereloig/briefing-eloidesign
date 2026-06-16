@@ -114,7 +114,10 @@
         radial-gradient(58% 42% at 18% 5%,rgba(157,78,221,.32),transparent 60%),
         radial-gradient(55% 42% at 88% 0%,rgba(123,44,191,.26),transparent 60%)!important}
       .actions,.aurora{display:none!important}
-      .section{background:rgba(36,0,70,.55)!important;border:1px solid var(--c800)!important;break-inside:avoid}
+      /* seção pode quebrar entre blocos; blocos pequenos ficam inteiros */
+      .section{background:rgba(36,0,70,.55)!important;border:1px solid var(--c800)!important;break-inside:auto}
+      .section h2,.phase-label{break-after:avoid}
+      .rule,.tl,.deliv li,.invest tr,.terms .t,.total-row,.totals,.note,.cover{break-inside:avoid}
       .cover .logo path{fill:#fff!important}
       .logo-tag{color:#fff!important}
     }
