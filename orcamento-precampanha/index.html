@@ -53,6 +53,19 @@
     .rule.ok li::before{content:'✓';position:absolute;left:0;color:#86efac}
     .rule.no li::before{content:'✕';position:absolute;left:0;color:#fca5a5}
 
+    /* timeline */
+    .timeline{margin-top:22px;position:relative;padding-left:28px}
+    .timeline::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--c700),var(--c500))}
+    .tl{position:relative;padding-bottom:18px}
+    .tl:last-child{padding-bottom:0}
+    .tl::before{content:'';position:absolute;left:-26px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--c500);border:2px solid var(--c950)}
+    .tl.key::before{background:#fff;box-shadow:0 0 0 3px var(--c600)}
+    .tl .date{font-size:.78rem;font-variation-settings:'wght' 700;color:var(--c300);letter-spacing:.03em}
+    .tl .ev{font-size:.92rem;color:var(--white);margin-top:1px}
+    .tl .ev small{display:block;color:var(--c300);font-size:.8rem;opacity:.85}
+
+    .phase-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--c500);font-variation-settings:'wght' 700;margin:24px 0 8px}
+
     /* entregas */
     .deliv{list-style:none;display:flex;flex-direction:column;gap:12px}
     .deliv li{display:flex;gap:12px;align-items:flex-start;font-size:.95rem}
@@ -108,19 +121,30 @@
   <!-- CAPA -->
   <header class="cover">
     <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750.94 177.34" aria-label="ELOI Design Studio"><path fill="#fff" d="M29.56,169.41c-9.77-5.29-17.14-12.61-22.11-21.99-4.97-9.37-7.45-20.22-7.45-32.56s2.52-24.03,7.57-33.64c5.05-9.61,12.41-17.02,22.11-22.23,9.69-5.2,21.42-7.81,35.2-7.81s25.11,2.49,34.48,7.45c9.37,4.97,16.5,12.01,21.39,21.15,4.88,9.13,7.41,19.94,7.57,32.44v5.77c0,.96-.08,1.92-.24,2.88H15.86l.48-19.46h87.47l-11.29,12.02c.64-8.65.04-15.86-1.8-21.63-1.84-5.77-4.97-10.13-9.37-13.1-4.41-2.96-10.06-4.45-16.94-4.45-7.53,0-13.58,1.8-18.14,5.41-4.57,3.6-7.81,8.29-9.73,14.06s-2.88,12.34-2.88,19.7c0,8.33,1.24,15.42,3.72,21.27,2.48,5.85,6.17,10.25,11.05,13.22,4.88,2.97,10.85,4.45,17.9,4.45,7.53,0,13.61-1.4,18.26-4.2,4.64-2.8,7.69-6.37,9.13-10.69h33.16c-2.88,12.98-9.65,22.87-20.3,29.68-10.66,6.81-24.47,10.21-41.45,10.21-13.94,0-25.79-2.64-35.56-7.93Z"/><path fill="#fff" d="M192.12,170.01c-6.97-3.44-12.1-8.97-15.38-16.58-3.29-7.61-4.93-17.66-4.93-30.16V34.36h-43.49V6.97h54.79c5.44,0,9.73.72,12.86,2.16,3.12,1.44,5.41,3.72,6.85,6.85s2.16,7.41,2.16,12.86v96.6c0,5.29.56,9.53,1.68,12.74,1.12,3.21,3.12,5.61,6.01,7.21,2.88,1.6,6.89,2.4,12.01,2.4h31.24v27.39h-37.25c-10.73,0-19.58-1.72-26.55-5.17Z"/><path fill="#fff" d="M300.97,169.29c-9.53-5.37-16.7-12.77-21.51-22.23-4.81-9.45-7.21-20.5-7.21-33.16s2.4-23.23,7.21-32.68c4.81-9.45,12.02-16.82,21.63-22.11,9.61-5.29,21.3-7.93,35.08-7.93s25.43,2.64,34.96,7.93c9.53,5.29,16.74,12.66,21.63,22.11,4.88,9.45,7.33,20.35,7.33,32.68s-2.44,23.71-7.33,33.16c-4.89,9.45-12.1,16.86-21.63,22.23-9.53,5.37-21.19,8.05-34.96,8.05s-25.67-2.68-35.2-8.05ZM358.88,140.46c5.05-6.17,7.57-15.02,7.57-26.55,0-7.37-1.12-13.66-3.36-18.86-2.25-5.2-5.61-9.21-10.09-12.01-4.49-2.8-10.17-4.21-17.06-4.21-9.93,0-17.42,3.05-22.47,9.13-5.04,6.09-7.57,14.74-7.57,25.95,0,7.69,1.12,14.18,3.36,19.46,2.24,5.29,5.6,9.33,10.09,12.13,4.48,2.81,10.01,4.21,16.58,4.21,10.25,0,17.9-3.08,22.95-9.25Z"/><path fill="#fff" d="M415.71,147.78h48.3v-67.04h-43.01v-27.39h54.31c5.61,0,9.97.68,13.1,2.04,3.12,1.36,5.37,3.6,6.73,6.73,1.36,3.12,2.04,7.49,2.04,13.1v72.57h43.97v27.39h-125.44v-27.39ZM462.81,31.6c-3.69-3.12-5.53-7.73-5.53-13.82s1.8-10.57,5.41-13.46c3.61-2.88,9.01-4.33,16.22-4.33s12.57,1.44,16.1,4.33c3.52,2.88,5.29,7.37,5.29,13.46s-1.77,10.69-5.29,13.82c-3.53,3.12-8.89,4.69-16.1,4.69s-12.42-1.56-16.1-4.69Z"/></svg>
-    <div class="eyebrow">Proposta · Fase Pré-Campanha</div>
-    <h1>Identidade Visual de Pré-Campanha</h1>
-    <p class="sub">Construção da base estratégica e visual da campanha para <span class="editable" contenteditable="true">[Nome da Candidata]</span> — Eleições 2026.</p>
+    <div class="eyebrow">Proposta · Eleições 2026</div>
+    <h1>Identidade &amp; Produção de Campanha</h1>
+    <p class="sub">Da construção da marca à operação diária de campanha para <span class="editable" contenteditable="true">[Nome da Candidata]</span> — Eleições 2026.</p>
     <p class="para">Preparado por ELOI Design Studio · <span class="editable" contenteditable="true">[data]</span></p>
   </header>
 
   <!-- CONTEXTO -->
   <section class="section">
-    <h2><span class="n">1</span> O Momento</h2>
-    <p class="lead">A pré-campanha é a fase de <strong>construção de imagem e posicionamento</strong>, antes da disputa oficial pelo voto. É aqui que a candidata se firma como nome forte, consolida suas causas e prepara o terreno para a convenção do partido. Tudo dentro das regras do TSE.</p>
+    <h2><span class="n">1</span> As Duas Fases da Eleição 2026</h2>
+    <p class="lead">A produção visual segue o calendário do TSE e muda <strong>radicalmente</strong> de uma fase para a outra. Esta proposta cobre as duas: a construção da base na <strong>pré-campanha</strong> e a operação intensa da <strong>campanha oficial</strong>.</p>
+
+    <div class="timeline">
+      <div class="tl key"><div class="date">05 JUL 2026</div><div class="ev">Início da propaganda intrapartidária<small>A marca já precisa estar pronta para a disputa interna do partido.</small></div></div>
+      <div class="tl"><div class="date">20 JUL – 05 AGO</div><div class="ev">Convenções partidárias<small>Confirmação dos nomes e definição das coligações.</small></div></div>
+      <div class="tl"><div class="date">15 AGO 2026</div><div class="ev">Fim da pré-campanha<small>Último dia para registro da candidatura.</small></div></div>
+      <div class="tl key"><div class="date">16 AGO 2026</div><div class="ev">Início da campanha oficial<small>Liberação total: número de urna, pedido de voto, santinhos, impulsionamento.</small></div></div>
+      <div class="tl key"><div class="date">04 OUT 2026</div><div class="ev">1º turno das eleições<small>50 dias de campanha oficial em ritmo acelerado.</small></div></div>
+      <div class="tl"><div class="date">25 OUT 2026</div><div class="ev">Eventual 2º turno<small>Se aplicável — produção orçada à parte.</small></div></div>
+    </div>
+
+    <div class="phase-label">Fase 1 · Pré-Campanha (até 15/08)</div>
     <div class="rules">
       <div class="rule ok">
-        <h4>Pode (foco desta fase)</h4>
+        <h4>Pode</h4>
         <ul>
           <li>Posicionamento de ideias e causas</li>
           <li>Histórico e trajetória profissional</li>
@@ -138,12 +162,34 @@
         </ul>
       </div>
     </div>
+
+    <div class="phase-label">Fase 2 · Campanha Oficial (16/08 a 04/10)</div>
+    <div class="rules">
+      <div class="rule ok">
+        <h4>Agora pode (e deve)</h4>
+        <ul>
+          <li>Número de urna em destaque</li>
+          <li>Pedido explícito de voto</li>
+          <li>Material de rua: santinhos, wind banners, bandeiras</li>
+          <li>Impulsionamento pago nas redes</li>
+        </ul>
+      </div>
+      <div class="rule no">
+        <h4>Obrigatório por lei</h4>
+        <ul>
+          <li>Dados legais do TSE nos impressos (CNPJ, coligação, tiragem)</li>
+          <li>Visual distinto do material de pré-campanha</li>
+          <li>Volume diário de produção (redes + impressos)</li>
+          <li>Ritmo acelerado nos 50 dias</li>
+        </ul>
+      </div>
+    </div>
   </section>
 
-  <!-- ENTREGAS -->
+  <!-- ENTREGAS FASE 1 -->
   <section class="section">
-    <h2><span class="n">2</span> Entregas — Branding & Identidade</h2>
-    <p class="lead" style="margin-bottom:18px">Sistema visual completo que serve de base para toda a comunicação da pré-campanha:</p>
+    <h2><span class="n">2</span> Fase 1 — Branding &amp; Identidade</h2>
+    <p class="lead" style="margin-bottom:18px">Sistema visual completo que serve de base para toda a comunicação da campanha:</p>
     <ul class="deliv">
       <li><span class="dot">◆</span> <span><strong>Marca da campanha</strong> — construção do símbolo/assinatura visual da candidata.</span></li>
       <li><span class="dot">◆</span> <span><strong>Paleta de cores</strong> oficial e <strong>tipografia</strong> da campanha.</span></li>
@@ -152,18 +198,35 @@
     </ul>
   </section>
 
+  <!-- ENTREGAS FASE 2 -->
+  <section class="section">
+    <h2><span class="n">3</span> Fase 2 — Campanha Oficial (Produção)</h2>
+    <p class="lead" style="margin-bottom:18px">Operação de produção diária durante os 50 dias de campanha, em fee mensal (agosto e setembro):</p>
+    <ul class="deliv">
+      <li><span class="dot">◆</span> <span><strong>Desdobramento diário de artes</strong> para redes sociais (feed e stories).</span></li>
+      <li><span class="dot">◆</span> <span><strong>Banners de WhatsApp</strong> e <strong>thumbnails de vídeos</strong>.</span></li>
+      <li><span class="dot">◆</span> <span><strong>Fechamento de arquivos para gráfica</strong> — santinhos, praguinhas, wind banners, bandeiras, etc.</span></li>
+      <li><span class="dot">◆</span> <span><strong>Aplicação do número de urna</strong> e dos <strong>dados legais do TSE</strong> exigidos em cada peça.</span></li>
+    </ul>
+  </section>
+
   <!-- INVESTIMENTO -->
   <section class="section">
-    <h2><span class="n">3</span> Investimento</h2>
+    <h2><span class="n">4</span> Investimento</h2>
     <table class="invest">
       <thead>
         <tr><th>Módulo</th><th>Pagamento</th><th class="val">Valor</th></tr>
       </thead>
       <tbody>
         <tr>
-          <td><div class="item-name">Pré-Campanha · Branding & Identidade</div><div class="item-desc">Marca, paleta, tipografia, manual e templates mestre de redes.</div></td>
+          <td><div class="item-name">Fase 1 · Branding &amp; Identidade</div><div class="item-desc">Marca, paleta, tipografia, manual e templates mestre de redes.</div></td>
           <td>À vista ou 2x (sinal + entrega)</td>
           <td class="val">R$ 6.000,00</td>
+        </tr>
+        <tr>
+          <td><div class="item-name">Fase 2 · Campanha Oficial (fee mensal)</div><div class="item-desc">Produção diária de redes e impressos. Mensalidade em agosto e setembro.</div></td>
+          <td>Mensal — Ago e Set (2x)</td>
+          <td class="val">R$ 10.000,00<br><span style="font-size:.78rem;font-variation-settings:'wght' 400;color:var(--c300)">por mês</span></td>
         </tr>
         <tr class="opt">
           <td><div class="item-name">Landing Page / Site <span class="opt-tag">Opcional</span></div><div class="item-desc">Site responsivo para apresentação de propostas, captação de voluntários e integração com plataforma de doações.</div></td>
@@ -171,7 +234,7 @@
           <td class="val">R$ 5.000,00</td>
         </tr>
         <tr class="opt">
-          <td><div class="item-name">Motion Design <span class="opt-tag">Opcional</span></div><div class="item-desc">Até 8 inserções animadas — vinhetas, lower thirds e transições para vídeos de posicionamento.</div></td>
+          <td><div class="item-name">Motion Design <span class="opt-tag">Opcional</span></div><div class="item-desc">Até 8 inserções animadas — vinhetas, lower thirds e transições para vídeos.</div></td>
           <td>Projeto fechado</td>
           <td class="val">R$ 2.500,00</td>
         </tr>
@@ -179,23 +242,26 @@
     </table>
 
     <div class="totals">
-      <div class="total-row main"><span class="lbl">Investimento base (Branding)</span><span class="v">R$ 6.000,00</span></div>
-      <div class="total-row"><span class="lbl">Com os 2 opcionais</span><span class="v">R$ 13.500,00</span></div>
+      <div class="total-row"><span class="lbl">Fase 1 — Branding</span><span class="v">R$ 6.000,00</span></div>
+      <div class="total-row"><span class="lbl">Fase 2 — Campanha Oficial (2 meses)</span><span class="v">R$ 20.000,00</span></div>
+      <div class="total-row main"><span class="lbl">Total essencial (Fase 1 + Fase 2)</span><span class="v">R$ 26.000,00</span></div>
+      <div class="total-row"><span class="lbl">Com os 2 opcionais</span><span class="v">R$ 33.500,00</span></div>
     </div>
   </section>
 
   <!-- CONDIÇÕES -->
   <section class="section">
-    <h2><span class="n">4</span> Prazos & Condições</h2>
+    <h2><span class="n">5</span> Prazos & Condições</h2>
     <div class="terms">
-      <div class="t"><b>Entrega ideal</b><span>Branding finalizado <strong>antes de 05/07/2026</strong> — início da propaganda intrapartidária. A marca precisa estar pronta para a fase interna do partido.</span></div>
+      <div class="t"><b>Entrega Fase 1</b><span>Branding finalizado <strong>antes de 05/07/2026</strong> — início da propaganda intrapartidária. A marca precisa estar pronta para a fase interna do partido.</span></div>
+      <div class="t"><b>Fase 2</b><span>Fee mensal de produção, faturado em <strong>agosto e setembro</strong>, cobrindo a operação diária até o 1º turno (04/10).</span></div>
       <div class="t"><b>Validade</b><span>Esta proposta é válida por 15 dias.</span></div>
-      <div class="t"><b>Pagamento</b><span>Branding: à vista ou 2x (sinal para início + saldo na entrega). Opcionais: projeto fechado, 50% início / 50% entrega.</span></div>
+      <div class="t"><b>Pagamento</b><span>Branding: à vista ou 2x (sinal + entrega). Fee: mensalidade no início de cada mês. Opcionais: 50% início / 50% entrega.</span></div>
       <div class="t"><b>Inclui</b><span>Rodadas de ajuste conforme contrato. Arquivos finais abertos e para aplicação.</span></div>
     </div>
 
     <div class="note">
-      <strong>Importante — Campanha Oficial é orçada à parte.</strong> A partir de 16/08/2026, a lei exige material visualmente distinto (número de urna, pedido de voto, dados legais do TSE). O pacote de campanha oficial (fee mensal de produção) será apresentado em proposta separada, no momento certo.
+      <strong>Eventual 2º turno (25/10/2026) é orçado à parte.</strong> Caso a candidata avance para o segundo turno, o período adicional de produção (≈3 semanas em ritmo intenso) será acordado em aditivo, no momento certo.
     </div>
   </section>
 
