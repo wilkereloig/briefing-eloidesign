@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Área Admin — ELOI Design Studio</title>
+  <title>Aplicativos — ELOI Design Studio</title>
   <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -35,13 +35,17 @@
     .hub .sub{text-align:center;color:var(--c300);font-size:.9rem;margin-bottom:28px}
     .cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
     @media(max-width:520px){.cards{grid-template-columns:1fr}}
-    .nav-card{display:block;text-decoration:none;color:#fff;padding:30px 26px;transition:border-color .2s,transform .15s,background .2s;cursor:pointer}
+    .nav-card{display:block;text-decoration:none;color:#fff;padding:30px 26px;transition:border-color .2s,transform .15s,background .2s;cursor:pointer;position:relative}
     .nav-card:hover{border-color:var(--c500);transform:translateY(-3px);background:rgba(45,0,85,.7)}
     .nav-card .ic{font-size:2rem;margin-bottom:14px;display:block}
-    .nav-card .t{font-size:1.1rem;font-variation-settings:'wght' 600;margin-bottom:4px}
+    .nav-card .t{font-size:1.1rem;font-variation-settings:'wght' 600;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+    .nav-card .t .ext{font-size:.7rem;color:var(--c300);border:1px solid var(--c700);border-radius:6px;padding:1px 7px;font-variation-settings:'wght' 500}
     .nav-card .d{font-size:.82rem;color:var(--c300)}
-    .logout{display:block;margin:24px auto 0;background:transparent;border:1px solid var(--c800);color:var(--c300);font-family:var(--font);font-size:.82rem;padding:9px 20px;border-radius:8px;cursor:pointer;transition:border-color .2s}
-    .logout:hover{border-color:var(--c500)}
+    .nav-card.soon{opacity:.45;pointer-events:none}
+    .nav-card.soon .t .ext{border-color:var(--c800)}
+    .actions{display:flex;gap:12px;justify-content:center;margin-top:24px}
+    .btn-ghost{background:transparent;border:1px solid var(--c800);color:var(--c300);font-family:var(--font);font-size:.82rem;text-decoration:none;padding:9px 20px;border-radius:8px;cursor:pointer;transition:border-color .2s}
+    .btn-ghost:hover{border-color:var(--c500)}
   </style>
 </head>
 <body>
@@ -52,7 +56,7 @@
 
   <!-- LOGIN -->
   <div class="card-base login" id="loginView">
-    <h1>Área Administrativa</h1>
+    <h1>Aplicativos</h1>
     <input type="password" id="pw" placeholder="Senha de acesso" autocomplete="current-password">
     <button onclick="entrar()">Entrar</button>
     <div class="err" id="err"></div>
@@ -60,26 +64,24 @@
 
   <!-- HUB -->
   <div class="hub" id="hubView">
-    <h1>Painel ELOI</h1>
-    <p class="sub">Selecione o que deseja gerenciar</p>
+    <h1>Aplicativos ELOI</h1>
+    <p class="sub">Seus apps num só lugar</p>
     <div class="cards">
-      <a class="card-base nav-card" href="/painel/">
-        <span class="ic">📋</span>
-        <div class="t">Briefings</div>
-        <div class="d">Briefings recebidos dos clientes, cores e pendências.</div>
+      <a class="card-base nav-card" href="https://eloi-financeiro.vercel.app" target="_blank" rel="noopener">
+        <span class="ic">💸</span>
+        <div class="t">ELOI Financeiro <span class="ext">abre ↗</span></div>
+        <div class="d">Controle financeiro pessoal + empresa. Lançamentos, cartões, relatórios.</div>
       </a>
-      <a class="card-base nav-card" href="/painel-orcamentos/">
-        <span class="ic">💰</span>
-        <div class="t">Orçamentos</div>
-        <div class="d">Criar, editar e acompanhar orçamentos e propostas.</div>
-      </a>
-      <a class="card-base nav-card" href="/aplicativos/">
-        <span class="ic">🧩</span>
-        <div class="t">Aplicativos</div>
-        <div class="d">Seus apps ELOI num só lugar — Financeiro e mais.</div>
-      </a>
+      <span class="card-base nav-card soon">
+        <span class="ic">🗓️</span>
+        <div class="t">Rotina AI <span class="ext">em breve</span></div>
+        <div class="d">Agenda viva com IA, medicação, treino e hábitos.</div>
+      </span>
     </div>
-    <button class="logout" onclick="sair()">Sair</button>
+    <div class="actions">
+      <a class="btn-ghost" href="/admin/">← Voltar ao painel</a>
+      <button class="btn-ghost" onclick="sair()">Sair</button>
+    </div>
   </div>
 </div>
 
