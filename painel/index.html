@@ -264,7 +264,7 @@ function renderList(){
     return `<div class="card" onclick="openDetail(${i})">
       <div class="card-empresa">${esc(b.q1||b.nome||'Sem nome')}</div>
       <div class="card-nome">${esc(b.nome||'')}</div>
-      <div class="card-meta"><span class="card-tag">${esc(mapVal('q12',b.q12)||'—')}</span><span>${dt}</span></div>
+      <div class="card-meta"><span class="card-tag">${esc(mapVal('q12',b.q12)||'—')}</span><span>#${b.numero||'—'} · ${dt}</span></div>
       ${dots?`<div class="card-mini-colors">${dots}</div>`:''}
     </div>`;
   }).join('');
@@ -291,7 +291,7 @@ function openDetail(i){
     <button class="back-btn" onclick="renderList()">← Voltar à lista</button>
     <div class="detail-head">
       <h2>${esc(b.q1||b.nome||'Briefing')}</h2>
-      <div class="sub">Recebido em ${dt}</div>
+      <div class="sub">Briefing #${b.numero||'—'} · Recebido em ${dt}</div>
       <div class="contact-row">
         <span>👤 ${esc(b.nome||'—')}</span>
         ${b.email?`<a href="mailto:${esc(b.email)}">✉️ ${esc(b.email)}</a>`:''}

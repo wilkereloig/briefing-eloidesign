@@ -212,7 +212,7 @@ function render(){
       <div class="cli">${esc(o.cliente||'—')}</div>
       <div class="tit">${esc(o.titulo||'Sem título')}</div>
       <div class="row"><span class="valor">${brl(o.valor_total)}</span><span class="badge ${st}">${st}</span></div>
-      <div class="dt">${dt}</div>
+      <div class="dt">#${o.numero||'—'} · ${dt}</div>
     </div>`;
   }).join('');
 }
@@ -235,17 +235,20 @@ function abrirView(i){
     <div class="v-itens">${linhas}</div>
     <div class="v-total"><span>Total</span><strong>${brl(o.valor_total)}</strong></div>
     ${o.observacoes?`<div class="v-obs"><div class="v-obs-lbl">Observações</div>${esc(o.observacoes)}</div>`:''}
-    <div class="v-dt">Criado em ${dt}</div>`;
+    <div class="v-dt">Orçamento #${o.numero||'—'} · Criado em ${dt}</div>`;
   const lk=document.getElementById('viewLink');
   if(o.link){ lk.href=o.link; lk.style.display='inline-flex'; } else { lk.style.display='none'; }
   document.getElementById('viewModal').classList.add('show');
 }
 function fecharView(){ document.getElementById('viewModal').classList.remove('show'); }
 function editarDoView(){ fecharView(); abrirEdit(VIEW_I); }
-function linkPublico(o){ return location.origin + '/orcamento/?t=' + (o&&o.share_token?o.share_token:''); }
+function linkPublico(o){
+  if(o && o.link){ return /^https?:/i.test(o.link) ? o.link : location.origin + o.link; }
+  return location.origin + '/orcamento/?t=' + (o&&o.share_token?o.share_token:'');
+}
 function copiarLink(){
   const o=ORCS[VIEW_I];
-  if(!o||!o.share_token){ toast('Recarregue a lista e tente de novo.'); return; }
+  if(!o||(!o.link&&!o.share_token)){ toast('Recarregue a lista e tente de novo.'); return; }
   const url=linkPublico(o);
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(url).then(()=>toast('Link copiado!')).catch(()=>prompt('Copie o link do orçamento:',url));
@@ -253,7 +256,7 @@ function copiarLink(){
 }
 function abrirWhatsApp(){
   const o=ORCS[VIEW_I];
-  if(!o||!o.share_token){ toast('Recarregue a lista e tente de novo.'); return; }
+  if(!o||(!o.link&&!o.share_token)){ toast('Recarregue a lista e tente de novo.'); return; }
   const msg='Olá! Segue o orçamento'+(o.titulo?' "'+o.titulo+'"':'')+': '+linkPublico(o);
   window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener');
 }
