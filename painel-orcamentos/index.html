@@ -33,7 +33,7 @@
     .top h1{font-size:1rem;color:var(--c100);font-variation-settings:'wght' 500}
     .back{color:var(--c300);text-decoration:none;font-size:.85rem;border:1px solid var(--c800);padding:8px 14px;border-radius:8px;transition:border-color .2s}
     .back:hover{border-color:var(--c500)}
-    .btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:10px;font-family:var(--font);font-size:.9rem;font-variation-settings:'wght' 600;padding:11px 20px;cursor:pointer;transition:background .2s,transform .15s}
+    .btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:10px;font-family:var(--font);font-size:.9rem;font-variation-settings:'wght' 600;padding:11px 20px;cursor:pointer;transition:background .2s,transform .15s;text-decoration:none}
     .btn-primary{background:var(--c700);color:#fff}.btn-primary:hover{background:var(--c600);transform:translateY(-1px)}
     .btn-ghost{background:transparent;color:var(--c100);border:1px solid var(--c800)}.btn-ghost:hover{border-color:var(--c500)}
     .btn-danger{background:transparent;color:#f87171;border:1px solid rgba(248,113,113,.4)}.btn-danger:hover{background:rgba(248,113,113,.12)}
@@ -75,6 +75,18 @@
     .add-item{background:transparent;border:1px dashed var(--c700);color:var(--c100);border-radius:8px;padding:8px;width:100%;cursor:pointer;font-family:var(--font);font-size:.85rem}
     .total-line{text-align:right;font-size:1.1rem;font-variation-settings:'wght' 700;color:var(--c100);margin:10px 0 18px}
     .form-actions{display:flex;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-top:8px}
+    /* view modal */
+    .v-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:18px}
+    .v-cli{font-size:.82rem;color:var(--c300);margin-bottom:2px}
+    .v-itens{border-top:1px solid var(--c800);margin-bottom:6px}
+    .v-item{display:flex;justify-content:space-between;gap:14px;padding:11px 2px;border-bottom:1px solid var(--c800);font-size:.92rem}
+    .v-item span:last-child{color:var(--c100);font-variation-settings:'wght' 600;white-space:nowrap}
+    .v-empty{padding:14px 2px;color:var(--c300);font-size:.9rem}
+    .v-total{display:flex;justify-content:space-between;font-size:1.12rem;margin:14px 0 16px}
+    .v-total strong{color:var(--c100);font-variation-settings:'wght' 700}
+    .v-obs{background:rgba(157,78,221,.1);border:1px solid var(--c800);border-radius:10px;padding:12px 14px;font-size:.9rem;color:var(--c100);margin-bottom:14px;white-space:pre-wrap}
+    .v-obs-lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--c300);margin-bottom:5px}
+    .v-dt{font-size:.75rem;color:var(--c300);opacity:.7;margin-bottom:4px}
     .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--c700);color:#fff;padding:13px 24px;border-radius:12px;font-size:.9rem;font-variation-settings:'wght' 600;z-index:90;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
     .toast.show{transform:translateX(-50%) translateY(0)}
   </style>
@@ -102,6 +114,20 @@
     <button class="btn btn-primary" onclick="abrirNovo()">+ Novo orçamento</button>
   </div>
   <div id="listView" class="grid"></div>
+</div>
+
+<!-- MODAL VIEW -->
+<div class="modal" id="viewModal">
+  <div class="form-card">
+    <div id="viewBody"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="fecharView()">Fechar</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <a class="btn btn-ghost" id="viewLink" href="#" target="_blank" rel="noopener" style="display:none">Abrir proposta ↗</a>
+        <button class="btn btn-primary" onclick="editarDoView()">Editar</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL FORM -->
@@ -180,7 +206,7 @@ function render(){
   lv.innerHTML = ORCS.map((o,i)=>{
     const dt = o.created_at ? new Date(o.created_at).toLocaleDateString('pt-BR') : '';
     const st = o.status||'rascunho';
-    return `<div class="card" onclick="abrirEdit(${i})">
+    return `<div class="card" onclick="abrirView(${i})">
       <div class="cli">${esc(o.cliente||'—')}</div>
       <div class="tit">${esc(o.titulo||'Sem título')}</div>
       <div class="row"><span class="valor">${brl(o.valor_total)}</span><span class="badge ${st}">${st}</span></div>
@@ -188,6 +214,32 @@ function render(){
     </div>`;
   }).join('');
 }
+
+// ── VIEW ──
+let VIEW_I = -1;
+function abrirView(i){
+  const o=ORCS[i]; VIEW_I=i;
+  const itens = Array.isArray(o.itens)?o.itens:[];
+  const st=o.status||'rascunho';
+  const dt=o.created_at?new Date(o.created_at).toLocaleDateString('pt-BR'):'';
+  const linhas = itens.length
+    ? itens.map(it=>`<div class="v-item"><span>${esc(it.nome||'—')}</span><span>${brl(it.valor)}</span></div>`).join('')
+    : '<div class="v-empty">Sem itens cadastrados.</div>';
+  document.getElementById('viewBody').innerHTML = `
+    <div class="v-head">
+      <div><div class="v-cli">${esc(o.cliente||'—')}</div><h2 style="margin:0">${esc(o.titulo||'Sem título')}</h2></div>
+      <span class="badge ${st}">${st}</span>
+    </div>
+    <div class="v-itens">${linhas}</div>
+    <div class="v-total"><span>Total</span><strong>${brl(o.valor_total)}</strong></div>
+    ${o.observacoes?`<div class="v-obs"><div class="v-obs-lbl">Observações</div>${esc(o.observacoes)}</div>`:''}
+    <div class="v-dt">Criado em ${dt}</div>`;
+  const lk=document.getElementById('viewLink');
+  if(o.link){ lk.href=o.link; lk.style.display='inline-flex'; } else { lk.style.display='none'; }
+  document.getElementById('viewModal').classList.add('show');
+}
+function fecharView(){ document.getElementById('viewModal').classList.remove('show'); }
+function editarDoView(){ fecharView(); abrirEdit(VIEW_I); }
 
 // ── ITENS ──
 function itemRow(nome,valor){
