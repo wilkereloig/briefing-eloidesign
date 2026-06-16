@@ -14,6 +14,7 @@ Repositório único do **site completo** (GitHub: `wilkereloig/briefing-eloidesi
 | `/orcamento-inteligente/` | `orcamento-inteligente/index.html` | Calculador de orçamento por catálogo de serviços (Supabase) + multiplicadores; gera orçamento no painel |
 | `/aplicativos/` | `aplicativos/index.html` | Meus aplicativos (ex.: ELOI Financeiro) |
 | `/orcamento-precampanha/` | `orcamento-precampanha/index.html` | Modelo de orçamento (proposta pré-campanha) |
+| `/orcamento/?t=<token>` | `orcamento/index.html` | **Público / view-only** — cliente visualiza 1 orçamento via token secreto (`share_token`). Sem login, sem links pro admin. Lê via edge `public_get` (só cliente/título/itens/total/data). Botão "Copiar link"/WhatsApp no painel-orcamentos gera o link. |
 
 ## Marca / Logo
 - Logo oficial = wordmark **"ELOI Design Studio"** (SVG inline, `viewBox 0 0 750.94 177.34`, **16 paths**, branco `#fff` via `.cls-1`).

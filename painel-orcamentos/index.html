@@ -122,8 +122,10 @@
     <div id="viewBody"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="fecharView()">Fechar</button>
-      <div style="display:flex;gap:10px;margin-left:auto">
+      <div style="display:flex;gap:10px;margin-left:auto;flex-wrap:wrap">
         <a class="btn btn-ghost" id="viewLink" href="#" target="_blank" rel="noopener" style="display:none">Abrir proposta ↗</a>
+        <button class="btn btn-ghost" onclick="copiarLink()">🔗 Copiar link</button>
+        <button class="btn btn-ghost" onclick="abrirWhatsApp()">WhatsApp</button>
         <button class="btn btn-primary" onclick="editarDoView()">Editar</button>
       </div>
     </div>
@@ -240,6 +242,21 @@ function abrirView(i){
 }
 function fecharView(){ document.getElementById('viewModal').classList.remove('show'); }
 function editarDoView(){ fecharView(); abrirEdit(VIEW_I); }
+function linkPublico(o){ return location.origin + '/orcamento/?t=' + (o&&o.share_token?o.share_token:''); }
+function copiarLink(){
+  const o=ORCS[VIEW_I];
+  if(!o||!o.share_token){ toast('Recarregue a lista e tente de novo.'); return; }
+  const url=linkPublico(o);
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>toast('Link copiado!')).catch(()=>prompt('Copie o link do orçamento:',url));
+  } else { prompt('Copie o link do orçamento:',url); }
+}
+function abrirWhatsApp(){
+  const o=ORCS[VIEW_I];
+  if(!o||!o.share_token){ toast('Recarregue a lista e tente de novo.'); return; }
+  const msg='Olá! Segue o orçamento'+(o.titulo?' "'+o.titulo+'"':'')+': '+linkPublico(o);
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank','noopener');
+}
 
 // ── ITENS ──
 function itemRow(nome,valor){
