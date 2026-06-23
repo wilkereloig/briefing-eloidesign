@@ -1295,17 +1295,18 @@
     const SUPA_URL = 'https://nlamznxoocmygfvnqcns.supabase.co';
     const SUPA_KEY = 'sb_publishable_QkKAqMUIklyCSj_3DAKA6g_mtEw2vhR';
 
-    // grava no Supabase (painel) + envia ao Formspree (email) em paralelo
-    const toSupabase = fetch(SUPA_URL + '/rest/v1/briefings', {
-      method: 'POST',
-      headers: {
-        'apikey': SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ ...obj, raw: obj })
-    });
+    // se veio por link com token, grava via edge (briefing_links); senão, tabela direta
+    const TOKEN = new URLSearchParams(location.search).get('t');
+    const toSupabase = TOKEN
+      ? fetch(SUPA_URL + '/functions/v1/briefing-submit', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: TOKEN, raw: obj })
+        })
+      : fetch(SUPA_URL + '/rest/v1/briefings', {
+          method: 'POST',
+          headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ ...obj, raw: obj })
+        });
 
     const toFormspree = fetch('https://formspree.io/f/xpqeraow', {
       method: 'POST',

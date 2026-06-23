@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Briefings — ELOI Design Studio</title>
+  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --c950: #10002B; --c900: #240046; --c800: #3C096C; --c700: #5A189A;
+      --c600: #7B2CBF; --c500: #9D4EDD; --c300: #C77DFF; --c100: #E0AAFF;
+      --white: #FFFFFF; --font: 'carbona-variable', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--c950); color: var(--white); min-height: 100vh; line-height: 1.6; }
+    a { color: var(--c300); }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .topbar h1 { font-size: 1.5rem; font-variation-settings: 'wght' 700; letter-spacing: -0.02em; }
+    .topbar .sub { font-size: 0.85rem; color: var(--c300); }
+    .btn { background: var(--c700); border: none; border-radius: 10px; color: #fff; font-family: var(--font); font-size: 0.9rem; font-variation-settings: 'wght' 600; padding: 11px 20px; cursor: pointer; transition: background .2s, transform .15s; }
+    .btn:hover { background: var(--c600); transform: translateY(-1px); }
+    .btn-ghost { background: transparent; border: 1px solid var(--c800); color: var(--c300); }
+    .btn-ghost:hover { border-color: var(--c600); color: #fff; }
+    .btn-sm { padding: 7px 14px; font-size: 0.8rem; }
+    .hidden { display: none !important; }
+
+    .login { max-width: 380px; margin: 80px auto; background: rgba(36,0,70,.6); border: 1px solid var(--c800); border-radius: 20px; padding: 40px 32px; text-align: center; }
+    .login h1 { font-size: 1.3rem; font-variation-settings: 'wght' 700; margin-bottom: 20px; }
+    .login input { width: 100%; background: var(--c950); border: 1px solid var(--c800); border-radius: 8px; color: #fff; font-family: var(--font); font-size: .95rem; padding: 12px 16px; margin-bottom: 14px; outline: none; }
+    .login input:focus { border-color: var(--c500); box-shadow: 0 0 0 3px rgba(157,78,221,.18); }
+    .err { color: #e05260; font-size: .85rem; margin-top: 10px; min-height: 1.2em; }
+
+    /* CRIAR CONVITE */
+    .creator { background: rgba(36,0,70,.5); border: 1px solid var(--c800); border-radius: 16px; padding: 22px 24px; margin-bottom: 26px; }
+    .creator h2 { font-size: 1rem; font-variation-settings: 'wght' 600; margin-bottom: 14px; }
+    .creator-row { display: grid; grid-template-columns: 1.4fr 1fr auto; gap: 12px; align-items: end; }
+    @media (max-width: 680px) { .creator-row { grid-template-columns: 1fr; } }
+    .fld label { display: block; font-size: 0.78rem; color: var(--c300); margin-bottom: 5px; }
+    .fld input, .fld select { width: 100%; background: var(--c950); border: 1px solid var(--c800); border-radius: 8px; color: #fff; font-family: var(--font); font-size: 0.9rem; padding: 11px 14px; outline: none; }
+    .fld input:focus, .fld select:focus { border-color: var(--c500); box-shadow: 0 0 0 3px rgba(157,78,221,.18); }
+    .gen-result { margin-top: 14px; background: var(--c950); border: 1px dashed var(--c600); border-radius: 10px; padding: 14px 16px; display: none; }
+    .gen-result.show { display: block; }
+    .gen-link { font-size: 0.82rem; color: var(--c100); word-break: break-all; margin-bottom: 10px; }
+    .gen-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* LISTA */
+    .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .chip { background: transparent; border: 1px solid var(--c800); color: var(--c300); border-radius: 99px; padding: 6px 16px; font-family: var(--font); font-size: 0.82rem; cursor: pointer; transition: all .2s; }
+    .chip.active { background: var(--c700); border-color: var(--c600); color: #fff; }
+    .rows { display: flex; flex-direction: column; gap: 10px; }
+    .row { background: rgba(36,0,70,.45); border: 1px solid var(--c800); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; transition: border-color .2s, background .2s; }
+    .row.clickable { cursor: pointer; }
+    .row.clickable:hover { border-color: var(--c500); background: rgba(45,0,85,.6); }
+    .row .cliente { font-variation-settings: 'wght' 600; font-size: 0.98rem; }
+    .row .rmeta { font-size: 0.76rem; color: var(--c300); }
+    .row .grow { flex: 1; min-width: 0; }
+    .badge { font-size: 0.72rem; border-radius: 99px; padding: 3px 11px; white-space: nowrap; }
+    .badge.pendente { background: rgba(157,78,221,.18); border: 1px solid var(--c700); color: var(--c100); }
+    .badge.respondido { background: rgba(56,142,60,.18); border: 1px solid #4a7d4f; color: #aee8ae; }
+    .badge.tipo { background: rgba(123,44,191,.2); border: 1px solid var(--c700); color: var(--c100); }
+    .empty { text-align: center; color: var(--c300); padding: 50px 20px; opacity: .7; }
+
+    /* DETALHE */
+    .detail h2 { font-size: 1.4rem; font-variation-settings: 'wght' 700; margin-bottom: 4px; }
+    .detail .contato { font-size: .9rem; color: var(--c300); margin-bottom: 18px; }
+    .rec { border-radius: 14px; padding: 18px 20px; margin-bottom: 20px; border: 1px solid; }
+    .rec.migrar { background: rgba(123,44,191,.18); border-color: var(--c600); }
+    .rec.manter { background: rgba(56,142,60,.14); border-color: #4a7d4f; }
+    .rec .rec-t { font-variation-settings: 'wght' 700; margin-bottom: 6px; }
+    .rec .rec-b { font-size: .88rem; color: var(--c100); line-height: 1.55; }
+    .rec ul { margin: 8px 0 0 18px; font-size: .85rem; color: var(--c100); }
+    .sec { background: rgba(36,0,70,.4); border: 1px solid var(--c800); border-radius: 14px; margin-bottom: 16px; overflow: hidden; }
+    .sec-h { padding: 13px 22px; background: linear-gradient(90deg, rgba(90,24,154,.25), transparent); font-variation-settings: 'wght' 600; font-size: .92rem; border-bottom: 1px solid var(--c800); }
+    .sec-b { padding: 6px 22px 16px; }
+    .qa { padding: 9px 0; border-bottom: 1px solid rgba(60,9,108,.5); }
+    .qa:last-child { border-bottom: none; }
+    .qa .q { font-size: .76rem; color: var(--c300); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+    .qa .a { font-size: .94rem; color: #fff; white-space: pre-wrap; }
+    .qa .a.empty-a { color: var(--c300); opacity: .5; font-style: italic; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0 22px; }
+    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--c700); color: #fff; padding: 12px 22px; border-radius: 10px; font-size: 0.88rem; opacity: 0; transition: opacity .25s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <div class="login" id="loginView">
+    <h1>Painel de Briefings</h1>
+    <input type="password" id="pw" placeholder="Senha de acesso" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()">
+    <button class="btn" onclick="entrar()" style="width:100%">Entrar</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <!-- LISTA + CRIAR -->
+  <div id="listView" class="hidden">
+    <div class="topbar">
+      <div><h1>Briefings</h1><span class="sub" id="countSub"></span></div>
+      <div style="display:flex;gap:10px">
+        <a class="btn btn-ghost" href="/admin/">← Admin</a>
+        <button class="btn btn-ghost" onclick="carregar()">Atualizar</button>
+      </div>
+    </div>
+
+    <div class="creator">
+      <h2>📨 Gerar link de briefing pra enviar ao cliente</h2>
+      <div class="creator-row">
+        <div class="fld"><label>Nome do cliente / empresa</label><input type="text" id="newCliente" placeholder="Ex: Solarium Cosméticos"></div>
+        <div class="fld"><label>Tipo de briefing</label>
+          <select id="newTipo">
+            <option value="briefing-ecommerce">E-commerce (genérico)</option>
+            <option value="briefing-solarium">E-commerce — Solarium</option>
+            <option value="briefing">Identidade visual</option>
+          </select>
+        </div>
+        <button class="btn" onclick="gerar()" id="genBtn">Gerar link</button>
+      </div>
+      <div class="gen-result" id="genResult">
+        <div class="gen-link" id="genLink"></div>
+        <div class="gen-actions">
+          <button class="btn btn-sm" onclick="copiar(document.getElementById('genLink').textContent, this)">📋 Copiar link</button>
+          <button class="btn btn-sm btn-ghost" onclick="whatsLink()">💬 WhatsApp</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="chip active" data-f="todos" onclick="setFilter('todos')">Todos</button>
+      <button class="chip" data-f="pendente" onclick="setFilter('pendente')">Pendentes</button>
+      <button class="chip" data-f="respondido" onclick="setFilter('respondido')">Respondidos</button>
+    </div>
+    <div class="rows" id="rows"></div>
+  </div>
+
+  <!-- DETALHE -->
+  <div id="detailView" class="hidden detail">
+    <div class="topbar"><button class="btn btn-ghost" onclick="voltar()">← Voltar</button></div>
+    <div id="detailBody"></div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const BASE = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1';
+const FN_LINKS = BASE + '/briefing-links';
+let DADOS = [], FILTRO = 'todos', LAST_LINK = '', LAST_TEL = '';
+
+const TIPO_LABEL = { 'briefing':'Identidade visual', 'briefing-ecommerce':'E-commerce', 'briefing-solarium':'E-commerce (Solarium)' };
+const TIPO_PATH  = { 'briefing':'/briefing/', 'briefing-ecommerce':'/briefing-ecommerce/', 'briefing-solarium':'/briefing-solarium/' };
+function isEcom(t){ return t === 'briefing-ecommerce' || t === 'briefing-solarium'; }
+
+/* ===== mapas E-COMMERCE ===== */
+const VE = {
+  ec_n_produtos:{'1-10':'1 a 10','11-50':'11 a 50','51-200':'51 a 200','201-1000':'201 a 1.000','1000+':'Mais de 1.000'},
+  ec_variacao:{sim:'Sim, a maioria',algumas:'Algumas',nao:'Produto simples'},
+  ec_catalogo_muda:{muito:'Muda muito',as_vezes:'De vez em quando',raro:'Quase fixo'},
+  ec_faturamento:{ate_5k:'Até R$ 5 mil','5-20k':'R$ 5–20 mil','20-50k':'R$ 20–50 mil','50-100k':'R$ 50–100 mil','100k+':'+R$ 100 mil',prefiro_nao:'Não informou'},
+  ec_mercado:{brasil:'Só Brasil',brasil_exterior:'Brasil + exterior'},
+  ec_identidade:{sim:'Marca pronta',parcial:'Só logo/parcial',nao:'Não tem'},
+  ec_fotos:{profissionais:'Profissionais',amador:'Amadoras',nao:'Não tem'},
+  ec_verba:{ate_3k:'Até R$ 3 mil','3-7k':'R$ 3–7 mil','7-15k':'R$ 7–15 mil','15k+':'+R$ 15 mil',conversar:'Conversar'},
+  ec_aceita_mensalidade:{sim:'Sim, se valer',depende:'Depende',nao:'Quer barato'},
+  ec_manutencao:{cliente:'Cliente/equipe',eloi:'Quer ELOI',indefinido:'Não sabe'},
+  ec_publico_b2b:{b2b:'B2B — salões (foco)',consumidor:'Consumidor final',ambos:'Ambos'},
+  ec_plataforma_decisao:{manter:'Manter e otimizar',aberto:'Aberto a migrar',migrar:'Quer migrar',nao_sei:'Precisa orientação'},
+  ec_frete_real:{sempre:'Sempre grátis',condicional:'Grátis em condições',pago:'Na real é pago',rever:'Precisa revisar'},
+  ec_email_dominio:{sim:'Tem no domínio',nao:'Usa Gmail',quero:'Quer passar a ter'},
+  ec_catalogo_completo:{sim:'Organizado',parcial:'Mais ou menos',nao:'Não'},
+  ec_crm:{sim:'Base organizada',lista:'Só lista/WhatsApp',nao:'Não tem'}
+};
+const LE = {
+  ec_oque_vende:'O que vende',ec_n_produtos:'Nº produtos',ec_variacao:'Variações',ec_catalogo_muda:'Frequência catálogo',ec_ticket:'Ticket médio',ec_faturamento:'Faturamento/mês',ec_mercado:'Mercado',ec_marketplaces:'Marketplaces',
+  ec_plataforma_atual:'Plataforma atual',ec_plataforma_decisao:'Decisão de plataforma',ec_tempo:'Tempo de uso',ec_dores:'Dores hoje',ec_dores_outro:'Outra dor',ec_nao_consegue:'O que não consegue',ec_custo_atual:'Custo mensal',ec_site_url:'Link da loja',
+  ec_pagamento:'Pagamento',ec_pagamento_outro:'Pagamento (outro)',ec_frete:'Frete',ec_frete_outro:'Frete (outro)',ec_erp:'NF/Estoque',ec_erp_outro:'ERP (outro)',ec_marketing:'Marketing/Ads',ec_atendimento:'Atendimento',ec_atendimento_outro:'Atend. (outro)',ec_quer_integrar:'Quer integrar',ec_sonho:'Recursos dos sonhos',ec_sonho_outro:'Sonho (outro)',
+  ec_publico_b2b:'Público prioritário',ec_objetivo_foco:'Foco da reestruturação',ec_frete_real:'Frete grátis (real?)',ec_email_dominio:'E-mail no domínio',ec_quem_cadastra:'Quem cadastra produtos',ec_catalogo_completo:'Catálogo/fornecedores',ec_crm:'CRM/base',ec_mkt_disparo:'Disparo e-mail/Whats',ec_metas:'Metas & prazo',
+  ec_identidade:'Identidade visual',ec_referencias:'Referências',ec_fotos:'Fotos',ec_objetivo:'Objetivo',ec_prazo:'Prazo',ec_verba:'Verba',ec_aceita_mensalidade:'Aceita mensalidade maior',ec_manutencao:'Quem mantém',ec_obs:'Observações'
+};
+const SE = [
+  { t:'Posicionamento & Negócio', keys:['ec_publico_b2b','ec_objetivo_foco','ec_oque_vende','ec_n_produtos','ec_variacao','ec_catalogo_muda','ec_ticket','ec_faturamento','ec_mercado','ec_marketplaces'] },
+  { t:'Loja atual & Plataforma', keys:['ec_site_url','ec_plataforma_atual','ec_plataforma_decisao','ec_tempo','ec_dores','ec_dores_outro','ec_nao_consegue','ec_custo_atual'] },
+  { t:'Operação & Integrações', keys:['ec_frete_real','ec_email_dominio','ec_quem_cadastra','ec_catalogo_completo','ec_crm','ec_mkt_disparo','ec_pagamento','ec_pagamento_outro','ec_frete','ec_frete_outro','ec_erp','ec_erp_outro','ec_marketing','ec_atendimento','ec_atendimento_outro','ec_quer_integrar','ec_sonho','ec_sonho_outro'] },
+  { t:'Marca, objetivo & verba', keys:['ec_identidade','ec_referencias','ec_fotos','ec_objetivo','ec_metas','ec_prazo','ec_verba','ec_aceita_mensalidade','ec_manutencao','ec_obs'] }
+];
+
+/* ===== mapas IDENTIDADE VISUAL ===== */
+const VV = {
+  q12:{criacao:'Empresa nova',rebranding:'Rebranding',atualizacao:'Atualização de logo'},
+  q13:{sim:'Sim',nao:'Não',em_processo:'Em processo'},
+  q14:{sim:'Sim',nao:'Não',em_processo:'Em processo',nao_sei:'Não sabe'},
+  q15:{sim:'Sim',nao:'Não',nao_sei:'Não sabe'},
+  q16:{sim:'Sim',nao:'Não',sem_site:'Não tem site'},
+  q17:{todas:'Em todas',algumas:'Em algumas',nao:'Não'}
+};
+const LV = {
+  q1:'Empresa/marca',q2:'O que faz',q3:'Missão e valores',q4:'Cliente ideal',q5:'Onde o público está',q6:'Concorrentes',q7:'Diferencial',q8:'Personalidade',q9:'Sentimento',
+  q10_descricao:'Referências',q10_link:'Links',q11_cores:'Cores a evitar',q11_texto:'Estilos a evitar',
+  q12:'Tipo de projeto',q13:'CNPJ registrado',q14:'INPI',q15:'Anterioridade',q16:'Domínio',q17:'Redes sociais',q18:'Serviços',q18_outro:'Outro'
+};
+const SV = [
+  { t:'Sobre o negócio', keys:['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10_descricao','q10_link','q11_cores','q11_texto','q12'] },
+  { t:'Registro & legal', keys:['q13','q14','q15','q16','q17'] },
+  { t:'Serviços', keys:['q18','q18_outro'] }
+];
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function mapVal(V,key,raw){ if(!raw) return ''; const m=V[key]; if(!m) return raw; return String(raw).split(',').map(s=>s.trim()).map(s=>m[s]||s).join(', '); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
+function copiar(txt,btn){ navigator.clipboard.writeText(txt).then(()=>{ if(btn){const o=btn.textContent;btn.textContent='✓ Copiado';setTimeout(()=>btn.textContent=o,1500);} else toast('Copiado!'); }); }
+
+/* ===== auth / load ===== */
+function entrar(){ const pw=document.getElementById('pw').value.trim(); if(!pw){document.getElementById('err').textContent='Digite a senha.';return;} sessionStorage.setItem('eloi_pw',pw); carregar(); }
+function carregar(){
+  const pw = sessionStorage.getItem('eloi_pw')||'';
+  fetch(FN_LINKS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,action:'list'})})
+    .then(r=> r.ok ? r.json() : Promise.reject())
+    .then(d=>{ DADOS=d.invites||[]; document.getElementById('loginView').classList.add('hidden'); document.getElementById('listView').classList.remove('hidden'); document.getElementById('detailView').classList.add('hidden'); renderLista(); })
+    .catch(()=>{ document.getElementById('err').textContent='Senha incorreta ou serviço indisponível.'; sessionStorage.removeItem('eloi_pw'); });
+}
+
+/* ===== criar convite ===== */
+function gerar(){
+  const cliente = document.getElementById('newCliente').value.trim();
+  const tipo = document.getElementById('newTipo').value;
+  const pw = sessionStorage.getItem('eloi_pw')||'';
+  const btn = document.getElementById('genBtn'); btn.disabled=true; btn.textContent='Gerando...';
+  fetch(FN_LINKS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,action:'create',cliente,tipo})})
+    .then(r=>r.json())
+    .then(d=>{
+      if(!d.invite) throw new Error();
+      LAST_LINK = location.origin + TIPO_PATH[tipo] + '?t=' + d.invite.token;
+      document.getElementById('genLink').textContent = LAST_LINK;
+      document.getElementById('genResult').classList.add('show');
+      document.getElementById('newCliente').value='';
+      carregar();
+    })
+    .catch(()=>toast('Erro ao gerar link.'))
+    .finally(()=>{ btn.disabled=false; btn.textContent='Gerar link'; });
+}
+function whatsLink(){ window.open('https://wa.me/?text='+encodeURIComponent('Oi! Pra montar sua proposta, responde esse briefing rápido: '+LAST_LINK),'_blank'); }
+
+/* ===== lista ===== */
+function setFilter(f){ FILTRO=f; document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.f===f)); renderLista(); }
+function renderLista(){
+  const el=document.getElementById('rows');
+  const arr = DADOS.filter(b=> FILTRO==='todos' ? true : b.status===FILTRO);
+  document.getElementById('countSub').textContent = `${DADOS.length} convite(s) · ${DADOS.filter(b=>b.status==='respondido').length} respondido(s)`;
+  if(!arr.length){ el.innerHTML='<div class="empty">Nenhum convite aqui. Gere um link acima pra enviar ao cliente.</div>'; return; }
+  el.innerHTML = arr.map((b,realIdx)=>{
+    const i = DADOS.indexOf(b);
+    const dt = b.created_at ? new Date(b.created_at).toLocaleDateString('pt-BR') : '';
+    const resp = b.status==='respondido';
+    const link = location.origin + (TIPO_PATH[b.tipo]||'/') + '?t=' + b.token;
+    return `<div class="row ${resp?'clickable':''}" ${resp?`onclick="abrir(${i})"`:''}>
+      <div class="grow">
+        <div class="cliente">${esc(b.cliente||b.empresa||'— sem nome —')}</div>
+        <div class="rmeta">${dt}</div>
+      </div>
+      <span class="badge tipo">${esc(TIPO_LABEL[b.tipo]||b.tipo)}</span>
+      <span class="badge ${resp?'respondido':'pendente'}">${resp?'✓ Respondido':'Pendente'}</span>
+      ${resp ? `<button class="btn btn-sm" onclick="event.stopPropagation();abrir(${i})">Ver</button>`
+             : `<button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();copiar('${link}',this)">Copiar link</button>`}
+    </div>`;
+  }).join('');
+}
+
+/* ===== recomendação (e-commerce) ===== */
+function recomendar(r){
+  const has=k=>r[k]&&String(r[k]).trim()&&!['nenhum','nada'].includes(String(r[k]).trim());
+  let score=0; const motivos=[];
+  if(has('ec_nao_consegue')){score+=2;motivos.push('Cita coisas que a loja atual não permite.');}
+  const sonho=(r.ec_sonho||'').split(',').map(s=>s.trim()).filter(s=>s&&s!=='nenhum');
+  if(sonho.length){score+=sonho.length;motivos.push('Quer recursos avançados.');}
+  if(has('ec_quer_integrar')){score+=2;motivos.push('Integração desejada que falta hoje.');}
+  const dores=(r.ec_dores||'').split(',').map(s=>s.trim());
+  if(dores.includes('limite_recursos')||dores.includes('taxas')){score+=2;motivos.push('Dores estruturais (limite/taxas).');}
+  if(r.ec_n_produtos==='201-1000'||r.ec_n_produtos==='1000+'){score+=1;motivos.push('Catálogo grande.');}
+  if(r.ec_mercado==='brasil_exterior'){score+=1;motivos.push('Vende p/ fora — multi-moeda/idioma.');}
+  if(r.ec_aceita_mensalidade==='sim'){score+=1;motivos.push('Aceita mensalidade maior.');}
+  if(r.ec_plataforma_decisao==='migrar'){score+=3;motivos.push('Já quer migrar.');}
+  if(r.ec_plataforma_decisao==='aberto'){score+=1;motivos.push('Aberto a migrar.');}
+  if(r.ec_plataforma_decisao==='manter'){score-=2;motivos.push('Prefere manter a plataforma atual.');}
+  if(score>=3) return {cls:'migrar',t:'🚀 Recomendação: migrar de plataforma',b:'Perfil indica que a loja atual limita o negócio. Upgrades BR: <strong>Nuvemshop</strong> ou <strong>Tray</strong>; <strong>Shopify</strong> p/ escala maior. Você cuida do visual.',motivos};
+  return {cls:'manter',t:'✅ Recomendação: manter / customizar',b:'Sem travas fortes. Dá pra entregar valor <strong>customizando a plataforma atual</strong>, sem custo/risco de migrar.',motivos:motivos.length?motivos:['Sem dores estruturais nem recursos bloqueados.']};
+}
+
+/* ===== detalhe ===== */
+function abrir(i){
+  const b=DADOS[i]; const r=b.raw||{}; const ecom=isEcom(b.tipo);
+  const L=ecom?LE:LV, V=ecom?VE:VV, S=ecom?SE:SV;
+  let html=`<h2>${esc(b.cliente||b.empresa||'Briefing')}</h2>
+    <div class="contato">${esc(TIPO_LABEL[b.tipo]||b.tipo)} · ${esc(b.nome||'')} ${b.email?'· '+esc(b.email):''} ${b.whatsapp?'· '+esc(b.whatsapp):''}${r.ec_site_url?` · <a href="${esc(r.ec_site_url)}" target="_blank" rel="noopener">loja ↗</a>`:''}</div>`;
+  if(ecom){ const rec=recomendar(r); html+=`<div class="rec ${rec.cls}"><div class="rec-t">${rec.t}</div><div class="rec-b">${rec.b}</div>${rec.motivos.length?`<ul>${rec.motivos.map(m=>`<li>${m}</li>`).join('')}</ul>`:''}</div>`; }
+  html+=`<div class="actions"><button class="btn" onclick="copiarResumo(${i})">📋 Copiar resumo</button><button class="btn btn-ghost" onclick="whats(${i})">💬 WhatsApp</button></div>`;
+  S.forEach(sec=>{
+    const linhas=sec.keys.map(k=>{
+      const val = (k in V) ? mapVal(V,k,r[k]) : (r[k]||'');
+      const ok=val&&String(val).trim();
+      return `<div class="qa"><div class="q">${esc(L[k]||k)}</div><div class="a${ok?'':' empty-a'}">${ok?esc(val):'—'}</div></div>`;
+    }).join('');
+    html+=`<div class="sec"><div class="sec-h">${esc(sec.t)}</div><div class="sec-b">${linhas}</div></div>`;
+  });
+  document.getElementById('detailBody').innerHTML=html;
+  document.getElementById('listView').classList.add('hidden');
+  document.getElementById('detailView').classList.remove('hidden');
+  window.scrollTo({top:0});
+}
+function voltar(){ document.getElementById('detailView').classList.add('hidden'); document.getElementById('listView').classList.remove('hidden'); }
+
+function montarResumo(i){
+  const b=DADOS[i]; const r=b.raw||{}; const ecom=isEcom(b.tipo); const L=ecom?LE:LV, V=ecom?VE:VV, S=ecom?SE:SV;
+  const out=[`*Briefing — ${b.cliente||b.empresa||'Cliente'}* (${TIPO_LABEL[b.tipo]||b.tipo})`,`${b.nome||''} ${b.email||''} ${b.whatsapp||''}`.trim(),''];
+  S.forEach(sec=>{ out.push('*'+sec.t+'*'); sec.keys.forEach(k=>{ const val=(k in V)?mapVal(V,k,r[k]):(r[k]||''); if(val&&String(val).trim()) out.push(`${L[k]||k}: ${String(val).replace(/\n/g,' ')}`); }); out.push(''); });
+  if(ecom){ const rec=recomendar(r); out.push('RECOMENDAÇÃO: '+rec.t.replace(/^[^A-Za-zÀ-ÿ]+/,'')); rec.motivos.forEach(m=>out.push('- '+m.replace(/<[^>]+>/g,''))); }
+  return out.join('\n');
+}
+function copiarResumo(i){ copiar(montarResumo(i)); }
+function whats(i){ const b=DADOS[i]; const tel=(b.whatsapp||'').replace(/\D/g,''); window.open((tel?`https://wa.me/55${tel}?text=`:`https://wa.me/?text=`)+encodeURIComponent(montarResumo(i)),'_blank'); }
+
+if(sessionStorage.getItem('eloi_pw')) carregar();
+</script>
+</body>
+</html>

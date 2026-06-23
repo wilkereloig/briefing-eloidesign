@@ -570,11 +570,17 @@
     const SUPA_URL = 'https://nlamznxoocmygfvnqcns.supabase.co';
     const SUPA_KEY = 'sb_publishable_QkKAqMUIklyCSj_3DAKA6g_mtEw2vhR';
     const supaPayload = { nome: obj.nome || null, email: obj.email || null, whatsapp: obj.whatsapp || null, empresa: empresa, raw: obj };
-    const toSupabase = fetch(SUPA_URL + '/rest/v1/ecommerce_briefings', {
-      method: 'POST',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify(supaPayload)
-    });
+    const TOKEN = new URLSearchParams(location.search).get('t');
+    const toSupabase = TOKEN
+      ? fetch(SUPA_URL + '/functions/v1/briefing-submit', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: TOKEN, raw: obj })
+        })
+      : fetch(SUPA_URL + '/rest/v1/ecommerce_briefings', {
+          method: 'POST',
+          headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify(supaPayload)
+        });
     const toFormspree = fetch('https://formspree.io/f/xpqeraow', { method: 'POST', body: fd, headers: { 'Accept': 'application/json' } });
     Promise.allSettled([toSupabase, toFormspree]).then(([supa, form]) => {
       const ok = (supa.status === 'fulfilled' && supa.value.ok) || (form.status === 'fulfilled' && form.value.ok);
