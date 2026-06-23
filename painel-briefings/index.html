@@ -43,6 +43,12 @@
     .gen-result.show { display: block; }
     .gen-link { font-size: 0.82rem; color: var(--c100); word-break: break-all; margin-bottom: 10px; }
     .gen-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .forms-list { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    @media (max-width: 680px) { .forms-list { grid-template-columns: 1fr; } }
+    .form-card { background: var(--c950); border: 1px solid var(--c800); border-radius: 10px; padding: 14px 16px; }
+    .form-card .fname { font-variation-settings: 'wght' 600; font-size: 0.9rem; margin-bottom: 3px; }
+    .form-card .fpath { font-size: 0.72rem; color: var(--c300); opacity: .8; margin-bottom: 10px; word-break: break-all; }
+    .form-card .factions { display: flex; gap: 8px; }
 
     /* LISTA */
     .filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -124,6 +130,11 @@
           <button class="btn btn-sm btn-ghost" onclick="whatsLink()">💬 WhatsApp</button>
         </div>
       </div>
+    </div>
+
+    <div class="creator" style="padding-top:18px">
+      <h2>📂 Formulários disponíveis</h2>
+      <div class="forms-list" id="formsList"></div>
     </div>
 
     <div class="filters" id="filters">
@@ -216,7 +227,7 @@ function carregar(){
   const pw = sessionStorage.getItem('eloi_pw')||'';
   fetch(FN_LINKS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,action:'list'})})
     .then(r=> r.ok ? r.json() : Promise.reject())
-    .then(d=>{ DADOS=d.invites||[]; document.getElementById('loginView').classList.add('hidden'); document.getElementById('listView').classList.remove('hidden'); document.getElementById('detailView').classList.add('hidden'); renderLista(); })
+    .then(d=>{ DADOS=d.invites||[]; document.getElementById('loginView').classList.add('hidden'); document.getElementById('listView').classList.remove('hidden'); document.getElementById('detailView').classList.add('hidden'); renderForms(); renderLista(); })
     .catch(()=>{ document.getElementById('err').textContent='Senha incorreta ou serviço indisponível.'; sessionStorage.removeItem('eloi_pw'); });
 }
 
@@ -240,6 +251,22 @@ function gerar(){
     .finally(()=>{ btn.disabled=false; btn.textContent='Gerar link'; });
 }
 function whatsLink(){ window.open('https://wa.me/?text='+encodeURIComponent('Oi! Pra montar sua proposta, responde esse briefing rápido: '+LAST_LINK),'_blank'); }
+
+/* ===== formulários disponíveis ===== */
+function renderForms(){
+  const el = document.getElementById('formsList'); if(!el) return;
+  el.innerHTML = Object.keys(TIPO_PATH).map(tipo=>{
+    const url = location.origin + TIPO_PATH[tipo];
+    return `<div class="form-card">
+      <div class="fname">${esc(TIPO_LABEL[tipo])}</div>
+      <div class="fpath">${esc(TIPO_PATH[tipo])}</div>
+      <div class="factions">
+        <a class="btn btn-sm" href="${url}" target="_blank" rel="noopener">Abrir</a>
+        <button class="btn btn-sm btn-ghost" onclick="copiar('${url}',this)">Copiar link</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 /* ===== lista ===== */
 function setFilter(f){ FILTRO=f; document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.f===f)); renderLista(); }
