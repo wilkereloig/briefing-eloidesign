@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel E-commerce — ELOI Design Studio</title>
+  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --c950: #10002B; --c900: #240046; --c800: #3C096C; --c700: #5A189A;
+      --c600: #7B2CBF; --c500: #9D4EDD; --c300: #C77DFF; --c100: #E0AAFF;
+      --white: #FFFFFF; --font: 'carbona-variable', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--c950); color: var(--white); min-height: 100vh; line-height: 1.6; }
+    a { color: var(--c300); }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 40px 24px 80px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+    .topbar h1 { font-size: 1.5rem; font-variation-settings: 'wght' 700; letter-spacing: -0.02em; }
+    .topbar .sub { font-size: 0.85rem; color: var(--c300); }
+    .btn { background: var(--c700); border: none; border-radius: 10px; color: #fff; font-family: var(--font); font-size: 0.9rem; font-variation-settings: 'wght' 600; padding: 11px 22px; cursor: pointer; transition: background .2s, transform .15s; }
+    .btn:hover { background: var(--c600); transform: translateY(-1px); }
+    .btn-ghost { background: transparent; border: 1px solid var(--c800); color: var(--c300); }
+    .btn-ghost:hover { border-color: var(--c600); color: #fff; background: transparent; }
+
+    /* LOGIN */
+    .login { max-width: 380px; margin: 80px auto; background: rgba(36,0,70,.6); border: 1px solid var(--c800); border-radius: 20px; padding: 40px 32px; text-align: center; }
+    .login h1 { font-size: 1.3rem; font-variation-settings: 'wght' 700; margin-bottom: 20px; }
+    .login input { width: 100%; background: var(--c950); border: 1px solid var(--c800); border-radius: 8px; color: #fff; font-family: var(--font); font-size: .95rem; padding: 12px 16px; margin-bottom: 14px; outline: none; }
+    .login input:focus { border-color: var(--c500); box-shadow: 0 0 0 3px rgba(157,78,221,.18); }
+    .err { color: #e05260; font-size: .85rem; margin-top: 10px; min-height: 1.2em; }
+    .hidden { display: none !important; }
+
+    /* LIST */
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 640px) { .cards { grid-template-columns: 1fr; } }
+    .card { background: rgba(36,0,70,.55); border: 1px solid var(--c800); border-radius: 16px; padding: 22px 24px; cursor: pointer; transition: border-color .2s, transform .15s, background .2s; }
+    .card:hover { border-color: var(--c500); transform: translateY(-3px); background: rgba(45,0,85,.7); }
+    .card .empresa { font-size: 1.05rem; font-variation-settings: 'wght' 600; margin-bottom: 4px; }
+    .card .desc { font-size: .85rem; color: var(--c100); opacity: .85; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card .meta { font-size: .75rem; color: var(--c300); display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .tag { background: rgba(90,24,154,.35); border: 1px solid var(--c700); border-radius: 99px; padding: 2px 10px; font-size: .72rem; color: var(--c100); }
+    .empty { text-align: center; color: var(--c300); padding: 60px 20px; opacity: .7; }
+
+    /* DETAIL */
+    .detail h2 { font-size: 1.5rem; font-variation-settings: 'wght' 700; letter-spacing: -.02em; margin-bottom: 4px; }
+    .detail .contato { font-size: .9rem; color: var(--c300); margin-bottom: 20px; }
+    .rec { border-radius: 14px; padding: 20px 22px; margin-bottom: 22px; border: 1px solid; }
+    .rec.migrar { background: rgba(123,44,191,.18); border-color: var(--c600); }
+    .rec.manter { background: rgba(56,142,60,.14); border-color: #4a7d4f; }
+    .rec .rec-t { font-variation-settings: 'wght' 700; font-size: 1rem; margin-bottom: 6px; }
+    .rec .rec-b { font-size: .88rem; color: var(--c100); line-height: 1.55; }
+    .rec ul { margin: 8px 0 0 18px; font-size: .85rem; color: var(--c100); }
+    .sec { background: rgba(36,0,70,.4); border: 1px solid var(--c800); border-radius: 14px; margin-bottom: 16px; overflow: hidden; }
+    .sec-h { padding: 14px 22px; background: linear-gradient(90deg, rgba(90,24,154,.25), transparent); font-variation-settings: 'wght' 600; font-size: .95rem; border-bottom: 1px solid var(--c800); }
+    .sec-b { padding: 8px 22px 18px; }
+    .qa { padding: 10px 0; border-bottom: 1px solid rgba(60,9,108,.5); }
+    .qa:last-child { border-bottom: none; }
+    .qa .q { font-size: .78rem; color: var(--c300); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+    .qa .a { font-size: .95rem; color: #fff; white-space: pre-wrap; }
+    .qa .a.empty-a { color: var(--c300); opacity: .5; font-style: italic; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 0 24px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- LOGIN -->
+  <div class="login" id="loginView">
+    <h1>Painel E-commerce</h1>
+    <input type="password" id="pw" placeholder="Senha de acesso" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()">
+    <button class="btn" onclick="entrar()" style="width:100%">Entrar</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <!-- LISTA -->
+  <div id="listView" class="hidden">
+    <div class="topbar">
+      <div>
+        <h1>Briefings E-commerce</h1>
+        <span class="sub" id="countSub"></span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <a class="btn btn-ghost" href="/admin/">← Admin</a>
+        <button class="btn btn-ghost" onclick="carregar()">Atualizar</button>
+      </div>
+    </div>
+    <div class="cards" id="cards"></div>
+  </div>
+
+  <!-- DETALHE -->
+  <div id="detailView" class="hidden detail">
+    <div class="topbar">
+      <button class="btn btn-ghost" onclick="voltar()">← Voltar à lista</button>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+
+</div>
+
+<script>
+const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/get-ecommerce-briefings';
+let DADOS = [];
+
+/* ---- mapas de rótulos ---- */
+const V = {
+  ec_n_produtos: { '1-10':'1 a 10', '11-50':'11 a 50', '51-200':'51 a 200', '201-1000':'201 a 1.000', '1000+':'Mais de 1.000' },
+  ec_variacao: { sim:'Sim, a maioria', algumas:'Algumas têm', nao:'Não, produto simples' },
+  ec_catalogo_muda: { muito:'Muda muito (toda semana)', as_vezes:'De vez em quando', raro:'Quase fixo' },
+  ec_faturamento: { ate_5k:'Até R$ 5 mil', '5-20k':'R$ 5 a 20 mil', '20-50k':'R$ 20 a 50 mil', '50-100k':'R$ 50 a 100 mil', '100k+':'Mais de R$ 100 mil', prefiro_nao:'Não informou' },
+  ec_mercado: { brasil:'Só Brasil', brasil_exterior:'Brasil + exterior' },
+  ec_identidade: { sim:'Marca pronta', parcial:'Só logo / parcial', nao:'Não tem — criar' },
+  ec_fotos: { profissionais:'Fotos profissionais', amador:'Amadoras (celular)', nao:'Não tem boas fotos' },
+  ec_verba: { ate_3k:'Até R$ 3 mil', '3-7k':'R$ 3 a 7 mil', '7-15k':'R$ 7 a 15 mil', '15k+':'Acima de R$ 15 mil', conversar:'Prefere conversar' },
+  ec_aceita_mensalidade: { sim:'Sim, se valer a pena', depende:'Depende do quanto', nao:'Prefere o mais barato' },
+  ec_manutencao: { cliente:'Cliente / equipe dele', eloi:'Quer que a ELOI cuide', indefinido:'Ainda não sabe' },
+  ec_publico_b2b: { b2b:'B2B — salões/profissionais (foco)', consumidor:'Consumidor final', ambos:'Ambos' },
+  ec_plataforma_decisao: { manter:'Manter Loja Integrada e otimizar', aberto:'Aberto a migrar se valer', migrar:'Quer migrar — atual não dá conta', nao_sei:'Não sabe — precisa orientação' },
+  ec_frete_real: { sempre:'Sempre grátis, todo Brasil', condicional:'Grátis em condições', pago:'Na real é pago (SEDEX/PAC)', rever:'Precisa revisar' },
+  ec_email_dominio: { sim:'Já tem e-mail no domínio', nao:'Usa Gmail', quero:'Quer passar a ter' },
+  ec_catalogo_completo: { sim:'Organizado', parcial:'Mais ou menos / desatualizado', nao:'Não organizado' },
+  ec_crm: { sim:'Base organizada', lista:'Só lista de contatos/WhatsApp', nao:'Não tem' }
+};
+const LBL = {
+  ec_oque_vende:'O que vende', ec_n_produtos:'Nº de produtos', ec_variacao:'Variações',
+  ec_catalogo_muda:'Frequência do catálogo', ec_ticket:'Ticket médio', ec_faturamento:'Faturamento/mês',
+  ec_mercado:'Mercado', ec_marketplaces:'Marketplaces',
+  ec_plataforma_atual:'Plataforma atual', ec_tempo:'Tempo de uso', ec_dores:'Dores hoje', ec_dores_outro:'Outra dor',
+  ec_nao_consegue:'O que não consegue fazer', ec_custo_atual:'Custo mensal atual',
+  ec_pagamento:'Pagamento', ec_pagamento_outro:'Pagamento (outro)', ec_frete:'Frete', ec_frete_outro:'Frete (outro)',
+  ec_erp:'NF / Estoque', ec_erp_outro:'ERP (outro)', ec_marketing:'Marketing / Ads',
+  ec_atendimento:'Atendimento', ec_atendimento_outro:'Atendimento (outro)',
+  ec_quer_integrar:'Quer integrar (falta hoje)', ec_sonho:'Recursos dos sonhos', ec_sonho_outro:'Sonho (outro)',
+  ec_identidade:'Identidade visual', ec_referencias:'Referências', ec_fotos:'Fotos de produto',
+  ec_objetivo:'Objetivo principal', ec_prazo:'Prazo', ec_verba:'Verba', ec_aceita_mensalidade:'Aceita mensalidade maior',
+  ec_manutencao:'Quem mantém', ec_obs:'Observações', ec_site_url:'Link da loja atual',
+  ec_publico_b2b:'Público prioritário', ec_objetivo_foco:'Foco da reestruturação', ec_plataforma_decisao:'Decisão de plataforma',
+  ec_frete_real:'Frete grátis (real?)', ec_email_dominio:'E-mail no domínio próprio', ec_quem_cadastra:'Quem cadastra produtos',
+  ec_catalogo_completo:'Catálogo / fornecedores', ec_crm:'CRM / base de clientes', ec_mkt_disparo:'Disparo e-mail/WhatsApp', ec_metas:'Metas & prazo'
+};
+const SECS = [
+  { t:'Posicionamento & Negócio', keys:['ec_publico_b2b','ec_objetivo_foco','ec_oque_vende','ec_n_produtos','ec_variacao','ec_catalogo_muda','ec_ticket','ec_faturamento','ec_mercado','ec_marketplaces'] },
+  { t:'Loja atual & Plataforma', keys:['ec_site_url','ec_plataforma_atual','ec_plataforma_decisao','ec_tempo','ec_dores','ec_dores_outro','ec_nao_consegue','ec_custo_atual'] },
+  { t:'Operação & Integrações', keys:['ec_frete_real','ec_email_dominio','ec_quem_cadastra','ec_catalogo_completo','ec_crm','ec_mkt_disparo','ec_pagamento','ec_pagamento_outro','ec_frete','ec_frete_outro','ec_erp','ec_erp_outro','ec_marketing','ec_atendimento','ec_atendimento_outro','ec_quer_integrar','ec_sonho','ec_sonho_outro'] },
+  { t:'Marca, objetivo & verba', keys:['ec_identidade','ec_referencias','ec_fotos','ec_objetivo','ec_metas','ec_prazo','ec_verba','ec_aceita_mensalidade','ec_manutencao','ec_obs'] }
+];
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function mapVal(key, raw){
+  if(!raw) return '';
+  const m = V[key]; if(!m) return raw;
+  return String(raw).split(',').map(s=>s.trim()).map(s=> m[s]||s).join(', ');
+}
+
+/* ---- login / fetch ---- */
+function entrar(){
+  const pw = document.getElementById('pw').value.trim();
+  if(!pw){ document.getElementById('err').textContent='Digite a senha.'; return; }
+  sessionStorage.setItem('eloi_pw', pw);
+  carregar();
+}
+function carregar(){
+  const pw = sessionStorage.getItem('eloi_pw') || '';
+  fetch(FN, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw}) })
+    .then(r=> r.ok ? r.json() : r.json().then(e=>Promise.reject(e)))
+    .then(data=>{
+      DADOS = data.briefings || [];
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('listView').classList.remove('hidden');
+      document.getElementById('detailView').classList.add('hidden');
+      renderLista();
+    })
+    .catch(()=>{ document.getElementById('err').textContent='Senha incorreta ou serviço indisponível.'; sessionStorage.removeItem('eloi_pw'); });
+}
+
+function renderLista(){
+  const el = document.getElementById('cards');
+  document.getElementById('countSub').textContent = DADOS.length ? `${DADOS.length} briefing(s) recebido(s)` : '';
+  if(!DADOS.length){ el.innerHTML = '<div class="empty">Nenhum briefing de e-commerce recebido ainda.</div>'; return; }
+  el.innerHTML = DADOS.map((b,i)=>{
+    const r = b.raw || {};
+    const dt = b.created_at ? new Date(b.created_at).toLocaleDateString('pt-BR') : '';
+    const plat = r.ec_plataforma_atual ? `<span class="tag">${esc(r.ec_plataforma_atual)}</span>` : '';
+    return `<div class="card" onclick="abrir(${i})">
+      <div class="empresa">${esc(b.empresa||r.ec_empresa||b.nome||'Sem nome')}</div>
+      <div class="desc">${esc(r.ec_oque_vende||'—')}</div>
+      <div class="meta">${plat}<span>${esc(b.nome||'')}</span><span>${dt}</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- recomendação de plataforma (regra simples) ---- */
+function recomendar(r){
+  const has = k => r[k] && String(r[k]).trim() && String(r[k]).trim()!=='nenhum' && String(r[k]).trim()!=='nada';
+  let score = 0; const motivos = [];
+  if(has('ec_nao_consegue')){ score+=2; motivos.push('Cliente cita coisas que a loja atual não permite.'); }
+  const sonho = (r.ec_sonho||'').split(',').map(s=>s.trim()).filter(s=>s && s!=='nenhum');
+  if(sonho.length){ score+=sonho.length; motivos.push('Quer recursos avançados: '+mapSonho(sonho)+'.'); }
+  if(has('ec_quer_integrar')){ score+=2; motivos.push('Há integração desejada que falta hoje.'); }
+  const dores = (r.ec_dores||'').split(',').map(s=>s.trim()).filter(s=>s && s!=='nada');
+  if(dores.includes('limite_recursos')||dores.includes('taxas')){ score+=2; motivos.push('Dores estruturais (limite de recursos / taxas).'); }
+  const nprod = r.ec_n_produtos;
+  if(nprod==='201-1000'||nprod==='1000+'){ score+=1; motivos.push('Catálogo grande pede plataforma robusta.'); }
+  if(r.ec_mercado==='brasil_exterior'){ score+=1; motivos.push('Vende para fora — precisa de multi-moeda/idioma.'); }
+  if(r.ec_aceita_mensalidade==='sim'){ score+=1; motivos.push('Aceita mensalidade maior por mais recurso.'); }
+  if(r.ec_plataforma_decisao==='migrar'){ score+=3; motivos.push('Cliente já quer migrar — a atual não dá conta.'); }
+  if(r.ec_plataforma_decisao==='aberto'){ score+=1; motivos.push('Cliente aberto a migrar se valer a pena.'); }
+  if(r.ec_plataforma_decisao==='manter'){ score-=2; motivos.push('Cliente prefere manter a plataforma atual — peso contra migrar.'); }
+
+  if(score>=3){
+    return { cls:'migrar', t:'🚀 Recomendação: migrar de plataforma',
+      b:'O perfil indica que a loja atual está limitando o negócio. Upgrades naturais no Brasil: <strong>Nuvemshop</strong> ou <strong>Tray</strong> (custo/recurso equilibrado); <strong>Shopify</strong> se houver ambição de escala maior. Você cuida do visual.',
+      motivos };
+  }
+  return { cls:'manter', t:'✅ Recomendação: pode manter / customizar',
+    b:'O perfil não mostra travas fortes. Dá pra entregar valor <strong>customizando a plataforma atual</strong> (visual + ajustes), sem o custo/risco de migrar. Reavalie se o negócio crescer.',
+    motivos: motivos.length?motivos:['Sem dores estruturais nem recursos avançados bloqueados.'] };
+}
+function mapSonho(arr){
+  const m={assinatura:'assinatura',clube:'clube',cashback:'cashback/pontos',app:'app próprio',multi_idioma:'multi-idioma',atacado:'atacado'};
+  return arr.map(s=>m[s]||s).join(', ');
+}
+
+/* ---- detalhe ---- */
+function abrir(i){
+  const b = DADOS[i]; const r = b.raw || {};
+  const rec = recomendar(r);
+  let html = `<h2>${esc(b.empresa||r.ec_empresa||'Briefing')}</h2>
+    <div class="contato">${esc(b.nome||'')} · ${esc(b.email||'')} · ${esc(b.whatsapp||'')}${r.ec_site_url?` · <a href="${esc(r.ec_site_url)}" target="_blank" rel="noopener">loja atual ↗</a>`:''}</div>
+    <div class="rec ${rec.cls}"><div class="rec-t">${rec.t}</div><div class="rec-b">${rec.b}</div>
+      ${rec.motivos.length?`<ul>${rec.motivos.map(m=>`<li>${m}</li>`).join('')}</ul>`:''}</div>
+    <div class="actions">
+      <button class="btn" onclick="copiarResumo(${i})">📋 Copiar resumo</button>
+      <button class="btn btn-ghost" onclick="whats(${i})">💬 Abrir no WhatsApp</button>
+    </div>`;
+  SECS.forEach(sec=>{
+    const linhas = sec.keys.map(k=>{
+      const val = k in V ? mapVal(k, r[k]) : (r[k]||'');
+      const has = val && String(val).trim();
+      return `<div class="qa"><div class="q">${esc(LBL[k]||k)}</div><div class="a${has?'':' empty-a'}">${has?esc(val):'—'}</div></div>`;
+    }).join('');
+    html += `<div class="sec"><div class="sec-h">${esc(sec.t)}</div><div class="sec-b">${linhas}</div></div>`;
+  });
+  document.getElementById('detailBody').innerHTML = html;
+  document.getElementById('listView').classList.add('hidden');
+  document.getElementById('detailView').classList.remove('hidden');
+  window.scrollTo({top:0});
+}
+function voltar(){
+  document.getElementById('detailView').classList.add('hidden');
+  document.getElementById('listView').classList.remove('hidden');
+}
+
+/* ---- resumo texto ---- */
+function montarResumo(i){
+  const b = DADOS[i]; const r = b.raw || {};
+  const rec = recomendar(r);
+  const L = [];
+  L.push(`*Briefing E-commerce — ${b.empresa||r.ec_empresa||'Cliente'}*`);
+  L.push(`Contato: ${b.nome||''} | ${b.email||''} | ${b.whatsapp||''}`);
+  if(r.ec_site_url) L.push(`Loja atual: ${r.ec_site_url}`);
+  L.push('');
+  L.push(`Vende: ${r.ec_oque_vende||'—'}`);
+  L.push(`Produtos: ${mapVal('ec_n_produtos',r.ec_n_produtos)||'—'} | Variação: ${mapVal('ec_variacao',r.ec_variacao)||'—'}`);
+  L.push(`Faturamento: ${mapVal('ec_faturamento',r.ec_faturamento)||'—'} | Ticket: ${r.ec_ticket||'—'}`);
+  L.push(`Plataforma hoje: ${r.ec_plataforma_atual||'—'} | Custo: ${r.ec_custo_atual||'—'}`);
+  if(r.ec_dores) L.push(`Dores: ${r.ec_dores}`);
+  if(r.ec_nao_consegue) L.push(`Não consegue fazer: ${r.ec_nao_consegue}`);
+  L.push('');
+  L.push('INTEGRAÇÕES ATUAIS');
+  L.push(`Pagamento: ${[r.ec_pagamento,r.ec_pagamento_outro].filter(Boolean).join(', ')||'—'}`);
+  L.push(`Frete: ${[r.ec_frete,r.ec_frete_outro].filter(Boolean).join(', ')||'—'}`);
+  L.push(`NF/Estoque: ${[r.ec_erp,r.ec_erp_outro].filter(Boolean).join(', ')||'—'}`);
+  L.push(`Marketing: ${r.ec_marketing||'—'} | Atendimento: ${[r.ec_atendimento,r.ec_atendimento_outro].filter(Boolean).join(', ')||'—'}`);
+  if(r.ec_quer_integrar) L.push(`Quer integrar: ${r.ec_quer_integrar}`);
+  if(r.ec_sonho) L.push(`Recursos dos sonhos: ${r.ec_sonho}${r.ec_sonho_outro?', '+r.ec_sonho_outro:''}`);
+  L.push('');
+  L.push(`Identidade: ${mapVal('ec_identidade',r.ec_identidade)||'—'} | Fotos: ${mapVal('ec_fotos',r.ec_fotos)||'—'}`);
+  if(r.ec_objetivo) L.push(`Objetivo: ${r.ec_objetivo}`);
+  L.push(`Prazo: ${r.ec_prazo||'—'} | Verba: ${mapVal('ec_verba',r.ec_verba)||'—'} | Aceita mensalidade maior: ${mapVal('ec_aceita_mensalidade',r.ec_aceita_mensalidade)||'—'}`);
+  L.push(`Quem mantém: ${mapVal('ec_manutencao',r.ec_manutencao)||'—'}`);
+  if(r.ec_obs) L.push(`Obs: ${r.ec_obs}`);
+  L.push('');
+  L.push(`RECOMENDAÇÃO: ${rec.t.replace(/^[^A-Za-zÀ-ÿ]+/, '')}`);
+  rec.motivos.forEach(m=>L.push('- '+m.replace(/<[^>]+>/g,'')));
+  return L.join('\n');
+}
+function copiarResumo(i){
+  navigator.clipboard.writeText(montarResumo(i)).then(()=>{
+    const btn = event.target; const t = btn.textContent; btn.textContent='✓ Copiado!'; setTimeout(()=>btn.textContent=t,1600);
+  });
+}
+function whats(i){
+  const b = DADOS[i];
+  const tel = (b.whatsapp||'').replace(/\D/g,'');
+  const txt = encodeURIComponent(montarResumo(i));
+  window.open(tel ? `https://wa.me/55${tel}?text=${txt}` : `https://wa.me/?text=${txt}`, '_blank');
+}
+
+/* auto-login se já tem senha */
+if(sessionStorage.getItem('eloi_pw')) carregar();
+</script>
+</body>
+</html>

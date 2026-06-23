@@ -7,9 +7,12 @@ Repositório único do **site completo** (GitHub: `wilkereloig/briefing-eloidesi
 | Rota | Arquivo | Descrição |
 |------|---------|-----------|
 | `/` | `index.html` | Página principal (landing) |
-| `/briefing/` | `briefing/index.html` | Formulário de briefing (cliente preenche) |
-| `/admin/` | `admin/index.html` | Sessão administrativa — hub "Painel ELOI" (Briefings · Orçamentos · Orçamento inteligente · Aplicativos) |
+| `/briefing/` | `briefing/index.html` | Formulário de briefing de identidade visual (cliente preenche) |
+| `/briefing-ecommerce/` | `briefing-ecommerce/index.html` | Formulário de briefing de e-commerce GENÉRICO — 5 etapas (contato, negócio, loja atual, integrações, visual/verba). Base reutilizável. Grava em `ecommerce_briefings` + email Formspree (`_subject` "[E-COMMERCE]"). |
+| `/briefing-solarium/` | `briefing-solarium/index.html` | Briefing DIRECIONADO p/ cliente Solarium Cosméticos — pré-preenchido com análise do site; foco em posicionamento B2B, decisão de plataforma e gaps de operação. Mesma tabela/painel (campos `ec_*`). |
+| `/admin/` | `admin/index.html` | Sessão administrativa — hub "Painel ELOI" (Briefings · Briefings E-commerce · Orçamentos · Orçamento inteligente · Aplicativos) |
 | `/painel/` | `painel/index.html` | Lista / relatório dos briefings recebidos |
+| `/painel-ecommerce/` | `painel-ecommerce/index.html` | Lista / diagnóstico dos briefings de e-commerce (via edge `get-ecommerce-briefings`) + recomendação de plataforma |
 | `/painel-orcamentos/` | `painel-orcamentos/index.html` | Gestão de orçamentos / propostas |
 | `/orcamento-inteligente/` | `orcamento-inteligente/index.html` | Calculador de orçamento por catálogo de serviços (Supabase) + multiplicadores; gera orçamento no painel |
 | `/aplicativos/` | `aplicativos/index.html` | Meus aplicativos (ex.: ELOI Financeiro) |
