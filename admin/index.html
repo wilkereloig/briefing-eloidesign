@@ -8,19 +8,19 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;--c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;--white:#fff;--font:'carbona-variable',sans-serif}
-    body{font-family:var(--font);background:var(--c950);color:var(--white);min-height:100vh;line-height:1.6;display:flex;align-items:center;justify-content:center;padding:24px}
+    body{font-family:var(--font);background:var(--c950);color:var(--white);min-height:100vh;line-height:1.6;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px}
     .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(80px) saturate(140%);opacity:.5}
     .blob{position:absolute;border-radius:50%;mix-blend-mode:screen}
     .blob.b1{width:40%;height:45%;left:5%;top:2%;background:radial-gradient(circle,#9D4EDD,transparent 70%);animation:d1 20s ease-in-out infinite}
     .blob.b2{width:44%;height:50%;right:3%;top:-8%;background:radial-gradient(circle,#7B2CBF,transparent 70%);animation:d2 24s ease-in-out infinite}
     @keyframes d1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24%,16%) scale(1.2)}}
     @keyframes d2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20%,18%) scale(1.15)}}
-    .box{position:relative;z-index:1;width:100%;max-width:560px}
+    .box{position:relative;z-index:1;width:100%;max-width:960px}
     .logo{width:160px;display:block;margin:0 auto 32px}
     .card-base{background:rgba(36,0,70,.6);border:1px solid var(--c800);border-radius:20px;backdrop-filter:blur(8px)}
 
     /* login */
-    .login{padding:44px 40px;text-align:center;max-width:380px;margin:0 auto}
+    .login{padding:44px 40px;text-align:center;max-width:380px;margin:6vh auto 0}
     .login h1{font-size:1.2rem;font-variation-settings:'wght' 600;margin-bottom:20px}
     .login input{width:100%;background:var(--c950);border:1px solid var(--c800);border-radius:10px;color:#fff;font-family:var(--font);font-size:.95rem;padding:13px 16px;outline:none;transition:border-color .2s,box-shadow .2s}
     .login input:focus{border-color:var(--c500);box-shadow:0 0 0 3px rgba(157,78,221,.2)}
@@ -42,6 +42,30 @@
     .nav-card .d{font-size:.82rem;color:var(--c300)}
     .logout{display:block;margin:24px auto 0;background:transparent;border:1px solid var(--c800);color:var(--c300);font-family:var(--font);font-size:.82rem;padding:9px 20px;border-radius:8px;cursor:pointer;transition:border-color .2s}
     .logout:hover{border-color:var(--c500)}
+
+    /* dashboard */
+    .dash-loading{text-align:center;color:var(--c300);padding:30px;font-size:.9rem}
+    .dash{margin-bottom:24px}
+    .funnel{display:flex;align-items:center;gap:0;background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:16px;padding:18px 12px;margin-bottom:14px;overflow-x:auto}
+    .fstage{flex:1;text-align:center;min-width:78px}
+    .fstage .fn{font-size:1.7rem;font-variation-settings:'wght' 700;color:var(--c100);line-height:1.1}
+    .fstage .fl{font-size:.7rem;color:var(--c300);text-transform:uppercase;letter-spacing:.04em}
+    .farrow{display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--c500);font-size:1rem;min-width:42px}
+    .farrow .pc{font-size:.68rem;font-variation-settings:'wght' 700;color:var(--c300)}
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+    .stat{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:14px;padding:16px 18px}
+    .stat .sv{font-size:1.5rem;font-variation-settings:'wght' 700;color:#fff;line-height:1.1}
+    .stat .sl{font-size:.78rem;color:var(--c300);margin-top:3px}
+    .stat .ss{font-size:.72rem;color:var(--c100);opacity:.75;margin-top:7px}
+    .stat.good .sv{color:#aee8ae}
+    .stat.warn .sv{color:#E0AAFF}
+    .activity-wrap{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:14px;padding:6px 18px 12px}
+    .activity-h,.atalhos-h{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--c300);margin:16px 0 8px;font-variation-settings:'wght' 600;text-align:left}
+    .act{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid rgba(60,9,108,.5);font-size:.85rem}
+    .act:last-child{border-bottom:none}
+    .act .who{color:var(--c100)}
+    .act .when{color:var(--c300);opacity:.7;font-size:.74rem;white-space:nowrap}
+    .act-empty{color:var(--c300);opacity:.6;font-size:.85rem;padding:14px 0}
   </style>
 </head>
 <body>
@@ -83,7 +107,19 @@
   <!-- HUB -->
   <div class="hub" id="hubView">
     <h1>Painel ELOI</h1>
-    <p class="sub">Selecione o que deseja gerenciar</p>
+    <p class="sub">Visão geral do seu negócio</p>
+
+    <div class="dash-loading" id="dashLoading">Carregando métricas…</div>
+    <div class="dash" id="dash" style="display:none">
+      <div class="funnel" id="funnel"></div>
+      <div class="metrics" id="metrics"></div>
+      <div class="activity-wrap">
+        <div class="activity-h" style="margin-top:6px">Atividade recente</div>
+        <div id="activity"></div>
+      </div>
+    </div>
+
+    <div class="atalhos-h">Atalhos</div>
     <div class="cards">
       <a class="card-base nav-card" href="/painel-briefings/">
         <span class="ic">📋</span>
@@ -111,16 +147,83 @@
 </div>
 
 <script>
-const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/get-briefings';
+const SUPA = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1';
+let PW = '', INV = [], ORCS = null;
+
 function showHub(){ document.getElementById('loginView').style.display='none'; document.getElementById('hubView').classList.add('show'); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function pct(a,b){ return b ? Math.round(a/b*100) : 0; }
+async function post(fn,body){ const r=await fetch(SUPA+'/'+fn,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); if(!r.ok) throw r.status; return r.json(); }
+
 function entrar(){
-  const pw = document.getElementById('pw').value;
+  PW = document.getElementById('pw').value;
   const err = document.getElementById('err'); err.textContent='Verificando...';
-  fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})
-    .then(r=> r.ok ? r.json() : Promise.reject(r.status))
-    .then(()=>{ sessionStorage.setItem('eloi_pw', pw); showHub(); })
+  post('briefing-links',{password:PW,action:'list'})
+    .then(d=>{ sessionStorage.setItem('eloi_pw', PW); INV = d.invites||[]; showHub(); renderDash(); loadOrcs(); })
     .catch(s=>{ err.textContent = s===401 ? 'Senha incorreta.' : 'Erro. Tente de novo.'; });
 }
+function loadOrcs(){
+  post('orcamentos',{password:PW,action:'list'})
+    .then(d=>{ ORCS = d.orcamentos||[]; renderDash(); })
+    .catch(()=>{ ORCS = []; renderDash(); });
+}
+
+function renderDash(){
+  const orcs = ORCS || [];
+  const pend = INV.filter(b=>b.status==='pendente').length;
+  const resp = INV.filter(b=>b.status==='respondido').length;
+  const byS = s => orcs.filter(o=>(o.status||'rascunho')===s);
+  const enviados=byS('enviado'), aprovados=byS('aprovado'), recusados=byS('recusado'), rascunhos=byS('rascunho');
+  const sum = arr => arr.reduce((a,o)=>a+(Number(o.valor_total)||0),0);
+  const rFechado=sum(aprovados), rAberto=sum(enviados);
+  const orcEnv = enviados.length+aprovados.length+recusados.length;
+
+  // clientes distintos (provisório: nomes de briefings + orçamentos)
+  const set=new Set();
+  INV.forEach(b=>{ const k=(b.cliente||b.empresa||'').trim().toLowerCase(); if(k) set.add(k); });
+  orcs.forEach(o=>{ const k=(o.cliente||'').trim().toLowerCase(); if(k) set.add(k); });
+  const clientes=set.size;
+
+  // FUNIL
+  const stages=[
+    {n:INV.length, l:'Convites'},
+    {n:resp, l:'Respondidos', pc:pct(resp, INV.length)},
+    {n:orcEnv, l:'Orç. enviados', pc:pct(orcEnv, resp)},
+    {n:aprovados.length, l:'Aprovados', pc:pct(aprovados.length, orcEnv)}
+  ];
+  let fhtml='';
+  stages.forEach((s,i)=>{
+    if(i>0) fhtml+=`<div class="farrow">→<span class="pc">${s.pc}%</span></div>`;
+    fhtml+=`<div class="fstage"><div class="fn">${s.n}</div><div class="fl">${s.l}</div></div>`;
+  });
+  document.getElementById('funnel').innerHTML=fhtml;
+
+  // MÉTRICAS
+  const orcLoading = ORCS===null;
+  document.getElementById('metrics').innerHTML=`
+    <div class="stat"><div class="sv">${pend+resp}</div><div class="sl">Briefings</div><div class="ss">${pend} pendente(s) · ${resp} respondido(s)</div></div>
+    <div class="stat"><div class="sv">${orcLoading?'…':orcs.length}</div><div class="sl">Orçamentos</div><div class="ss">${orcLoading?'carregando':`${enviados.length} enviado(s) · ${aprovados.length} aprovado(s) · ${rascunhos.length} rascunho`}</div></div>
+    <div class="stat good"><div class="sv">${orcLoading?'…':brl(rFechado)}</div><div class="sl">Receita fechada</div><div class="ss">${aprovados.length} orçamento(s) aprovado(s)</div></div>
+    <div class="stat warn"><div class="sv">${orcLoading?'…':brl(rAberto)}</div><div class="sl">Em aberto (pipeline)</div><div class="ss">${enviados.length} enviado(s) aguardando</div></div>
+    <div class="stat"><div class="sv">${clientes}</div><div class="sl">Clientes</div><div class="ss">distintos (briefings + orçamentos)</div></div>`;
+
+  // ATIVIDADE
+  const acts=[];
+  INV.filter(b=>b.status==='respondido').forEach(b=>acts.push({t:b.responded_at||b.created_at, ic:'📋', txt:'Briefing respondido', who:b.cliente||b.empresa||'—'}));
+  orcs.forEach(o=>acts.push({t:o.created_at, ic:'💰', txt:'Orçamento '+(o.status||'rascunho'), who:(o.cliente||'—')+' · '+brl(o.valor_total)}));
+  acts.sort((a,b)=> new Date(b.t||0)-new Date(a.t||0));
+  const av=document.getElementById('activity');
+  if(!acts.length){ av.innerHTML='<div class="act-empty">Nada por aqui ainda. Gere um briefing ou crie um orçamento.</div>'; }
+  else av.innerHTML=acts.slice(0,7).map(a=>{
+    const dt=a.t?new Date(a.t).toLocaleDateString('pt-BR'):'';
+    return `<div class="act"><span>${a.ic} ${esc(a.txt)} — <span class="who">${esc(a.who)}</span></span><span class="when">${dt}</span></div>`;
+  }).join('');
+
+  document.getElementById('dashLoading').style.display='none';
+  document.getElementById('dash').style.display='block';
+}
+
 function sair(){ sessionStorage.removeItem('eloi_pw'); location.reload(); }
 document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') entrar(); });
 const saved = sessionStorage.getItem('eloi_pw');
