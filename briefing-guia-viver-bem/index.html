@@ -856,7 +856,7 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   nextBtn.addEventListener("click", function () {
-    if (validateStep(current)) show(Math.min(current + 1, total - 1));
+    if (IS_ADMIN || validateStep(current)) show(Math.min(current + 1, total - 1));
   });
   backBtn.addEventListener("click", function () { show(Math.max(current - 1, 0)); });
 
