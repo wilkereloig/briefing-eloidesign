@@ -119,6 +119,7 @@
             <option value="briefing-ecommerce">E-commerce (genérico)</option>
             <option value="briefing-solarium">E-commerce — Solarium</option>
             <option value="briefing">Identidade visual</option>
+            <option value="briefing-guia-viver-bem">Reestruturação — Guia Viver Bem</option>
           </select>
         </div>
         <button class="btn" onclick="gerar()" id="genBtn">Gerar link</button>
@@ -159,8 +160,8 @@ const BASE = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1';
 const FN_LINKS = BASE + '/briefing-links';
 let DADOS = [], FILTRO = 'todos', LAST_LINK = '', LAST_TEL = '';
 
-const TIPO_LABEL = { 'briefing':'Identidade visual', 'briefing-ecommerce':'E-commerce', 'briefing-solarium':'E-commerce (Solarium)' };
-const TIPO_PATH  = { 'briefing':'/briefing/', 'briefing-ecommerce':'/briefing-ecommerce/', 'briefing-solarium':'/briefing-solarium/' };
+const TIPO_LABEL = { 'briefing':'Identidade visual', 'briefing-ecommerce':'E-commerce', 'briefing-solarium':'E-commerce (Solarium)', 'briefing-guia-viver-bem':'Guia Viver Bem' };
+const TIPO_PATH  = { 'briefing':'/briefing/', 'briefing-ecommerce':'/briefing-ecommerce/', 'briefing-solarium':'/briefing-solarium/', 'briefing-guia-viver-bem':'/briefing-guia-viver-bem/' };
 function isEcom(t){ return t === 'briefing-ecommerce' || t === 'briefing-solarium'; }
 
 /* ===== mapas E-COMMERCE ===== */
@@ -257,11 +258,12 @@ function renderForms(){
   const el = document.getElementById('formsList'); if(!el) return;
   el.innerHTML = Object.keys(TIPO_PATH).map(tipo=>{
     const url = location.origin + TIPO_PATH[tipo];
+    const adminUrl = url + '?mode=admin';
     return `<div class="form-card">
       <div class="fname">${esc(TIPO_LABEL[tipo])}</div>
       <div class="fpath">${esc(TIPO_PATH[tipo])}</div>
       <div class="factions">
-        <a class="btn btn-sm" href="${url}" target="_blank" rel="noopener">Abrir</a>
+        <a class="btn btn-sm" href="${adminUrl}" target="_blank" rel="noopener">Abrir</a>
         <button class="btn btn-sm btn-ghost" onclick="copiar('${url}',this)">Copiar link</button>
       </div>
     </div>`;

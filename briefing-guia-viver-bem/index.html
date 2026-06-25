@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Briefing — Reestruturação do Guia Viver Bem</title>
+<meta name="description" content="Questionário de briefing para o estudo e reestruturação do portal Guia Viver Bem.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Paleta — eucalipto profundo + off-white real + acento argila. OKLCH. */
+    --bg:        oklch(0.984 0.004 165);
+    --surface:   oklch(1 0 0);
+    --surface-2: oklch(0.972 0.006 165);
+    --ink:       oklch(0.255 0.022 168);
+    --ink-soft:  oklch(0.40 0.022 168);
+    --muted:     oklch(0.455 0.018 168);
+    --line:      oklch(0.905 0.008 168);
+    --line-2:    oklch(0.855 0.012 168);
+    --primary:   oklch(0.455 0.085 168);
+    --primary-h: oklch(0.405 0.090 168);
+    --primary-t: oklch(0.955 0.018 168);
+    --accent:    oklch(0.64 0.135 42);
+    --accent-t:  oklch(0.965 0.020 56);
+    --focus:     oklch(0.58 0.10 200);
+    --danger:    oklch(0.55 0.16 25);
+
+    --r-sm: 8px;
+    --r-md: 12px;
+    --r-lg: 18px;
+    --shadow-sm: 0 1px 2px oklch(0.255 0.022 168 / 0.06), 0 2px 6px oklch(0.255 0.022 168 / 0.05);
+    --shadow-md: 0 8px 30px oklch(0.255 0.022 168 / 0.08), 0 2px 8px oklch(0.255 0.022 168 / 0.05);
+    --maxw: 720px;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body::before {
+    /* halo verde suave no topo, sem chamar atenção */
+    content: "";
+    position: fixed; inset: 0 0 auto 0; height: 360px; z-index: -1;
+    background: radial-gradient(120% 90% at 50% -20%, oklch(0.93 0.04 168 / 0.55), transparent 70%);
+    pointer-events: none;
+  }
+
+  h1, h2, h3 { font-family: "Newsreader", Georgia, serif; font-weight: 500; line-height: 1.12; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+
+  a { color: var(--primary); }
+
+  /* ---------- Top bar / progresso ---------- */
+  .topbar {
+    position: sticky; top: 0; z-index: 20;
+    background: oklch(0.984 0.004 165 / 0.82);
+    backdrop-filter: saturate(1.2) blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar__inner { max-width: var(--maxw); margin: 0 auto; padding: 14px 22px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.92rem; letter-spacing: -0.01em; }
+  .brand__dot { width: 26px; height: 26px; border-radius: 8px; background: var(--primary); color: var(--primary-t); display: grid; place-items: center; font-family: "Newsreader", serif; font-size: 1.05rem; line-height: 1; flex: none; }
+  .brand small { color: var(--muted); font-weight: 500; }
+  .progress { padding: 12px 0 11px; display: flex; align-items: center; gap: 14px; }
+  .progress__track { flex: 1; height: 6px; border-radius: 99px; background: var(--line-2); overflow: hidden; }
+  .progress__fill { height: 100%; width: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), oklch(0.52 0.10 168)); transform: scaleX(0); transform-origin: left center; transition: transform 0.5s var(--ease); }
+  .progress__count { font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 500; }
+
+  /* ---------- Layout ---------- */
+  main { max-width: var(--maxw); margin: 0 auto; padding: 34px 22px 120px; }
+  .step { display: none; }
+  .step.is-active { display: block; animation: stepIn 0.45s var(--ease) both; }
+  @keyframes stepIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  .step__eyebrow { font-size: 0.8rem; font-weight: 600; color: var(--primary); letter-spacing: 0.01em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .step__eyebrow::before { content: ""; width: 18px; height: 1.5px; background: var(--primary); display: inline-block; }
+  .step__title { font-size: clamp(1.85rem, 5vw, 2.6rem); margin-bottom: 12px; }
+  .step__intro { color: var(--ink-soft); font-size: 1.02rem; max-width: 60ch; margin-bottom: 30px; }
+  .step__intro strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Campos ---------- */
+  .field { margin-bottom: 26px; }
+  .field:last-child { margin-bottom: 0; }
+  .label { display: block; font-weight: 600; font-size: 1.02rem; margin-bottom: 4px; color: var(--ink); }
+  .label .num { color: var(--primary); font-variant-numeric: tabular-nums; margin-right: 4px; }
+  .req { color: var(--accent); font-weight: 600; }
+  .hint { display: block; color: var(--muted); font-size: 0.88rem; margin: 2px 0 12px; line-height: 1.5; }
+
+  input[type="text"], input[type="email"], input[type="tel"], textarea {
+    width: 100%; font: inherit; color: var(--ink);
+    background: var(--surface); border: 1.5px solid var(--line-2);
+    border-radius: var(--r-md); padding: 13px 15px; transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  }
+  textarea { min-height: 108px; resize: vertical; line-height: 1.55; }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px oklch(0.455 0.085 168 / 0.14); }
+
+  /* opções (radio / checkbox) como linhas selecionáveis */
+  .options { display: grid; gap: 9px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 12px; cursor: pointer;
+    background: var(--surface); border: 1.5px solid var(--line-2);
+    border-radius: var(--r-md); padding: 13px 15px; transition: border-color 0.16s, background 0.16s, box-shadow 0.16s;
+  }
+  .opt:hover { border-color: var(--line); background: var(--surface-2); }
+  .opt input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .opt__mark { flex: none; width: 21px; height: 21px; border: 1.5px solid var(--line-2); display: grid; place-items: center; margin-top: 1px; transition: all 0.16s; }
+  .opt[data-type="radio"] .opt__mark { border-radius: 99px; }
+  .opt[data-type="check"] .opt__mark { border-radius: 6px; }
+  .opt__mark::after { content: ""; opacity: 0; transition: opacity 0.16s, transform 0.16s; }
+  .opt[data-type="radio"] .opt__mark::after { width: 10px; height: 10px; border-radius: 99px; background: var(--primary-t); transform: scale(0.4); }
+  .opt[data-type="check"] .opt__mark::after { width: 11px; height: 6px; border-left: 2px solid var(--primary-t); border-bottom: 2px solid var(--primary-t); transform: rotate(-45deg) translateY(-1px) scale(0.6); }
+  .opt__text { font-size: 0.98rem; color: var(--ink); }
+  .opt input:checked ~ .opt__mark { background: var(--primary); border-color: var(--primary); }
+  .opt input:checked ~ .opt__mark::after { opacity: 1; transform: scale(1) rotate(0); }
+  .opt[data-type="check"] input:checked ~ .opt__mark::after { transform: rotate(-45deg) translateY(-1px) scale(1); }
+  .opt:has(input:checked) { border-color: var(--primary); background: var(--primary-t); }
+  .opt input:focus-visible ~ .opt__mark { box-shadow: 0 0 0 4px oklch(0.455 0.085 168 / 0.16); }
+
+  /* escala 1-5 */
+  .scale { display: grid; gap: 8px; }
+  .scale .opt__text b { font-weight: 600; }
+
+  /* "outro" input embutido */
+  .other-wrap { margin-top: -3px; padding-left: 33px; }
+  .other-wrap input { max-width: 420px; }
+  [hidden] { display: none !important; }
+
+  /* matriz Q15 */
+  .matrix { border: 1.5px solid var(--line-2); border-radius: var(--r-lg); overflow: hidden; background: var(--surface); }
+  .matrix__row { display: grid; grid-template-columns: 1fr 168px; align-items: center; gap: 14px; padding: 11px 16px; border-bottom: 1px solid var(--line); }
+  .matrix__row:last-child { border-bottom: 0; }
+  .matrix__row:nth-child(even) { background: var(--surface-2); }
+  .matrix__cat { font-size: 0.94rem; font-weight: 500; }
+  .matrix__cat .sub { color: var(--muted); font-weight: 400; }
+  select {
+    width: 100%; font: inherit; font-size: 0.9rem; color: var(--ink);
+    background: var(--surface); border: 1.5px solid var(--line-2); border-radius: var(--r-sm);
+    padding: 9px 11px; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%23667' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px;
+  }
+  select:invalid { color: var(--muted); }
+
+  /* arquivo */
+  .file-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-left: 33px; margin-top: 4px; }
+  input[type="file"] { font-size: 0.9rem; }
+  input[type="file"]::file-selector-button { font: inherit; font-weight: 600; font-size: 0.85rem; color: var(--primary); background: var(--primary-t); border: 1.5px solid var(--line-2); border-radius: var(--r-sm); padding: 8px 14px; margin-right: 12px; cursor: pointer; transition: background 0.16s; }
+  input[type="file"]::file-selector-button:hover { background: var(--surface-2); }
+
+  .err { display: none; color: var(--danger); font-size: 0.85rem; font-weight: 500; margin-top: 7px; }
+  .field.invalid .err { display: block; }
+  .field.invalid input, .field.invalid textarea, .field.invalid select { border-color: var(--danger); }
+  .field.invalid .options { outline: 0; }
+
+  /* ---------- bloco próximos passos ---------- */
+  .nextsteps { background: var(--primary); color: var(--primary-t); border-radius: var(--r-lg); padding: 30px 28px; margin-bottom: 8px; }
+  .nextsteps h3 { color: var(--primary-t); font-size: 1.5rem; margin-bottom: 8px; }
+  .nextsteps p { color: oklch(0.90 0.02 168); font-size: 0.98rem; margin: 0 0 18px; }
+  .nextsteps ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+  .nextsteps li { display: flex; gap: 13px; align-items: flex-start; font-size: 0.98rem; }
+  .nextsteps li b { color: var(--primary-t); }
+  .nextsteps li span { color: oklch(0.90 0.02 168); }
+  .check { flex: none; width: 24px; height: 24px; border-radius: 99px; background: var(--accent); color: var(--accent-t); display: grid; place-items: center; font-size: 0.8rem; margin-top: 1px; }
+  .deadline { margin-top: 20px; padding-top: 18px; border-top: 1px solid oklch(0.62 0.06 168 / 0.5); font-size: 0.92rem; color: oklch(0.90 0.02 168); }
+  .deadline b { color: var(--primary-t); }
+
+  /* ---------- navegação ---------- */
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 20; background: oklch(0.984 0.004 165 / 0.9); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
+  .nav__inner { max-width: var(--maxw); margin: 0 auto; padding: 14px 22px; display: flex; align-items: center; gap: 14px; }
+  .autosave { font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 7px; margin-right: auto; }
+  .autosave::before { content: ""; width: 7px; height: 7px; border-radius: 99px; background: var(--primary); opacity: 0.45; }
+  .btn { font: inherit; font-weight: 600; font-size: 0.95rem; border-radius: var(--r-md); padding: 13px 26px; cursor: pointer; border: 1.5px solid transparent; transition: transform 0.12s var(--ease), background 0.16s, box-shadow 0.16s, color 0.16s; }
+  .btn:active { transform: translateY(1px); }
+  .btn--ghost { background: transparent; color: var(--ink-soft); border-color: var(--line-2); }
+  .btn--ghost:hover { background: var(--surface-2); color: var(--ink); }
+  .btn--primary { background: var(--primary); color: var(--primary-t); box-shadow: var(--shadow-sm); }
+  .btn--primary:hover { background: var(--primary-h); box-shadow: var(--shadow-md); }
+  .btn--primary:disabled { opacity: 0.6; cursor: progress; }
+
+  /* ---------- confirmação ---------- */
+  .done { display: none; min-height: 70vh; place-items: center; text-align: center; padding: 40px 22px; }
+  .done.is-active { display: grid; animation: stepIn 0.6s var(--ease) both; }
+  .done__card { max-width: 540px; }
+  .done__badge { width: 76px; height: 76px; border-radius: 99px; background: var(--primary); color: var(--primary-t); display: grid; place-items: center; margin: 0 auto 26px; box-shadow: var(--shadow-md); }
+  .done__badge svg { width: 36px; height: 36px; }
+  .done h2 { font-size: clamp(2rem, 6vw, 2.8rem); margin-bottom: 14px; }
+  .done p { color: var(--ink-soft); font-size: 1.05rem; margin: 0 auto 22px; max-width: 46ch; }
+  .done__list { text-align: left; display: inline-grid; gap: 14px; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: 22px 24px; box-shadow: var(--shadow-sm); }
+  .done__list div { display: flex; gap: 12px; align-items: flex-start; font-size: 0.98rem; }
+  .done__list .check { background: var(--primary); color: var(--primary-t); }
+
+  .formerr { display: none; margin-top: 14px; padding: 13px 16px; border-radius: var(--r-md); background: oklch(0.96 0.04 25); border: 1.5px solid oklch(0.80 0.10 25); color: var(--danger); font-size: 0.9rem; }
+  .formerr.is-active { display: block; }
+  .formerr a { color: var(--danger); font-weight: 600; }
+
+  @media (max-width: 560px) {
+    main { padding: 26px 18px 130px; }
+    .topbar__inner { padding: 13px 18px 0; }
+    .nav__inner { padding: 12px 18px; gap: 10px; }
+    .btn { padding: 12px 18px; }
+    .autosave { display: none; }
+    .matrix__row { grid-template-columns: 1fr; gap: 9px; align-items: stretch; }
+    .matrix__row select { width: 100%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    .step.is-active, .done.is-active { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar__inner">
+    <div class="brand"><span class="brand__dot">V</span> Guia Viver Bem <small>· Briefing de reestruturação</small></div>
+    <div class="progress" role="progressbar" aria-label="Progresso do questionário" aria-valuemin="1" aria-valuemax="9" aria-valuenow="1">
+      <div class="progress__track"><div class="progress__fill" id="bar"></div></div>
+      <div class="progress__count" id="count">Etapa 1 de 9</div>
+    </div>
+  </div>
+</header>
+
+<form id="form" novalidate>
+<main>
+
+  <!-- ETAPA 1 — Dados -->
+  <section class="step is-active" data-step>
+    <p class="step__eyebrow">Vamos começar</p>
+    <h1 class="step__title">Questionário de briefing</h1>
+    <p class="step__intro">Olá! Para entender exatamente o que você precisa e planejar as melhorias do seu site, responda esse questionário com calma. <strong>Não existe resposta certa ou errada</strong> — quanto mais detalhes você der, melhor eu consigo trabalhar para você. Leva de 15 a 20 minutos, e suas respostas ficam salvas neste navegador caso precise parar e voltar depois.</p>
+
+    <div class="field">
+      <label class="label" for="nome">Seu nome <span class="req">*</span></label>
+      <input type="text" id="nome" name="Nome" required placeholder="Como você gostaria de ser chamada?">
+      <span class="err">Por favor, preencha seu nome.</span>
+    </div>
+    <div class="field">
+      <label class="label" for="email">Seu melhor e-mail <span class="req">*</span></label>
+      <span class="hint">É nesse e-mail que você vai receber o plano de trabalho e o orçamento.</span>
+      <input type="email" id="email" name="E-mail" required placeholder="voce@exemplo.com.br">
+      <span class="err">Informe um e-mail válido.</span>
+    </div>
+    <div class="field">
+      <label class="label" for="whats">Seu WhatsApp</label>
+      <span class="hint">Opcional — só para agilizar caso eu tenha uma dúvida rápida.</span>
+      <input type="tel" id="whats" name="WhatsApp" placeholder="(84) 9 0000-0000">
+    </div>
+  </section>
+
+  <!-- ETAPA 2 — Visão geral -->
+  <section class="step" data-step>
+    <p class="step__eyebrow">Seção 1</p>
+    <h2 class="step__title">Visão geral e objetivos</h2>
+    <p class="step__intro">Primeiro, o panorama: o que incomoda hoje e onde você quer chegar.</p>
+
+    <div class="field">
+      <label class="label"><span class="num">1.</span>Em uma frase, qual é o principal problema que você sente no site hoje? <span class="req">*</span></label>
+      <textarea name="1. Principal problema do site hoje" required placeholder="Escreva com suas palavras..."></textarea>
+      <span class="err">Conte pra mim, mesmo que em poucas palavras.</span>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">2.</span>Qual é o principal objetivo da reestruturação? <span class="req">*</span></label>
+      <div class="options" data-radio="2. Principal objetivo">
+        <label class="opt" data-type="radio"><input type="radio" name="2. Principal objetivo" value="Melhorar o visual e o design" required><span class="opt__mark"></span><span class="opt__text">Melhorar o visual e o design</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="2. Principal objetivo" value="Reorganizar o conteúdo e as categorias"><span class="opt__mark"></span><span class="opt__text">Reorganizar o conteúdo e as categorias</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="2. Principal objetivo" value="Atrair mais leitores (tráfego orgânico)"><span class="opt__mark"></span><span class="opt__text">Atrair mais leitores (tráfego orgânico)</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="2. Principal objetivo" value="Conseguir mais anunciantes e parceiros"><span class="opt__mark"></span><span class="opt__text">Conseguir mais anunciantes e parceiros</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="2. Principal objetivo" value="Melhorar a experiência no celular"><span class="opt__mark"></span><span class="opt__text">Melhorar a experiência no celular</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="2. Principal objetivo" value="Tornar o site mais profissional e confiável"><span class="opt__mark"></span><span class="opt__text">Tornar o site mais profissional e confiável</span></label>
+        <label class="opt" data-type="radio" data-other><input type="radio" name="2. Principal objetivo" value="Outro"><span class="opt__mark"></span><span class="opt__text">Outro</span></label>
+      </div>
+      <div class="other-wrap" hidden><input type="text" name="2. Objetivo (outro)" placeholder="Qual?"></div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">3.</span>Se o site fosse uma pessoa, como você descreveria a personalidade que ele deveria transmitir?</label>
+      <span class="hint">Ex: confiável e sério como um médico de família, ou moderno e próximo como um influenciador de saúde?</span>
+      <textarea name="3. Personalidade do site" placeholder="A personalidade ideal seria..."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">4.</span>Existe algum site — de saúde ou não — que você admira e gostaria de usar como referência?</label>
+      <span class="hint">Pode colar links. Vale referência de visual ou de organização.</span>
+      <textarea name="4. Sites de referência" placeholder="Gosto de... porque..."></textarea>
+    </div>
+  </section>
+
+  <!-- ETAPA 3 — Público e conteúdo -->
+  <section class="step" data-step>
+    <p class="step__eyebrow">Seção 2</p>
+    <h2 class="step__title">Público e conteúdo</h2>
+    <p class="step__intro">Para quem você escreve e o que vale a pena destacar.</p>
+
+    <div class="field">
+      <label class="label"><span class="num">5.</span>Descreva o leitor típico do Guia Viver Bem. Quem é essa pessoa? <span class="req">*</span></label>
+      <span class="hint">Idade, onde mora, o que procura, por que confia em você.</span>
+      <textarea name="5. Leitor típico" required placeholder="Normalmente é alguém que..."></textarea>
+      <span class="err">Me ajude a enxergar quem é seu leitor.</span>
+    </div>
+    <div class="field">
+      <label class="label"><span class="num">6.</span>Qual tipo de conteúdo gera mais retorno hoje — em leitores, comentários ou retorno de anunciantes?</label>
+      <textarea name="6. Conteúdo de maior retorno" placeholder="O que mais funciona é..."></textarea>
+    </div>
+    <div class="field">
+      <label class="label"><span class="num">7.</span>Existe algum tipo de conteúdo que você publica hoje mas quer parar, reduzir ou reformular?</label>
+      <textarea name="7. Conteúdo a parar/reduzir/reformular" placeholder="Quero rever..."></textarea>
+    </div>
+    <div class="field">
+      <label class="label"><span class="num">8.</span>Você tem planos de criar novos tipos de conteúdo que ainda não existem no site?</label>
+      <span class="hint">Ex: podcast, vídeos próprios, boletim semanal, quiz de saúde.</span>
+      <textarea name="8. Novos conteúdos planejados" placeholder="Tenho vontade de..."></textarea>
+    </div>
+  </section>
+
+  <!-- ETAPA 4 — Design -->
+  <section class="step" data-step>
+    <p class="step__eyebrow">Seção 3</p>
+    <h2 class="step__title">Design e identidade visual</h2>
+    <p class="step__intro">O que fica, o que sai, e o que você já tem de marca.</p>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">9.</span>Como você avalia o visual atual do site? <span class="req">*</span></label>
+      <div class="options scale" data-radio="9. Avaliação do visual atual">
+        <label class="opt" data-type="radio"><input type="radio" name="9. Avaliação do visual atual" value="1 — Muito desatualizado" required><span class="opt__mark"></span><span class="opt__text"><b>1</b> — Muito desatualizado, precisa mudar tudo</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="9. Avaliação do visual atual" value="2 — Ruim"><span class="opt__mark"></span><span class="opt__text"><b>2</b> — Ruim, mas algumas coisas podem ficar</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="9. Avaliação do visual atual" value="3 — Razoável"><span class="opt__mark"></span><span class="opt__text"><b>3</b> — Razoável, mas precisa de modernização</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="9. Avaliação do visual atual" value="4 — Bom"><span class="opt__mark"></span><span class="opt__text"><b>4</b> — Bom, só precisa de ajustes pequenos</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="9. Avaliação do visual atual" value="5 — Satisfeita"><span class="opt__mark"></span><span class="opt__text"><b>5</b> — Satisfeita com o visual atual</span></label>
+      </div>
+      <span class="err">Dê uma nota de 1 a 5.</span>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">10.</span>O que você definitivamente quer MANTER do design atual?</label>
+      <textarea name="10. Manter do design" placeholder="Gosto de manter..."></textarea>
+    </div>
+    <div class="field">
+      <label class="label"><span class="num">11.</span>O que você definitivamente quer ELIMINAR ou MUDAR?</label>
+      <textarea name="11. Eliminar/mudar do design" placeholder="Quero eliminar..."></textarea>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">12.</span>Você tem uma identidade visual definida (manual de marca, paleta, tipografia)? <span class="req">*</span></label>
+      <div class="options" data-radio="12. Identidade visual">
+        <label class="opt" data-type="radio" data-file><input type="radio" name="12. Identidade visual" value="Sim — tenho arquivos de marca" required><span class="opt__mark"></span><span class="opt__text">Sim — tenho arquivos de marca definidos</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="12. Identidade visual" value="Algumas referências, não formal"><span class="opt__mark"></span><span class="opt__text">Tenho algumas referências, mas não é formal</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="12. Identidade visual" value="Não tenho nada definido"><span class="opt__mark"></span><span class="opt__text">Não tenho nada definido ainda</span></label>
+      </div>
+      <div class="file-row" hidden>
+        <input type="file" name="Arquivos de marca" multiple>
+        <span class="hint" style="margin:0">Logo, paleta, manual — o que tiver.</span>
+      </div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">13.</span>Qual a importância do site funcionar bem no celular? <span class="req">*</span></label>
+      <div class="options" data-radio="13. Importância do celular">
+        <label class="opt" data-type="radio"><input type="radio" name="13. Importância do celular" value="Prioridade nº 1" required><span class="opt__mark"></span><span class="opt__text">É a prioridade número 1 — a maioria dos meus leitores usa celular</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="13. Importância do celular" value="Importante, não urgente"><span class="opt__mark"></span><span class="opt__text">É importante, mas não é a urgência principal</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="13. Importância do celular" value="Não é prioridade"><span class="opt__mark"></span><span class="opt__text">Não é prioridade no momento</span></label>
+      </div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+  </section>
+
+  <!-- ETAPA 5 — Estrutura -->
+  <section class="step" data-step>
+    <p class="step__eyebrow">Seção 4</p>
+    <h2 class="step__title">Estrutura e organização</h2>
+    <p class="step__intro">Como o conteúdo se organiza — menu, categorias, guia local e colunistas.</p>
+
+    <div class="field">
+      <label class="label"><span class="num">14.</span>O menu atual faz sentido para você? O que mudaria?</label>
+      <span class="hint">Menu atual: Guia Viver Bem · Colunas · Programas · Revistas · Eventos · Blog.</span>
+      <textarea name="14. Menu atual" placeholder="No menu, eu..."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">14b.</span>Há páginas, links ou áreas do site que você sabe que estão quebradas, vazias ou desatualizadas?</label>
+      <span class="hint">Ex: uma página que não abre, uma seção parada há tempos, algo que some no celular.</span>
+      <textarea name="14b. Áreas quebradas ou desatualizadas" placeholder="Sei que está com problema..."></textarea>
+    </div>
+
+    <div class="field" data-matrix>
+      <label class="label"><span class="num">15.</span>O que fazer com cada categoria atual? <span class="req">*</span></label>
+      <span class="hint">Para cada uma, escolha o destino. Se não souber, tudo bem marcar "Não sei".</span>
+      <div class="matrix" id="matrix"></div>
+      <span class="err">Defina o destino de cada categoria.</span>
+    </div>
+    <div class="field">
+      <label class="label">Quer criar alguma categoria nova que ainda não existe?</label>
+      <textarea name="15b. Categorias novas" placeholder="Gostaria de criar..."></textarea>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">16.</span>O Guia Local de clínicas tem hoje só 18 entradas. O que fazer com ele? <span class="req">*</span></label>
+      <div class="options" data-radio="16. Guia Local">
+        <label class="opt" data-type="radio"><input type="radio" name="16. Guia Local" value="Expandir bastante — um dos focos" required><span class="opt__mark"></span><span class="opt__text">Quero expandir bastante — esse é um dos focos da reestruturação</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="16. Guia Local" value="Transformar em produto pago"><span class="opt__mark"></span><span class="opt__text">Quero transformar em produto pago para clínicas anunciantes</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="16. Guia Local" value="Manter como está"><span class="opt__mark"></span><span class="opt__text">Quero manter como está por enquanto</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="16. Guia Local" value="Não sei ainda"><span class="opt__mark"></span><span class="opt__text">Não sei ainda</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="16. Guia Local" value="Eliminar a seção"><span class="opt__mark"></span><span class="opt__text">Quero eliminar essa seção</span></label>
+      </div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">16b.</span>Ainda sobre o Guia Local: você já tem relacionamento com clínicas, laboratórios ou consultórios de Natal?</label>
+      <span class="hint">Se sim, quantos você acha que conseguiria trazer como anunciantes de um guia atualizado?</span>
+      <textarea name="16b. Relacionamento com clínicas e potencial" placeholder="Hoje converso com... acho que traria..."></textarea>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">17.</span>Quer criar uma área de colunistas fixos (especialistas com nome, foto e bio)? <span class="req">*</span></label>
+      <div class="options" data-radio="17. Colunistas fixos">
+        <label class="opt" data-type="radio"><input type="radio" name="17. Colunistas fixos" value="Sim, criar do zero" required><span class="opt__mark"></span><span class="opt__text">Sim, quero criar do zero</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="17. Colunistas fixos" value="Já tenho e quero expandir"><span class="opt__mark"></span><span class="opt__text">Já tenho e quero expandir</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="17. Colunistas fixos" value="Não vejo necessidade agora"><span class="opt__mark"></span><span class="opt__text">Não vejo necessidade agora</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="17. Colunistas fixos" value="Não sei"><span class="opt__mark"></span><span class="opt__text">Não sei</span></label>
+      </div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">17b.</span>Você conhece especialistas com registro (médicos, psicólogos, nutricionistas, fisioterapeutas) dispostos a assinar conteúdo no site?</label>
+      <span class="hint">Saber o nome e a área de cada um ajuda a planejar a seção de colunistas.</span>
+      <textarea name="17b. Acesso a especialistas para colunas" placeholder="Conheço... das áreas de..."></textarea>
+    </div>
+  </section>
+
+  <!-- ETAPA 6 — Funcionalidades -->
+  <section class="step" data-step>
+    <p class="step__eyebrow">Seção 5</p>
+    <h2 class="step__title">Funcionalidades</h2>
+    <p class="step__intro">Recursos que o site pode ganhar. Marque quantos quiser.</p>
+
+    <div class="field">
+      <label class="label"><span class="num">18.</span>Quais funcionalidades você quer adicionar ou melhorar?</label>
+      <div class="options" style="margin-top:10px">
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Newsletter / boletim por e-mail"><span class="opt__mark"></span><span class="opt__text">Newsletter / boletim por e-mail para leitores</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Busca interna mais eficiente"><span class="opt__mark"></span><span class="opt__text">Sistema de busca interno mais eficiente</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Página de perfil por clínica"><span class="opt__mark"></span><span class="opt__text">Página de perfil para cada clínica do guia local</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Área de membros / conteúdo exclusivo"><span class="opt__mark"></span><span class="opt__text">Área de membros ou conteúdo exclusivo para assinantes</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Formulário para anunciantes"><span class="opt__mark"></span><span class="opt__text">Formulário de contato para anunciantes</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Galeria da Revista VB com download"><span class="opt__mark"></span><span class="opt__text">Galeria de edições da Revista VB Digital com download</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Integração com Instagram"><span class="opt__mark"></span><span class="opt__text">Integração com Instagram (feed automático no site)</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Página de eventos com calendário"><span class="opt__mark"></span><span class="opt__text">Página de eventos com calendário visual</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Captação de inscrições/e-mails nos eventos"><span class="opt__mark"></span><span class="opt__text">Captação de inscrições e e-mails nos eventos físicos (corrida, treinos)</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Botão de WhatsApp flutuante"><span class="opt__mark"></span><span class="opt__text">Botão de WhatsApp flutuante</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Comentários nos artigos"><span class="opt__mark"></span><span class="opt__text">Comentários nos artigos</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="18. Funcionalidades" value="Compartilhamento fácil nas redes"><span class="opt__mark"></span><span class="opt__text">Compartilhamento fácil nas redes sociais</span></label>
+        <label class="opt" data-type="check" data-other><input type="checkbox" name="18. Funcionalidades" value="Outro"><span class="opt__mark"></span><span class="opt__text">Outro</span></label>
+      </div>
+      <div class="other-wrap" hidden><input type="text" name="18. Funcionalidades (outro)" placeholder="Qual?"></div>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">19.</span>A Revista VB Digital (102 edições) precisa de mais destaque? <span class="req">*</span></label>
+      <div class="options" data-radio="19. Destaque da Revista">
+        <label class="opt" data-type="radio"><input type="radio" name="19. Destaque da Revista" value="Sim, área própria e destacada" required><span class="opt__mark"></span><span class="opt__text">Sim, quero uma área própria e bem destacada</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="19. Destaque da Revista" value="Um pouco mais de destaque"><span class="opt__mark"></span><span class="opt__text">Sim, um pouco mais de destaque já ajudaria</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="19. Destaque da Revista" value="Está bem como está"><span class="opt__mark"></span><span class="opt__text">Está bem como está</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="19. Destaque da Revista" value="Não sei"><span class="opt__mark"></span><span class="opt__text">Não sei</span></label>
+      </div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">20.</span>Quer uma área exclusiva para potenciais anunciantes (audiência, pacotes, contato)? <span class="req">*</span></label>
+      <div class="options" data-radio="20. Área de anunciantes">
+        <label class="opt" data-type="radio"><input type="radio" name="20. Área de anunciantes" value="Sim, quero criar" required><span class="opt__mark"></span><span class="opt__text">Sim, quero criar essa área</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="20. Área de anunciantes" value="Já tenho e quero melhorar"><span class="opt__mark"></span><span class="opt__text">Já tenho algo assim e quero melhorar</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="20. Área de anunciantes" value="Não é prioridade agora"><span class="opt__mark"></span><span class="opt__text">Não é prioridade agora</span></label>
+      </div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">20b.</span>Você coleta e-mails de leitores hoje?</label>
+      <span class="hint">Isso define se a newsletter começa do zero ou aproveita uma base que já existe.</span>
+      <div class="options">
+        <label class="opt" data-type="radio"><input type="radio" name="20b. Lista de e-mails hoje" value="Sim, tenho lista ativa"><span class="opt__mark"></span><span class="opt__text">Sim, tenho uma lista ativa</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="20b. Lista de e-mails hoje" value="Coleto mas não uso"><span class="opt__mark"></span><span class="opt__text">Coleto, mas não uso / está parada</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="20b. Lista de e-mails hoje" value="Não coleto"><span class="opt__mark"></span><span class="opt__text">Não coleto e-mails</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="20b. Lista de e-mails hoje" value="Não sei"><span class="opt__mark"></span><span class="opt__text">Não sei</span></label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ETAPA 7 — Negócio -->
+  <section class="step" data-step>
+    <p class="step__eyebrow">Seção 6</p>
+    <h2 class="step__title">Negócio e monetização</h2>
+    <p class="step__intro">Como o site sustenta o projeto e onde você quer chegar financeiramente.</p>
+
+    <div class="field">
+      <label class="label"><span class="num">21.</span>Como o site gera receita hoje? <span class="req">*</span></label>
+      <span class="hint">Marque tudo que se aplica.</span>
+      <div class="options" data-checkreq="21. Receita atual" style="margin-top:6px">
+        <label class="opt" data-type="check"><input type="checkbox" name="21. Receita atual" value="Banners e anúncios locais"><span class="opt__mark"></span><span class="opt__text">Banners e anúncios de clínicas e empresas locais</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="21. Receita atual" value="Conteúdo pago / patrocinado"><span class="opt__mark"></span><span class="opt__text">Conteúdo pago / patrocinado</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="21. Receita atual" value="Eventos físicos"><span class="opt__mark"></span><span class="opt__text">Eventos físicos (corrida, treinos, conexão)</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="21. Receita atual" value="Revista digital"><span class="opt__mark"></span><span class="opt__text">Revista digital (venda ou patrocínio)</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="21. Receita atual" value="Ainda não gera receita direta"><span class="opt__mark"></span><span class="opt__text">Ainda não gera receita direta</span></label>
+        <label class="opt" data-type="check" data-other><input type="checkbox" name="21. Receita atual" value="Outro"><span class="opt__mark"></span><span class="opt__text">Outro</span></label>
+      </div>
+      <div class="other-wrap" hidden><input type="text" name="21. Receita (outro)" placeholder="Qual?"></div>
+      <span class="err">Marque ao menos uma opção.</span>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">22.</span>Qual sua principal meta com o site nos próximos 12 meses? <span class="req">*</span></label>
+      <div class="options" data-radio="22. Meta 12 meses">
+        <label class="opt" data-type="radio"><input type="radio" name="22. Meta 12 meses" value="Aumentar anunciantes locais" required><span class="opt__mark"></span><span class="opt__text">Aumentar o número de anunciantes locais</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="22. Meta 12 meses" value="Criar novo produto de receita"><span class="opt__mark"></span><span class="opt__text">Criar um novo produto de receita (guia pago, newsletter, assinatura)</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="22. Meta 12 meses" value="Atrair anunciantes nacionais"><span class="opt__mark"></span><span class="opt__text">Atrair anunciantes nacionais do setor saúde</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="22. Meta 12 meses" value="Manter modelo e melhorar visual"><span class="opt__mark"></span><span class="opt__text">Manter o modelo atual e melhorar o visual</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="22. Meta 12 meses" value="Ainda não defini meta financeira"><span class="opt__mark"></span><span class="opt__text">Ainda não defini uma meta financeira</span></label>
+      </div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">23.</span>Perdeu ou deixou de fechar algum anunciante por limitação do site atual?</label>
+      <textarea name="23. Anunciantes perdidos" placeholder="Já aconteceu de..."></textarea>
+    </div>
+  </section>
+
+  <!-- ETAPA 8 — Prazo -->
+  <section class="step" data-step>
+    <p class="step__eyebrow">Seção 7</p>
+    <h2 class="step__title">Prazo e expectativas</h2>
+    <p class="step__intro">Por último, ritmo e prioridade — para eu planejar as etapas certas.</p>
+
+    <div class="field">
+      <label class="label"><span class="num">24.</span>Tem uma data limite ou evento importante para o site estar pronto antes?</label>
+      <textarea name="24. Data limite" placeholder="Preciso que esteja pronto antes de..."></textarea>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">24b.</span>O que você já tem em mãos para começarmos?</label>
+      <span class="hint">Marque o que tiver acesso — sem stress se não souber, a gente resolve junto.</span>
+      <div class="options">
+        <label class="opt" data-type="check"><input type="checkbox" name="24b. Acessos disponíveis" value="Painel WordPress (admin)"><span class="opt__mark"></span><span class="opt__text">Acesso ao painel do WordPress (administrador)</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="24b. Acessos disponíveis" value="Hospedagem"><span class="opt__mark"></span><span class="opt__text">Acesso à hospedagem do site</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="24b. Acessos disponíveis" value="Registro do domínio"><span class="opt__mark"></span><span class="opt__text">Acesso ao registro do domínio (Registro.br)</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="24b. Acessos disponíveis" value="Google Analytics / Search Console"><span class="opt__mark"></span><span class="opt__text">Google Analytics / Search Console</span></label>
+        <label class="opt" data-type="check"><input type="checkbox" name="24b. Acessos disponíveis" value="Não tenho certeza"><span class="opt__mark"></span><span class="opt__text">Não tenho certeza de quais eu tenho</span></label>
+      </div>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">25.</span>Qual sua expectativa de prazo para a reestruturação? <span class="req">*</span></label>
+      <div class="options" data-radio="25. Prazo esperado">
+        <label class="opt" data-type="radio"><input type="radio" name="25. Prazo esperado" value="Urgente — até 30 dias" required><span class="opt__mark"></span><span class="opt__text">Urgente — resultado em até 30 dias</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="25. Prazo esperado" value="Moderado — até 60 dias"><span class="opt__mark"></span><span class="opt__text">Moderado — até 60 dias está ótimo</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="25. Prazo esperado" value="Tranquilo — 90 dias ou mais"><span class="opt__mark"></span><span class="opt__text">Tranquilo — 90 dias ou mais, com cuidado</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="25. Prazo esperado" value="Ainda não sei"><span class="opt__mark"></span><span class="opt__text">Ainda não sei</span></label>
+      </div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+
+    <div class="field" data-group>
+      <label class="label"><span class="num">26.</span>Em qual aspecto você quer ver resultado primeiro? <span class="req">*</span></label>
+      <div class="options" data-radio="26. Resultado prioritário">
+        <label class="opt" data-type="radio"><input type="radio" name="26. Resultado prioritário" value="No visual" required><span class="opt__mark"></span><span class="opt__text">No visual — quero que fique bonito logo</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="26. Resultado prioritário" value="Na organização"><span class="opt__mark"></span><span class="opt__text">Na organização — quero o conteúdo mais fácil de encontrar</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="26. Resultado prioritário" value="Na captação"><span class="opt__mark"></span><span class="opt__text">Na captação — quero mais anunciantes ou leitores rapidamente</span></label>
+        <label class="opt" data-type="radio"><input type="radio" name="26. Resultado prioritário" value="No celular"><span class="opt__mark"></span><span class="opt__text">No celular — quero que funcione bem no smartphone primeiro</span></label>
+      </div>
+      <span class="err">Escolha uma opção.</span>
+    </div>
+
+    <div class="field">
+      <label class="label"><span class="num">27.</span>Tem algo importante que eu não perguntei e você quer me contar?</label>
+      <textarea name="27. Observações livres" placeholder="Queria também te dizer que..."></textarea>
+    </div>
+  </section>
+
+  <!-- ETAPA 9 — Revisão e envio -->
+  <section class="step" data-step>
+    <p class="step__eyebrow">Quase lá</p>
+    <h2 class="step__title">Revisão e envio</h2>
+    <p class="step__intro">Tudo pronto. Antes de enviar, veja o que acontece a seguir.</p>
+
+    <div class="nextsteps">
+      <h3>Próximos passos após o envio</h3>
+      <p>Depois que você enviar, vou analisar todas as suas respostas com cuidado e preparar duas coisas para você:</p>
+      <ul>
+        <li><span class="check">✓</span><span><b>Um plano de trabalho detalhado</b> — descrevendo tudo que será feito no site, em qual ordem e quanto tempo cada etapa vai levar.</span></li>
+        <li><span class="check">✓</span><span><b>Um orçamento personalizado</b> — com o investimento de cada parte da reestruturação, de forma clara e sem surpresas.</span></li>
+      </ul>
+      <p class="deadline">Você recebe tudo por e-mail em até <b>3 dias úteis</b> após enviar este formulário. Só então decidimos juntas se seguimos em frente e como.</p>
+    </div>
+
+    <div class="formerr" id="formerr">Não consegui enviar agora. Verifique sua conexão e tente de novo — ou me mande as respostas direto por <a id="mailtoFallback" href="#">e-mail</a>.</div>
+  </section>
+
+</main>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <span class="autosave" id="autosave">Respostas salvas neste navegador</span>
+    <button type="button" class="btn btn--ghost" id="back" hidden>Voltar</button>
+    <button type="button" class="btn btn--primary" id="next">Continuar</button>
+    <button type="submit" class="btn btn--primary" id="submit" hidden>Enviar meu briefing</button>
+  </div>
+</nav>
+</form>
+
+<!-- CONFIRMAÇÃO -->
+<section class="done" id="done">
+  <div class="done__card">
+    <div class="done__badge"><svg viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <h2>Recebi seu briefing!</h2>
+    <p>Obrigado pela confiança. Vou analisar suas respostas com atenção nos próximos dias. Em até <strong>3 dias úteis</strong> você vai receber no seu e-mail:</p>
+    <div class="done__list">
+      <div><span class="check">✓</span><span>Um <b>plano de trabalho</b> com tudo que será feito no site, etapa por etapa.</span></div>
+      <div><span class="check">✓</span><span>Um <b>orçamento detalhado</b> com o investimento de cada parte da reestruturação.</span></div>
+    </div>
+    <p style="margin-top:24px;font-size:0.95rem">Só depois disso a gente decide juntas como seguir. Qualquer dúvida antes, é só me chamar.</p>
+  </div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ===== CONFIG — troque pelo seu endpoint do Formspree ===== */
+  var FORMSPREE_ENDPOINT = "https://formspree.io/f/xpqeraow"; // caixa compartilhada ELOI
+  var EMAIL_FALLBACK = "wilkereloigalvao@gmail.com";
+  var STORAGE_KEY = "briefing_gvb_v1";
+  // Integração nativa com o painel ELOI (token gerado no painel-briefings)
+  var SUPA_URL = "https://nlamznxoocmygfvnqcns.supabase.co";
+  var TOKEN = new URLSearchParams(location.search).get("t");
+  var IS_ADMIN = new URLSearchParams(location.search).get("mode") === "admin";
+  /* ========================================================== */
+
+  var form = document.getElementById("form");
+  var steps = Array.prototype.slice.call(document.querySelectorAll("[data-step]"));
+  var bar = document.getElementById("bar");
+  var count = document.getElementById("count");
+  var backBtn = document.getElementById("back");
+  var nextBtn = document.getElementById("next");
+  var submitBtn = document.getElementById("submit");
+  var progressEl = document.querySelector(".progress");
+  var current = 0;
+  var total = steps.length;
+
+  /* ---- Matriz Q15 gerada por JS ---- */
+  var CATS = [
+    "Blog","Notícias","Guia Viver Bem",
+    "Guia › Alimentação","Guia › Clínicas","Guia › Dermatologia","Guia › Fisioterapia",
+    "Guia › Laboratórios","Guia › Odontologia","Guia › Oftalmologia","Guia › Psicologia","Guia › Saúde",
+    "Colunas › Fisioterapia Neurofuncional","Colunas › Psicologia",
+    "Programas","Revistas",
+    "Eventos › Conexão Viver Bem","Eventos › Corrida Pirangi Praiano","Eventos › Treinos Viver Bem"
+  ];
+  var DESTINOS = ["Manter","Renomear","Expandir","Reduzir","Eliminar","Não sei"];
+  var matrix = document.getElementById("matrix");
+  CATS.forEach(function (cat) {
+    var parts = cat.split(" › ");
+    var label = parts.length > 1
+      ? '<span class="sub">' + parts[0] + ' › </span>' + parts[1]
+      : cat;
+    var row = document.createElement("div");
+    row.className = "matrix__row";
+    var opts = '<option value="" selected disabled>Escolha…</option>' +
+      DESTINOS.map(function (d) { return '<option value="' + d + '">' + d + '</option>'; }).join("");
+    row.innerHTML = '<div class="matrix__cat">' + label + '</div>' +
+      '<select name="15. ' + cat + '" required>' + opts + '</select>';
+    matrix.appendChild(row);
+  });
+
+  /* ---- Mostrar/ocultar "Outro" e upload de arquivo ---- */
+  form.addEventListener("change", function (e) {
+    var t = e.target;
+    // grupos com "outro"
+    document.querySelectorAll('.options').forEach(function (group) {
+      var otherInput = group.parentElement.querySelector('.other-wrap');
+      if (!otherInput) return;
+      var otherOpt = group.querySelector('[data-other] input');
+      if (!otherOpt) return;
+      otherInput.hidden = !otherOpt.checked;
+    });
+    // upload de arquivo (Q12)
+    var fileRow = document.querySelector('.file-row');
+    if (fileRow) {
+      var sim = document.querySelector('[data-file] input');
+      fileRow.hidden = !(sim && sim.checked);
+    }
+    save();
+  });
+  form.addEventListener("input", save);
+
+  /* ---- Persistência (localStorage) ---- */
+  var saveTimer;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try {
+        var data = {};
+        form.querySelectorAll("input, textarea, select").forEach(function (el) {
+          if (el.type === "file") return;
+          var key = el.name + "|" + (el.value || "");
+          if (el.type === "radio" || el.type === "checkbox") {
+            if (el.checked) data[key] = true;
+          } else if (el.value) {
+            data[el.name] = el.value;
+          }
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }, 350);
+  }
+  function restore() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      form.querySelectorAll("input, textarea, select").forEach(function (el) {
+        if (el.type === "file") return;
+        if (el.type === "radio" || el.type === "checkbox") {
+          if (data[el.name + "|" + el.value]) el.checked = true;
+        } else if (data[el.name] != null) {
+          el.value = data[el.name];
+        }
+      });
+      // reaplica condicionais
+      document.querySelectorAll('.options').forEach(function (group) {
+        var otherWrap = group.parentElement.querySelector('.other-wrap');
+        if (!otherWrap) return;
+        var otherOpt = group.querySelector('[data-other] input');
+        if (otherOpt) otherWrap.hidden = !otherOpt.checked;
+      });
+      var fileRow = document.querySelector('.file-row');
+      if (fileRow) { var sim = document.querySelector('[data-file] input'); fileRow.hidden = !(sim && sim.checked); }
+    } catch (e) {}
+  }
+
+  /* ---- Validação por etapa ---- */
+  function validateStep(idx) {
+    var step = steps[idx];
+    var ok = true;
+    var firstBad = null;
+
+    step.querySelectorAll(".field").forEach(function (field) { field.classList.remove("invalid"); });
+
+    // inputs / textarea / select obrigatórios
+    step.querySelectorAll("input[required], textarea[required], select[required]").forEach(function (el) {
+      // radios: validar o grupo só uma vez
+      if (el.type === "radio") {
+        var group = form.querySelectorAll('input[name="' + CSS.escape(el.name) + '"]');
+        var checked = Array.prototype.some.call(group, function (r) { return r.checked; });
+        if (!checked) { markInvalid(el); ok = false; firstBad = firstBad || el; }
+        return;
+      }
+      if (!el.value || (el.value.trim && !el.value.trim())) {
+        markInvalid(el); ok = false; firstBad = firstBad || el;
+      }
+      if (el.type === "email" && el.value && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value)) {
+        markInvalid(el); ok = false; firstBad = firstBad || el;
+      }
+    });
+
+    // checkbox obrigatório (Q21)
+    step.querySelectorAll("[data-checkreq]").forEach(function (group) {
+      var any = group.querySelector('input:checked');
+      if (!any) {
+        var field = group.closest(".field");
+        if (field) field.classList.add("invalid");
+        ok = false; firstBad = firstBad || group;
+      }
+    });
+
+    if (firstBad) {
+      var f = firstBad.closest(".field");
+      if (f) f.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    return ok;
+  }
+  function markInvalid(el) {
+    var field = el.closest(".field");
+    if (field) field.classList.add("invalid");
+  }
+  // limpar erro ao corrigir
+  form.addEventListener("change", function (e) {
+    var f = e.target.closest(".field.invalid");
+    if (f) f.classList.remove("invalid");
+  });
+
+  /* ---- Navegação ---- */
+  function show(idx) {
+    steps[current].classList.remove("is-active");
+    current = idx;
+    steps[current].classList.add("is-active");
+    var pct = ((current + 1) / total) * 100;
+    bar.style.transform = "scaleX(" + ((current + 1) / total) + ")";
+    count.textContent = "Etapa " + (current + 1) + " de " + total;
+    progressEl.setAttribute("aria-valuenow", current + 1);
+    backBtn.hidden = current === 0;
+    var last = current === total - 1;
+    nextBtn.hidden = last;
+    submitBtn.hidden = !last;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  nextBtn.addEventListener("click", function () {
+    if (validateStep(current)) show(Math.min(current + 1, total - 1));
+  });
+  backBtn.addEventListener("click", function () { show(Math.max(current - 1, 0)); });
+
+  /* ---- Envio ---- */
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    document.getElementById("formerr").classList.remove("is-active");
+    // valida todas as etapas (modo admin/preview pula validação)
+    if (!IS_ADMIN) {
+      for (var i = 0; i < total; i++) {
+        if (!validateStep(i)) { show(i); return; }
+      }
+    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enviando…";
+
+    var fd = new FormData(form);
+    fd.append("_subject", "[REESTRUTURAÇÃO] Briefing — Guia Viver Bem");
+    var obj = {};
+    fd.forEach(function (v, k) {
+      if (v === "" || k === "_subject") return;
+      obj[k] = (obj[k] !== undefined && obj[k] !== "") ? obj[k] + ", " + v : v;
+    });
+
+    // 1) Painel ELOI via token (quando aberto pelo link do painel-briefings)
+    var toSupabase = TOKEN
+      ? fetch(SUPA_URL + "/functions/v1/briefing-submit", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: TOKEN, raw: obj })
+        })
+      : Promise.reject(new Error("sem token"));
+    // 2) E-mail de backup (sempre)
+    var toFormspree = fetch(FORMSPREE_ENDPOINT, { method: "POST", body: fd, headers: { "Accept": "application/json" } });
+
+    Promise.allSettled([toSupabase, toFormspree]).then(function (r) {
+      var ok = (r[0].status === "fulfilled" && r[0].value.ok) ||
+               (r[1].status === "fulfilled" && r[1].value.ok);
+      if (ok) onSuccess(); else onError();
+    }).catch(onError);
+  });
+
+  function onSuccess() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    form.style.display = "none";
+    document.querySelector(".nav").style.display = "none";
+    document.querySelector(".topbar").style.display = "none";
+    document.getElementById("done").classList.add("is-active");
+    window.scrollTo(0, 0);
+  }
+  function onError() {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Enviar meu briefing";
+    var box = document.getElementById("formerr");
+    box.classList.add("is-active");
+    var nome = (form.querySelector('[name="Nome"]') || {}).value || "";
+    document.getElementById("mailtoFallback").href =
+      "mailto:" + EMAIL_FALLBACK + "?subject=" + encodeURIComponent("Briefing Guia Viver Bem — " + nome);
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  /* ---- Init ---- */
+  restore();
+  show(0);
+})();
+</script>
+</body>
+</html>
