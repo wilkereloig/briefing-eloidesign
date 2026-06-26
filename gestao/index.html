@@ -383,7 +383,7 @@ async function salvarServico(){
       const { path, signed_url } = await api('nf.upload_url', { servico_id: saved.id, filename: file.name });
       const put = await fetch(signed_url, { method:'PUT', headers:{'content-type':file.type||'application/pdf'}, body:file });
       if(!put.ok) throw new Error('Falha no upload do PDF');
-      await api('servicos.upsert', { servico:{ id:saved.id, cliente_id:saved.cliente_id, descricao:saved.descricao, nf_arquivo_url:path } });
+      await api('servicos.upsert', { servico:{ ...saved, nf_arquivo_url:path } });
     }
     fecharModal('modalServico'); toast('Serviço salvo');
     await Promise.all([ carregarDashboard(), carregarServicos(), carregarClientes() ]);
