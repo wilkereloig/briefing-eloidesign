@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão — ELOI Design Studio</title>
+  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;--c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;--white:#fff;--font:'carbona-variable',sans-serif;--good:#aee8ae;--warn:#E0AAFF}
+    body{font-family:var(--font);background:var(--c950);color:var(--white);min-height:100vh;line-height:1.6}
+    a{color:var(--c300)}
+    .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(80px) saturate(140%);opacity:.4}
+    .blob{position:absolute;border-radius:50%;mix-blend-mode:screen}
+    .blob.b1{width:40%;height:45%;left:5%;top:2%;background:radial-gradient(circle,#9D4EDD,transparent 70%);animation:d1 20s ease-in-out infinite}
+    .blob.b2{width:44%;height:50%;right:3%;top:-8%;background:radial-gradient(circle,#7B2CBF,transparent 70%);animation:d2 24s ease-in-out infinite}
+    @keyframes d1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24%,16%) scale(1.2)}}
+    @keyframes d2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20%,18%) scale(1.15)}}
+
+    /* login */
+    .login{position:relative;z-index:1;max-width:380px;margin:12vh auto 0;background:rgba(36,0,70,.6);border:1px solid var(--c800);border-radius:20px;padding:44px 40px;text-align:center;backdrop-filter:blur(8px)}
+    .login .logo{width:150px;margin:0 auto 26px;display:block}
+    .login h1{font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:20px}
+    .login input{width:100%;background:var(--c950);border:1px solid var(--c800);border-radius:10px;color:#fff;font-family:var(--font);font-size:.95rem;padding:13px 16px;outline:none}
+    .login input:focus{border-color:var(--c500);box-shadow:0 0 0 3px rgba(157,78,221,.2)}
+    .login button{width:100%;margin-top:14px;background:var(--c700);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:.95rem;font-variation-settings:'wght' 600;padding:14px;cursor:pointer}
+    .login button:hover{background:var(--c600)}
+    .err{color:#f87171;font-size:.85rem;margin-top:12px;min-height:1.2em}
+
+    /* app */
+    #app{display:none;position:relative;z-index:1;max-width:1040px;margin:0 auto;padding:28px 22px 80px}
+    #app.show{display:block}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+    .topbar .logo{width:128px;display:block}
+    .topbar .right{display:flex;gap:10px}
+    .btn{background:var(--c700);border:none;border-radius:10px;color:#fff;font-family:var(--font);font-size:.88rem;font-variation-settings:'wght' 600;padding:10px 18px;cursor:pointer;transition:background .2s,transform .15s}
+    .btn:hover{background:var(--c600);transform:translateY(-1px)}
+    .btn-ghost{background:transparent;border:1px solid var(--c800);color:var(--c300);text-decoration:none;display:inline-flex;align-items:center}
+    .btn-ghost:hover{border-color:var(--c500);color:#fff}
+    .btn-sm{padding:6px 12px;font-size:.78rem}
+
+    /* dashboard */
+    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+    .stat{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:14px;padding:15px 18px}
+    .stat .sv{font-size:1.5rem;font-variation-settings:'wght' 700;line-height:1.1}
+    .stat .sl{font-size:.76rem;color:var(--c300);margin-top:3px}
+    .stat.good .sv{color:var(--good)}
+    .stat.warn .sv{color:var(--warn)}
+    .rankwrap{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:14px;padding:12px 18px;margin-bottom:24px}
+    .rankwrap h3{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--c300);margin-bottom:8px;font-variation-settings:'wght' 600}
+    .rank-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:.88rem}
+    .rank-row .rv{margin-left:auto;color:var(--c100);font-variation-settings:'wght' 600}
+
+    /* tabs */
+    .tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--c800)}
+    .tab{background:none;border:none;color:var(--c300);font-family:var(--font);font-size:.92rem;padding:10px 16px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+    .tab.active{color:#fff;border-bottom-color:var(--c500);font-variation-settings:'wght' 600}
+
+    /* chips */
+    .chip{display:inline-block;color:#fff;font-size:.74rem;font-variation-settings:'wght' 600;border-radius:99px;padding:3px 12px;white-space:nowrap}
+
+    /* filtros */
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:end}
+    .filters select,.filters input{background:var(--c950);border:1px solid var(--c800);border-radius:8px;color:#fff;font-family:var(--font);font-size:.82rem;padding:8px 11px;outline:none}
+    .filters label{font-size:.7rem;color:var(--c300);display:block;margin-bottom:3px}
+
+    /* serviços agrupados */
+    .grupo{margin-bottom:20px}
+    .grupo-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .grupo-h .gtot{margin-left:auto;font-size:.8rem;color:var(--c300)}
+    .svc{background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:7px;cursor:pointer;transition:border-color .2s,background .2s}
+    .svc:hover{border-color:var(--c500);background:rgba(45,0,85,.6)}
+    .svc .desc{flex:1;min-width:0}
+    .svc .desc .d{font-size:.92rem;overflow:hidden;text-overflow:ellipsis}
+    .svc .desc .m{font-size:.72rem;color:var(--c300);margin-top:2px}
+    .svc .valor{font-variation-settings:'wght' 700;font-size:.95rem;white-space:nowrap}
+    .badge{font-size:.68rem;border-radius:99px;padding:2px 9px;white-space:nowrap;border:1px solid}
+    .badge.exec{background:rgba(224,170,255,.12);border-color:var(--c600);color:var(--c100)}
+    .badge.concl{background:rgba(56,142,60,.16);border-color:#4a7d4f;color:var(--good)}
+    .badge.pago{background:rgba(56,142,60,.16);border-color:#4a7d4f;color:var(--good)}
+    .badge.naopago{background:rgba(248,113,113,.12);border-color:#9a4a4a;color:#f3b4b4}
+    .nf-pill{font-size:.7rem;color:var(--c100);border:1px solid var(--c700);border-radius:6px;padding:2px 8px;background:transparent;cursor:pointer;font-family:var(--font)}
+    .nf-pill:hover{border-color:var(--c500)}
+
+    /* clientes */
+    .cli-row{background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .cli-row .cmeta{margin-left:auto;font-size:.78rem;color:var(--c300);text-align:right}
+
+    .empty{text-align:center;color:var(--c300);padding:36px 20px;opacity:.7}
+
+    /* modal */
+    .modal-bg{display:none;position:fixed;inset:0;z-index:10;background:rgba(8,0,20,.7);backdrop-filter:blur(3px);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+    .modal-bg.show{display:flex}
+    .modal{background:var(--c900);border:1px solid var(--c700);border-radius:16px;padding:24px;width:100%;max-width:460px}
+    .modal h2{font-size:1.05rem;font-variation-settings:'wght' 700;margin-bottom:16px}
+    .fld{margin-bottom:12px}
+    .fld label{display:block;font-size:.76rem;color:var(--c300);margin-bottom:5px}
+    .fld input,.fld select,.fld textarea{width:100%;background:var(--c950);border:1px solid var(--c800);border-radius:8px;color:#fff;font-family:var(--font);font-size:.9rem;padding:10px 13px;outline:none}
+    .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--c500);box-shadow:0 0 0 3px rgba(157,78,221,.18)}
+    .fld textarea{resize:vertical;min-height:54px}
+    .frow{display:flex;gap:10px}
+    .frow .fld{flex:1}
+    .chk{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--c100)}
+    .chk input{width:auto}
+    .modal-actions{display:flex;gap:10px;justify-content:space-between;margin-top:18px}
+    .modal-actions .btn-del{background:transparent;border:1px solid #9a4a4a;color:#f3b4b4}
+    .modal-actions .btn-del:hover{background:rgba(154,74,74,.2)}
+    .modal-err{color:#f87171;font-size:.82rem;min-height:1.1em;margin-top:6px}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--c700);color:#fff;padding:12px 22px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20}
+    .toast.show{opacity:1}
+  </style>
+</head>
+<body>
+<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span></div>
+
+<!-- LOGIN -->
+<div class="login" id="loginView">
+  <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750.94 177.34" aria-label="ELOI Design Studio">
+    <defs><style>.cls-1{fill:#fff}</style></defs>
+    <g><g><g>
+      <path class="cls-1" d="M29.56,169.41c-9.77-5.29-17.14-12.61-22.11-21.99-4.97-9.37-7.45-20.22-7.45-32.56s2.52-24.03,7.57-33.64c5.05-9.61,12.41-17.02,22.11-22.23,9.69-5.2,21.42-7.81,35.2-7.81s25.11,2.49,34.48,7.45c9.37,4.97,16.5,12.01,21.39,21.15,4.88,9.13,7.41,19.94,7.57,32.44v5.77c0,.96-.08,1.92-.24,2.88H15.86l.48-19.46h87.47l-11.29,12.02c.64-8.65.04-15.86-1.8-21.63-1.84-5.77-4.97-10.13-9.37-13.1-4.41-2.96-10.06-4.45-16.94-4.45-7.53,0-13.58,1.8-18.14,5.41-4.57,3.6-7.81,8.29-9.73,14.06s-2.88,12.34-2.88,19.7c0,8.33,1.24,15.42,3.72,21.27,2.48,5.85,6.17,10.25,11.05,13.22,4.88,2.97,10.85,4.45,17.9,4.45,7.53,0,13.61-1.4,18.26-4.2,4.64-2.8,7.69-6.37,9.13-10.69h33.16c-2.88,12.98-9.65,22.87-20.3,29.68-10.66,6.81-24.47,10.21-41.45,10.21-13.94,0-25.79-2.64-35.56-7.93Z"/>
+      <path class="cls-1" d="M192.12,170.01c-6.97-3.44-12.1-8.97-15.38-16.58-3.29-7.61-4.93-17.66-4.93-30.16V34.36h-43.49V6.97h54.79c5.44,0,9.73.72,12.86,2.16,3.12,1.44,5.41,3.72,6.85,6.85s2.16,7.41,2.16,12.86v96.6c0,5.29.56,9.53,1.68,12.74,1.12,3.21,3.12,5.61,6.01,7.21,2.88,1.6,6.89,2.4,12.01,2.4h31.24v27.39h-37.25c-10.73,0-19.58-1.72-26.55-5.17Z"/>
+      <path class="cls-1" d="M300.97,169.29c-9.53-5.37-16.7-12.77-21.51-22.23-4.81-9.45-7.21-20.5-7.21-33.16s2.4-23.23,7.21-32.68c4.81-9.45,12.02-16.82,21.63-22.11,9.61-5.29,21.3-7.93,35.08-7.93s25.43,2.64,34.96,7.93c9.53,5.29,16.74,12.66,21.63,22.11,4.88,9.45,7.33,20.35,7.33,32.68s-2.44,23.71-7.33,33.16c-4.89,9.45-12.1,16.86-21.63,22.23-9.53,5.37-21.19,8.05-34.96,8.05s-25.67-2.68-35.2-8.05ZM358.88,140.46c5.05-6.17,7.57-15.02,7.57-26.55,0-7.37-1.12-13.66-3.36-18.86-2.25-5.2-5.61-9.21-10.09-12.01-4.49-2.8-10.17-4.21-17.06-4.21-9.93,0-17.42,3.05-22.47,9.13-5.04,6.09-7.57,14.74-7.57,25.95,0,7.69,1.12,14.18,3.36,19.46,2.24,5.29,5.6,9.33,10.09,12.13,4.48,2.81,10.01,4.21,16.58,4.21,10.25,0,17.9-3.08,22.95-9.25Z"/>
+      <path class="cls-1" d="M415.71,147.78h48.3v-67.04h-43.01v-27.39h54.31c5.61,0,9.97.68,13.1,2.04,3.12,1.36,5.37,3.6,6.73,6.73,1.36,3.12,2.04,7.49,2.04,13.1v72.57h43.97v27.39h-125.44v-27.39ZM462.81,31.6c-3.69-3.12-5.53-7.73-5.53-13.82s1.8-10.57,5.41-13.46c3.61-2.88,9.01-4.33,16.22-4.33s12.57,1.44,16.1,4.33c3.52,2.88,5.29,7.37,5.29,13.46s-1.77,10.69-5.29,13.82c-3.53,3.12-8.89,4.69-16.1,4.69s-12.42-1.56-16.1-4.69Z"/>
+    </g></g></g>
+  </svg>
+  <h1>Gestão</h1>
+  <input type="password" id="pw" placeholder="Senha de acesso" autocomplete="current-password">
+  <button onclick="entrar()">Entrar</button>
+  <div class="err" id="loginErr"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750.94 177.34" aria-label="ELOI Design Studio">
+      <defs><style>.cls-1{fill:#fff}</style></defs>
+      <g><g><g>
+        <path class="cls-1" d="M29.56,169.41c-9.77-5.29-17.14-12.61-22.11-21.99-4.97-9.37-7.45-20.22-7.45-32.56s2.52-24.03,7.57-33.64c5.05-9.61,12.41-17.02,22.11-22.23,9.69-5.2,21.42-7.81,35.2-7.81s25.11,2.49,34.48,7.45c9.37,4.97,16.5,12.01,21.39,21.15,4.88,9.13,7.41,19.94,7.57,32.44v5.77c0,.96-.08,1.92-.24,2.88H15.86l.48-19.46h87.47l-11.29,12.02c.64-8.65.04-15.86-1.8-21.63-1.84-5.77-4.97-10.13-9.37-13.1-4.41-2.96-10.06-4.45-16.94-4.45-7.53,0-13.58,1.8-18.14,5.41-4.57,3.6-7.81,8.29-9.73,14.06s-2.88,12.34-2.88,19.7c0,8.33,1.24,15.42,3.72,21.27,2.48,5.85,6.17,10.25,11.05,13.22,4.88,2.97,10.85,4.45,17.9,4.45,7.53,0,13.61-1.4,18.26-4.2,4.64-2.8,7.69-6.37,9.13-10.69h33.16c-2.88,12.98-9.65,22.87-20.3,29.68-10.66,6.81-24.47,10.21-41.45,10.21-13.94,0-25.79-2.64-35.56-7.93Z"/>
+        <path class="cls-1" d="M192.12,170.01c-6.97-3.44-12.1-8.97-15.38-16.58-3.29-7.61-4.93-17.66-4.93-30.16V34.36h-43.49V6.97h54.79c5.44,0,9.73.72,12.86,2.16,3.12,1.44,5.41,3.72,6.85,6.85s2.16,7.41,2.16,12.86v96.6c0,5.29.56,9.53,1.68,12.74,1.12,3.21,3.12,5.61,6.01,7.21,2.88,1.6,6.89,2.4,12.01,2.4h31.24v27.39h-37.25c-10.73,0-19.58-1.72-26.55-5.17Z"/>
+        <path class="cls-1" d="M300.97,169.29c-9.53-5.37-16.7-12.77-21.51-22.23-4.81-9.45-7.21-20.5-7.21-33.16s2.4-23.23,7.21-32.68c4.81-9.45,12.02-16.82,21.63-22.11,9.61-5.29,21.3-7.93,35.08-7.93s25.43,2.64,34.96,7.93c9.53,5.29,16.74,12.66,21.63,22.11,4.88,9.45,7.33,20.35,7.33,32.68s-2.44,23.71-7.33,33.16c-4.89,9.45-12.1,16.86-21.63,22.23-9.53,5.37-21.19,8.05-34.96,8.05s-25.67-2.68-35.2-8.05ZM358.88,140.46c5.05-6.17,7.57-15.02,7.57-26.55,0-7.37-1.12-13.66-3.36-18.86-2.25-5.2-5.61-9.21-10.09-12.01-4.49-2.8-10.17-4.21-17.06-4.21-9.93,0-17.42,3.05-22.47,9.13-5.04,6.09-7.57,14.74-7.57,25.95,0,7.69,1.12,14.18,3.36,19.46,2.24,5.29,5.6,9.33,10.09,12.13,4.48,2.81,10.01,4.21,16.58,4.21,10.25,0,17.9-3.08,22.95-9.25Z"/>
+        <path class="cls-1" d="M415.71,147.78h48.3v-67.04h-43.01v-27.39h54.31c5.61,0,9.97.68,13.1,2.04,3.12,1.36,5.37,3.6,6.73,6.73,1.36,3.12,2.04,7.49,2.04,13.1v72.57h43.97v27.39h-125.44v-27.39ZM462.81,31.6c-3.69-3.12-5.53-7.73-5.53-13.82s1.8-10.57,5.41-13.46c3.61-2.88,9.01-4.33,16.22-4.33s12.57,1.44,16.1,4.33c3.52,2.88,5.29,7.37,5.29,13.46s-1.77,10.69-5.29,13.82c-3.53,3.12-8.89,4.69-16.1,4.69s-12.42-1.56-16.1-4.69Z"/>
+      </g></g></g>
+    </svg>
+    <div class="right">
+      <a class="btn btn-ghost btn-sm" href="/admin/">← Admin</a>
+      <button class="btn btn-ghost btn-sm" onclick="sair()">Sair</button>
+    </div>
+  </div>
+
+  <!-- dashboard -->
+  <div class="metrics" id="metrics"></div>
+  <div class="rankwrap" id="rankwrap" style="display:none">
+    <h3>Faturamento por cliente</h3>
+    <div id="rank"></div>
+  </div>
+
+  <!-- tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="servicos" onclick="trocarTab('servicos')">Serviços</button>
+    <button class="tab" data-tab="clientes" onclick="trocarTab('clientes')">Clientes</button>
+  </div>
+
+  <!-- aba serviços -->
+  <div id="tabServicos">
+    <div class="filters">
+      <div><label>Cliente</label><select id="fCliente" onchange="carregarServicos()"><option value="">Todos</option></select></div>
+      <div><label>Status</label><select id="fStatus" onchange="carregarServicos()"><option value="">Todos</option><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
+      <div><label>Pagamento</label><select id="fPago" onchange="carregarServicos()"><option value="">Todos</option><option value="true">Pago</option><option value="false">A receber</option></select></div>
+      <div><label>Mês (pgto)</label><input type="month" id="fMes" onchange="carregarServicos()"></div>
+      <div style="margin-left:auto"><button class="btn" onclick="abrirServico()">+ Serviço</button></div>
+    </div>
+    <div id="servicosList"></div>
+  </div>
+
+  <!-- aba clientes -->
+  <div id="tabClientes" style="display:none">
+    <div class="filters"><div style="margin-left:auto"><button class="btn" onclick="abrirCliente()">+ Cliente</button></div></div>
+    <div id="clientesList"></div>
+  </div>
+</div>
+
+<!-- MODAL SERVIÇO -->
+<div class="modal-bg" id="modalServico">
+  <div class="modal">
+    <h2 id="svcTitle">Novo serviço</h2>
+    <input type="hidden" id="svcId">
+    <div class="fld"><label>Cliente</label><select id="svcCliente"></select></div>
+    <div class="fld"><label>Serviço (descrição)</label><textarea id="svcDesc" placeholder="Ex: Layout jogo ROG (versão vertical)"></textarea></div>
+    <div class="frow">
+      <div class="fld"><label>Valor (R$)</label><input type="text" id="svcValor" inputmode="decimal" placeholder="1.000,00"></div>
+      <div class="fld"><label>Status</label><select id="svcStatus"><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
+    </div>
+    <div class="frow">
+      <div class="fld"><label>Nº Nota (NF-S)</label><input type="text" id="svcNf" placeholder="ex: 23"></div>
+      <div class="fld"><label>Data pagamento</label><input type="date" id="svcData"></div>
+    </div>
+    <div class="fld"><label class="chk"><input type="checkbox" id="svcPago"> Pago</label></div>
+    <div class="fld"><label>Observações</label><textarea id="svcObs" placeholder="ex: pago parcial / precisa emitir nota"></textarea></div>
+    <div class="fld"><label>PDF da nota fiscal</label><input type="file" id="svcPdf" accept="application/pdf"><div id="svcNfAtual" style="font-size:.76rem;margin-top:6px"></div></div>
+    <div class="modal-err" id="svcErr"></div>
+    <div class="modal-actions">
+      <button class="btn btn-del" id="svcDelBtn" onclick="excluirServico()" style="display:none">Excluir</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="btn btn-ghost" onclick="fecharModal('modalServico')">Cancelar</button>
+        <button class="btn" id="svcSaveBtn" onclick="salvarServico()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-bg" id="modalCliente">
+  <div class="modal">
+    <h2 id="cliTitle">Novo cliente</h2>
+    <input type="hidden" id="cliId">
+    <div class="frow">
+      <div class="fld" style="flex:2"><label>Nome / empresa</label><input type="text" id="cliNome" placeholder="ex: ASUS"></div>
+      <div class="fld" style="flex:0 0 70px"><label>Cor</label><input type="color" id="cliCor" value="#7B2CBF" style="height:42px;padding:4px"></div>
+    </div>
+    <div class="fld"><label>Contato (opcional)</label><input type="text" id="cliContato" placeholder="responsável / whatsapp / email"></div>
+    <div class="modal-err" id="cliErr"></div>
+    <div class="modal-actions">
+      <button class="btn btn-del" id="cliDelBtn" onclick="excluirCliente()" style="display:none">Excluir</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="btn btn-ghost" onclick="fecharModal('modalCliente')">Cancelar</button>
+        <button class="btn" id="cliSaveBtn" onclick="salvarCliente()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPA = "https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/eloi-gestao";
+let CLIENTES = [];
+
+async function api(action, extra = {}) {
+  const password = sessionStorage.getItem('eloi_pw') || '';
+  const r = await fetch(SUPA, { method:'POST', headers:{'content-type':'application/json'},
+    body: JSON.stringify({ password, action, ...extra }) });
+  if (r.status === 401) { sessionStorage.removeItem('eloi_pw'); location.reload(); throw new Error('401'); }
+  const j = await r.json();
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+function brl(cents){ return (Number(cents||0)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function dataBR(d){ if(!d) return ''; const [y,m,dd]=String(d).slice(0,10).split('-'); return `${dd}/${m}/${y}`; }
+function valorToCents(v){ const n = parseFloat(String(v).replace(/\./g,'').replace(',','.').replace(/[^0-9.]/g,'')); return isNaN(n)?0:Math.round(n*100); }
+function centsToInput(c){ return (Number(c||0)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+async function entrar(){
+  const pw = document.getElementById('pw').value;
+  const err = document.getElementById('loginErr'); err.textContent='Verificando...';
+  sessionStorage.setItem('eloi_pw', pw);
+  try { await api('dashboard.stats'); mostrarApp(); }
+  catch(e){ sessionStorage.removeItem('eloi_pw'); err.textContent = e.message==='401'?'Senha incorreta.':'Erro ao conectar.'; }
+}
+function sair(){ sessionStorage.removeItem('eloi_pw'); location.reload(); }
+
+async function mostrarApp(){
+  document.getElementById('loginView').style.display='none';
+  document.getElementById('app').classList.add('show');
+  await carregarTudo();
+}
+async function carregarTudo(){
+  await carregarClientes();
+  await Promise.all([ carregarDashboard(), carregarServicos() ]);
+}
+
+/* DASHBOARD */
+async function carregarDashboard(){
+  const s = await api('dashboard.stats');
+  document.getElementById('metrics').innerHTML = `
+    <div class="stat good"><div class="sv">${brl(s.faturado_mes)}</div><div class="sl">Faturado no mês</div></div>
+    <div class="stat warn"><div class="sv">${brl(s.a_receber)}</div><div class="sl">A receber</div></div>
+    <div class="stat"><div class="sv">${s.em_execucao}</div><div class="sl">Em execução</div></div>
+    <div class="stat"><div class="sv">${s.concluido_sem_nf}</div><div class="sl">Concluído sem NF</div></div>`;
+  const rank = (s.por_cliente||[]).filter(c=>c.total_cents>0);
+  const rw = document.getElementById('rankwrap');
+  if(rank.length){ rw.style.display='block';
+    document.getElementById('rank').innerHTML = rank.map(c=>`<div class="rank-row"><span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span><span class="rv">${brl(c.total_cents)}</span></div>`).join('');
+  } else rw.style.display='none';
+}
+
+/* CLIENTES */
+async function carregarClientes(){
+  const { clientes } = await api('clientes.list');
+  CLIENTES = clientes;
+  // popula selects
+  const opt = '<option value="">—</option>' + clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  document.getElementById('svcCliente').innerHTML = opt;
+  document.getElementById('fCliente').innerHTML = '<option value="">Todos</option>' + clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+  // lista
+  const list = document.getElementById('clientesList');
+  if(!clientes.length){ list.innerHTML = '<div class="empty">Nenhum cliente ainda. Clique em "+ Cliente".</div>'; return; }
+  list.innerHTML = clientes.map(c=>`
+    <div class="cli-row" onclick='abrirCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
+      <span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span>
+      ${c.contato?`<span style="font-size:.8rem;color:var(--c300)">${esc(c.contato)}</span>`:''}
+      <span class="cmeta">${c.total_servicos} serviço(s)<br>${brl(c.total_cents)}</span>
+    </div>`).join('');
+}
+
+/* SERVIÇOS */
+async function carregarServicos(){
+  const filtro = {};
+  const fc=document.getElementById('fCliente').value; if(fc) filtro.cliente_id=fc;
+  const fs=document.getElementById('fStatus').value; if(fs) filtro.status_execucao=fs;
+  const fp=document.getElementById('fPago').value; if(fp) filtro.pago = fp==='true';
+  const fm=document.getElementById('fMes').value; if(fm) filtro.mes=fm;
+  const { servicos } = await api('servicos.list', { filtro });
+  const list = document.getElementById('servicosList');
+  if(!servicos.length){ list.innerHTML = '<div class="empty">Nenhum serviço. Clique em "+ Serviço".</div>'; return; }
+  const byCli = {}; servicos.forEach(s=>(byCli[s.cliente_id]??=[]).push(s));
+  const ordem = CLIENTES.filter(c=>byCli[c.id]);
+  list.innerHTML = ordem.map(c=>{
+    const itens = byCli[c.id];
+    const tot = itens.reduce((a,s)=>a+(Number(s.valor_cents)||0),0);
+    return `<div class="grupo">
+      <div class="grupo-h"><span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span><span class="gtot">${itens.length} • ${brl(tot)}</span></div>
+      ${itens.map(s=>linhaServico(s,c)).join('')}
+    </div>`;
+  }).join('');
+}
+function linhaServico(s,c){
+  const stb = s.status_execucao==='concluida' ? '<span class="badge concl">Concluída</span>' : '<span class="badge exec">Em execução</span>';
+  const pgb = s.pago ? '<span class="badge pago">Pago</span>' : '<span class="badge naopago">A receber</span>';
+  const meta = [ s.nf_numero?('NF '+esc(s.nf_numero)):'', dataBR(s.data_pagamento), s.observacoes?esc(s.observacoes):'' ].filter(Boolean).join(' • ');
+  const nfBtn = s.nf_arquivo_url ? `<button class="nf-pill" onclick="event.stopPropagation();verNF('${esc(s.nf_arquivo_url)}')">📄 NF</button>` : '';
+  return `<div class="svc" onclick='abrirServico(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
+    <div class="desc"><div class="d">${esc(s.descricao)}</div>${meta?`<div class="m">${meta}</div>`:''}</div>
+    ${stb}${pgb}${nfBtn}<div class="valor">${brl(s.valor_cents)}</div>
+  </div>`;
+}
+async function verNF(path){ try{ const { url } = await api('nf.view_url',{ path }); window.open(url,'_blank'); }catch(e){ toast('Erro ao abrir NF'); } }
+
+/* MODAL SERVIÇO */
+function abrirServico(s){
+  const ev = s && s.target ? null : s; // ignora event
+  const d = (ev && ev.id) ? ev : null;
+  document.getElementById('svcErr').textContent='';
+  document.getElementById('svcPdf').value='';
+  document.getElementById('svcId').value = d?d.id:'';
+  document.getElementById('svcCliente').value = d?d.cliente_id:(document.getElementById('fCliente').value||'');
+  document.getElementById('svcDesc').value = d?d.descricao:'';
+  document.getElementById('svcValor').value = d?centsToInput(d.valor_cents):'';
+  document.getElementById('svcStatus').value = d?d.status_execucao:'em_execucao';
+  document.getElementById('svcNf').value = d&&d.nf_numero?d.nf_numero:'';
+  document.getElementById('svcData').value = d&&d.data_pagamento?String(d.data_pagamento).slice(0,10):'';
+  document.getElementById('svcPago').checked = d?!!d.pago:false;
+  document.getElementById('svcObs').value = d&&d.observacoes?d.observacoes:'';
+  document.getElementById('svcTitle').textContent = d?'Editar serviço':'Novo serviço';
+  document.getElementById('svcDelBtn').style.display = d?'block':'none';
+  document.getElementById('svcNfAtual').innerHTML = (d&&d.nf_arquivo_url)?`<a href="#" onclick="event.preventDefault();verNF('${esc(d.nf_arquivo_url)}')">📄 Ver nota atual</a> — escolha outro PDF para substituir`:'';
+  document.getElementById('modalServico').classList.add('show');
+}
+async function salvarServico(){
+  const err=document.getElementById('svcErr'); err.textContent='';
+  const id=document.getElementById('svcId').value;
+  const servico = {
+    cliente_id: document.getElementById('svcCliente').value,
+    descricao: document.getElementById('svcDesc').value.trim(),
+    valor_cents: valorToCents(document.getElementById('svcValor').value),
+    status_execucao: document.getElementById('svcStatus').value,
+    pago: document.getElementById('svcPago').checked,
+    data_pagamento: document.getElementById('svcData').value || null,
+    nf_numero: document.getElementById('svcNf').value.trim(),
+    observacoes: document.getElementById('svcObs').value.trim(),
+  };
+  if(id) servico.id=id;
+  if(!servico.cliente_id){ err.textContent='Escolha o cliente.'; return; }
+  if(!servico.descricao){ err.textContent='Descreva o serviço.'; return; }
+  const btn=document.getElementById('svcSaveBtn'); btn.disabled=true; btn.textContent='Salvando...';
+  try {
+    const { servico: saved } = await api('servicos.upsert', { servico });
+    const file = document.getElementById('svcPdf').files[0];
+    if(file){
+      btn.textContent='Subindo NF...';
+      const { path, signed_url } = await api('nf.upload_url', { servico_id: saved.id, filename: file.name });
+      const put = await fetch(signed_url, { method:'PUT', headers:{'content-type':file.type||'application/pdf'}, body:file });
+      if(!put.ok) throw new Error('Falha no upload do PDF');
+      await api('servicos.upsert', { servico:{ id:saved.id, cliente_id:saved.cliente_id, descricao:saved.descricao, nf_arquivo_url:path } });
+    }
+    fecharModal('modalServico'); toast('Serviço salvo');
+    await Promise.all([ carregarDashboard(), carregarServicos(), carregarClientes() ]);
+  } catch(e){ err.textContent=e.message; }
+  finally { btn.disabled=false; btn.textContent='Salvar'; }
+}
+async function excluirServico(){
+  const id=document.getElementById('svcId').value; if(!id) return;
+  if(!confirm('Excluir este serviço?')) return;
+  try{ await api('servicos.delete',{ id }); fecharModal('modalServico'); toast('Serviço excluído');
+    await Promise.all([ carregarDashboard(), carregarServicos(), carregarClientes() ]);
+  }catch(e){ document.getElementById('svcErr').textContent=e.message; }
+}
+
+/* MODAL CLIENTE */
+function abrirCliente(c){
+  const d = (c && c.id) ? c : null;
+  document.getElementById('cliErr').textContent='';
+  document.getElementById('cliId').value = d?d.id:'';
+  document.getElementById('cliNome').value = d?d.nome:'';
+  document.getElementById('cliCor').value = d?d.cor:'#7B2CBF';
+  document.getElementById('cliContato').value = d&&d.contato?d.contato:'';
+  document.getElementById('cliTitle').textContent = d?'Editar cliente':'Novo cliente';
+  document.getElementById('cliDelBtn').style.display = d?'block':'none';
+  document.getElementById('modalCliente').classList.add('show');
+}
+async function salvarCliente(){
+  const err=document.getElementById('cliErr'); err.textContent='';
+  const id=document.getElementById('cliId').value;
+  const cliente = { nome:document.getElementById('cliNome').value.trim(), cor:document.getElementById('cliCor').value, contato:document.getElementById('cliContato').value.trim() };
+  if(id) cliente.id=id;
+  if(!cliente.nome){ err.textContent='Nome obrigatório.'; return; }
+  const btn=document.getElementById('cliSaveBtn'); btn.disabled=true; btn.textContent='Salvando...';
+  try{ await api('clientes.upsert',{ cliente }); fecharModal('modalCliente'); toast('Cliente salvo');
+    await Promise.all([ carregarClientes(), carregarDashboard(), carregarServicos() ]);
+  }catch(e){ err.textContent=e.message; }
+  finally{ btn.disabled=false; btn.textContent='Salvar'; }
+}
+async function excluirCliente(){
+  const id=document.getElementById('cliId').value; if(!id) return;
+  if(!confirm('Excluir este cliente?')) return;
+  try{ await api('clientes.delete',{ id }); fecharModal('modalCliente'); toast('Cliente excluído');
+    await Promise.all([ carregarClientes(), carregarDashboard(), carregarServicos() ]);
+  }catch(e){ document.getElementById('cliErr').textContent = e.message==='cliente tem serviços; mova ou exclua antes'?'Esse cliente tem serviços. Exclua os serviços antes.':e.message; }
+}
+
+/* util */
+function fecharModal(id){ document.getElementById(id).classList.remove('show'); }
+function trocarTab(t){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
+  document.getElementById('tabServicos').style.display = t==='servicos'?'block':'none';
+  document.getElementById('tabClientes').style.display = t==='clientes'?'block':'none';
+}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
+document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') entrar(); });
+const saved = sessionStorage.getItem('eloi_pw');
+if(saved){ document.getElementById('pw').value=saved; entrar(); }
+</script>
+</body>
+</html>
