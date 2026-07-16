@@ -175,6 +175,11 @@
   <p class="header-sub">Já estudamos o site da Solarium a fundo. Aqui a gente confirma o que levantou e preenche as lacunas pra montar a proposta de reestruturação certa. Leva ~7 minutos. 💜</p>
 </header>
 
+<!-- ADMIN BANNER -->
+<div id="adminBanner" style="display:none;background:#f97316;color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:700;letter-spacing:.5px;position:sticky;top:0;z-index:999;">
+  ⚙ MODO ADMIN — navegação livre, validação desativada
+</div>
+
 <div class="progress-wrap">
   <div class="progress-header">
     <span class="progress-label" id="progressLabel">Etapa 1 de 5</span>
@@ -550,7 +555,10 @@
     }
     return valid;
   }
-  function goNext(s) { if (!validateStep(s)) return; showStep(s + 1, 'next'); }
+  const IS_ADMIN = new URLSearchParams(location.search).get('mode') === 'admin';
+  if (IS_ADMIN) document.getElementById('adminBanner').style.display = 'block';
+
+  function goNext(s) { if (!IS_ADMIN && !validateStep(s)) return; showStep(s + 1, 'next'); }
   function goBack(s) { showStep(s - 1, 'back'); }
 
   document.getElementById('briefingForm').addEventListener('keydown', e => {

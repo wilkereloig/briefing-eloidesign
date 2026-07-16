@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel E-commerce — ELOI Design Studio</title>
   <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -67,6 +68,7 @@
 
   <!-- LOGIN -->
   <div class="login" id="loginView">
+    <div class="logo" id="logoSlotLogin" style="width:150px;margin:0 auto 20px"></div>
     <h1>Painel E-commerce</h1>
     <input type="password" id="pw" placeholder="Senha de acesso" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()">
     <button class="btn" onclick="entrar()" style="width:100%">Entrar</button>
@@ -76,13 +78,18 @@
   <!-- LISTA -->
   <div id="listView" class="hidden">
     <div class="topbar">
-      <div>
-        <h1>Briefings E-commerce</h1>
-        <span class="sub" id="countSub"></span>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div id="logoSlotTop" style="width:110px"></div>
+        <div>
+          <h1>Briefings E-commerce</h1>
+          <span class="sub" id="countSub"></span>
+        </div>
       </div>
       <div style="display:flex;gap:10px">
         <a class="btn btn-ghost" href="/admin/">← Admin</a>
         <button class="btn btn-ghost" onclick="carregar()">Atualizar</button>
+        <a class="btn" href="/briefing-ecommerce/?mode=admin" target="_blank">+ Novo briefing</a>
+        <button class="btn btn-ghost" onclick="sair()">Sair</button>
       </div>
     </div>
     <div class="cards" id="cards"></div>
@@ -98,7 +105,13 @@
 
 </div>
 
+<script src="/assets/eloi-admin/auth.js"></script>
 <script>
+fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
+  document.getElementById('logoSlotLogin').innerHTML = svg;
+  document.getElementById('logoSlotTop').innerHTML = svg;
+});
+
 const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/get-ecommerce-briefings';
 let DADOS = [];
 
@@ -153,25 +166,27 @@ function mapVal(key, raw){
 }
 
 /* ---- login / fetch ---- */
-function entrar(){
+async function entrar(){
   const pw = document.getElementById('pw').value.trim();
   if(!pw){ document.getElementById('err').textContent='Digite a senha.'; return; }
-  sessionStorage.setItem('eloi_pw', pw);
-  carregar();
+  document.getElementById('err').textContent = 'Entrando...';
+  try{
+    await EloiAdminAuth.login(pw);
+    document.getElementById('err').textContent = '';
+    await carregar();
+  }catch(e){
+    document.getElementById('err').textContent = e.status === 401 ? 'Senha incorreta.' : 'Erro de conexão. Tente de novo.';
+  }
 }
-function carregar(){
-  const pw = sessionStorage.getItem('eloi_pw') || '';
-  fetch(FN, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw}) })
-    .then(r=> r.ok ? r.json() : r.json().then(e=>Promise.reject(e)))
-    .then(data=>{
-      DADOS = data.briefings || [];
-      document.getElementById('loginView').classList.add('hidden');
-      document.getElementById('listView').classList.remove('hidden');
-      document.getElementById('detailView').classList.add('hidden');
-      renderLista();
-    })
-    .catch(()=>{ document.getElementById('err').textContent='Senha incorreta ou serviço indisponível.'; sessionStorage.removeItem('eloi_pw'); });
+async function carregar(){
+  const data = await EloiAdminAuth.call(FN, {});
+  DADOS = data.briefings || [];
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('listView').classList.remove('hidden');
+  document.getElementById('detailView').classList.add('hidden');
+  renderLista();
 }
+function sair(){ EloiAdminAuth.logout(); location.reload(); }
 
 function renderLista(){
   const el = document.getElementById('cards');
@@ -297,8 +312,8 @@ function whats(i){
   window.open(tel ? `https://wa.me/55${tel}?text=${txt}` : `https://wa.me/?text=${txt}`, '_blank');
 }
 
-/* auto-login se já tem senha */
-if(sessionStorage.getItem('eloi_pw')) carregar();
+/* auto-login se já houver sessão */
+if (EloiAdminAuth.token()) { carregar(); }
 </script>
 </body>
 </html>

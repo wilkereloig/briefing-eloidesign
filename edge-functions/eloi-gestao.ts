@@ -1,8 +1,8 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const PASSWORD = "eloidesign2026";
 const BUCKET = "eloi-notas";
+const PORTAL_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // Crockford base32, sem I L O U
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +16,28 @@ function json(body: unknown, status = 200) {
   });
 }
 
+async function verifyAdminToken(supabase: any, token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+  const { data } = await supabase.from("admin_sessions").select("expires_at").eq("token", token).maybeSingle();
+  if (!data || new Date(data.expires_at) < new Date()) return false;
+  await supabase.from("admin_sessions")
+    .update({ last_seen_at: new Date().toISOString(), expires_at: new Date(Date.now() + 12 * 3600 * 1000).toISOString() })
+    .eq("token", token);
+  return true;
+}
+
+function b64(b: Uint8Array) { let s = ""; for (const x of b) s += String.fromCharCode(x); return btoa(s); }
+async function hashPassword(secret: string): Promise<string> {
+  const ITERATIONS = 600_000;
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: ITERATIONS, hash: "SHA-256" }, key, 256);
+  return `pbkdf2$${ITERATIONS}$${b64(salt)}$${b64(new Uint8Array(bits))}`;
+}
+function randomToken(len: number) {
+  return Array.from(crypto.getRandomValues(new Uint8Array(len)), (b) => PORTAL_ALPHABET[b % PORTAL_ALPHABET.length]).join("");
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
 
@@ -23,12 +45,12 @@ Deno.serve(async (req: Request) => {
   try { body = await req.json(); } catch (_) { /* ignore */ }
   const action = body?.action || "";
 
-  if (body?.password !== PASSWORD) return json({ error: "unauthorized" }, 401);
-
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  if (!(await verifyAdminToken(supabase, body?.token))) return json({ error: "unauthorized" }, 401);
 
   // ── CLIENTES ──
   if (action === "clientes.list") {
@@ -48,7 +70,13 @@ Deno.serve(async (req: Request) => {
   if (action === "clientes.upsert") {
     const c = body?.cliente || {};
     if (!c.nome) return json({ error: "nome obrigatório" }, 400);
-    const row = { nome: c.nome, cor: c.cor || "#7B2CBF", contato: c.contato ?? null };
+    const row = {
+      nome: c.nome,
+      cor: c.cor || "#7B2CBF",
+      contato: c.contato ?? null,
+      marca_slug: c.marca_slug || null,
+      marca_publicada: c.marca_publicada === true,
+    };
     if (c.id) {
       const { data, error } = await supabase.from("eloi_clientes").update(row).eq("id", c.id).select().single();
       if (error) return json({ error: error.message }, 500);
@@ -57,6 +85,26 @@ Deno.serve(async (req: Request) => {
     const { data, error } = await supabase.from("eloi_clientes").insert(row).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ cliente: data });
+  }
+
+  if (action === "clientes.gerar_senha_portal") {
+    const clienteId = body?.cliente_id;
+    if (!clienteId) return json({ error: "cliente_id obrigatório" }, 400);
+    let prefix = "";
+    for (let tries = 0; tries < 5; tries++) {
+      prefix = randomToken(4);
+      const { count } = await supabase.from("eloi_clientes").select("id", { count: "exact", head: true }).eq("portal_senha_prefix", prefix);
+      if (!count) break;
+    }
+    const secret = randomToken(8);
+    const hash = await hashPassword(secret);
+    const { error } = await supabase.from("eloi_clientes").update({
+      portal_senha_prefix: prefix, portal_senha_hash: hash,
+      portal_senha_gerada_em: new Date().toISOString(),
+      portal_tentativas_falhas: 0, portal_bloqueado_ate: null, portal_ativo: true,
+    }).eq("id", clienteId);
+    if (error) return json({ error: error.message }, 500);
+    return json({ senha: `${prefix}-${secret}` });
   }
 
   if (action === "clientes.delete") {

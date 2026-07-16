@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel de Briefings — ELOI Design Studio</title>
   <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -94,6 +95,7 @@
 
   <!-- LOGIN -->
   <div class="login" id="loginView">
+    <div class="logo" id="logoSlot" style="width:140px;margin:0 auto 20px"></div>
     <h1>Painel de Briefings</h1>
     <input type="password" id="pw" placeholder="Senha de acesso" autocomplete="current-password" onkeydown="if(event.key==='Enter')entrar()">
     <button class="btn" onclick="entrar()" style="width:100%">Entrar</button>
@@ -107,6 +109,7 @@
       <div style="display:flex;gap:10px">
         <a class="btn btn-ghost" href="/admin/">← Admin</a>
         <button class="btn btn-ghost" onclick="carregar()">Atualizar</button>
+        <button class="btn btn-ghost" onclick="sair()">Sair</button>
       </div>
     </div>
 
@@ -123,6 +126,10 @@
           </select>
         </div>
         <button class="btn" onclick="gerar()" id="genBtn">Gerar link</button>
+      </div>
+      <div class="fld" style="margin-top:12px">
+        <label>Associar a cliente cadastrado (opcional)</label>
+        <select id="newClienteId"><option value="">— avulso / outro —</option></select>
       </div>
       <div class="gen-result" id="genResult">
         <div class="gen-link" id="genLink"></div>
@@ -155,9 +162,15 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="/assets/eloi-admin/auth.js"></script>
 <script>
+fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
+  document.getElementById('logoSlot').innerHTML = svg;
+});
+
 const BASE = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1';
 const FN_LINKS = BASE + '/briefing-links';
+const FN_GESTAO = BASE + '/eloi-gestao';
 let DADOS = [], FILTRO = 'todos', LAST_LINK = '', LAST_TEL = '';
 
 const TIPO_LABEL = { 'briefing':'Identidade visual', 'briefing-ecommerce':'E-commerce', 'briefing-solarium':'E-commerce (Solarium)', 'briefing-guia-viver-bem':'Guia Viver Bem' };
@@ -223,29 +236,54 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 function copiar(txt,btn){ navigator.clipboard.writeText(txt).then(()=>{ if(btn){const o=btn.textContent;btn.textContent='✓ Copiado';setTimeout(()=>btn.textContent=o,1500);} else toast('Copiado!'); }); }
 
 /* ===== auth / load ===== */
-function entrar(){ const pw=document.getElementById('pw').value.trim(); if(!pw){document.getElementById('err').textContent='Digite a senha.';return;} sessionStorage.setItem('eloi_pw',pw); carregar(); }
+function mostrarConteudo(){ document.getElementById('loginView').classList.add('hidden'); document.getElementById('listView').classList.remove('hidden'); }
+async function entrar(){
+  const pw=document.getElementById('pw').value.trim();
+  const err=document.getElementById('err');
+  if(!pw){err.textContent='Digite a senha.';return;}
+  err.textContent='Verificando...';
+  try{
+    await EloiAdminAuth.login(pw);
+    err.textContent='';
+    mostrarConteudo();
+    carregar();
+    carregarClientesSelect();
+  }catch(e){
+    err.textContent = e.status===401 ? 'Senha incorreta.' : 'Erro de conexão. Tente de novo.';
+  }
+}
+function sair(){ EloiAdminAuth.logout(); location.reload(); }
 function carregar(){
-  const pw = sessionStorage.getItem('eloi_pw')||'';
-  fetch(FN_LINKS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,action:'list'})})
-    .then(r=> r.ok ? r.json() : Promise.reject())
-    .then(d=>{ DADOS=d.invites||[]; document.getElementById('loginView').classList.add('hidden'); document.getElementById('listView').classList.remove('hidden'); document.getElementById('detailView').classList.add('hidden'); renderForms(); renderLista(); })
-    .catch(()=>{ document.getElementById('err').textContent='Senha incorreta ou serviço indisponível.'; sessionStorage.removeItem('eloi_pw'); });
+  EloiAdminAuth.call(FN_LINKS,{action:'list'})
+    .then(d=>{ DADOS=d.invites||[]; document.getElementById('detailView').classList.add('hidden'); renderForms(); renderLista(); })
+    .catch(()=>toast('Erro ao carregar convites.'));
+}
+function carregarClientesSelect(){
+  EloiAdminAuth.call(FN_GESTAO,{action:'clientes.list'})
+    .then(d=>{
+      const sel=document.getElementById('newClienteId');
+      if(!sel||!d.clientes) return;
+      sel.innerHTML = '<option value="">— avulso / outro —</option>' +
+        d.clientes.map(c=>`<option value="${esc(c.id)}">${esc(c.nome)}</option>`).join('');
+    })
+    .catch(()=>{}); // campo é opcional, silencia erro
 }
 
 /* ===== criar convite ===== */
 function gerar(){
   const cliente = document.getElementById('newCliente').value.trim();
   const tipo = document.getElementById('newTipo').value;
-  const pw = sessionStorage.getItem('eloi_pw')||'';
+  const selCliente = document.getElementById('newClienteId');
+  const cliente_id = selCliente && selCliente.value ? selCliente.value : null;
   const btn = document.getElementById('genBtn'); btn.disabled=true; btn.textContent='Gerando...';
-  fetch(FN_LINKS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw,action:'create',cliente,tipo})})
-    .then(r=>r.json())
+  EloiAdminAuth.call(FN_LINKS,{action:'create',cliente,tipo,cliente_id})
     .then(d=>{
       if(!d.invite) throw new Error();
       LAST_LINK = location.origin + TIPO_PATH[tipo] + '?t=' + d.invite.token;
       document.getElementById('genLink').textContent = LAST_LINK;
       document.getElementById('genResult').classList.add('show');
       document.getElementById('newCliente').value='';
+      if(selCliente) selCliente.value='';
       carregar();
     })
     .catch(()=>toast('Erro ao gerar link.'))
@@ -348,7 +386,7 @@ function montarResumo(i){
 function copiarResumo(i){ copiar(montarResumo(i)); }
 function whats(i){ const b=DADOS[i]; const tel=(b.whatsapp||'').replace(/\D/g,''); window.open((tel?`https://wa.me/55${tel}?text=`:`https://wa.me/?text=`)+encodeURIComponent(montarResumo(i)),'_blank'); }
 
-if(sessionStorage.getItem('eloi_pw')) carregar();
+if (EloiAdminAuth.token()) { mostrarConteudo(); carregar(); carregarClientesSelect(); }
 </script>
 </body>
 </html>

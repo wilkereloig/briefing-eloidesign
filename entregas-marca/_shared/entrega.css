@@ -1,0 +1,65 @@
+:root{
+  --bg:#f8f6f1;
+  --fg:#20201d;
+  --muted:#6b6660;
+  --line:rgba(0,0,0,.1);
+  --card:#fff;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:'Bricolage Grotesque',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:56px 24px 96px}
+
+header.hero{
+  text-align:center;
+  padding:64px 24px;
+  border-radius:24px;
+  margin-bottom:48px;
+}
+header.hero .logo-full{width:min(420px,80%);height:auto;margin:0 auto 28px;display:block}
+header.hero h1{font-family:'meno-banner-condensed',serif;font-weight:400;font-size:clamp(28px,4vw,44px);margin:0 0 8px}
+header.hero p{margin:0;opacity:.8;font-size:15px}
+
+.zip-cta{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:20px 24px;margin-bottom:40px;
+}
+.zip-cta p{margin:0;font-size:14px;color:var(--muted)}
+.zip-cta strong{display:block;font-size:17px;color:var(--fg);margin-bottom:2px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--fg);color:#fff;text-decoration:none;
+  padding:12px 20px;border-radius:999px;font-size:14px;font-weight:600;
+  transition:opacity .15s;white-space:nowrap;
+}
+.btn:hover{opacity:.85}
+
+.variacao{margin-bottom:44px}
+.variacao h2{font-family:'meno-banner-condensed',serif;font-weight:400;font-size:22px;margin:0 0 16px}
+
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.swatch{
+  border-radius:14px;border:1px solid var(--line);overflow:hidden;
+  background:var(--card);
+}
+.swatch .preview{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.swatch .preview img{max-width:80%;max-height:80%}
+.swatch .meta{padding:10px 12px;border-top:1px solid var(--line)}
+.swatch .cor-nome{font-size:12px;font-weight:600;margin:0 0 6px}
+.swatch .downloads{display:flex;gap:6px}
+.swatch .downloads a{
+  flex:1;text-align:center;font-size:11px;font-weight:700;letter-spacing:.03em;
+  padding:6px 0;border-radius:8px;text-decoration:none;
+  background:rgba(0,0,0,.05);color:var(--fg);
+}
+.swatch .downloads a:hover{background:rgba(0,0,0,.1)}
+
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:64px}

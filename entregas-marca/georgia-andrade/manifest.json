@@ -1,0 +1,250 @@
+{
+  "slug": "georgia-andrade",
+  "cliente": "Georgia Andrade",
+  "marca": "Georgia Andrade — Estética Avançada",
+  "gerado_em": "2026-07-15T23:56:24.155Z",
+  "paleta": [
+    {
+      "nome": "Grafite",
+      "hex": "#272126",
+      "claro": false
+    },
+    {
+      "nome": "Vinho",
+      "hex": "#552D37",
+      "claro": false
+    },
+    {
+      "nome": "Verde",
+      "hex": "#64685E",
+      "claro": false
+    },
+    {
+      "nome": "Marfim",
+      "hex": "#F5F2EC",
+      "claro": true
+    },
+    {
+      "nome": "Nude",
+      "hex": "#F1E9E0",
+      "claro": true
+    },
+    {
+      "nome": "Taupe claro",
+      "hex": "#B4A89D",
+      "claro": true
+    },
+    {
+      "nome": "Taupe profundo",
+      "hex": "#80756D",
+      "claro": false
+    }
+  ],
+  "variacoes": [
+    {
+      "id": "completa",
+      "nome": "Assinatura completa",
+      "arquivos": {
+        "#272126": {
+          "svg": "logo/completa/grafite.svg",
+          "png": "logo/completa/grafite.png",
+          "preview": "logo/completa/grafite.preview.png"
+        },
+        "#552D37": {
+          "svg": "logo/completa/vinho.svg",
+          "png": "logo/completa/vinho.png",
+          "preview": "logo/completa/vinho.preview.png"
+        },
+        "#64685E": {
+          "svg": "logo/completa/verde.svg",
+          "png": "logo/completa/verde.png",
+          "preview": "logo/completa/verde.preview.png"
+        },
+        "#F5F2EC": {
+          "svg": "logo/completa/marfim.svg",
+          "png": "logo/completa/marfim.png",
+          "preview": "logo/completa/marfim.preview.png"
+        },
+        "#F1E9E0": {
+          "svg": "logo/completa/nude.svg",
+          "png": "logo/completa/nude.png",
+          "preview": "logo/completa/nude.preview.png"
+        },
+        "#B4A89D": {
+          "svg": "logo/completa/taupe-claro.svg",
+          "png": "logo/completa/taupe-claro.png",
+          "preview": "logo/completa/taupe-claro.preview.png"
+        },
+        "#80756D": {
+          "svg": "logo/completa/taupe-profundo.svg",
+          "png": "logo/completa/taupe-profundo.png",
+          "preview": "logo/completa/taupe-profundo.preview.png"
+        }
+      }
+    },
+    {
+      "id": "lockup-horizontal",
+      "nome": "Assinatura horizontal",
+      "arquivos": {
+        "#272126": {
+          "svg": "logo/lockup-horizontal/grafite.svg",
+          "png": "logo/lockup-horizontal/grafite.png",
+          "preview": "logo/lockup-horizontal/grafite.preview.png"
+        },
+        "#552D37": {
+          "svg": "logo/lockup-horizontal/vinho.svg",
+          "png": "logo/lockup-horizontal/vinho.png",
+          "preview": "logo/lockup-horizontal/vinho.preview.png"
+        },
+        "#64685E": {
+          "svg": "logo/lockup-horizontal/verde.svg",
+          "png": "logo/lockup-horizontal/verde.png",
+          "preview": "logo/lockup-horizontal/verde.preview.png"
+        },
+        "#F5F2EC": {
+          "svg": "logo/lockup-horizontal/marfim.svg",
+          "png": "logo/lockup-horizontal/marfim.png",
+          "preview": "logo/lockup-horizontal/marfim.preview.png"
+        },
+        "#F1E9E0": {
+          "svg": "logo/lockup-horizontal/nude.svg",
+          "png": "logo/lockup-horizontal/nude.png",
+          "preview": "logo/lockup-horizontal/nude.preview.png"
+        },
+        "#B4A89D": {
+          "svg": "logo/lockup-horizontal/taupe-claro.svg",
+          "png": "logo/lockup-horizontal/taupe-claro.png",
+          "preview": "logo/lockup-horizontal/taupe-claro.preview.png"
+        },
+        "#80756D": {
+          "svg": "logo/lockup-horizontal/taupe-profundo.svg",
+          "png": "logo/lockup-horizontal/taupe-profundo.png",
+          "preview": "logo/lockup-horizontal/taupe-profundo.preview.png"
+        }
+      }
+    },
+    {
+      "id": "lockup-empilhado",
+      "nome": "Assinatura vertical",
+      "arquivos": {
+        "#272126": {
+          "svg": "logo/lockup-empilhado/grafite.svg",
+          "png": "logo/lockup-empilhado/grafite.png",
+          "preview": "logo/lockup-empilhado/grafite.preview.png"
+        },
+        "#552D37": {
+          "svg": "logo/lockup-empilhado/vinho.svg",
+          "png": "logo/lockup-empilhado/vinho.png",
+          "preview": "logo/lockup-empilhado/vinho.preview.png"
+        },
+        "#64685E": {
+          "svg": "logo/lockup-empilhado/verde.svg",
+          "png": "logo/lockup-empilhado/verde.png",
+          "preview": "logo/lockup-empilhado/verde.preview.png"
+        },
+        "#F5F2EC": {
+          "svg": "logo/lockup-empilhado/marfim.svg",
+          "png": "logo/lockup-empilhado/marfim.png",
+          "preview": "logo/lockup-empilhado/marfim.preview.png"
+        },
+        "#F1E9E0": {
+          "svg": "logo/lockup-empilhado/nude.svg",
+          "png": "logo/lockup-empilhado/nude.png",
+          "preview": "logo/lockup-empilhado/nude.preview.png"
+        },
+        "#B4A89D": {
+          "svg": "logo/lockup-empilhado/taupe-claro.svg",
+          "png": "logo/lockup-empilhado/taupe-claro.png",
+          "preview": "logo/lockup-empilhado/taupe-claro.preview.png"
+        },
+        "#80756D": {
+          "svg": "logo/lockup-empilhado/taupe-profundo.svg",
+          "png": "logo/lockup-empilhado/taupe-profundo.png",
+          "preview": "logo/lockup-empilhado/taupe-profundo.preview.png"
+        }
+      }
+    },
+    {
+      "id": "simbolo",
+      "nome": "Símbolo isolado",
+      "arquivos": {
+        "#272126": {
+          "svg": "logo/simbolo/grafite.svg",
+          "png": "logo/simbolo/grafite.png",
+          "preview": "logo/simbolo/grafite.preview.png"
+        },
+        "#552D37": {
+          "svg": "logo/simbolo/vinho.svg",
+          "png": "logo/simbolo/vinho.png",
+          "preview": "logo/simbolo/vinho.preview.png"
+        },
+        "#64685E": {
+          "svg": "logo/simbolo/verde.svg",
+          "png": "logo/simbolo/verde.png",
+          "preview": "logo/simbolo/verde.preview.png"
+        },
+        "#F5F2EC": {
+          "svg": "logo/simbolo/marfim.svg",
+          "png": "logo/simbolo/marfim.png",
+          "preview": "logo/simbolo/marfim.preview.png"
+        },
+        "#F1E9E0": {
+          "svg": "logo/simbolo/nude.svg",
+          "png": "logo/simbolo/nude.png",
+          "preview": "logo/simbolo/nude.preview.png"
+        },
+        "#B4A89D": {
+          "svg": "logo/simbolo/taupe-claro.svg",
+          "png": "logo/simbolo/taupe-claro.png",
+          "preview": "logo/simbolo/taupe-claro.preview.png"
+        },
+        "#80756D": {
+          "svg": "logo/simbolo/taupe-profundo.svg",
+          "png": "logo/simbolo/taupe-profundo.png",
+          "preview": "logo/simbolo/taupe-profundo.preview.png"
+        }
+      }
+    },
+    {
+      "id": "wordmark",
+      "nome": "Wordmark",
+      "arquivos": {
+        "#272126": {
+          "svg": "logo/wordmark/grafite.svg",
+          "png": "logo/wordmark/grafite.png",
+          "preview": "logo/wordmark/grafite.preview.png"
+        },
+        "#552D37": {
+          "svg": "logo/wordmark/vinho.svg",
+          "png": "logo/wordmark/vinho.png",
+          "preview": "logo/wordmark/vinho.preview.png"
+        },
+        "#64685E": {
+          "svg": "logo/wordmark/verde.svg",
+          "png": "logo/wordmark/verde.png",
+          "preview": "logo/wordmark/verde.preview.png"
+        },
+        "#F5F2EC": {
+          "svg": "logo/wordmark/marfim.svg",
+          "png": "logo/wordmark/marfim.png",
+          "preview": "logo/wordmark/marfim.preview.png"
+        },
+        "#F1E9E0": {
+          "svg": "logo/wordmark/nude.svg",
+          "png": "logo/wordmark/nude.png",
+          "preview": "logo/wordmark/nude.preview.png"
+        },
+        "#B4A89D": {
+          "svg": "logo/wordmark/taupe-claro.svg",
+          "png": "logo/wordmark/taupe-claro.png",
+          "preview": "logo/wordmark/taupe-claro.preview.png"
+        },
+        "#80756D": {
+          "svg": "logo/wordmark/taupe-profundo.svg",
+          "png": "logo/wordmark/taupe-profundo.png",
+          "preview": "logo/wordmark/taupe-profundo.preview.png"
+        }
+      }
+    }
+  ]
+}

@@ -767,6 +767,11 @@
   <p class="header-sub">Relaxa — não existe resposta certa ou errada. Conte o que souber, do seu jeito. Se travar em alguma pergunta, pode pular: a gente conversa sobre isso depois. 💜</p>
 </header>
 
+<!-- ADMIN BANNER -->
+<div id="adminBanner" style="display:none;background:#f97316;color:#fff;text-align:center;padding:8px 16px;font-size:13px;font-weight:700;letter-spacing:.5px;position:sticky;top:0;z-index:999;">
+  ⚙ MODO ADMIN — navegação livre, validação desativada
+</div>
+
 <!-- PROGRESS -->
 <div class="progress-wrap">
   <div class="progress-header">
@@ -1239,8 +1244,11 @@
     return valid;
   }
 
+  const IS_ADMIN = new URLSearchParams(location.search).get('mode') === 'admin';
+  if (IS_ADMIN) document.getElementById('adminBanner').style.display = 'block';
+
   function goNext(fromStep) {
-    if (!validateStep(fromStep)) return;
+    if (!IS_ADMIN && !validateStep(fromStep)) return;
     showStep(fromStep + 1, 'next');
   }
 

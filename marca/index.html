@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marca — ELOI Design Studio</title>
+<link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+<link rel="stylesheet" href="/assets/eloi-admin/admin.css">
+<style>
+  .login .logo{width:150px;margin:0 auto 26px;display:block}
+  #app{display:none;position:relative;z-index:1;max-width:900px;margin:0 auto;padding:28px 22px 80px}
+  #app.show{display:block}
+  .topbar{margin-bottom:24px}
+  .pagetitle{font-size:1.3rem;font-variation-settings:'wght' 700;margin-bottom:4px;letter-spacing:-.01em}
+  .sub{color:var(--c300);font-size:.88rem;margin-bottom:24px}
+  .sec{padding:20px 22px;margin-bottom:18px}
+  .sec h2{font-size:.95rem;font-variation-settings:'wght' 700;margin-bottom:14px}
+  .hint{color:var(--c300);font-size:.8rem;margin-top:8px;line-height:1.5}
+  .hint code{background:var(--c950);padding:1px 6px;border-radius:5px}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:.76rem;color:var(--c300);margin-bottom:5px}
+  .fld input,.fld select{width:100%;background:var(--c950);border:1px solid var(--c800);border-radius:8px;color:#fff;font-family:var(--font);font-size:.9rem;padding:10px 13px;outline:none}
+  .fld input:focus,.fld select:focus{border-color:var(--c500);box-shadow:0 0 0 3px rgba(157,78,221,.18)}
+  .frow{display:flex;gap:12px;flex-wrap:wrap}
+  .frow .fld{flex:1;min-width:200px}
+
+  input[type=file]{color:var(--c100);font-size:.85rem}
+
+  .var-row,.cor-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--c800);font-size:.85rem;flex-wrap:wrap}
+  .var-row:last-child,.cor-row:last-child{border-bottom:none}
+  .var-row input{flex:1;min-width:140px;background:var(--c950);border:1px solid var(--c800);border-radius:7px;color:#fff;font-family:var(--font);font-size:.85rem;padding:7px 10px}
+  .var-row .arquivo{color:var(--c300);font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+  .err-inline{color:#f3b4b4;font-size:.76rem}
+  .ok-inline{color:var(--good,#aee8ae);font-size:.76rem}
+  .empty{color:var(--c300);font-size:.85rem;padding:8px 0}
+
+  .cor-row input[type=text]{background:var(--c950);border:1px solid var(--c800);border-radius:7px;color:#fff;font-family:var(--font);font-size:.85rem;padding:7px 10px}
+  .cor-row input[type=text].nome{flex:1;min-width:120px}
+  .cor-row input[type=text].hexinput{width:90px}
+  .cor-row input[type=color]{width:36px;height:32px;padding:0;border:1px solid var(--c800);border-radius:6px;background:none;cursor:pointer}
+  .chk{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--c300);white-space:nowrap}
+  .chk input{width:auto}
+
+  .btn{background:var(--c700);border:none;border-radius:10px;color:#fff;font-family:var(--font);font-size:.88rem;font-variation-settings:'wght' 600;padding:10px 18px;cursor:pointer}
+  .btn:hover{background:var(--c600)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn-sm{padding:6px 12px;font-size:.78rem;border-radius:8px}
+
+  .progresso{height:8px;background:var(--c950);border-radius:99px;overflow:hidden;margin:14px 0 4px;display:none}
+  .progresso.show{display:block}
+  .progresso .bar{height:100%;width:100%;background:var(--c500);transform:scaleX(0);transform-origin:left;transition:transform .15s}
+
+  .preview-grupo{margin-bottom:20px}
+  .preview-grupo h3{font-size:.85rem;font-variation-settings:'wght' 600;margin-bottom:8px;color:var(--c100)}
+  .swatches{display:flex;flex-wrap:wrap;gap:10px}
+  .swatch{width:110px;border:1px solid var(--c800);border-radius:10px;overflow:hidden;text-align:center;font-size:.72rem}
+  .swatch img{width:100%;height:90px;object-fit:contain;display:block}
+  .swatch span{display:block;padding:5px 4px;color:var(--c300)}
+
+  #instrucoes ol{margin:8px 0 0 18px}
+  #instrucoes li{margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span></div>
+
+<!-- LOGIN -->
+<div class="login" id="loginView">
+  <div class="logo" id="logoSlotLogin"></div>
+  <h1>Marca</h1>
+  <input type="password" id="pw" placeholder="Senha de acesso" autocomplete="current-password">
+  <button onclick="entrar()">Entrar</button>
+  <div class="err" id="loginErr"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo" id="logoSlotApp"></div>
+    <div class="actions">
+      <a class="btn-ghost" href="/admin/">← Painel</a>
+      <button class="btn-ghost" onclick="sair()">Sair</button>
+    </div>
+  </div>
+
+  <h1 class="pagetitle">Gerador de variações de marca</h1>
+  <p class="sub">SVG mestre (fill:currentColor) → paleta → PNG/SVG por cor, gerado 100% no navegador.</p>
+
+  <!-- 1. Cliente -->
+  <section class="card-base sec">
+    <h2>1. Cliente</h2>
+    <div class="fld"><label>Cliente</label><select id="selCliente"></select></div>
+    <div class="frow">
+      <div class="fld"><label>Slug (pasta de entrega)</label><input id="inpSlug" placeholder="georgia-andrade"></div>
+      <div class="fld"><label>Nome da marca (subtítulo da página pública)</label><input id="inpMarca" placeholder="Georgia Andrade — Estética Avançada"></div>
+    </div>
+  </section>
+
+  <!-- 2. Upload SVGs -->
+  <section class="card-base sec">
+    <h2>2. SVGs mestre</h2>
+    <p class="hint">Cada SVG deve colorir via <code>fill:currentColor</code>. Não use <code>&lt;filter&gt;</code>, <code>&lt;text&gt;</code>, <code>&lt;image&gt;</code> ou <code>foreignObject</code> — esses arquivos ficam marcados e são ignorados na geração.</p>
+    <input type="file" id="inpFiles" multiple accept=".svg">
+    <div id="listaVariacoes"><p class="empty">Nenhum SVG carregado ainda.</p></div>
+  </section>
+
+  <!-- 3. Paleta -->
+  <section class="card-base sec">
+    <h2>3. Paleta</h2>
+    <div id="listaPaleta"></div>
+    <button class="btn-ghost btn-sm" onclick="addCorRow()" style="margin-top:8px">+ cor</button>
+  </section>
+
+  <!-- 4. Gerar -->
+  <section class="card-base sec">
+    <h2>4. Gerar</h2>
+    <button class="btn" id="btnGerar" onclick="gerar()">Gerar variações</button>
+    <div class="progresso" id="progresso"><div class="bar" id="progressoBar"></div></div>
+    <div class="hint" id="statusGerar"></div>
+  </section>
+
+  <!-- 5. Preview -->
+  <section class="card-base sec" id="secPreview" style="display:none">
+    <h2>5. Preview</h2>
+    <div id="grid"></div>
+  </section>
+
+  <!-- 6. Publicar -->
+  <section class="card-base sec" id="secPublicar" style="display:none">
+    <h2>6. Publicar</h2>
+    <button class="btn" onclick="publicar()">Baixar .zip (SVG + PNG + manifest.json)</button>
+    <div class="hint" id="instrucoes"></div>
+  </section>
+</div>
+
+<!--
+  TODO fflate: esta página espera /assets/vendor/fflate.min.js vendorizado (build UMD single-file
+  da lib https://github.com/101arrowz/fflate, expõe window.fflate). Ainda não existe no repo —
+  baixe/vendorize manualmente, não é gerado por código. Enquanto não existir, publicar() detecta
+  a ausência e avisa em vez de quebrar a página.
+-->
+<script src="/assets/vendor/fflate.min.js"></script>
+<script src="/assets/eloi-admin/auth.js"></script>
+<script>
+const FN_ELOI_GESTAO = "https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/eloi-gestao";
+let CLIENTES = [];
+let VARIACOES = []; // {id, nome, svgText, errors, arquivo}
+let PALETA = [{ nome: '', hex: '#000000', claro: false }];
+let RESULTADOS = null; // {variacaoId: {nome, cores:{hex:{svgText, png:Blob, preview:Blob}}}}
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function slugify(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
+function humanize(s) { return String(s).replace(/[-_]+/g, ' ').trim().replace(/\b\w/g, c => c.toUpperCase()); }
+
+async function api(action, extra = {}) {
+  const j = await EloiAdminAuth.call(FN_ELOI_GESTAO, { action, ...extra });
+  if (j.error) throw new Error(j.error);
+  return j;
+}
+
+/* ── AUTH / SHELL (mesmo padrão de /gestao/ e /aplicativos/) ── */
+async function entrar() {
+  const pw = document.getElementById('pw').value;
+  const err = document.getElementById('loginErr'); err.textContent = 'Verificando...';
+  try {
+    await EloiAdminAuth.login(pw);
+    err.textContent = '';
+    await mostrarApp();
+  } catch (e) { err.textContent = e.status === 401 ? 'Senha incorreta.' : 'Erro de conexão. Tente de novo.'; }
+}
+function sair() { EloiAdminAuth.logout(); location.reload(); }
+async function mostrarApp() {
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  try { await carregarClientes(); } catch (e) { console.error(e); }
+}
+
+/* ── 1. CLIENTE ── */
+async function carregarClientes() {
+  const { clientes } = await api('clientes.list');
+  CLIENTES = clientes;
+  const sel = document.getElementById('selCliente');
+  sel.innerHTML = '<option value="">— selecione —</option>' +
+    clientes.map(c => `<option value="${c.id}">${esc(c.nome)}${c.marca_publicada ? ' ✓ marca publicada' : ''}</option>`).join('');
+}
+function onClienteChange() {
+  const c = CLIENTES.find(x => x.id === document.getElementById('selCliente').value);
+  if (!c) return;
+  document.getElementById('inpSlug').value = c.marca_slug || slugify(c.nome);
+  document.getElementById('inpMarca').value = c.nome;
+}
+
+/* ── 2. SVGs MESTRE ── */
+function readFileText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+}
+function validateSvg(text) {
+  const errors = [];
+  if (!/fill\s*:\s*currentColor/i.test(text)) errors.push('não usa fill:currentColor');
+  if (/<filter[\s>]/i.test(text)) errors.push('contém <filter>');
+  if (/<text[\s>]/i.test(text)) errors.push('contém <text>');
+  if (/<image[\s>]/i.test(text)) errors.push('contém <image>');
+  if (/foreignObject/i.test(text)) errors.push('contém foreignObject');
+  return errors;
+}
+function uniqueId(base) {
+  let id = base || 'variacao', i = 2;
+  while (VARIACOES.some(v => v.id === id)) id = `${base}-${i++}`;
+  return id;
+}
+async function onFiles(e) {
+  for (const file of Array.from(e.target.files)) {
+    if (!/\.svg$/i.test(file.name)) continue;
+    const text = await readFileText(file);
+    const errors = validateSvg(text);
+    const base = slugify(file.name.replace(/\.svg$/i, ''));
+    VARIACOES.push({ id: uniqueId(base), nome: humanize(base), svgText: text, errors, arquivo: file.name });
+  }
+  e.target.value = '';
+  renderVariacoes();
+}
+function renomearVariacao(i, val) { VARIACOES[i].nome = val; }
+function removerVariacao(i) { VARIACOES.splice(i, 1); renderVariacoes(); }
+function renderVariacoes() {
+  const el = document.getElementById('listaVariacoes');
+  if (!VARIACOES.length) { el.innerHTML = '<p class="empty">Nenhum SVG carregado ainda.</p>'; return; }
+  el.innerHTML = VARIACOES.map((v, i) => `
+    <div class="var-row">
+      <input value="${esc(v.nome)}" onchange="renomearVariacao(${i}, this.value)">
+      <span class="arquivo" title="${esc(v.arquivo)}">${esc(v.arquivo)}</span>
+      ${v.errors.length ? `<span class="err-inline">rejeitado: ${esc(v.errors.join('; '))}</span>` : '<span class="ok-inline">OK</span>'}
+      <button class="btn-ghost btn-sm" onclick="removerVariacao(${i})">remover</button>
+    </div>`).join('');
+}
+
+/* ── 3. PALETA ── */
+function addCorRow() { PALETA.push({ nome: '', hex: '#000000', claro: false }); renderPaleta(); }
+function removerCor(i) { PALETA.splice(i, 1); renderPaleta(); }
+function renderPaleta() {
+  const el = document.getElementById('listaPaleta');
+  if (!PALETA.length) { el.innerHTML = '<p class="empty">Adicione ao menos 1 cor.</p>'; return; }
+  el.innerHTML = PALETA.map((c, i) => `
+    <div class="cor-row">
+      <input type="text" class="nome" placeholder="Nome (ex: Grafite)" value="${esc(c.nome)}" onchange="PALETA[${i}].nome=this.value">
+      <input type="color" value="${c.hex}" onchange="PALETA[${i}].hex=this.value; renderPaleta()">
+      <input type="text" class="hexinput" value="${esc(c.hex)}" onchange="PALETA[${i}].hex=this.value; renderPaleta()">
+      <label class="chk"><input type="checkbox" ${c.claro ? 'checked' : ''} onchange="PALETA[${i}].claro=this.checked"> cor clara</label>
+      <button class="btn-ghost btn-sm" onclick="removerCor(${i})">remover</button>
+    </div>`).join('');
+}
+
+/* ── 4. GERAR (rasterização client-side, sem servidor) ── */
+function rasterize(svgText, targetWidth) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const aspect = (img.naturalWidth && img.naturalHeight) ? img.naturalHeight / img.naturalWidth : 1;
+      const w = targetWidth, h = Math.max(1, Math.round(targetWidth * aspect));
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob falhou')), 'image/png');
+    };
+    img.onerror = () => reject(new Error('SVG inválido para rasterização'));
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText);
+  });
+}
+function validPaletaAtual() { return PALETA.filter(c => c.nome.trim() && /^#[0-9a-f]{6}$/i.test(c.hex)); }
+function validVariacoesAtual() { return VARIACOES.filter(v => !v.errors.length); }
+
+async function gerar() {
+  const vars = validVariacoesAtual(), cores = validPaletaAtual();
+  if (!vars.length) return alert('Nenhum SVG válido carregado (veja os avisos em vermelho na lista).');
+  if (!cores.length) return alert('Adicione ao menos 1 cor válida (nome preenchido + hex #rrggbb).');
+
+  const btn = document.getElementById('btnGerar'); btn.disabled = true;
+  document.getElementById('progresso').classList.add('show');
+  const total = vars.length * cores.length;
+  let done = 0;
+  RESULTADOS = {};
+  for (const v of vars) {
+    RESULTADOS[v.id] = { nome: v.nome, cores: {} };
+    for (const cor of cores) {
+      const svg = v.svgText.replace(/fill:\s*currentColor/g, `fill: ${cor.hex}`);
+      const [png, preview] = await Promise.all([rasterize(svg, 2000), rasterize(svg, 480)]);
+      RESULTADOS[v.id].cores[cor.hex] = { svgText: svg, png, preview };
+      done++;
+      document.getElementById('progressoBar').style.transform = `scaleX(${done / total})`;
+      document.getElementById('statusGerar').textContent = `Gerando... ${done}/${total}`;
+    }
+  }
+  btn.disabled = false;
+  document.getElementById('statusGerar').textContent = `Concluído: ${vars.length} variações × ${cores.length} cores × 2 tamanhos + SVG.`;
+  renderPreview(cores);
+  document.getElementById('secPreview').style.display = 'block';
+  document.getElementById('secPublicar').style.display = 'block';
+}
+
+/* ── 5. PREVIEW ── */
+function renderPreview(cores) {
+  const el = document.getElementById('grid');
+  el.innerHTML = Object.values(RESULTADOS).map(v => `
+    <div class="preview-grupo">
+      <h3>${esc(v.nome)}</h3>
+      <div class="swatches">
+        ${cores.map(cor => {
+          const f = v.cores[cor.hex]; if (!f) return '';
+          const bg = cor.claro ? '#20201d' : '#f3f1ec';
+          return `<div class="swatch" style="background:${bg}"><img src="${URL.createObjectURL(f.preview)}" alt="${esc(cor.nome)}"><span>${esc(cor.nome)}</span></div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+
+/* ── 6. PUBLICAR — monta manifest.json + zip client-side, baixa localmente.
+   ponytail: upload real pro bucket público entregas-marca (Supabase Storage) é TODO explícito
+   abaixo, fora do escopo desta rodada. Fluxo real ficaria assim (mesmo padrão 1:1 de
+   nf.upload_url em edge-functions/eloi-gestao.ts, action marca.upload_urls do plano, Fase 5):
+     1) const { uploads } = await api('marca.upload_urls', { slug, paths: Object.keys(files) });
+     2) PUT paralelo (~6 por vez) de cada blob pro signed_url de `uploads`,
+        header cache-control: public, max-age=3600 (upsert:true, sem immutable).
+     3) só depois de 100% dos uploads confirmados:
+        await api('clientes.upsert', { cliente: { id: clienteId, marca_slug: slug, marca_publicada: true } });
+   Ação `marca.upload_urls` ainda não existe em eloi-gestao — não foi adicionada nesta rodada. ── */
+async function publicar() {
+  if (!RESULTADOS) return;
+  const slug = document.getElementById('inpSlug').value.trim();
+  const marca = document.getElementById('inpMarca').value.trim();
+  const cliente = CLIENTES.find(c => c.id === document.getElementById('selCliente').value);
+  if (!slug) return alert('Preencha o slug.');
+  if (!marca) return alert('Preencha o nome da marca.');
+  if (typeof fflate === 'undefined') return alert('fflate não está vendorizado em /assets/vendor/fflate.min.js — veja o comentário TODO no código-fonte desta página.');
+
+  const cores = validPaletaAtual();
+  const manifest = {
+    slug, cliente: cliente ? cliente.nome : '', marca,
+    gerado_em: new Date().toISOString(),
+    paleta: cores.map(c => ({ nome: c.nome, hex: c.hex, claro: !!c.claro })),
+    variacoes: Object.entries(RESULTADOS).map(([id, v]) => ({
+      id, nome: v.nome,
+      arquivos: Object.fromEntries(cores.filter(cor => v.cores[cor.hex]).map(cor => {
+        const corSlug = slugify(cor.nome);
+        return [cor.hex, { svg: `logo/${id}/${corSlug}.svg`, png: `logo/${id}/${corSlug}.png`, preview: `logo/${id}/${corSlug}.preview.png` }];
+      })),
+    })),
+  };
+
+  const files = { 'manifest.json': new TextEncoder().encode(JSON.stringify(manifest, null, 2)) };
+  for (const [id, v] of Object.entries(RESULTADOS)) {
+    for (const cor of cores) {
+      const f = v.cores[cor.hex]; if (!f) continue;
+      const corSlug = slugify(cor.nome);
+      files[`logo/${id}/${corSlug}.svg`] = new TextEncoder().encode(f.svgText);
+      files[`logo/${id}/${corSlug}.png`] = new Uint8Array(await f.png.arrayBuffer());
+      // preview.png fica fora do zip (mesma regra do script Node _tools/gerar-variacoes.mjs)
+    }
+  }
+
+  const zipped = fflate.zipSync(files, { level: 9 });
+  const blob = new Blob([zipped], { type: 'application/zip' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${slug}-marca-completa.zip`;
+  a.click();
+
+  document.getElementById('instrucoes').innerHTML = `
+    <p><strong>Zip baixado.</strong> Publicação automática no Storage ainda não existe nesta versão — passo manual por enquanto:</p>
+    <ol>
+      <li>Extraia o zip em <code>entregas-marca/${esc(slug)}/</code> (mesma estrutura de <code>entregas-marca/georgia-andrade/</code>: <code>manifest.json</code> + <code>logo/</code>).</li>
+      <li>Copie <code>entregas-marca/georgia-andrade/index.html</code> pra <code>entregas-marca/${esc(slug)}/index.html</code> (template genérico, já lê <code>manifest.json</code> da própria pasta).</li>
+      <li>Commit + push.</li>
+      <li>No painel <a href="/gestao/">/gestao/</a>, marque este cliente com <code>marca_slug: "${esc(slug)}"</code> e <code>marca_publicada: true</code>.</li>
+    </ol>`;
+}
+
+/* ── init ── */
+renderVariacoes();
+renderPaleta();
+document.getElementById('selCliente').addEventListener('change', onClienteChange);
+document.getElementById('inpFiles').addEventListener('change', onFiles);
+document.getElementById('pw').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+fetch('/assets/eloi-admin/wordmark.svg').then(r => r.text()).then(svg => {
+  document.getElementById('logoSlotLogin').innerHTML = svg;
+  document.getElementById('logoSlotApp').innerHTML = svg;
+});
+if (EloiAdminAuth.token()) { mostrarApp(); }
+</script>
+</body>
+</html>

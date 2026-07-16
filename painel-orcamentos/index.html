@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel de Orçamentos — ELOI Design Studio</title>
   <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;--c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;--white:#fff;--font:'carbona-variable',sans-serif;
@@ -26,6 +27,7 @@
     .login-card button{width:100%;margin-top:14px;background:var(--c700);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:.95rem;font-variation-settings:'wght' 600;padding:14px;cursor:pointer}
     .login-card button:hover{background:var(--c600)}
     .err{color:#f87171;font-size:.85rem;margin-top:12px;min-height:1.2em}
+    .login-card .logo{width:150px;margin:0 auto 26px;display:block}
 
     .wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:32px 24px 80px}
     .top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:26px}
@@ -97,6 +99,7 @@
 <!-- LOGIN -->
 <div class="login" id="loginView">
   <div class="login-card">
+    <div class="logo" id="logoSlot"></div>
     <h1>Painel de Orçamentos</h1>
     <input type="password" id="pw" placeholder="Senha de acesso">
     <button onclick="entrar()">Entrar</button>
@@ -148,6 +151,11 @@
         </select>
       </div>
     </div>
+    <div class="field"><label>Cliente cadastrado (opcional)</label>
+      <select id="f_cliente_id" onchange="const c=CLIENTES.find(x=>x.id===this.value); if(c) document.getElementById('f_cliente').value=c.nome;">
+        <option value="">— nenhum, usar nome acima —</option>
+      </select>
+    </div>
     <div class="field"><label>Título do orçamento</label><input id="f_titulo" placeholder="Ex: Identidade de campanha 2026"></div>
 
     <div class="itens-head"><span class="lbl">Itens</span></div>
@@ -170,35 +178,55 @@
 
 <div class="toast" id="toast">Salvo!</div>
 
+<script src="/assets/eloi-admin/auth.js"></script>
 <script>
 const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/orcamentos';
+const FN_GESTAO = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/eloi-gestao';
 let ORCS = [];
-let PW = '';
+let CLIENTES = [];
 
 function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 async function call(action, payload){
-  const r = await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:PW,action,...payload})});
-  if(!r.ok) throw r.status;
-  return r.json();
+  const d = await EloiAdminAuth.call(FN, {action, ...payload});
+  if(d && d.error) throw new Error(d.error);
+  return d;
 }
 
 // ── LOGIN ──
-function entrar(){
-  PW = document.getElementById('pw').value;
+fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
+  document.getElementById('logoSlot').innerHTML = svg;
+});
+function mostrarPainel(){ document.getElementById('loginView').style.display='none'; document.getElementById('panelView').style.display='block'; }
+function popularClientesSelect(){
+  document.getElementById('f_cliente_id').innerHTML = '<option value="">— nenhum, usar nome acima —</option>' +
+    CLIENTES.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+}
+async function carregarDados(){
+  const [d, cli] = await Promise.all([
+    call('list',{}),
+    EloiAdminAuth.call(FN_GESTAO,{action:'clientes.list'}).catch(()=>({clientes:[]})),
+  ]);
+  ORCS = d.orcamentos||[];
+  CLIENTES = cli.clientes||[];
+  popularClientesSelect();
+  render();
+}
+async function entrar(){
+  const pw = document.getElementById('pw').value;
   const err=document.getElementById('err'); err.textContent='Entrando...';
-  call('list',{}).then(d=>{
-    ORCS = d.orcamentos||[];
-    sessionStorage.setItem('eloi_pw', PW);
-    document.getElementById('loginView').style.display='none';
-    document.getElementById('panelView').style.display='block';
-    render();
-  }).catch(s=>{ err.textContent = s===401 ? 'Senha incorreta.' : 'Erro ao carregar.'; });
+  try{
+    await EloiAdminAuth.login(pw);
+    err.textContent='';
+    mostrarPainel();
+    await carregarDados();
+  }catch(e){
+    err.textContent = e.status===401 ? 'Senha incorreta.' : 'Erro de conexão. Tente de novo.';
+  }
 }
 document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')entrar()});
-const saved = sessionStorage.getItem('eloi_pw');
-if(saved){ document.getElementById('pw').value=saved; entrar(); }
+if (EloiAdminAuth.token()) { mostrarPainel(); carregarDados(); }
 
 // ── LISTA ──
 function render(){
@@ -293,6 +321,7 @@ function abrirNovo(){
   document.getElementById('formTitle').textContent='Novo orçamento';
   document.getElementById('f_id').value='';
   document.getElementById('f_cliente').value='';
+  document.getElementById('f_cliente_id').value='';
   document.getElementById('f_titulo').value='';
   document.getElementById('f_status').value='rascunho';
   document.getElementById('f_link').value='';
@@ -308,6 +337,7 @@ function abrirEdit(i){
   document.getElementById('formTitle').textContent='Editar orçamento';
   document.getElementById('f_id').value=o.id;
   document.getElementById('f_cliente').value=o.cliente||'';
+  document.getElementById('f_cliente_id').value=o.cliente_id||'';
   document.getElementById('f_titulo').value=o.titulo||'';
   document.getElementById('f_status').value=o.status||'rascunho';
   document.getElementById('f_link').value=o.link||'';
@@ -325,6 +355,7 @@ function salvar(){
   const o={
     id: document.getElementById('f_id').value || undefined,
     cliente: document.getElementById('f_cliente').value,
+    cliente_id: document.getElementById('f_cliente_id').value || null,
     titulo: document.getElementById('f_titulo').value,
     status: document.getElementById('f_status').value,
     itens: lerItens(),

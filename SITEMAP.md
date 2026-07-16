@@ -21,6 +21,7 @@ Repositório único do **site completo** (GitHub: `wilkereloig/briefing-eloidesi
 | `/aplicativos/` | `aplicativos/index.html` | Meus aplicativos (ex.: ELOI Financeiro) |
 | `/orcamento-precampanha/` | `orcamento-precampanha/index.html` | Modelo de orçamento (proposta pré-campanha) |
 | `/orcamento/?t=<token>` | `orcamento/index.html` | **Público / view-only** — cliente visualiza 1 orçamento via token secreto (`share_token`). Sem login, sem links pro admin. Lê via edge `public_get` (só cliente/título/itens/total/data). Botão "Copiar link"/WhatsApp no painel-orcamentos gera o link. |
+| `/entregas-marca/<slug>/` | `entregas-marca/<slug>/index.html` | **Público, sem login** — página de download da identidade visual de um cliente (SVG+PNG, todas as variações × todas as cores da paleta oficial, + zip "baixar tudo"). Página é um wrapper fino que carrega `../_shared/entrega.{css,js}` e renderiza a partir de `manifest.json` (gerado por `entregas-marca/_tools/gerar-variacoes.mjs` a partir dos SVGs mestre `fill:currentColor` + config JSON por cliente). Sem tabela própria: `eloi_clientes.marca_slug`/`marca_publicada` (via `eloi-gestao`, aba Clientes → botão "🔗 link marca") aponta pra pasta. Não é sensível (arquivos de marca já aprovados) — não usa token secreto como o orçamento. |
 
 ## Marca / Logo
 - Logo oficial = wordmark **"ELOI Design Studio"** (SVG inline, `viewBox 0 0 750.94 177.34`, **16 paths**, branco `#fff` via `.cls-1`).

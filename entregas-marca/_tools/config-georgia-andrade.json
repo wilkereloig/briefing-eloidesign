@@ -1,0 +1,23 @@
+{
+  "slug": "georgia-andrade",
+  "cliente": "Georgia Andrade",
+  "marca": "Georgia Andrade — Estética Avançada",
+  "mastersDir": "F:/F2 Experience Dropbox/Criação ELOI Design/ELOI DESIGN STUDIO/07. GEORGIA ANDRADE/APRESENTAÇÃO MARCA/assets/logo",
+  "pngWidth": 2000,
+  "variacoes": [
+    { "id": "completa", "arquivo": "logo-completa.svg", "nome": "Assinatura completa" },
+    { "id": "lockup-horizontal", "arquivo": "lockup-horizontal.svg", "nome": "Assinatura horizontal" },
+    { "id": "lockup-empilhado", "arquivo": "lockup-empilhado.svg", "nome": "Assinatura vertical" },
+    { "id": "simbolo", "arquivo": "simbolo-solido.svg", "nome": "Símbolo isolado" },
+    { "id": "wordmark", "arquivo": "wordmark.svg", "nome": "Wordmark" }
+  ],
+  "paleta": [
+    { "nome": "Grafite", "hex": "#272126", "claro": false },
+    { "nome": "Vinho", "hex": "#552D37", "claro": false },
+    { "nome": "Verde", "hex": "#64685E", "claro": false },
+    { "nome": "Marfim", "hex": "#F5F2EC", "claro": true },
+    { "nome": "Nude", "hex": "#F1E9E0", "claro": true },
+    { "nome": "Taupe claro", "hex": "#B4A89D", "claro": true },
+    { "nome": "Taupe profundo", "hex": "#80756D", "claro": false }
+  ]
+}

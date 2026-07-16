@@ -1,0 +1,12 @@
+{
+  "name": "entregas-marca-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "gerar": "node gerar-variacoes.mjs"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "sharp": "^0.35.3"
+  }
+}

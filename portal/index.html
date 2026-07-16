@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal do Cliente — ELOI Design Studio</title>
+  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    a{color:var(--c300)}
+    .hidden{display:none!important}
+    .wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px 80px}
+
+    .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
+    .login .logo{width:150px;margin:0 auto 26px;display:block}
+
+    .topbar .logo{width:110px}
+    .topbar h1{font-size:1.05rem;font-variation-settings:'wght' 600}
+    .topbar .sub{font-size:.8rem;color:var(--c300)}
+
+    .tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+    .tab-btn{background:transparent;border:1px solid var(--c800);color:var(--c300);border-radius:99px;padding:9px 20px;font-family:var(--font);font-size:.88rem;cursor:pointer;transition:all .2s}
+    .tab-btn:hover{border-color:var(--c500)}
+    .tab-btn.active{background:var(--c700);border-color:var(--c600);color:#fff}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    .marca-card{padding:44px;text-align:center;max-width:420px;margin:20px auto}
+    .marca-card .ic{font-size:2.4rem;margin-bottom:14px}
+    .marca-card h2{font-size:1.2rem;font-variation-settings:'wght' 700;margin-bottom:8px}
+    .marca-card p{color:var(--c300);font-size:.9rem;margin-bottom:22px}
+
+    .rows{display:flex;flex-direction:column;gap:10px}
+    .row{background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .row .grow{flex:1;min-width:180px}
+    .row .t{font-variation-settings:'wght' 600;font-size:.96rem}
+    .row .meta{font-size:.78rem;color:var(--c300)}
+    .btn-sm{padding:7px 14px;font-size:.8rem}
+
+    .badge{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-variation-settings:'wght' 700;padding:3px 10px;border-radius:99px;white-space:nowrap}
+    .badge.rascunho{background:rgba(156,163,175,.2);color:#9ca3af}
+    .badge.enviado{background:rgba(96,165,250,.2);color:#60a5fa}
+    .badge.aprovado,.badge.pago,.badge.respondido{background:rgba(74,222,128,.2);color:#4ade80}
+    .badge.recusado{background:rgba(248,113,113,.2);color:#f87171}
+    .badge.em_execucao,.badge.pendente{background:rgba(157,78,221,.2);color:var(--c100)}
+    .badge.concluida{background:rgba(96,165,250,.2);color:#60a5fa}
+    .badge.aberto{background:rgba(248,113,113,.15);color:#f87171}
+
+    .empty{text-align:center;padding:60px 24px;color:var(--c300)}
+    .empty .ic{font-size:2.4rem;opacity:.5;margin-bottom:14px}
+
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--c700);color:#fff;padding:12px 22px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
+    .toast.show{opacity:1}
+  </style>
+</head>
+<body>
+<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span></div>
+
+<!-- LOGIN -->
+<div class="login" id="loginView">
+  <div class="card-base login-box" style="padding:44px 40px;max-width:380px;width:100%;text-align:center">
+    <div class="logo" id="logoSlot"></div>
+    <h1 style="font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:20px">Portal do Cliente</h1>
+    <input type="password" id="pw" placeholder="Cole sua senha (ex: K7M2-QXTN8PLW)" autocomplete="current-password">
+    <button onclick="entrar()">Entrar</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<!-- PORTAL -->
+<div class="wrap hidden" id="portalView">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="logo" id="logoSlotTop"></div>
+      <div>
+        <h1>Portal do cliente</h1>
+        <div class="sub" id="clienteNome"></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn-ghost" onclick="sair()">Sair</button></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="marca">Marca</button>
+    <button class="tab-btn" data-tab="nf">Notas Fiscais</button>
+    <button class="tab-btn" data-tab="orc">Orçamentos</button>
+    <button class="tab-btn" data-tab="briefing">Briefing</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-marca"></div>
+  <div class="tab-panel" id="tab-nf"></div>
+  <div class="tab-panel" id="tab-orc"></div>
+  <div class="tab-panel" id="tab-briefing"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/portal-cliente';
+const PT_KEY = 'eloi_portal_token';
+let CLIENTE = {}, SERVICOS = [], ORCAMENTOS = [], BRIEFINGS = [];
+
+function token(){ return sessionStorage.getItem(PT_KEY); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(s){ return s ? new Date(s).toLocaleDateString('pt-BR') : '—'; }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+
+fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
+  document.getElementById('logoSlot').innerHTML = svg;
+  document.getElementById('logoSlotTop').innerHTML = svg;
+});
+
+function mostrarLogin(){ document.getElementById('portalView').classList.add('hidden'); document.getElementById('loginView').classList.remove('hidden'); }
+function mostrarConteudo(){ document.getElementById('loginView').classList.add('hidden'); document.getElementById('portalView').classList.remove('hidden'); }
+
+async function callPortal(action, payload){
+  const r = await fetch(FN, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action, token: token(), ...(payload||{}) }) });
+  const d = await r.json().catch(()=>({}));
+  if (r.status === 401) { sessionStorage.removeItem(PT_KEY); mostrarLogin(); throw new Error('sessão expirada'); }
+  if (d && d.error) throw new Error(d.error);
+  return d;
+}
+
+async function entrar(){
+  const pw = document.getElementById('pw').value.trim();
+  const err = document.getElementById('err');
+  if (!pw) { err.textContent = 'Cole sua senha.'; return; }
+  err.textContent = 'Verificando...';
+  try {
+    const r = await fetch(FN, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'login', senha: pw }) });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error();
+    sessionStorage.setItem(PT_KEY, d.token);
+    err.textContent = '';
+    mostrarConteudo();
+    await carregarDados();
+  } catch (e) {
+    // ponytail: erro genérico pra qualquer falha (senha errada, prefixo inexistente,
+    // rate-limit, rede) — pedido explícito do contrato, não vaza qual caso é
+    err.textContent = 'Senha incorreta.';
+  }
+}
+document.getElementById('pw').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
+
+function sair(){
+  callPortal('logout').catch(()=>{});
+  sessionStorage.removeItem(PT_KEY);
+  location.reload();
+}
+
+async function carregarDados(){
+  try {
+    const [me, sv, oc, br] = await Promise.all([
+      callPortal('me'),
+      callPortal('servicos.list'),
+      callPortal('orcamentos.list'),
+      callPortal('briefings.list'),
+    ]);
+    CLIENTE = me.cliente || {};
+    SERVICOS = sv.servicos || [];
+    ORCAMENTOS = oc.orcamentos || [];
+    BRIEFINGS = br.briefings || [];
+    document.getElementById('clienteNome').textContent = CLIENTE.nome || '';
+    renderMarca(); renderNF(); renderOrc(); renderBriefing();
+  } catch (e) { /* 401 já trocou pra tela de login dentro de callPortal */ }
+}
+
+// ── MARCA (link direto público, sem passar pela edge function) ──
+function renderMarca(){
+  const el = document.getElementById('tab-marca');
+  if (CLIENTE.marca_publicada && CLIENTE.marca_slug) {
+    el.innerHTML = `<div class="card-base marca-card">
+      <div class="ic">🎨</div>
+      <h2>Sua marca está pronta</h2>
+      <p>Logo, cores e todas as aplicações da sua identidade visual.</p>
+      <a class="btn" href="/entregas-marca/${encodeURIComponent(CLIENTE.marca_slug)}/" target="_blank" rel="noopener">Abrir marca ↗</a>
+    </div>`;
+  } else {
+    el.innerHTML = `<div class="empty"><div class="ic">🎨</div>Seus arquivos de marca ainda não foram publicados.</div>`;
+  }
+}
+
+// ── NOTAS FISCAIS ──
+const NF_STATUS = { em_execucao:'Em execução', concluida:'Concluída' };
+function renderNF(){
+  const el = document.getElementById('tab-nf');
+  if (!SERVICOS.length) { el.innerHTML = '<div class="empty"><div class="ic">🧾</div>Nenhum serviço registrado ainda.</div>'; return; }
+  el.innerHTML = '<div class="rows">' + SERVICOS.map(s => `
+    <div class="row">
+      <div class="grow">
+        <div class="t">${esc(s.descricao)}</div>
+        <div class="meta">${brl((s.valor_cents||0)/100)} · ${esc(NF_STATUS[s.status_execucao] || s.status_execucao)}${s.data_pagamento ? ' · ' + fmtDate(s.data_pagamento) : ''}</div>
+      </div>
+      <span class="badge ${s.pago ? 'pago' : 'aberto'}">${s.pago ? 'Pago' : 'Em aberto'}</span>
+      ${s.tem_nf ? `<button class="btn btn-sm" onclick="verNF('${s.id}')">Ver nota fiscal</button>` : ''}
+    </div>`).join('') + '</div>';
+}
+async function verNF(servico_id){
+  try {
+    const d = await callPortal('nf.view_url', { servico_id });
+    if (d.url) window.open(d.url, '_blank', 'noopener');
+  } catch (e) { toast('Erro ao abrir nota fiscal.'); }
+}
+
+// ── ORÇAMENTOS ──
+const ORC_STATUS = { rascunho:'Rascunho', enviado:'Enviado', aprovado:'Aprovado', recusado:'Recusado' };
+function renderOrc(){
+  const el = document.getElementById('tab-orc');
+  if (!ORCAMENTOS.length) { el.innerHTML = '<div class="empty"><div class="ic">💰</div>Nenhum orçamento ainda.</div>'; return; }
+  el.innerHTML = '<div class="rows">' + ORCAMENTOS.map(o => `
+    <div class="row">
+      <div class="grow">
+        <div class="t">${esc(o.titulo || 'Sem título')}</div>
+        <div class="meta">${brl(o.valor_total)} · ${fmtDate(o.created_at)}</div>
+      </div>
+      <span class="badge ${o.status || 'rascunho'}">${esc(ORC_STATUS[o.status] || o.status || '—')}</span>
+      <a class="btn btn-sm btn-ghost" href="/orcamento/?t=${encodeURIComponent(o.share_token)}" target="_blank" rel="noopener">Ver proposta completa</a>
+    </div>`).join('') + '</div>';
+}
+
+// ── BRIEFING (somente leitura) ──
+const TIPO_LABEL = { 'briefing':'Identidade visual', 'briefing-ecommerce':'E-commerce', 'briefing-solarium':'E-commerce (Solarium)', 'briefing-guia-viver-bem':'Guia Viver Bem' };
+const BR_STATUS = { pendente:'Pendente', respondido:'Respondido' };
+function renderBriefing(){
+  const el = document.getElementById('tab-briefing');
+  if (!BRIEFINGS.length) { el.innerHTML = '<div class="empty"><div class="ic">📝</div>Nenhum briefing ainda.</div>'; return; }
+  el.innerHTML = '<div class="rows">' + BRIEFINGS.map(b => `
+    <div class="row">
+      <div class="grow">
+        <div class="t">${esc(TIPO_LABEL[b.tipo] || b.tipo)}</div>
+        <div class="meta">${b.status === 'respondido' && b.responded_at ? 'Respondido em ' + fmtDate(b.responded_at) : 'Enviado em ' + fmtDate(b.created_at)}</div>
+      </div>
+      <span class="badge ${b.status || 'pendente'}">${esc(BR_STATUS[b.status] || b.status || '—')}</span>
+    </div>`).join('') + '</div>';
+}
+
+// ── TABS ──
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+if (token()) { mostrarConteudo(); carregarDados(); }
+</script>
+</body>
+</html>

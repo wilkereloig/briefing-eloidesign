@@ -4,6 +4,8 @@ create table if not exists public.eloi_clientes (
   nome text not null,
   cor text not null default '#7B2CBF',
   contato text,
+  marca_slug text unique,        -- pasta em entregas-marca/<slug>/ com as variações da logo
+  marca_publicada boolean not null default false,
   created_at timestamptz not null default now()
 );
 
