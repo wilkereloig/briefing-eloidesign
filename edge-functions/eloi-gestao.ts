@@ -143,7 +143,7 @@ Deno.serve(async (req: Request) => {
       cliente_id: s.cliente_id,
       descricao: s.descricao,
       valor_cents: Number(s.valor_cents) || 0,
-      status_execucao: s.status_execucao === "concluida" ? "concluida" : "em_execucao",
+      status_execucao: ["aguardando_inicio", "em_execucao", "concluida"].includes(s.status_execucao) ? s.status_execucao : "em_execucao",
       pago: s.pago === true,
       data_pagamento: s.data_pagamento || null,
       nf_numero: s.nf_numero || null,
@@ -158,6 +158,25 @@ Deno.serve(async (req: Request) => {
     const { data, error } = await supabase.from("eloi_servicos").insert(row).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ servico: data });
+  }
+
+  if (action === "servicos.from_orcamento") {
+    const orcamentoId = body?.orcamento_id;
+    if (!orcamentoId) return json({ error: "orcamento_id obrigatório" }, 400);
+    const { data: existente } = await supabase.from("eloi_servicos").select("*").eq("orcamento_id", orcamentoId).maybeSingle();
+    if (existente) return json({ servico: existente, ja_existia: true });
+    const { data: o, error: oErr } = await supabase.from("orcamentos").select("cliente_id,titulo,valor_total").eq("id", orcamentoId).single();
+    if (oErr || !o) return json({ error: "orçamento não encontrado" }, 404);
+    if (!o.cliente_id) return json({ error: "orçamento sem cliente cadastrado vinculado -- edite o orçamento e escolha um cliente cadastrado antes" }, 400);
+    const { data, error } = await supabase.from("eloi_servicos").insert({
+      cliente_id: o.cliente_id,
+      orcamento_id: orcamentoId,
+      descricao: o.titulo || "Serviço",
+      valor_cents: Math.round((Number(o.valor_total) || 0) * 100),
+      status_execucao: "aguardando_inicio",
+    }).select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ servico: data, ja_existia: false });
   }
 
   if (action === "servicos.delete") {

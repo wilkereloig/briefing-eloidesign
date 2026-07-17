@@ -129,6 +129,7 @@
         <a class="btn btn-ghost" id="viewLink" href="#" target="_blank" rel="noopener" style="display:none">Abrir proposta ↗</a>
         <button class="btn btn-ghost" onclick="copiarLink()">🔗 Copiar link</button>
         <button class="btn btn-ghost" onclick="abrirWhatsApp()">WhatsApp</button>
+        <button class="btn btn-primary" id="viewCriarServico" style="display:none" onclick="criarServico()">🔧 Criar serviço</button>
         <button class="btn btn-primary" onclick="editarDoView()">Editar</button>
       </div>
     </div>
@@ -266,7 +267,17 @@ function abrirView(i){
     <div class="v-dt">Orçamento #${o.numero||'—'} · Criado em ${dt}</div>`;
   const lk=document.getElementById('viewLink');
   if(o.link){ lk.href=o.link; lk.style.display='inline-flex'; } else { lk.style.display='none'; }
+  document.getElementById('viewCriarServico').style.display = st==='aprovado' ? 'inline-flex' : 'none';
   document.getElementById('viewModal').classList.add('show');
+}
+async function criarServico(){
+  const o=ORCS[VIEW_I];
+  if(!o) return;
+  try{
+    const d = await EloiAdminAuth.call(FN_GESTAO, {action:'servicos.from_orcamento', orcamento_id:o.id});
+    if(d && d.error) throw new Error(d.error);
+    toast(d.ja_existia ? 'Esse orçamento já tinha virado serviço.' : 'Serviço criado! Abra a Gestão pra tocar.');
+  }catch(e){ toast('Erro: '+e.message); }
 }
 function fecharView(){ document.getElementById('viewModal').classList.remove('show'); }
 function editarDoView(){ fecharView(); abrirEdit(VIEW_I); }

@@ -76,6 +76,7 @@
     .svc .desc .m{font-size:.72rem;color:var(--c300);margin-top:2px}
     .svc .valor{font-variation-settings:'wght' 700;font-size:.95rem;white-space:nowrap}
     .badge{font-size:.68rem;border-radius:99px;padding:2px 9px;white-space:nowrap;border:1px solid}
+    .badge.aguard{background:rgba(96,165,250,.14);border-color:#4a6d9a;color:#a8c8f0}
     .badge.exec{background:rgba(224,170,255,.12);border-color:var(--c600);color:var(--c100)}
     .badge.concl{background:rgba(56,142,60,.16);border-color:#4a7d4f;color:var(--good)}
     .badge.pago{background:rgba(56,142,60,.16);border-color:#4a7d4f;color:var(--good)}
@@ -150,7 +151,7 @@
   <div id="tabServicos">
     <div class="filters">
       <div><label>Cliente</label><select id="fCliente" onchange="carregarServicos()"><option value="">Todos</option></select></div>
-      <div><label>Status</label><select id="fStatus" onchange="carregarServicos()"><option value="">Todos</option><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
+      <div><label>Status</label><select id="fStatus" onchange="carregarServicos()"><option value="">Todos</option><option value="aguardando_inicio">Aguardando início</option><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
       <div><label>Pagamento</label><select id="fPago" onchange="carregarServicos()"><option value="">Todos</option><option value="true">Pago</option><option value="false">A receber</option></select></div>
       <div><label>Mês (pgto)</label><input type="month" id="fMes" onchange="carregarServicos()"></div>
       <div style="margin-left:auto"><button class="btn" onclick="abrirServico()">+ Serviço</button></div>
@@ -174,7 +175,7 @@
     <div class="fld"><label>Serviço (descrição)</label><textarea id="svcDesc" placeholder="Ex: Layout jogo ROG (versão vertical)"></textarea></div>
     <div class="frow">
       <div class="fld"><label>Valor (R$)</label><input type="text" id="svcValor" inputmode="decimal" placeholder="1.000,00"></div>
-      <div class="fld"><label>Status</label><select id="svcStatus"><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
+      <div class="fld"><label>Status</label><select id="svcStatus"><option value="aguardando_inicio">Aguardando início</option><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
     </div>
     <div class="frow">
       <div class="fld"><label>Nº Nota (NF-S)</label><input type="text" id="svcNf" placeholder="ex: 23"></div>
@@ -337,7 +338,9 @@ async function carregarServicos(){
   }).join('');
 }
 function linhaServico(s,c){
-  const stb = s.status_execucao==='concluida' ? '<span class="badge concl">Concluída</span>' : '<span class="badge exec">Em execução</span>';
+  const stb = s.status_execucao==='concluida' ? '<span class="badge concl">Concluída</span>'
+    : s.status_execucao==='aguardando_inicio' ? '<span class="badge aguard">Aguardando início</span>'
+    : '<span class="badge exec">Em execução</span>';
   const pgb = s.pago ? '<span class="badge pago">Pago</span>' : '<span class="badge naopago">A receber</span>';
   const meta = [ s.nf_numero?('NF '+esc(s.nf_numero)):'', dataBR(s.data_pagamento), s.observacoes?esc(s.observacoes):'' ].filter(Boolean).join(' • ');
   const nfBtn = s.nf_arquivo_url ? `<button class="nf-pill" onclick="event.stopPropagation();verNF('${esc(s.nf_arquivo_url)}')">📄 NF</button>` : '';
