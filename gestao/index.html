@@ -59,8 +59,10 @@
     .yearsel{background:var(--c950);border:1px solid var(--c800);border-radius:99px;color:#fff;font-family:var(--font);font-size:.82rem;padding:7px 12px;outline:none}
     .rankwrap{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:14px;padding:12px 18px;margin-bottom:24px}
     .rankwrap h3{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--c300);margin-bottom:8px;font-variation-settings:'wght' 600}
-    .rank-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:.88rem}
+    .rank-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:.85rem;flex-wrap:wrap}
     .rank-row .rv{margin-left:auto;color:var(--c100);font-variation-settings:'wght' 600}
+    .rbar{flex:1;min-width:80px;height:6px;background:rgba(157,78,221,.15);border-radius:99px;overflow:hidden}
+    .rbar span{display:block;height:100%;border-radius:99px}
 
     /* tabs */
     .tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--c800)}
@@ -151,7 +153,7 @@
   <div class="monthnav"><div class="months" id="monthTabs"></div><select id="yearSel" class="yearsel" onchange="setAno(this.value)"></select></div>
   <div class="metrics" id="metrics"></div>
   <div class="rankwrap" id="rankwrap" style="display:none">
-    <h3>Faturamento por cliente</h3>
+    <h3>Faturamento por marca no período</h3>
     <div id="rank"></div>
   </div>
 
@@ -371,8 +373,37 @@ function filtroCard(t){
   else { set('fPago',''); set('fStatus',''); set('fNota',''); }
   renderServicos(); document.getElementById('tabServicos').scrollIntoView({behavior:'smooth'});
 }
-/* stubs — substituídos nas Tasks 6-8 */
-function renderRanking(){}
+function corDoCliente(id){ const c=CLIENTES.find(x=>x.id===id); return c?c.cor:'#7B2CBF'; }
+function renderRanking(){
+  const inP = SERVICOS.filter(noPeriodo);
+  const map = {};
+  inP.forEach(s=>{
+    const cli = CLIENTES.find(c=>c.id===s.cliente_id);
+    const marca = s.sub_cliente || (cli?cli.nome:'—');
+    const r = map[marca] || (map[marca]={ marca, cor:corDoCliente(s.cliente_id), fat:0, rec:0, ar:0, n:0 });
+    const v=+s.valor_cents||0; r.fat+=v; r.n++; if(!s.pago) r.ar+=v;
+  });
+  SERVICOS.filter(pagoNoPeriodo).forEach(s=>{
+    const cli = CLIENTES.find(c=>c.id===s.cliente_id);
+    const marca = s.sub_cliente || (cli?cli.nome:'—');
+    if(map[marca]) map[marca].rec += (+s.valor_cents||0);
+  });
+  const rows = Object.values(map).sort((a,b)=>b.fat-a.fat);
+  const rw = document.getElementById('rankwrap');
+  if(!rows.length){ rw.style.display='none'; return; }
+  rw.style.display='block';
+  const max = rows[0].fat || 1;
+  document.getElementById('rank').innerHTML = rows.map(r=>`
+    <div class="rank-row">
+      <span class="chip" style="background:${esc(r.cor)}">${esc(r.marca)}</span>
+      <span style="font-size:.74rem;color:var(--c300)">${r.n} serv.</span>
+      <div class="rbar"><span style="width:${Math.round(r.fat/max*100)}%;background:${esc(r.cor)}"></span></div>
+      <span class="rv" title="faturado">${brl(r.fat)}</span>
+      <span style="font-size:.72rem;color:var(--good)" title="recebido">${brl(r.rec)}</span>
+      <span style="font-size:.72rem;color:#f0c46a" title="a receber">${brl(r.ar)}</span>
+    </div>`).join('');
+}
+/* stub — substituído na Task 7 */
 function renderServicos(){}
 
 /* CLIENTES */
