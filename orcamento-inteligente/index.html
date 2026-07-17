@@ -203,6 +203,7 @@
 <div class="toast" id="toast">Salvo!</div>
 
 <script src="/assets/eloi-admin/auth.js"></script>
+<script src="/assets/eloi-admin/nav.js"></script>
 <script>
 const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/orcamentos';
 let CATALOG = [];                 // serviços do banco
@@ -247,6 +248,7 @@ async function entrar(){
   try{
     await EloiAdminAuth.login(pw);
     err.textContent='';
+    if(window.EloiNav) EloiNav.mount();
     await carregarApp();
   }catch(e){
     err.textContent = e.status===401 ? 'Senha incorreta.' : 'Erro de conexão. Tente de novo.';

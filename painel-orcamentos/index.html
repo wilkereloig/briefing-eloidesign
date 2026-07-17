@@ -180,6 +180,7 @@
 <div class="toast" id="toast">Salvo!</div>
 
 <script src="/assets/eloi-admin/auth.js"></script>
+<script src="/assets/eloi-admin/nav.js"></script>
 <script>
 const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/orcamentos';
 const FN_GESTAO = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/eloi-gestao';
@@ -199,7 +200,7 @@ async function call(action, payload){
 fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
   document.getElementById('logoSlot').innerHTML = svg;
 });
-function mostrarPainel(){ document.getElementById('loginView').style.display='none'; document.getElementById('panelView').style.display='block'; }
+function mostrarPainel(){ document.getElementById('loginView').style.display='none'; document.getElementById('panelView').style.display='block'; if(window.EloiNav) EloiNav.mount(); }
 function popularClientesSelect(){
   document.getElementById('f_cliente_id').innerHTML = '<option value="">— nenhum, usar nome acima —</option>' +
     CLIENTES.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');

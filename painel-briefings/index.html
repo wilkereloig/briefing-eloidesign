@@ -163,6 +163,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="/assets/eloi-admin/auth.js"></script>
+<script src="/assets/eloi-admin/nav.js"></script>
 <script>
 fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
   document.getElementById('logoSlot').innerHTML = svg;
@@ -236,7 +237,7 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 function copiar(txt,btn){ navigator.clipboard.writeText(txt).then(()=>{ if(btn){const o=btn.textContent;btn.textContent='✓ Copiado';setTimeout(()=>btn.textContent=o,1500);} else toast('Copiado!'); }); }
 
 /* ===== auth / load ===== */
-function mostrarConteudo(){ document.getElementById('loginView').classList.add('hidden'); document.getElementById('listView').classList.remove('hidden'); }
+function mostrarConteudo(){ document.getElementById('loginView').classList.add('hidden'); document.getElementById('listView').classList.remove('hidden'); if(window.EloiNav) EloiNav.mount(); }
 async function entrar(){
   const pw=document.getElementById('pw').value.trim();
   const err=document.getElementById('err');

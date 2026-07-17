@@ -291,6 +291,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="/assets/eloi-admin/auth.js"></script>
+<script src="/assets/eloi-admin/nav.js"></script>
 <script>
 fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
   document.getElementById('logoSlotLogin').innerHTML = svg;
@@ -328,6 +329,7 @@ function sair(){ EloiAdminAuth.logout(); location.reload(); }
 async function mostrarApp(){
   document.getElementById('loginView').style.display='none';
   document.getElementById('app').classList.add('show');
+  if(window.EloiNav) EloiNav.mount();
   await carregarTudo();
 }
 async function carregarTudo(){

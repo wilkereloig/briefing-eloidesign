@@ -3,254 +3,297 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Área Admin — ELOI Design Studio</title>
+  <title>Painel ELOI — ELOI Design Studio</title>
   <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
   <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;--c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;--white:#fff;--font:'carbona-variable',sans-serif}
-    body{font-family:var(--font);background:var(--c950);color:var(--white);min-height:100vh;line-height:1.6;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px}
-    .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(80px) saturate(140%);opacity:.5}
+    :root{--c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;--c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;--white:#fff;--good:#8ee6a8;--amber:#f0c46a;--font:'carbona-variable',sans-serif}
+    body{font-family:var(--font);background:var(--c950);color:var(--white);min-height:100vh;line-height:1.55}
+    .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(80px) saturate(140%);opacity:.4}
     .blob{position:absolute;border-radius:50%;mix-blend-mode:screen}
     .blob.b1{width:40%;height:45%;left:5%;top:2%;background:radial-gradient(circle,#9D4EDD,transparent 70%);animation:d1 20s ease-in-out infinite}
     .blob.b2{width:44%;height:50%;right:3%;top:-8%;background:radial-gradient(circle,#7B2CBF,transparent 70%);animation:d2 24s ease-in-out infinite}
     @keyframes d1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24%,16%) scale(1.2)}}
     @keyframes d2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20%,18%) scale(1.15)}}
-    .box{position:relative;z-index:1;width:100%;max-width:960px}
-    .logo{width:160px;display:block;margin:0 auto 32px}
-    .card-base{background:rgba(36,0,70,.6);border:1px solid var(--c800);border-radius:20px;backdrop-filter:blur(8px)}
 
     /* login */
-    .login{padding:44px 40px;text-align:center;max-width:380px;margin:6vh auto 0}
-    .login h1{font-size:1.2rem;font-variation-settings:'wght' 600;margin-bottom:20px}
+    .login-wrap{position:relative;z-index:1;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 24px}
+    .login{background:rgba(36,0,70,.6);border:1px solid var(--c800);border-radius:20px;backdrop-filter:blur(8px);padding:44px 40px;text-align:center;max-width:380px;width:100%;margin:10vh auto 0}
+    .login .logo{width:150px;margin:0 auto 28px}
+    .login h1{font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:18px}
     .login input{width:100%;background:var(--c950);border:1px solid var(--c800);border-radius:10px;color:#fff;font-family:var(--font);font-size:.95rem;padding:13px 16px;outline:none;transition:border-color .2s,box-shadow .2s}
     .login input:focus{border-color:var(--c500);box-shadow:0 0 0 3px rgba(157,78,221,.2)}
     .login button{width:100%;margin-top:14px;background:var(--c700);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:.95rem;font-variation-settings:'wght' 600;padding:14px;cursor:pointer;transition:background .2s}
     .login button:hover{background:var(--c600)}
     .err{color:#f87171;font-size:.85rem;margin-top:12px;min-height:1.2em}
 
-    /* hub */
-    .hub{display:none}
-    .hub.show{display:block}
-    .hub h1{font-size:1.5rem;font-variation-settings:'wght' 700;text-align:center;margin-bottom:8px;letter-spacing:-.02em}
-    .hub .sub{text-align:center;color:var(--c300);font-size:.9rem;margin-bottom:28px}
-    .cards{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    @media(max-width:520px){.cards{grid-template-columns:1fr}}
-    .nav-card{display:block;text-decoration:none;color:#fff;padding:30px 26px;transition:border-color .2s,transform .15s,background .2s;cursor:pointer}
-    .nav-card:hover{border-color:var(--c500);transform:translateY(-3px);background:rgba(45,0,85,.7)}
-    .nav-card .ic{font-size:2rem;margin-bottom:14px;display:block}
-    .nav-card .t{font-size:1.1rem;font-variation-settings:'wght' 600;margin-bottom:4px}
-    .nav-card .d{font-size:.82rem;color:var(--c300)}
-    .logout{display:block;margin:24px auto 0;background:transparent;border:1px solid var(--c800);color:var(--c300);font-family:var(--font);font-size:.82rem;padding:9px 20px;border-radius:8px;cursor:pointer;transition:border-color .2s}
-    .logout:hover{border-color:var(--c500)}
-
     /* dashboard */
-    .dash-loading{text-align:center;color:var(--c300);padding:30px;font-size:.9rem}
-    .dash{margin-bottom:24px}
-    .funnel{display:flex;align-items:center;gap:0;background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:16px;padding:18px 12px;margin-bottom:14px;overflow-x:auto}
-    .fstage{flex:1;text-align:center;min-width:78px}
-    .fstage .fn{font-size:1.7rem;font-variation-settings:'wght' 700;color:var(--c100);line-height:1.1}
-    .fstage .fl{font-size:.7rem;color:var(--c300);text-transform:uppercase;letter-spacing:.04em}
-    .farrow{display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--c500);font-size:1rem;min-width:42px}
-    .farrow .pc{font-size:.68rem;font-variation-settings:'wght' 700;color:var(--c300)}
-    .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
-    .stat{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:14px;padding:16px 18px}
-    .stat .sv{font-size:1.5rem;font-variation-settings:'wght' 700;color:#fff;line-height:1.1}
-    .stat .sl{font-size:.78rem;color:var(--c300);margin-top:3px}
-    .stat .ss{font-size:.72rem;color:var(--c100);opacity:.75;margin-top:7px}
-    .stat.good .sv{color:#aee8ae}
-    .stat.warn .sv{color:#E0AAFF}
-    .activity-wrap{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:14px;padding:6px 18px 12px}
-    .activity-h,.atalhos-h{font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;color:var(--c300);margin:16px 0 8px;font-variation-settings:'wght' 600;text-align:left}
+    .app{display:none;position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:34px 26px 60px}
+    .app.show{display:block}
+    @media(max-width:899px){.app{padding:20px 16px 48px}}
+    .head{margin-bottom:22px}
+    .greet{font-size:1.5rem;font-variation-settings:'wght' 700;letter-spacing:-.02em}
+    .greet .em{color:var(--c300)}
+    .head .sub{color:var(--c300);font-size:.86rem;margin-top:2px}
+    .months{display:flex;gap:4px;overflow-x:auto;margin-top:16px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+    .mtab{flex:0 0 auto;background:transparent;border:1px solid transparent;color:var(--c300);font-family:var(--font);font-size:.82rem;padding:7px 13px;border-radius:9px;cursor:pointer;transition:background .15s,color .15s}
+    .mtab:hover{color:#fff;background:rgba(90,24,154,.3)}
+    .mtab.active{background:var(--c700);color:#fff;font-variation-settings:'wght' 600}
+    .yearsel{margin-left:8px;background:var(--c950);border:1px solid var(--c800);color:var(--c100);font-family:var(--font);font-size:.82rem;padding:7px 8px;border-radius:9px;flex:0 0 auto}
+
+    .sec-h{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--c300);margin:26px 4px 12px;font-variation-settings:'wght' 600}
+    .fin{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    @media(max-width:760px){.fin{grid-template-columns:1fr 1fr}}
+    .fcard{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:15px;padding:16px 18px;cursor:pointer;transition:border-color .18s,transform .12s;text-decoration:none;color:inherit;display:block}
+    .fcard:hover{border-color:var(--c500);transform:translateY(-2px)}
+    .fcard .fl{font-size:.76rem;color:var(--c300);margin-bottom:7px}
+    .fcard .fv{font-size:1.42rem;font-variation-settings:'wght' 700;line-height:1.05}
+    .fcard.good .fv{color:var(--good)} .fcard.amber .fv{color:var(--amber)} .fcard.est .fv{color:var(--c100)}
+    .fcard .delta{font-size:.72rem;margin-top:6px;color:var(--c300)}
+    .fcard .delta.up{color:var(--good)} .fcard .delta.down{color:#f0a0a0}
+
+    .ops{display:flex;flex-wrap:wrap;gap:10px}
+    .opstat{background:rgba(36,0,70,.4);border:1px solid var(--c800);border-radius:12px;padding:11px 15px;min-width:120px;flex:1 1 120px}
+    .opstat .ov{font-size:1.2rem;font-variation-settings:'wght' 700}
+    .opstat .ol{font-size:.72rem;color:var(--c300);margin-top:2px}
+    .opstat.hot .ov{color:var(--amber)}
+
+    .panel{background:rgba(36,0,70,.4);border:1px solid var(--c800);border-radius:15px;padding:6px 18px 12px}
+    .row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(60,9,108,.5);text-decoration:none;color:inherit}
+    .row:last-child{border-bottom:none}
+    .tag{flex:0 0 auto;font-size:.66rem;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:6px;font-variation-settings:'wght' 600}
+    .tag.nf{background:rgba(157,78,221,.25);color:var(--c100)}
+    .tag.pay{background:rgba(240,196,106,.18);color:var(--amber)}
+    .tag.orc{background:rgba(123,44,191,.28);color:var(--c100)}
+    .tag.brf{background:rgba(90,24,154,.35);color:var(--c300)}
+    .row .rmain{flex:1;min-width:0}
+    .row .rt{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row .rs{font-size:.75rem;color:var(--c300)}
+    .row .rd{flex:0 0 auto;font-size:.74rem;color:var(--c300);opacity:.8;white-space:nowrap}
+    .row:hover .rt{color:var(--c100)}
+    .chip{flex:0 0 auto;font-size:.7rem;padding:2px 9px;border-radius:999px;color:#fff;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cli-line{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(60,9,108,.5)}
+    .cli-line:last-child{border-bottom:none}
+    .cli-line .cm{margin-left:auto;font-size:.76rem;color:var(--c300);text-align:right;white-space:nowrap}
+    .cli-line .cm b{color:#fff;font-variation-settings:'wght' 600}
+    .empty{color:var(--c300);opacity:.6;font-size:.86rem;padding:16px 2px}
+    .loading{color:var(--c300);text-align:center;padding:40px;font-size:.9rem}
     .act{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid rgba(60,9,108,.5);font-size:.85rem}
     .act:last-child{border-bottom:none}
-    .act .who{color:var(--c100)}
-    .act .when{color:var(--c300);opacity:.7;font-size:.74rem;white-space:nowrap}
-    .act-empty{color:var(--c300);opacity:.6;font-size:.85rem;padding:14px 0}
+    .act .who{color:var(--c100)} .act .when{color:var(--c300);opacity:.7;font-size:.74rem;white-space:nowrap}
   </style>
 </head>
 <body>
 <div class="aurora"><span class="blob b1"></span><span class="blob b2"></span></div>
 
-<div class="box">
-  <div class="logo" id="logoSlot"></div>
-
-  <!-- LOGIN -->
-  <div class="card-base login" id="loginView">
+<!-- LOGIN -->
+<div class="login-wrap" id="loginView">
+  <div class="login">
+    <div class="logo" id="logoSlot"></div>
     <h1>Área Administrativa</h1>
     <input type="password" id="pw" placeholder="Senha de acesso" autocomplete="current-password">
     <button onclick="entrar()">Entrar</button>
     <div class="err" id="err"></div>
   </div>
+</div>
 
-  <!-- HUB -->
-  <div class="hub" id="hubView">
-    <h1>Painel ELOI</h1>
-    <p class="sub">Visão geral do seu negócio</p>
+<!-- DASHBOARD -->
+<div class="app" id="appView">
+  <div class="head">
+    <div class="greet">Painel <span class="em">ELOI</span></div>
+    <div class="sub" id="sub">Visão do período</div>
+    <div class="months" id="months"></div>
+  </div>
+  <div class="loading" id="loading">Carregando…</div>
+  <div id="dash" style="display:none">
+    <div class="fin" id="fin"></div>
 
-    <div class="dash-loading" id="dashLoading">Carregando métricas…</div>
-    <div class="dash" id="dash" style="display:none">
-      <div class="funnel" id="funnel"></div>
-      <div class="metrics" id="metrics"></div>
-      <div class="metrics" id="metricsFin"></div>
-      <div class="activity-wrap">
-        <div class="activity-h" style="margin-top:6px">Atividade recente</div>
-        <div id="activity"></div>
-      </div>
-    </div>
+    <div class="sec-h">Sua atenção</div>
+    <div class="panel"><div id="atencao"></div></div>
 
-    <div class="atalhos-h">Atalhos</div>
-    <div class="cards">
-      <a class="card-base nav-card" href="/gestao/">
-        <span class="ic">📊</span>
-        <div class="t">Gestão</div>
-        <div class="d">Clientes, serviços prestados (valor, nota fiscal, PDF, status) e dashboard financeiro.</div>
-      </a>
-      <a class="card-base nav-card" href="/painel-briefings/">
-        <span class="ic">📋</span>
-        <div class="t">Briefings</div>
-        <div class="d">Gere links pra enviar ao cliente e veja as respostas — identidade visual e e-commerce, num só lugar.</div>
-      </a>
-      <a class="card-base nav-card" href="/painel-orcamentos/">
-        <span class="ic">💰</span>
-        <div class="t">Orçamentos</div>
-        <div class="d">Criar, editar e acompanhar orçamentos e propostas.</div>
-      </a>
-      <a class="card-base nav-card" href="/orcamento-inteligente/">
-        <span class="ic">🧮</span>
-        <div class="t">Orçamento inteligente</div>
-        <div class="d">Monte orçamentos por catálogo de serviços e multiplicadores.</div>
-      </a>
-      <a class="card-base nav-card" href="/marca/">
-        <span class="ic">🎨</span>
-        <div class="t">Entregas de Marca</div>
-        <div class="d">Gerar e publicar variações de logo.</div>
-      </a>
-      <a class="card-base nav-card" href="/aplicativos/">
-        <span class="ic">🧩</span>
-        <div class="t">Aplicativos</div>
-        <div class="d">Seus apps ELOI num só lugar — Financeiro e mais.</div>
-      </a>
-    </div>
-    <button class="logout" onclick="sair()">Sair</button>
+    <div class="sec-h">Resumo operacional</div>
+    <div class="ops" id="ops"></div>
+
+    <div class="sec-h">Clientes em destaque</div>
+    <div class="panel"><div id="clientes"></div></div>
+
+    <div class="sec-h">Atividade recente</div>
+    <div class="panel"><div id="activity"></div></div>
   </div>
 </div>
 
 <script src="/assets/eloi-admin/auth.js"></script>
+<script src="/assets/eloi-admin/periodo.js"></script>
+<script src="/assets/eloi-admin/nav.js"></script>
 <script>
 const SUPA = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1';
-let INV = [], ORCS = null, FIN = null;
+const P = window.EloiPeriodo;
+const { brl, esc, dataBR } = P;
+let CLIENTES=[], SERVICOS=[], ORCS=[], INV=[], FIN=null;
+let PERIODO = P.criar();
 
-fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
-  document.getElementById('logoSlot').innerHTML = svg;
-});
+fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{ const s=document.getElementById('logoSlot'); if(s) s.innerHTML=svg; });
 
-function showHub(){ document.getElementById('loginView').style.display='none'; document.getElementById('hubView').classList.add('show'); }
-function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function pct(a,b){ return b ? Math.round(a/b*100) : 0; }
+function nomeCliente(id){ const c=CLIENTES.find(x=>x.id===id); return c?c.nome:'—'; }
+function corCliente(id){ const c=CLIENTES.find(x=>x.id===id); return c?c.cor:'#7B2CBF'; }
+function marcaDe(s){ return s.sub_cliente || nomeCliente(s.cliente_id); }
+
+async function call(fn, body){ return EloiAdminAuth.call(SUPA+'/'+fn, body); }
 
 async function entrar(){
-  const pw = document.getElementById('pw').value;
-  const err = document.getElementById('err'); err.textContent='Verificando...';
+  const pw=document.getElementById('pw').value, err=document.getElementById('err'); err.textContent='Verificando…';
+  try{ await EloiAdminAuth.login(pw); err.textContent=''; mostrar(); }
+  catch(e){ err.textContent = e.status===401?'Senha incorreta.':'Erro. Tente de novo.'; }
+}
+function mostrar(){
+  document.getElementById('loginView').style.display='none';
+  document.getElementById('appView').classList.add('show');
+  if(window.EloiNav) EloiNav.mount();
+  carregar();
+}
+async function carregar(){
   try{
-    await EloiAdminAuth.login(pw);
-    err.textContent='';
-    showHub();
-    carregarDados();
-  }catch(e){
-    err.textContent = e.status===401 ? 'Senha incorreta.' : 'Erro. Tente de novo.';
-  }
+    const [g, stats, briefs, orcs] = await Promise.allSettled([
+      call('eloi-gestao',{action:'clientes.list'}),
+      call('eloi-gestao',{action:'dashboard.stats'}),
+      call('briefing-links',{action:'list'}),
+      call('orcamentos',{action:'list'})
+    ]);
+    CLIENTES = g.status==='fulfilled' ? (g.value.clientes||[]) : [];
+    FIN = stats.status==='fulfilled' ? stats.value : null;
+    INV = briefs.status==='fulfilled' ? (briefs.value.invites||[]) : [];
+    ORCS = orcs.status==='fulfilled' ? (orcs.value.orcamentos||[]) : [];
+    const sv = await call('eloi-gestao',{action:'servicos.list',filtro:{}});
+    SERVICOS = sv.servicos||[];
+  }catch(e){ /* segue com o que tiver */ }
+  PERIODO = P.criar();
+  render();
+  document.getElementById('loading').style.display='none';
+  document.getElementById('dash').style.display='block';
 }
-function carregarDados(){
-  EloiAdminAuth.call(SUPA+'/briefing-links',{action:'list'})
-    .then(d=>{ INV = d.invites||[]; renderDash(); })
-    .catch(()=>{ INV = []; renderDash(); });
-  loadOrcs();
-  loadFin();
+function setMes(m){ PERIODO.mes=m; render(); }
+function setAno(a){ PERIODO.ano=Number(a); render(); }
+
+function render(){ renderMonths(); renderFin(); renderAtencao(); renderOps(); renderClientes(); renderActivity(); renderSub(); }
+
+function renderSub(){
+  const lbl = PERIODO.mes ? P.MESES[PERIODO.mes-1]+' '+PERIODO.ano : 'Ano '+PERIODO.ano;
+  document.getElementById('sub').textContent = 'Visão de '+lbl;
 }
-function loadOrcs(){
-  EloiAdminAuth.call(SUPA+'/orcamentos',{action:'list'})
-    .then(d=>{ ORCS = d.orcamentos||[]; renderDash(); })
-    .catch(()=>{ ORCS = []; renderDash(); });
-}
-function loadFin(){
-  EloiAdminAuth.call(SUPA+'/eloi-gestao',{action:'dashboard.stats'})
-    .then(d=>{ FIN = d; renderDash(); })
-    .catch(()=>{ FIN = false; renderDash(); });
+function renderMonths(){
+  let h = P.MESES.map((nm,i)=>`<button class="mtab${PERIODO.mes===i+1?' active':''}" onclick="setMes(${i+1})">${nm}</button>`).join('')
+    + `<button class="mtab${PERIODO.mes===null?' active':''}" onclick="setMes(null)">Todos</button>`;
+  const anos = P.anosDisponiveis(SERVICOS);
+  if(anos.length>1) h += `<select class="yearsel" onchange="setAno(this.value)">`+anos.map(a=>`<option value="${a}"${a===PERIODO.ano?' selected':''}>${a}</option>`).join('')+`</select>`;
+  document.getElementById('months').innerHTML = h;
 }
 
-function renderDash(){
-  const orcs = ORCS || [];
-  const pend = INV.filter(b=>b.status==='pendente').length;
-  const resp = INV.filter(b=>b.status==='respondido').length;
-  const byS = s => orcs.filter(o=>(o.status||'rascunho')===s);
-  const enviados=byS('enviado'), aprovados=byS('aprovado'), recusados=byS('recusado'), rascunhos=byS('rascunho');
-  const sum = arr => arr.reduce((a,o)=>a+(Number(o.valor_total)||0),0);
-  const rFechado=sum(aprovados), rAberto=sum(enviados);
-  const orcEnv = enviados.length+aprovados.length+recusados.length;
+function finDoPeriodo(per){
+  const inP = SERVICOS.filter(s=>P.noPeriodo(per,s));
+  const faturado = inP.reduce((a,s)=>a+(+s.valor_cents||0),0);
+  const recebido = SERVICOS.filter(s=>P.pagoNoPeriodo(per,s)).reduce((a,s)=>a+(+s.valor_cents||0),0);
+  const aReceber = inP.filter(s=>!s.pago).reduce((a,s)=>a+(+s.valor_cents||0),0);
+  return { faturado, recebido, aReceber };
+}
+function deltaHTML(cur, prev){
+  if(!prev) return '';
+  const d = Math.round((cur-prev)/prev*100);
+  if(!isFinite(d)||d===0) return `<div class="delta">= mês anterior</div>`;
+  return `<div class="delta ${d>0?'up':'down'}">${d>0?'▲':'▼'} ${Math.abs(d)}% vs mês ant.</div>`;
+}
+function renderFin(){
+  const cur = finDoPeriodo(PERIODO);
+  const prev = PERIODO.mes ? finDoPeriodo(P.anterior(PERIODO)) : null;
+  const est = FIN ? (FIN.aprovados_pendentes_cents||0) : 0;
+  const estN = FIN ? (FIN.aprovados_pendentes_count||0) : 0;
+  document.getElementById('fin').innerHTML = `
+    <a class="fcard" href="/gestao/"><div class="fl">Faturado</div><div class="fv">${brl(cur.faturado)}</div>${prev?deltaHTML(cur.faturado,prev.faturado):''}</a>
+    <a class="fcard good" href="/gestao/"><div class="fl">Recebido</div><div class="fv">${brl(cur.recebido)}</div>${prev?deltaHTML(cur.recebido,prev.recebido):''}</a>
+    <a class="fcard amber" href="/gestao/"><div class="fl">A receber</div><div class="fv">${brl(cur.aReceber)}</div></a>
+    <a class="fcard est" href="/painel-orcamentos/"><div class="fl">Estimativa</div><div class="fv">${brl(est)}</div><div class="delta">${estN} orç. aprovado(s) sem serviço</div></a>`;
+}
 
-  // clientes distintos (provisório: nomes de briefings + orçamentos)
-  const set=new Set();
-  INV.forEach(b=>{ const k=(b.cliente||b.empresa||'').trim().toLowerCase(); if(k) set.add(k); });
-  orcs.forEach(o=>{ const k=(o.cliente||'').trim().toLowerCase(); if(k) set.add(k); });
-  const clientes=set.size;
+function renderAtencao(){
+  const rows=[];
+  // NF pendente: concluida sem NF (pronta pra faturar)
+  SERVICOS.filter(s=>s.status_execucao==='concluida' && !s.nf_numero).forEach(s=>rows.push({
+    ord:0, tag:'nf', tl:'NF pendente', cli:marcaDe(s), cor:corCliente(s.cliente_id),
+    txt:s.descricao, sub:brl(s.valor_cents)+' a faturar', d:s.data_competencia, href:'/gestao/'
+  }));
+  // pagamento pendente: com NF, nao pago
+  SERVICOS.filter(s=>s.nf_numero && !s.pago).forEach(s=>rows.push({
+    ord:1, tag:'pay', tl:'Pagamento', cli:marcaDe(s), cor:corCliente(s.cliente_id),
+    txt:s.descricao, sub:brl(s.valor_cents)+' a receber', d:s.data_competencia, href:'/gestao/'
+  }));
+  // orcamento enviado aguardando
+  ORCS.filter(o=>(o.status||'')==='enviado').forEach(o=>rows.push({
+    ord:2, tag:'orc', tl:'Orçamento', cli:o.cliente||'—', cor:'#7B2CBF',
+    txt:o.titulo||'Proposta', sub:brl((Number(o.valor_total)||0)*100)+' aguardando', d:o.created_at, href:'/painel-orcamentos/'
+  }));
+  // briefing pendente
+  INV.filter(b=>b.status==='pendente').forEach(b=>rows.push({
+    ord:3, tag:'brf', tl:'Briefing', cli:b.cliente||b.empresa||'—', cor:'#5A189A',
+    txt:'Aguardando resposta', sub:'', d:b.created_at, href:'/painel-briefings/'
+  }));
+  rows.sort((a,b)=> a.ord-b.ord || new Date(a.d||0)-new Date(b.d||0));
+  const el=document.getElementById('atencao');
+  if(!rows.length){ el.innerHTML='<div class="empty">Nada pendente. Tudo em dia. ✦</div>'; return; }
+  el.innerHTML = rows.slice(0,8).map(r=>`
+    <a class="row" href="${r.href}">
+      <span class="tag ${r.tag}">${r.tl}</span>
+      <span class="chip" style="background:${esc(r.cor)}">${esc(r.cli)}</span>
+      <span class="rmain"><span class="rt">${esc(r.txt)}</span>${r.sub?`<span class="rs">${esc(r.sub)}</span>`:''}</span>
+      <span class="rd">${r.d?dataBR(r.d):''}</span>
+    </a>`).join('') + (rows.length>8?`<div class="empty">+${rows.length-8} — ver na Gestão</div>`:'');
+}
 
-  // FUNIL
-  const stages=[
-    {n:INV.length, l:'Convites'},
-    {n:resp, l:'Respondidos', pc:pct(resp, INV.length)},
-    {n:orcEnv, l:'Orç. enviados', pc:pct(orcEnv, resp)},
-    {n:aprovados.length, l:'Aprovados', pc:pct(aprovados.length, orcEnv)}
-  ];
-  let fhtml='';
-  stages.forEach((s,i)=>{
-    if(i>0) fhtml+=`<div class="farrow">→<span class="pc">${s.pc}%</span></div>`;
-    fhtml+=`<div class="fstage"><div class="fn">${s.n}</div><div class="fl">${s.l}</div></div>`;
+function renderOps(){
+  const emExec = SERVICOS.filter(s=>s.status_execucao==='em_execucao').length;
+  const nfPend = SERVICOS.filter(s=>s.status_execucao==='concluida' && !s.nf_numero).length;
+  const payPend = SERVICOS.filter(s=>s.nf_numero && !s.pago).length;
+  const orcAg = ORCS.filter(o=>(o.status||'')==='enviado').length;
+  const brfPend = INV.filter(b=>b.status==='pendente').length;
+  const it=(v,l,hot)=>`<div class="opstat${hot&&v?' hot':''}"><div class="ov">${v}</div><div class="ol">${l}</div></div>`;
+  document.getElementById('ops').innerHTML =
+    it(emExec,'Em execução') + it(nfPend,'NF pendentes',1) + it(payPend,'Pagamentos pendentes',1)
+    + it(orcAg,'Orçamentos aguardando',1) + it(brfPend,'Briefings pendentes',1);
+}
+
+function renderClientes(){
+  const map={};
+  SERVICOS.filter(s=>P.noPeriodo(PERIODO,s)).forEach(s=>{
+    const c = map[s.cliente_id] || (map[s.cliente_id]={ id:s.cliente_id, nome:nomeCliente(s.cliente_id), cor:corCliente(s.cliente_id), fat:0, ar:0, exec:0 });
+    c.fat += (+s.valor_cents||0); if(!s.pago) c.ar += (+s.valor_cents||0);
+    if(s.status_execucao==='em_execucao') c.exec++;
   });
-  document.getElementById('funnel').innerHTML=fhtml;
+  SERVICOS.filter(s=>P.pagoNoPeriodo(PERIODO,s)).forEach(s=>{ if(map[s.cliente_id]){ map[s.cliente_id].rec=(map[s.cliente_id].rec||0)+(+s.valor_cents||0); } });
+  const rows=Object.values(map).sort((a,b)=>b.fat-a.fat).slice(0,5);
+  const el=document.getElementById('clientes');
+  if(!rows.length){ el.innerHTML='<div class="empty">Nenhum serviço no período.</div>'; return; }
+  el.innerHTML = rows.map(c=>`
+    <div class="cli-line">
+      <span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span>
+      ${c.exec?`<span class="rs" style="font-size:.74rem;color:var(--c300)">${c.exec} em exec.</span>`:''}
+      <span class="cm">Fat <b>${brl(c.fat)}</b> · Rec ${brl(c.rec||0)} · A rec. ${brl(c.ar)}</span>
+    </div>`).join('');
+}
 
-  // MÉTRICAS
-  const orcLoading = ORCS===null;
-  document.getElementById('metrics').innerHTML=`
-    <div class="stat"><div class="sv">${pend+resp}</div><div class="sl">Briefings</div><div class="ss">${pend} pendente(s) · ${resp} respondido(s)</div></div>
-    <div class="stat"><div class="sv">${orcLoading?'…':orcs.length}</div><div class="sl">Orçamentos</div><div class="ss">${orcLoading?'carregando':`${enviados.length} enviado(s) · ${aprovados.length} aprovado(s) · ${rascunhos.length} rascunho`}</div></div>
-    <div class="stat good"><div class="sv">${orcLoading?'…':brl(rFechado)}</div><div class="sl">Receita fechada</div><div class="ss">${aprovados.length} orçamento(s) aprovado(s)</div></div>
-    <div class="stat warn"><div class="sv">${orcLoading?'…':brl(rAberto)}</div><div class="sl">Em aberto (pipeline)</div><div class="ss">${enviados.length} enviado(s) aguardando</div></div>
-    <div class="stat"><div class="sv">${clientes}</div><div class="sl">Clientes</div><div class="ss">distintos (briefings + orçamentos)</div></div>`;
-
-  // FINANCEIRO (real, de eloi_servicos -- via eloi-gestao, nao so o pipeline de orçamentos)
-  const finLoading = FIN === null;
-  const finEl = document.getElementById('metricsFin');
-  if (FIN === false) {
-    finEl.innerHTML = '';
-  } else {
-    finEl.innerHTML = `
-      <div class="stat good"><div class="sv">${finLoading?'…':brl(FIN.faturado_mes)}</div><div class="sl">Faturado no mês</div><div class="ss">serviços pagos (eloi_servicos)</div></div>
-      <div class="stat warn"><div class="sv">${finLoading?'…':brl(FIN.a_receber)}</div><div class="sl">A receber</div><div class="ss">serviços em aberto</div></div>
-      ${!finLoading && FIN.aprovados_pendentes_count ? `<div class="stat warn"><div class="sv">${brl(FIN.aprovados_pendentes_cents/100)}</div><div class="sl">Aprovado sem serviço</div><div class="ss"><a href="/painel-orcamentos/" style="color:inherit">${FIN.aprovados_pendentes_count} orçamento(s) — criar serviço →</a></div></div>` : ''}
-      <a class="stat" href="/gestao/" style="text-decoration:none;color:inherit;display:flex;align-items:center;justify-content:center"><div class="sl">Ver financeiro completo →</div></a>`;
-  }
-
-  // ATIVIDADE
+function renderActivity(){
   const acts=[];
-  INV.filter(b=>b.status==='respondido').forEach(b=>acts.push({t:b.responded_at||b.created_at, ic:'📋', txt:'Briefing respondido', who:b.cliente||b.empresa||'—'}));
-  orcs.forEach(o=>acts.push({t:o.created_at, ic:'💰', txt:'Orçamento '+(o.status||'rascunho'), who:(o.cliente||'—')+' · '+brl(o.valor_total)}));
-  acts.sort((a,b)=> new Date(b.t||0)-new Date(a.t||0));
-  const av=document.getElementById('activity');
-  if(!acts.length){ av.innerHTML='<div class="act-empty">Nada por aqui ainda. Gere um briefing ou crie um orçamento.</div>'; }
-  else av.innerHTML=acts.slice(0,7).map(a=>{
+  INV.filter(b=>b.status==='respondido').forEach(b=>acts.push({t:b.responded_at||b.created_at, ic:'✦', txt:'Briefing respondido', who:b.cliente||b.empresa||'—'}));
+  ORCS.forEach(o=>acts.push({t:o.created_at, ic:'•', txt:'Orçamento '+(o.status||'rascunho'), who:(o.cliente||'—')+' · '+brl((Number(o.valor_total)||0)*100)}));
+  acts.sort((a,b)=>new Date(b.t||0)-new Date(a.t||0));
+  const el=document.getElementById('activity');
+  if(!acts.length){ el.innerHTML='<div class="empty">Nada por aqui ainda.</div>'; return; }
+  el.innerHTML = acts.slice(0,7).map(a=>{
     const dt=a.t?new Date(a.t).toLocaleDateString('pt-BR'):'';
     return `<div class="act"><span>${a.ic} ${esc(a.txt)} — <span class="who">${esc(a.who)}</span></span><span class="when">${dt}</span></div>`;
   }).join('');
-
-  document.getElementById('dashLoading').style.display='none';
-  document.getElementById('dash').style.display='block';
 }
 
-function sair(){ EloiAdminAuth.logout(); location.reload(); }
 document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') entrar(); });
-if (EloiAdminAuth.token()) { showHub(); carregarDados(); }
+if (EloiAdminAuth.token()) { mostrar(); }
 </script>
 </body>
 </html>
