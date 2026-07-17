@@ -337,9 +337,7 @@ async function carregarTudo(){
   const anos = anosDisponiveis();
   const now = new Date();
   const anoAtual = now.getFullYear();
-  PERIODO = { ano: anos.includes(anoAtual) ? anoAtual : (anos[anos.length-1] || anoAtual), mes: (now.getMonth()+1) };
-  // se o mês atual não tem dados nem é "todos", começa em Todos
-  if(!SERVICOS.some(s=>mesDe(s)===`${PERIODO.ano}-${String(PERIODO.mes).padStart(2,'0')}`)) PERIODO.mes = null;
+  PERIODO = { ano: anoAtual, mes: (now.getMonth()+1) };
   await carregarDashboardExtra();  // só o card de orçamento (Task 5)
   render();
 }
