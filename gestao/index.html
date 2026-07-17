@@ -266,6 +266,8 @@ fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
 
 const SUPA = "https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/eloi-gestao";
 let CLIENTES = [];
+let SERVICOS = [];
+let PERIODO = { ano: new Date().getFullYear(), mes: null };
 
 async function api(action, extra = {}) {
   const j = await EloiAdminAuth.call(SUPA, { action, ...extra });
@@ -297,8 +299,30 @@ async function mostrarApp(){
 }
 async function carregarTudo(){
   await carregarClientes();
-  await Promise.all([ carregarDashboard(), carregarServicos() ]);
+  const { servicos } = await api('servicos.list', { filtro:{} });
+  SERVICOS = servicos || [];
+  const anos = anosDisponiveis();
+  const now = new Date();
+  const anoAtual = now.getFullYear();
+  PERIODO = { ano: anos.includes(anoAtual) ? anoAtual : (anos[anos.length-1] || anoAtual), mes: (now.getMonth()+1) };
+  // se o mês atual não tem dados nem é "todos", começa em Todos
+  if(!SERVICOS.some(s=>mesDe(s)===`${PERIODO.ano}-${String(PERIODO.mes).padStart(2,'0')}`)) PERIODO.mes = null;
+  await carregarDashboardExtra();  // só o card de orçamento (Task 5)
+  render();
 }
+function mesDe(s){ return s.data_competencia ? String(s.data_competencia).slice(0,7) : null; }
+function ymPeriodo(){ return PERIODO.mes ? `${PERIODO.ano}-${String(PERIODO.mes).padStart(2,'0')}` : null; }
+function noPeriodo(s){ const m=mesDe(s); if(!m) return false; return PERIODO.mes ? m===ymPeriodo() : m.slice(0,4)===String(PERIODO.ano); }
+function pagoNoPeriodo(s){ if(!s.pago||!s.data_pagamento) return false; const m=String(s.data_pagamento).slice(0,7); return PERIODO.mes ? m===ymPeriodo() : m.slice(0,4)===String(PERIODO.ano); }
+function anosDisponiveis(){ const set=new Set(); SERVICOS.forEach(s=>{ if(s.data_competencia) set.add(String(s.data_competencia).slice(0,4)); if(s.data_pagamento) set.add(String(s.data_pagamento).slice(0,4)); }); return [...set].map(Number).sort((a,b)=>a-b); }
+function render(){ renderNav(); renderCards(); renderRanking(); renderServicos(); if(document.getElementById('tabClientes').style.display!=='none') carregarClientes(); }
+async function recarregar(){ const { servicos } = await api('servicos.list',{filtro:{}}); SERVICOS = servicos||[]; await carregarClientes(); await carregarDashboardExtra(); render(); }
+/* stubs — substituídos nas Tasks 4-8 */
+function renderNav(){}
+function renderCards(){}
+function renderRanking(){}
+function renderServicos(){}
+async function carregarDashboardExtra(){}
 
 /* DASHBOARD */
 async function carregarDashboard(){
