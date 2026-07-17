@@ -149,6 +149,7 @@ Deno.serve(async (req: Request) => {
       status_execucao: ["aguardando_inicio", "em_execucao", "concluida"].includes(s.status_execucao) ? s.status_execucao : "em_execucao",
       pago: s.pago === true,
       data_pagamento: s.data_pagamento || null,
+      data_competencia: s.data_competencia || null,
       nf_numero: s.nf_numero || null,
       observacoes: s.observacoes || null,
     };
