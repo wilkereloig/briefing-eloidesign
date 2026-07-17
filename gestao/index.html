@@ -90,6 +90,7 @@
     .subgrp{margin:6px 0 6px 14px;border-left:2px solid var(--c700,#3C096C);padding-left:12px}
     .subgrp-h{display:flex;align-items:center;gap:8px;font-size:.78rem;font-variation-settings:'wght' 600;color:var(--c300);margin-bottom:6px}
     .subgrp-h .gtot{margin-left:auto;font-variation-settings:'wght' 400;opacity:.85}
+    .mdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
     .svc{background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:7px;cursor:pointer;transition:border-color .2s,background .2s}
     .svc:hover{border-color:var(--c500);background:rgba(45,0,85,.6)}
     .svc .desc{flex:1;min-width:0}
@@ -393,13 +394,15 @@ function filtroCard(t){
   renderServicos(); document.getElementById('tabServicos').scrollIntoView({behavior:'smooth'});
 }
 function corDoCliente(id){ const c=CLIENTES.find(x=>x.id===id); return c?c.cor:'#7B2CBF'; }
+const PALETA_MARCA = ['#E4007C','#9D4EDD','#7B2CBF','#C77DFF','#FF6FB5','#5A189A','#B5179E','#8367C7','#D046A6','#6A4C93','#A663CC','#E85D9E'];
+function corDaMarca(nome){ let h=0; const s=String(nome||''); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return PALETA_MARCA[h%PALETA_MARCA.length]; }
 function renderRanking(){
   const inP = SERVICOS.filter(noPeriodo);
   const map = {};
   inP.forEach(s=>{
     const cli = CLIENTES.find(c=>c.id===s.cliente_id);
     const marca = s.sub_cliente || (cli?cli.nome:'—');
-    const r = map[marca] || (map[marca]={ marca, cor:corDoCliente(s.cliente_id), fat:0, rec:0, ar:0, n:0 });
+    const r = map[marca] || (map[marca]={ marca, cor:corDaMarca(marca), fat:0, rec:0, ar:0, n:0 });
     const v=+s.valor_cents||0; r.fat+=v; r.n++; if(!s.pago) r.ar+=v;
   });
   SERVICOS.filter(pagoNoPeriodo).forEach(s=>{
@@ -481,7 +484,7 @@ function grupoHTML(itens){
       const arr=bySub[sk];
       if(!sk) return arr.map(s=>linhaServico(s,c)).join('');
       const st=arr.reduce((a,s)=>a+(+s.valor_cents||0),0);
-      return `<div class="subgrp"><div class="subgrp-h">↳ ${esc(sk)} <span class="gtot">${arr.length} • ${brl(st)}</span></div>${arr.map(s=>linhaServico(s,c)).join('')}</div>`;
+      return `<div class="subgrp" style="border-left-color:${esc(corDaMarca(sk))}"><div class="subgrp-h"><span class="mdot" style="background:${esc(corDaMarca(sk))}"></span>${esc(sk)} <span class="gtot">${arr.length} • ${brl(st)}</span></div>${arr.map(s=>linhaServico(s,c)).join('')}</div>`;
     }).join('');
     return `<div class="grupo"><div class="grupo-h"><span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span><span class="gtot">${arrC.length} • ${brl(tot)}</span></div>${corpo}</div>`;
   }).join('');
