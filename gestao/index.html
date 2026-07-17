@@ -424,15 +424,24 @@ async function carregarClientes(){
   // lista
   const list = document.getElementById('clientesList');
   if(!clientes.length){ list.innerHTML = '<div class="empty">Nenhum cliente ainda. Clique em "+ Cliente".</div>'; return; }
-  list.innerHTML = clientes.map(c=>`
+  list.innerHTML = clientes.map(c=>{
+    const meus = SERVICOS.filter(s=>s.cliente_id===c.id);
+    const inP = meus.filter(noPeriodo);
+    const fat = inP.reduce((a,s)=>a+(+s.valor_cents||0),0);
+    const rec = meus.filter(pagoNoPeriodo).reduce((a,s)=>a+(+s.valor_cents||0),0);
+    const ar  = inP.filter(s=>!s.pago).reduce((a,s)=>a+(+s.valor_cents||0),0);
+    const exec = meus.filter(s=>s.status_execucao==='em_execucao').length;
+    const semNf = meus.filter(s=>!s.nf_numero).length;
+    return `
     <div class="cli-row" onclick='abrirCliente(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
       <span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span>
       ${c.contato?`<span style="font-size:.8rem;color:var(--c300)">${esc(c.contato)}</span>`:''}
       ${c.marca_slug?`<button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();copiarLinkMarca(${JSON.stringify(c.marca_slug)})'>🔗 ${c.marca_publicada?'link marca':'link marca (rascunho)'}</button>`:''}
-      <button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();gerarSenhaPortal(${JSON.stringify(c.id)})'>🔐 Gerar senha do portal</button>
+      <button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();gerarSenhaPortal(${JSON.stringify(c.id)})'>🔐 Senha portal</button>
       <button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();abrirEntregas(${JSON.stringify(c.id)},${JSON.stringify(c.nome)})'>📁 Arquivos</button>
-      <span class="cmeta">${c.total_servicos} serviço(s)<br>${brl(c.total_cents)}</span>
-    </div>`).join('');
+      <span class="cmeta">Fat ${brl(fat)} · Rec ${brl(rec)} · A receber ${brl(ar)}<br>${exec} em exec. · ${semNf} NF pend.</span>
+    </div>`;
+  }).join('');
 }
 
 /* SERVIÇOS */
@@ -671,6 +680,7 @@ function trocarTab(t){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.tab===t));
   document.getElementById('tabServicos').style.display = t==='servicos'?'block':'none';
   document.getElementById('tabClientes').style.display = t==='clientes'?'block':'none';
+  if(t==='clientes') carregarClientes();
 }
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
 document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') entrar(); });
