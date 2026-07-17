@@ -47,6 +47,9 @@
     .stat .sl{font-size:.76rem;color:var(--c300);margin-top:3px}
     .stat.good .sv{color:var(--good)}
     .stat.warn .sv{color:var(--warn)}
+    .stat{cursor:pointer;transition:border-color .15s,transform .12s}
+    .stat:hover{border-color:var(--c600);transform:translateY(-1px)}
+    .stat.amber .sv{color:#f0c46a}
     .monthnav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
     .months{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;padding-bottom:2px}
     .months::-webkit-scrollbar{display:none}
@@ -336,27 +339,41 @@ function renderNav(){
 }
 function setMes(m){ PERIODO.mes = m; render(); }
 function setAno(a){ PERIODO.ano = Number(a); render(); }
-/* stubs — substituídos nas Tasks 5-8 */
-function renderCards(){}
+let ORC_PEND = { count:0, cents:0 };
+async function carregarDashboardExtra(){
+  try{ const s = await api('dashboard.stats'); ORC_PEND = { count:s.aprovados_pendentes_count||0, cents:s.aprovados_pendentes_cents||0 }; }
+  catch(_){ ORC_PEND = { count:0, cents:0 }; }
+}
+function renderCards(){
+  const inP = SERVICOS.filter(noPeriodo);
+  const faturado = inP.reduce((a,s)=>a+(+s.valor_cents||0),0);
+  const recebido = SERVICOS.filter(pagoNoPeriodo).reduce((a,s)=>a+(+s.valor_cents||0),0);
+  const aReceber = inP.filter(s=>!s.pago).reduce((a,s)=>a+(+s.valor_cents||0),0);
+  const emExec = SERVICOS.filter(s=>s.status_execucao==='em_execucao').length;
+  const semNf = SERVICOS.filter(s=>!s.nf_numero);
+  const semNfCents = semNf.reduce((a,s)=>a+(+s.valor_cents||0),0);
+  const cards = [
+    `<div class="stat" onclick="filtroCard('faturado')"><div class="sv">${brl(faturado)}</div><div class="sl">Faturado no mês</div></div>`,
+    `<div class="stat good" onclick="filtroCard('recebido')"><div class="sv">${brl(recebido)}</div><div class="sl">Recebido no mês</div></div>`,
+    `<div class="stat amber" onclick="filtroCard('areceber')"><div class="sv">${brl(aReceber)}</div><div class="sl">A receber</div></div>`,
+    `<div class="stat" onclick="filtroCard('execucao')"><div class="sv">${emExec}</div><div class="sl">Em execução</div></div>`,
+    `<div class="stat warn" onclick="filtroCard('nfpend')"><div class="sv">${semNf.length}</div><div class="sl">NF pendente · ${brl(semNfCents)} a faturar</div></div>`,
+  ];
+  if(ORC_PEND.count) cards.push(`<div class="stat amber"><div class="sv">${brl(ORC_PEND.cents)}</div><div class="sl">Orçamento aprovado sem serviço</div></div>`);
+  document.getElementById('metrics').innerHTML = cards.join('');
+}
+function filtroCard(t){
+  const set=(id,v)=>{const el=document.getElementById(id); if(el){el.value=v;}};
+  if(t==='recebido'){ set('fPago','true'); set('fNota',''); set('fStatus',''); }
+  else if(t==='areceber'){ set('fPago','false'); set('fNota',''); set('fStatus',''); }
+  else if(t==='execucao'){ set('fStatus','em_execucao'); set('fPago',''); set('fNota',''); }
+  else if(t==='nfpend'){ set('fNota','pendente'); set('fPago',''); set('fStatus',''); }
+  else { set('fPago',''); set('fStatus',''); set('fNota',''); }
+  renderServicos(); document.getElementById('tabServicos').scrollIntoView({behavior:'smooth'});
+}
+/* stubs — substituídos nas Tasks 6-8 */
 function renderRanking(){}
 function renderServicos(){}
-async function carregarDashboardExtra(){}
-
-/* DASHBOARD */
-async function carregarDashboard(){
-  const s = await api('dashboard.stats');
-  document.getElementById('metrics').innerHTML = `
-    <div class="stat good"><div class="sv">${brl(s.faturado_mes)}</div><div class="sl">Faturado no mês</div></div>
-    <div class="stat warn"><div class="sv">${brl(s.a_receber)}</div><div class="sl">A receber</div></div>
-    <div class="stat"><div class="sv">${s.em_execucao}</div><div class="sl">Em execução</div></div>
-    <div class="stat"><div class="sv">${s.concluido_sem_nf}</div><div class="sl">Concluído sem NF</div></div>
-    ${s.aprovados_pendentes_count ? `<div class="stat warn"><div class="sv">${brl(s.aprovados_pendentes_cents/100)}</div><div class="sl">Orçamento aprovado sem serviço</div></div>` : ''}`;
-  const rank = (s.por_cliente||[]).filter(c=>c.total_cents>0);
-  const rw = document.getElementById('rankwrap');
-  if(rank.length){ rw.style.display='block';
-    document.getElementById('rank').innerHTML = rank.map(c=>`<div class="rank-row"><span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span><span class="rv">${brl(c.total_cents)}</span></div>`).join('');
-  } else rw.style.display='none';
-}
 
 /* CLIENTES */
 async function carregarClientes(){
@@ -482,7 +499,7 @@ async function salvarServico(){
       const cli = CLIENTES.find(c=>c.id===servico.cliente_id);
       if(cli && !cli.portal_senha_hash) await gerarSenhaPortal(servico.cliente_id, {auto:true});
     }
-    await Promise.all([ carregarDashboard(), carregarServicos(), carregarClientes() ]);
+    await recarregar();
   } catch(e){ err.textContent=e.message; }
   finally { btn.disabled=false; btn.textContent='Salvar'; }
 }
@@ -490,7 +507,7 @@ async function excluirServico(){
   const id=document.getElementById('svcId').value; if(!id) return;
   if(!confirm('Excluir este serviço?')) return;
   try{ await api('servicos.delete',{ id }); fecharModal('modalServico'); toast('Serviço excluído');
-    await Promise.all([ carregarDashboard(), carregarServicos(), carregarClientes() ]);
+    await recarregar();
   }catch(e){ document.getElementById('svcErr').textContent=e.message; }
 }
 
@@ -583,7 +600,7 @@ async function salvarCliente(){
   if(!cliente.nome){ err.textContent='Nome obrigatório.'; return; }
   const btn=document.getElementById('cliSaveBtn'); btn.disabled=true; btn.textContent='Salvando...';
   try{ await api('clientes.upsert',{ cliente }); fecharModal('modalCliente'); toast('Cliente salvo');
-    await Promise.all([ carregarClientes(), carregarDashboard(), carregarServicos() ]);
+    await recarregar();
   }catch(e){ err.textContent=e.message; }
   finally{ btn.disabled=false; btn.textContent='Salvar'; }
 }
@@ -591,7 +608,7 @@ async function excluirCliente(){
   const id=document.getElementById('cliId').value; if(!id) return;
   if(!confirm('Excluir este cliente?')) return;
   try{ await api('clientes.delete',{ id }); fecharModal('modalCliente'); toast('Cliente excluído');
-    await Promise.all([ carregarClientes(), carregarDashboard(), carregarServicos() ]);
+    await recarregar();
   }catch(e){ document.getElementById('cliErr').textContent = e.message==='cliente tem serviços; mova ou exclua antes'?'Esse cliente tem serviços. Exclua os serviços antes.':e.message; }
 }
 
