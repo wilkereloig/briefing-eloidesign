@@ -238,12 +238,13 @@ Deno.serve(async (req: Request) => {
   if (action === "dashboard.stats") {
     const { data: rows, error } = await supabase
       .from("eloi_servicos")
-      .select("valor_cents,status_execucao,pago,data_pagamento,nf_numero,cliente_id");
+      .select("valor_cents,status_execucao,pago,data_pagamento,nf_numero,cliente_id,orcamento_id");
     if (error) return json({ error: error.message }, 500);
     const now = new Date();
     const ym = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
     let faturado_mes = 0, a_receber = 0, em_execucao = 0, concluido_sem_nf = 0;
     const porCli: Record<string, number> = {};
+    const orcamentoIdsComServico = new Set<string>();
     for (const r of rows ?? []) {
       const v = Number(r.valor_cents) || 0;
       if (r.pago && r.data_pagamento && String(r.data_pagamento).slice(0, 7) === ym) faturado_mes += v;
@@ -251,12 +252,24 @@ Deno.serve(async (req: Request) => {
       if (r.status_execucao === "em_execucao") em_execucao++;
       if (r.status_execucao === "concluida" && !r.nf_numero) concluido_sem_nf++;
       porCli[r.cliente_id] = (porCli[r.cliente_id] ?? 0) + v;
+      if (r.orcamento_id) orcamentoIdsComServico.add(r.orcamento_id);
     }
     const { data: clientes } = await supabase.from("eloi_clientes").select("id,nome,cor");
     const por_cliente = (clientes ?? [])
       .map((c) => ({ nome: c.nome, cor: c.cor, total_cents: porCli[c.id] ?? 0 }))
       .sort((a, b) => b.total_cents - a.total_cents);
-    return json({ faturado_mes, a_receber, em_execucao, concluido_sem_nf, por_cliente });
+
+    // orçamentos aprovados que ainda não viraram serviço (fase 1) -- financeiro incompleto sem isso
+    const { data: orcsAprovados } = await supabase.from("orcamentos").select("id,valor_total").eq("status", "aprovado");
+    let aprovados_pendentes_count = 0, aprovados_pendentes_cents = 0;
+    for (const o of orcsAprovados ?? []) {
+      if (!orcamentoIdsComServico.has(o.id)) {
+        aprovados_pendentes_count++;
+        aprovados_pendentes_cents += Math.round((Number(o.valor_total) || 0) * 100);
+      }
+    }
+
+    return json({ faturado_mes, a_receber, em_execucao, concluido_sem_nf, por_cliente, aprovados_pendentes_count, aprovados_pendentes_cents });
   }
 
   return json({ error: "ação inválida" }, 400);

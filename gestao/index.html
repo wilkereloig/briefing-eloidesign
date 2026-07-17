@@ -303,7 +303,8 @@ async function carregarDashboard(){
     <div class="stat good"><div class="sv">${brl(s.faturado_mes)}</div><div class="sl">Faturado no mês</div></div>
     <div class="stat warn"><div class="sv">${brl(s.a_receber)}</div><div class="sl">A receber</div></div>
     <div class="stat"><div class="sv">${s.em_execucao}</div><div class="sl">Em execução</div></div>
-    <div class="stat"><div class="sv">${s.concluido_sem_nf}</div><div class="sl">Concluído sem NF</div></div>`;
+    <div class="stat"><div class="sv">${s.concluido_sem_nf}</div><div class="sl">Concluído sem NF</div></div>
+    ${s.aprovados_pendentes_count ? `<div class="stat warn"><div class="sv">${brl(s.aprovados_pendentes_cents/100)}</div><div class="sl">Orçamento aprovado sem serviço</div></div>` : ''}`;
   const rank = (s.por_cliente||[]).filter(c=>c.total_cents>0);
   const rw = document.getElementById('rankwrap');
   if(rank.length){ rw.style.display='block';

@@ -92,6 +92,7 @@
     <div class="dash" id="dash" style="display:none">
       <div class="funnel" id="funnel"></div>
       <div class="metrics" id="metrics"></div>
+      <div class="metrics" id="metricsFin"></div>
       <div class="activity-wrap">
         <div class="activity-h" style="margin-top:6px">Atividade recente</div>
         <div id="activity"></div>
@@ -138,7 +139,7 @@
 <script src="/assets/eloi-admin/auth.js"></script>
 <script>
 const SUPA = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1';
-let INV = [], ORCS = null;
+let INV = [], ORCS = null, FIN = null;
 
 fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
   document.getElementById('logoSlot').innerHTML = svg;
@@ -166,11 +167,17 @@ function carregarDados(){
     .then(d=>{ INV = d.invites||[]; renderDash(); })
     .catch(()=>{ INV = []; renderDash(); });
   loadOrcs();
+  loadFin();
 }
 function loadOrcs(){
   EloiAdminAuth.call(SUPA+'/orcamentos',{action:'list'})
     .then(d=>{ ORCS = d.orcamentos||[]; renderDash(); })
     .catch(()=>{ ORCS = []; renderDash(); });
+}
+function loadFin(){
+  EloiAdminAuth.call(SUPA+'/eloi-gestao',{action:'dashboard.stats'})
+    .then(d=>{ FIN = d; renderDash(); })
+    .catch(()=>{ FIN = false; renderDash(); });
 }
 
 function renderDash(){
@@ -211,6 +218,19 @@ function renderDash(){
     <div class="stat good"><div class="sv">${orcLoading?'…':brl(rFechado)}</div><div class="sl">Receita fechada</div><div class="ss">${aprovados.length} orçamento(s) aprovado(s)</div></div>
     <div class="stat warn"><div class="sv">${orcLoading?'…':brl(rAberto)}</div><div class="sl">Em aberto (pipeline)</div><div class="ss">${enviados.length} enviado(s) aguardando</div></div>
     <div class="stat"><div class="sv">${clientes}</div><div class="sl">Clientes</div><div class="ss">distintos (briefings + orçamentos)</div></div>`;
+
+  // FINANCEIRO (real, de eloi_servicos -- via eloi-gestao, nao so o pipeline de orçamentos)
+  const finLoading = FIN === null;
+  const finEl = document.getElementById('metricsFin');
+  if (FIN === false) {
+    finEl.innerHTML = '';
+  } else {
+    finEl.innerHTML = `
+      <div class="stat good"><div class="sv">${finLoading?'…':brl(FIN.faturado_mes)}</div><div class="sl">Faturado no mês</div><div class="ss">serviços pagos (eloi_servicos)</div></div>
+      <div class="stat warn"><div class="sv">${finLoading?'…':brl(FIN.a_receber)}</div><div class="sl">A receber</div><div class="ss">serviços em aberto</div></div>
+      ${!finLoading && FIN.aprovados_pendentes_count ? `<div class="stat warn"><div class="sv">${brl(FIN.aprovados_pendentes_cents/100)}</div><div class="sl">Aprovado sem serviço</div><div class="ss"><a href="/painel-orcamentos/" style="color:inherit">${FIN.aprovados_pendentes_count} orçamento(s) — criar serviço →</a></div></div>` : ''}
+      <a class="stat" href="/gestao/" style="text-decoration:none;color:inherit;display:flex;align-items:center;justify-content:center"><div class="sl">Ver financeiro completo →</div></a>`;
+  }
 
   // ATIVIDADE
   const acts=[];
