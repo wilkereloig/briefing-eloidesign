@@ -225,11 +225,12 @@
   <div class="modal">
     <h2>Senha do portal</h2>
     <p style="font-size:.82rem;color:var(--c300);margin-bottom:12px">Envie por WhatsApp agora. Fechando esta janela, a senha não aparece de novo em lugar nenhum — só o hash fica salvo.</p>
-    <div class="fld"><input type="text" id="senhaPortalValor" readonly></div>
+    <div class="fld"><label>Link do portal</label><input type="text" id="senhaPortalLink" readonly></div>
+    <div class="fld"><label>Senha</label><input type="text" id="senhaPortalValor" readonly></div>
     <div class="modal-actions">
       <div style="display:flex;gap:10px;margin-left:auto">
         <button class="btn btn-ghost" onclick="fecharModal('modalSenha')">Fechar</button>
-        <button class="btn" onclick="copiarSenhaPortal()">Copiar</button>
+        <button class="btn" onclick="copiarSenhaPortal()">Copiar link + senha</button>
       </div>
     </div>
   </div>
@@ -352,9 +353,11 @@ function linhaServico(s,c){
 async function verNF(path){ try{ const { url } = await api('nf.view_url',{ path }); window.open(url,'_blank'); }catch(e){ toast('Erro ao abrir NF'); } }
 
 /* MODAL SERVIÇO */
+let SVC_PREV_STATUS = null;
 function abrirServico(s){
   const ev = s && s.target ? null : s; // ignora event
   const d = (ev && ev.id) ? ev : null;
+  SVC_PREV_STATUS = d ? d.status_execucao : null;
   document.getElementById('svcErr').textContent='';
   document.getElementById('svcPdf').value='';
   document.getElementById('svcId').value = d?d.id:'';
@@ -399,6 +402,10 @@ async function salvarServico(){
       await api('servicos.upsert', { servico:{ ...saved, nf_arquivo_url:path } });
     }
     fecharModal('modalServico'); toast('Serviço salvo');
+    if(servico.status_execucao==='concluida' && SVC_PREV_STATUS!=='concluida'){
+      const cli = CLIENTES.find(c=>c.id===servico.cliente_id);
+      if(cli && !cli.portal_senha_hash) await gerarSenhaPortal(servico.cliente_id, {auto:true});
+    }
     await Promise.all([ carregarDashboard(), carregarServicos(), carregarClientes() ]);
   } catch(e){ err.textContent=e.message; }
   finally { btn.disabled=false; btn.textContent='Salvar'; }
@@ -416,19 +423,23 @@ function copiarLinkMarca(slug){
   navigator.clipboard.writeText(url).then(()=>toast('Link copiado: '+url)).catch(()=>toast(url));
 }
 
-async function gerarSenhaPortal(id){
+async function gerarSenhaPortal(id, opts){
+  opts = opts || {};
   const c = CLIENTES.find(x=>x.id===id);
   const nome = c ? c.nome : 'este cliente';
-  if(!confirm(`Gerar nova senha do portal para ${nome}? A senha atual (se houver) deixa de funcionar.`)) return;
+  if(!opts.auto && !confirm(`Gerar nova senha do portal para ${nome}? A senha atual (se houver) deixa de funcionar.`)) return;
   try{
     const { senha } = await api('clientes.gerar_senha_portal', { cliente_id: id });
+    document.getElementById('senhaPortalLink').value = `${location.origin}/portal/`;
     document.getElementById('senhaPortalValor').value = senha;
     document.getElementById('modalSenha').classList.add('show');
   }catch(e){ toast('Erro ao gerar senha: '+e.message); }
 }
 function copiarSenhaPortal(){
-  const v = document.getElementById('senhaPortalValor').value;
-  navigator.clipboard.writeText(v).then(()=>toast('Senha copiada')).catch(()=>toast(v));
+  const link = document.getElementById('senhaPortalLink').value;
+  const senha = document.getElementById('senhaPortalValor').value;
+  const texto = `Acesse seu portal: ${link}\nSenha: ${senha}`;
+  navigator.clipboard.writeText(texto).then(()=>toast('Link + senha copiados')).catch(()=>toast(texto));
 }
 
 /* MODAL CLIENTE */
