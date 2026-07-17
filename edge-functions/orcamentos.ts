@@ -43,11 +43,25 @@ Deno.serve(async (req: Request) => {
     if (!token) return json({ error: "token obrigatório" }, 400);
     const { data, error } = await supabase
       .from("orcamentos")
-      .select("cliente,titulo,itens,valor_total,created_at")
+      .select("cliente,titulo,itens,valor_total,created_at,status")
       .eq("share_token", token)
       .single();
     if (error || !data) return json({ error: "não encontrado" }, 404);
     return json({ orcamento: data });
+  }
+
+  // ── PÚBLICO (sem senha): cliente aceita ou recusa um orçamento enviado ──
+  if (action === "client_decide") {
+    const token = body?.token;
+    const decisao = body?.decisao;
+    if (!token) return json({ error: "token obrigatório" }, 400);
+    if (!["aprovado", "recusado"].includes(decisao)) return json({ error: "decisão inválida" }, 400);
+    const { data: o, error: findErr } = await supabase.from("orcamentos").select("id,status").eq("share_token", token).maybeSingle();
+    if (findErr || !o) return json({ error: "não encontrado" }, 404);
+    if (o.status !== "enviado") return json({ error: "esse orçamento já foi respondido ou ainda não foi enviado" }, 409);
+    const { data, error } = await supabase.from("orcamentos").update({ status: decisao, updated_at: new Date().toISOString() }).eq("id", o.id).select("status").single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ status: data.status });
   }
 
   // ── daqui pra baixo exige sessão admin ──

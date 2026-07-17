@@ -45,6 +45,15 @@
     .foot{text-align:center;color:var(--c300);font-size:.82rem;opacity:.75;padding-top:30px;line-height:1.8}
     .foot a{color:var(--c100);text-decoration:none}
 
+    .acoes{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
+    .acoes button{flex:1;min-width:160px;border:none;border-radius:12px;font-family:var(--font);font-size:.92rem;font-variation-settings:'wght' 600;padding:14px 20px;cursor:pointer;transition:transform .15s,background .2s}
+    .acoes button:disabled{opacity:.5;cursor:default}
+    .acoes button.btn-ok{background:var(--c700);color:#fff}
+    .acoes button.btn-ok:hover:not(:disabled){background:var(--c600);transform:translateY(-1px)}
+    .acoes button.btn-no{background:transparent;border:1px solid rgba(248,113,113,.4);color:#f87171}
+    .acoes button.btn-no:hover:not(:disabled){background:rgba(248,113,113,.12)}
+    .note.ok{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.3);color:#aee8ae}
+
     .state{text-align:center;padding:90px 20px;color:var(--c300);position:relative;z-index:1}
     .state .ic{font-size:2.6rem;opacity:.5;margin-bottom:14px}
     @media(max-width:560px){.card{padding:26px 22px}}
@@ -68,6 +77,8 @@ function showState(ic, msg){
   document.getElementById('root').innerHTML = `<div class="state"><div class="ic">${ic}</div>${esc(msg)}</div>`;
 }
 
+let CUR_TOKEN = null;
+
 function render(o){
   const itens = Array.isArray(o.itens) ? o.itens : [];
   const linhas = itens.length
@@ -77,6 +88,12 @@ function render(o){
       }).join('')
     : '<div class="empty">Sem itens.</div>';
   const dt = o.created_at ? new Date(o.created_at).toLocaleDateString('pt-BR') : '';
+  const status = o.status || 'rascunho';
+  const rodape = status === 'enviado'
+    ? `<div class="acoes"><button class="btn-ok" onclick="decidir('aprovado')">Aprovar orçamento</button><button class="btn-no" onclick="decidir('recusado')">Recusar</button></div>`
+    : status === 'aprovado' ? `<div class="note ok">✓ Orçamento aprovado. Em breve entramos em contato pra dar início.</div>`
+    : status === 'recusado' ? `<div class="note">Orçamento marcado como recusado. Qualquer dúvida, é só responder por aqui.</div>`
+    : `<div class="note">Proposta válida por 15 dias. Para aprovar ou tirar dúvidas, é só responder por aqui.</div>`;
   document.getElementById('root').innerHTML = `
     <div class="doc">
       <div class="topbar">${LOGO}</div>
@@ -87,21 +104,37 @@ function render(o){
         <div class="itens">${linhas}</div>
         <div class="total"><span>Total</span><strong>${brl(o.valor_total)}</strong></div>
         ${dt?`<div class="meta">Emitido em ${dt}</div>`:''}
-        <div class="note">Proposta válida por 15 dias. Para aprovar ou tirar dúvidas, é só responder por aqui.</div>
+        ${rodape}
       </div>
       <div class="foot">ELOI Design Studio<br><a href="mailto:contato@eloidesign.com.br">contato@eloidesign.com.br</a> · eloidesign.com.br</div>
     </div>`;
 }
 
-(function(){
+async function decidir(decisao){
+  const btns = document.querySelectorAll('.acoes button');
+  btns.forEach(b=>b.disabled=true);
+  try{
+    const r = await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'client_decide',token:CUR_TOKEN,decisao})});
+    const d = await r.json();
+    if(!r.ok || d.error) throw new Error(d.error||'erro');
+    carregar();
+  }catch(e){
+    btns.forEach(b=>b.disabled=false);
+    alert('Não deu pra registrar sua resposta agora. Tenta de novo em instantes.');
+  }
+}
+
+function carregar(){
   const params = new URLSearchParams(location.search);
   const token = params.get('t');
+  CUR_TOKEN = token;
   if(!token){ showState('🔗','Link inválido.'); return; }
   fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'public_get',token})})
     .then(r=> r.ok ? r.json() : Promise.reject(r.status))
     .then(d=>{ if(d&&d.orcamento) render(d.orcamento); else showState('🔍','Orçamento não encontrado.'); })
     .catch(s=>{ showState(s===404?'🔍':'⚠️', s===404?'Orçamento não encontrado ou link expirado.':'Não foi possível carregar o orçamento.'); });
-})();
+}
+carregar();
 </script>
 </body>
 </html>
