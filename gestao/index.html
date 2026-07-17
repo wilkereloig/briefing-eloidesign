@@ -76,6 +76,12 @@
     .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:end}
     .filters select,.filters input{background:var(--c950);border:1px solid var(--c800);border-radius:8px;color:#fff;font-family:var(--font);font-size:.82rem;padding:8px 11px;outline:none}
     .filters label{font-size:.7rem;color:var(--c300);display:block;margin-bottom:3px}
+    .filtersbox{margin-bottom:14px}
+    .filtersbox>summary{cursor:pointer;color:var(--c300);font-size:.78rem;list-style:none;margin-bottom:8px}
+    .filtersbox>summary::-webkit-details-marker{display:none}
+    .badge.nfok{background:rgba(56,142,60,.14);border-color:#4a7d4f;color:var(--good)}
+    .badge.nfpend{background:rgba(199,125,255,.16);border-color:var(--c500);color:var(--c100)}
+    .afaturar-h{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--c100);margin:4px 0 8px;font-variation-settings:'wght' 600}
 
     /* serviços agrupados */
     .grupo{margin-bottom:20px}
@@ -165,13 +171,17 @@
 
   <!-- aba serviços -->
   <div id="tabServicos">
-    <div class="filters">
-      <div><label>Cliente</label><select id="fCliente" onchange="carregarServicos()"><option value="">Todos</option></select></div>
-      <div><label>Status</label><select id="fStatus" onchange="carregarServicos()"><option value="">Todos</option><option value="aguardando_inicio">Aguardando início</option><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
-      <div><label>Pagamento</label><select id="fPago" onchange="carregarServicos()"><option value="">Todos</option><option value="true">Pago</option><option value="false">A receber</option></select></div>
-      <div><label>Mês (pgto)</label><input type="month" id="fMes" onchange="carregarServicos()"></div>
-      <div style="margin-left:auto"><button class="btn" onclick="abrirServico()">+ Serviço</button></div>
-    </div>
+    <details class="filtersbox" open>
+      <summary>Filtros</summary>
+      <div class="filters">
+        <div><label>Cliente</label><select id="fCliente" onchange="renderServicos()"><option value="">Todos</option></select></div>
+        <div><label>Status do serviço</label><select id="fStatus" onchange="renderServicos()"><option value="">Todos</option><option value="aguardando_inicio">Aguardando início</option><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
+        <div><label>Pagamento</label><select id="fPago" onchange="renderServicos()"><option value="">Todos</option><option value="true">Pago</option><option value="false">A receber</option></select></div>
+        <div><label>Nota fiscal</label><select id="fNota" onchange="renderServicos()"><option value="">Todas</option><option value="emitida">Emitida</option><option value="pendente">Pendente</option></select></div>
+        <div><label>Busca</label><input type="text" id="fBusca" placeholder="serviço..." oninput="renderServicos()"></div>
+        <div style="margin-left:auto"><button class="btn" onclick="abrirServico()">+ Serviço</button></div>
+      </div>
+    </details>
     <div id="servicosList"></div>
   </div>
 
@@ -403,9 +413,6 @@ function renderRanking(){
       <span style="font-size:.72rem;color:#f0c46a" title="a receber">${brl(r.ar)}</span>
     </div>`).join('');
 }
-/* stub — substituído na Task 7 */
-function renderServicos(){}
-
 /* CLIENTES */
 async function carregarClientes(){
   const { clientes } = await api('clientes.list');
@@ -429,47 +436,62 @@ async function carregarClientes(){
 }
 
 /* SERVIÇOS */
-async function carregarServicos(){
-  const filtro = {};
-  const fc=document.getElementById('fCliente').value; if(fc) filtro.cliente_id=fc;
-  const fs=document.getElementById('fStatus').value; if(fs) filtro.status_execucao=fs;
-  const fp=document.getElementById('fPago').value; if(fp) filtro.pago = fp==='true';
-  const fm=document.getElementById('fMes').value; if(fm) filtro.mes=fm;
-  const { servicos } = await api('servicos.list', { filtro });
-  const list = document.getElementById('servicosList');
-  if(!servicos.length){ list.innerHTML = '<div class="empty">Nenhum serviço. Clique em "+ Serviço".</div>'; return; }
-  const byCli = {}; servicos.forEach(s=>(byCli[s.cliente_id]??=[]).push(s));
-  const subs = new Set(); servicos.forEach(s=>{ if(s.sub_cliente) subs.add(s.sub_cliente); });
-  document.getElementById('subClientes').innerHTML = [...subs].sort().map(v=>`<option value="${esc(v)}">`).join('');
-  const ordem = CLIENTES.filter(c=>byCli[c.id]);
-  list.innerHTML = ordem.map(c=>{
-    const itens = byCli[c.id];
-    const tot = itens.reduce((a,s)=>a+(Number(s.valor_cents)||0),0);
-    // sub-agrupa por marca; serviços sem sub_cliente ficam soltos no topo
-    const bySub = {}; itens.forEach(s=>(bySub[s.sub_cliente||'']??=[]).push(s));
-    const chavesSub = Object.keys(bySub).sort((a,b)=> a===''?-1 : b===''?1 : a.localeCompare(b));
-    const corpo = chavesSub.map(sk=>{
-      const arr = bySub[sk];
+function servicosFiltrados(){
+  const fc=document.getElementById('fCliente').value;
+  const fs=document.getElementById('fStatus').value;
+  const fp=document.getElementById('fPago').value;
+  const fn=document.getElementById('fNota').value;
+  const fb=(document.getElementById('fBusca').value||'').toLowerCase();
+  return SERVICOS.filter(s=>{
+    if(fc && s.cliente_id!==fc) return false;
+    if(fs && s.status_execucao!==fs) return false;
+    if(fp && String(!!s.pago)!==fp) return false;
+    if(fn==='emitida' && !s.nf_numero) return false;
+    if(fn==='pendente' && s.nf_numero) return false;
+    if(fb && !(String(s.descricao||'')+' '+String(s.sub_cliente||'')).toLowerCase().includes(fb)) return false;
+    return true;
+  });
+}
+function grupoHTML(itens){
+  const byCli={}; itens.forEach(s=>(byCli[s.cliente_id]??=[]).push(s));
+  const ordem=CLIENTES.filter(c=>byCli[c.id]);
+  return ordem.map(c=>{
+    const arrC=byCli[c.id]; const tot=arrC.reduce((a,s)=>a+(+s.valor_cents||0),0);
+    const bySub={}; arrC.forEach(s=>(bySub[s.sub_cliente||'']??=[]).push(s));
+    const chaves=Object.keys(bySub).sort((a,b)=>a===''?-1:b===''?1:a.localeCompare(b));
+    const corpo=chaves.map(sk=>{
+      const arr=bySub[sk];
       if(!sk) return arr.map(s=>linhaServico(s,c)).join('');
-      const st = arr.reduce((a,s)=>a+(Number(s.valor_cents)||0),0);
+      const st=arr.reduce((a,s)=>a+(+s.valor_cents||0),0);
       return `<div class="subgrp"><div class="subgrp-h">↳ ${esc(sk)} <span class="gtot">${arr.length} • ${brl(st)}</span></div>${arr.map(s=>linhaServico(s,c)).join('')}</div>`;
     }).join('');
-    return `<div class="grupo">
-      <div class="grupo-h"><span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span><span class="gtot">${itens.length} • ${brl(tot)}</span></div>
-      ${corpo}
-    </div>`;
+    return `<div class="grupo"><div class="grupo-h"><span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span><span class="gtot">${arrC.length} • ${brl(tot)}</span></div>${corpo}</div>`;
   }).join('');
+}
+function renderServicos(){
+  const filt=servicosFiltrados();
+  // popula datalist de sub-clientes
+  const subs=new Set(); SERVICOS.forEach(s=>{ if(s.sub_cliente) subs.add(s.sub_cliente); });
+  const dl=document.getElementById('subClientes'); if(dl) dl.innerHTML=[...subs].sort().map(v=>`<option value="${esc(v)}">`).join('');
+  const doMes = filt.filter(noPeriodo);
+  const aFaturar = filt.filter(s=>!s.nf_numero);            // sem competência/sem NF = a faturar (geral)
+  const list=document.getElementById('servicosList');
+  let html='';
+  if(aFaturar.length){ html += `<div class="afaturar-h">A faturar (sem NF) — ${aFaturar.length} · ${brl(aFaturar.reduce((a,s)=>a+(+s.valor_cents||0),0))}</div>` + grupoHTML(aFaturar); }
+  if(doMes.length){ html += (aFaturar.length?`<div class="afaturar-h" style="margin-top:18px">Faturado ${PERIODO.mes?MESES[PERIODO.mes-1]+'/'+PERIODO.ano:'(todos)'}</div>`:'') + grupoHTML(doMes); }
+  list.innerHTML = html || '<div class="empty">Nenhum serviço no período. Ajuste o mês ou os filtros.</div>';
 }
 function linhaServico(s,c){
   const stb = s.status_execucao==='concluida' ? '<span class="badge concl">Concluída</span>'
     : s.status_execucao==='aguardando_inicio' ? '<span class="badge aguard">Aguardando início</span>'
     : '<span class="badge exec">Em execução</span>';
   const pgb = s.pago ? '<span class="badge pago">Pago</span>' : '<span class="badge naopago">A receber</span>';
-  const meta = [ s.nf_numero?('NF '+esc(s.nf_numero)):'', dataBR(s.data_pagamento), s.observacoes?esc(s.observacoes):'' ].filter(Boolean).join(' • ');
-  const nfBtn = s.nf_arquivo_url ? `<button class="nf-pill" onclick="event.stopPropagation();verNF('${esc(s.nf_arquivo_url)}')">📄 NF</button>` : '';
+  const nfb = s.nf_numero ? `<span class="badge nfok">NF ${esc(s.nf_numero)}</span>` : '<span class="badge nfpend">NF pendente</span>';
+  const meta = [ s.data_competencia?('comp. '+dataBR(s.data_competencia)):'', s.data_pagamento?('pg '+dataBR(s.data_pagamento)):'', s.observacoes?esc(s.observacoes):'' ].filter(Boolean).join(' • ');
+  const nfBtn = s.nf_arquivo_url ? `<button class="nf-pill" onclick="event.stopPropagation();verNF('${esc(s.nf_arquivo_url)}')">📄</button>` : '';
   return `<div class="svc" onclick='abrirServico(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
     <div class="desc"><div class="d">${esc(s.descricao)}</div>${meta?`<div class="m">${meta}</div>`:''}</div>
-    ${stb}${pgb}${nfBtn}<div class="valor">${brl(s.valor_cents)}</div>
+    ${stb}${pgb}${nfb}${nfBtn}<div class="valor">${brl(s.valor_cents)}</div>
   </div>`;
 }
 async function verNF(path){ try{ const { url } = await api('nf.view_url',{ path }); window.open(url,'_blank'); }catch(e){ toast('Erro ao abrir NF'); } }
