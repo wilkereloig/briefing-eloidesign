@@ -220,6 +220,21 @@
   </div>
 </div>
 
+<!-- MODAL ENTREGAS (arquivos/apresentação/fontes do cliente) -->
+<div class="modal-bg" id="modalEntregas">
+  <div class="modal">
+    <h2>Arquivos — <span id="entCliNome"></span></h2>
+    <input type="hidden" id="entCliId">
+    <div class="frow">
+      <div class="fld"><label>Categoria</label><select id="entCategoria"><option value="arquivo">Arquivo do projeto</option><option value="apresentacao">Apresentação</option><option value="fonte">Fonte</option></select></div>
+      <div class="fld"><label>Arquivo</label><input type="file" id="entArquivo"></div>
+    </div>
+    <button class="btn btn-sm" onclick="enviarEntrega()">+ Enviar</button>
+    <div id="entLista" style="margin-top:14px"></div>
+    <div class="modal-actions"><div style="display:flex;gap:10px;margin-left:auto"><button class="btn btn-ghost" onclick="fecharModal('modalEntregas')">Fechar</button></div></div>
+  </div>
+</div>
+
 <!-- MODAL SENHA PORTAL -->
 <div class="modal-bg" id="modalSenha">
   <div class="modal">
@@ -313,6 +328,7 @@ async function carregarClientes(){
       ${c.contato?`<span style="font-size:.8rem;color:var(--c300)">${esc(c.contato)}</span>`:''}
       ${c.marca_slug?`<button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();copiarLinkMarca(${JSON.stringify(c.marca_slug)})'>🔗 ${c.marca_publicada?'link marca':'link marca (rascunho)'}</button>`:''}
       <button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();gerarSenhaPortal(${JSON.stringify(c.id)})'>🔐 Gerar senha do portal</button>
+      <button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();abrirEntregas(${JSON.stringify(c.id)},${JSON.stringify(c.nome)})'>📁 Arquivos</button>
       <span class="cmeta">${c.total_servicos} serviço(s)<br>${brl(c.total_cents)}</span>
     </div>`).join('');
 }
@@ -440,6 +456,43 @@ function copiarSenhaPortal(){
   const senha = document.getElementById('senhaPortalValor').value;
   const texto = `Acesse seu portal: ${link}\nSenha: ${senha}`;
   navigator.clipboard.writeText(texto).then(()=>toast('Link + senha copiados')).catch(()=>toast(texto));
+}
+
+/* MODAL ENTREGAS */
+const CAT_LABEL = { arquivo:'Arquivo do projeto', apresentacao:'Apresentação', fonte:'Fonte' };
+async function abrirEntregas(id, nome){
+  document.getElementById('entCliId').value = id;
+  document.getElementById('entCliNome').textContent = nome || '';
+  document.getElementById('entArquivo').value = '';
+  document.getElementById('modalEntregas').classList.add('show');
+  await carregarEntregas();
+}
+async function carregarEntregas(){
+  const id = document.getElementById('entCliId').value;
+  const { entregas } = await api('entregas.list', { cliente_id: id });
+  const linhas = [];
+  Object.keys(entregas||{}).forEach(cat => {
+    (entregas[cat]||[]).forEach(f => linhas.push(`<div class="svc" style="cursor:default"><div class="desc"><div class="d">${esc(f.nome)}</div><div class="m">${CAT_LABEL[cat]||cat}</div></div><button class="nf-pill" onclick="excluirEntrega('${esc(f.path)}')">🗑 excluir</button></div>`));
+  });
+  document.getElementById('entLista').innerHTML = linhas.length ? linhas.join('') : '<div class="empty">Nenhum arquivo ainda.</div>';
+}
+async function enviarEntrega(){
+  const cliente_id = document.getElementById('entCliId').value;
+  const categoria = document.getElementById('entCategoria').value;
+  const file = document.getElementById('entArquivo').files[0];
+  if(!file){ toast('Escolha um arquivo.'); return; }
+  try{
+    const { signed_url } = await api('entregas.upload_url', { cliente_id, categoria, filename: file.name });
+    const put = await fetch(signed_url, { method:'PUT', headers:{'content-type':file.type||'application/octet-stream'}, body:file });
+    if(!put.ok) throw new Error('Falha no upload');
+    document.getElementById('entArquivo').value = '';
+    toast('Arquivo enviado');
+    await carregarEntregas();
+  }catch(e){ toast('Erro: '+e.message); }
+}
+async function excluirEntrega(path){
+  if(!confirm('Excluir este arquivo?')) return;
+  try{ await api('entregas.delete', { path }); await carregarEntregas(); toast('Excluído'); }catch(e){ toast('Erro: '+e.message); }
 }
 
 /* MODAL CLIENTE */

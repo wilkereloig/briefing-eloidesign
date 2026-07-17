@@ -2,6 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const BUCKET = "eloi-notas";
+const ENTREGAS_BUCKET = "eloi-entregas";
+const ENTREGA_CATEGORIAS = ["arquivo", "apresentacao", "fonte"];
 const PORTAL_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // Crockford base32, sem I L O U
 
 const cors = {
@@ -201,6 +203,35 @@ Deno.serve(async (req: Request) => {
     const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(body.path, 120);
     if (error) return json({ error: error.message }, 500);
     return json({ url: data.signedUrl });
+  }
+
+  // ── ENTREGAS (arquivos do projeto / apresentação / fonte) ──
+  if (action === "entregas.upload_url") {
+    if (!body?.cliente_id || !body?.categoria || !body?.filename) return json({ error: "cliente_id, categoria e filename obrigatórios" }, 400);
+    if (!ENTREGA_CATEGORIAS.includes(body.categoria)) return json({ error: "categoria inválida" }, 400);
+    const safe = String(body.filename).replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${body.cliente_id}/entregas/${body.categoria}/${Date.now()}_${safe}`;
+    const { data, error } = await supabase.storage.from(ENTREGAS_BUCKET).createSignedUploadUrl(path);
+    if (error) return json({ error: error.message }, 500);
+    return json({ path, signed_url: data.signedUrl, token: data.token });
+  }
+
+  if (action === "entregas.list") {
+    if (!body?.cliente_id) return json({ error: "cliente_id obrigatório" }, 400);
+    const resultado: Record<string, any[]> = {};
+    for (const cat of ENTREGA_CATEGORIAS) {
+      const { data } = await supabase.storage.from(ENTREGAS_BUCKET)
+        .list(`${body.cliente_id}/entregas/${cat}`, { limit: 200, sortBy: { column: "name", order: "asc" } });
+      resultado[cat] = (data ?? []).filter((f: any) => f.id).map((f: any) => ({ nome: f.name, path: `${body.cliente_id}/entregas/${cat}/${f.name}` }));
+    }
+    return json({ entregas: resultado });
+  }
+
+  if (action === "entregas.delete") {
+    if (!body?.path) return json({ error: "path obrigatório" }, 400);
+    const { error } = await supabase.storage.from(ENTREGAS_BUCKET).remove([body.path]);
+    if (error) return json({ error: error.message }, 500);
+    return json({ ok: true });
   }
 
   // ── DASHBOARD ──

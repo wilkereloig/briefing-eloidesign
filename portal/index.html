@@ -50,6 +50,22 @@
     .empty{text-align:center;padding:60px 24px;color:var(--c300)}
     .empty .ic{font-size:2.4rem;opacity:.5;margin-bottom:14px}
 
+    .marca-hero{padding:32px;border-radius:16px;text-align:center;margin-bottom:20px}
+    .marca-hero img{max-width:200px;margin:0 auto 14px;display:block}
+    .marca-hero .nm{font-variation-settings:'wght' 700;font-size:1.15rem}
+    .paleta-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+    .paleta-chip{display:flex;align-items:center;gap:8px;background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:99px;padding:6px 14px 6px 6px;font-size:.82rem;color:#fff;cursor:pointer;font-family:var(--font)}
+    .paleta-chip:hover{border-color:var(--c500)}
+    .paleta-chip .sw{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.25);flex:none}
+    .zip-cta{display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(157,78,221,.1);border:1px solid var(--c800);border-radius:12px;padding:14px 18px;margin-bottom:22px;flex-wrap:wrap}
+    .variacao-h{font-size:.88rem;font-variation-settings:'wght' 600;color:var(--c100);margin:20px 0 10px}
+    .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+    .swatch{background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:12px;overflow:hidden}
+    .swatch .prev{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:14px}
+    .swatch .prev img{max-width:100%;max-height:100%}
+    .swatch .dl{display:flex;gap:6px;padding:8px;border-top:1px solid var(--c800)}
+    .swatch .dl a{flex:1;text-align:center;font-size:.7rem;color:var(--c100);text-decoration:none;border:1px solid var(--c700);border-radius:6px;padding:4px}
+
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--c700);color:#fff;padding:12px 22px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
     .toast.show{opacity:1}
   </style>
@@ -83,12 +99,14 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="marca">Marca</button>
+    <button class="tab-btn" data-tab="arquivos">Arquivos</button>
     <button class="tab-btn" data-tab="nf">Notas Fiscais</button>
     <button class="tab-btn" data-tab="orc">Orçamentos</button>
     <button class="tab-btn" data-tab="briefing">Briefing</button>
   </div>
 
   <div class="tab-panel active" id="tab-marca"></div>
+  <div class="tab-panel" id="tab-arquivos"></div>
   <div class="tab-panel" id="tab-nf"></div>
   <div class="tab-panel" id="tab-orc"></div>
   <div class="tab-panel" id="tab-briefing"></div>
@@ -163,23 +181,75 @@ async function carregarDados(){
     ORCAMENTOS = oc.orcamentos || [];
     BRIEFINGS = br.briefings || [];
     document.getElementById('clienteNome').textContent = CLIENTE.nome || '';
-    renderMarca(); renderNF(); renderOrc(); renderBriefing();
+    renderNF(); renderOrc(); renderBriefing();
+    renderMarca(); renderArquivos();
   } catch (e) { /* 401 já trocou pra tela de login dentro de callPortal */ }
 }
 
-// ── MARCA (link direto público, sem passar pela edge function) ──
-function renderMarca(){
+// ── MARCA (autenticada -- bucket privado eloi-entregas, signed urls) ──
+async function renderMarca(){
   const el = document.getElementById('tab-marca');
-  if (CLIENTE.marca_publicada && CLIENTE.marca_slug) {
-    el.innerHTML = `<div class="card-base marca-card">
-      <div class="ic">🎨</div>
-      <h2>Sua marca está pronta</h2>
-      <p>Logo, cores e todas as aplicações da sua identidade visual.</p>
-      <a class="btn" href="/entregas-marca/${encodeURIComponent(CLIENTE.marca_slug)}/" target="_blank" rel="noopener">Abrir marca ↗</a>
-    </div>`;
-  } else {
-    el.innerHTML = `<div class="empty"><div class="ic">🎨</div>Seus arquivos de marca ainda não foram publicados.</div>`;
+  try {
+    const d = await callPortal('marca.manifest');
+    const m = d.manifest;
+    if (!m) { el.innerHTML = '<div class="empty"><div class="ic">🎨</div>Seus arquivos de marca ainda não foram publicados.</div>'; return; }
+    const urls = d.urls || {};
+    const completa = m.variacoes.find(v => v.id === 'completa') || m.variacoes[0];
+    const heroCor = m.paleta.find(c => !c.claro) || m.paleta[0];
+    const heroPath = (completa && heroCor) ? completa.arquivos[heroCor.hex]?.svg : null;
+    const heroUrl = heroPath ? urls[heroPath] : null;
+    const zipUrl = urls[`${m.slug}-marca-completa.zip`];
+    const paletaHtml = m.paleta.map(c => `<button class="paleta-chip" onclick="copiarHex('${esc(c.hex)}')"><span class="sw" style="background:${esc(c.hex)}"></span>${esc(c.nome)} · ${esc(c.hex)}</button>`).join('');
+    const variacoesHtml = m.variacoes.map(v => `
+      <div class="variacao-h">${esc(v.nome)}</div>
+      <div class="swatches">${m.paleta.map(cor => {
+        const f = v.arquivos[cor.hex]; if (!f) return '';
+        const prevUrl = urls[f.preview] || urls[f.png];
+        const svgUrl = urls[f.svg], pngUrl = urls[f.png];
+        return `<div class="swatch">
+          <div class="prev" style="background:${cor.claro ? '#20201d' : '#f3f1ec'}">${prevUrl ? `<img src="${prevUrl}" alt="${esc(v.nome)} ${esc(cor.nome)}">` : ''}</div>
+          <div class="dl">${svgUrl ? `<a href="${svgUrl}" download>SVG</a>` : ''}${pngUrl ? `<a href="${pngUrl}" download>PNG</a>` : ''}</div>
+        </div>`;
+      }).join('')}</div>`).join('');
+    el.innerHTML = `
+      <div class="marca-hero card-base" style="background:${heroCor ? heroCor.hex : 'transparent'};color:${heroCor && !heroCor.claro ? '#fff' : '#20201d'}">
+        ${heroUrl ? `<img src="${heroUrl}" alt="${esc(m.marca || '')}">` : ''}
+        <div class="nm">${esc(m.marca || '')}</div>
+      </div>
+      <div class="paleta-row">${paletaHtml}</div>
+      ${zipUrl ? `<div class="zip-cta"><div><strong>Baixar tudo</strong><div class="meta">Todas as variações e cores, SVG + PNG</div></div><a class="btn" href="${zipUrl}" download>Baixar .zip</a></div>` : ''}
+      ${variacoesHtml}`;
+  } catch (e) {
+    el.innerHTML = '<div class="empty"><div class="ic">🎨</div>Seus arquivos de marca ainda não foram publicados.</div>';
   }
+}
+function copiarHex(hex){
+  navigator.clipboard.writeText(hex).then(() => toast('Cor copiada: ' + hex)).catch(() => toast(hex));
+}
+
+// ── ARQUIVOS (projeto / apresentação / fonte) ──
+const CAT_LABEL_PORTAL = { arquivo: 'Arquivo do projeto', apresentacao: 'Apresentação', fonte: 'Fonte' };
+async function renderArquivos(){
+  const el = document.getElementById('tab-arquivos');
+  try {
+    const d = await callPortal('entregas.list');
+    const entregas = d.entregas || {};
+    const linhas = [];
+    Object.keys(entregas).forEach(cat => {
+      (entregas[cat] || []).forEach(f => linhas.push(`
+        <div class="row">
+          <div class="grow"><div class="t">${esc(f.nome)}</div><div class="meta">${esc(CAT_LABEL_PORTAL[cat] || cat)}</div></div>
+          <button class="btn btn-sm" onclick="baixarEntrega('${esc(f.path)}')">Baixar</button>
+        </div>`));
+    });
+    el.innerHTML = linhas.length ? '<div class="rows">' + linhas.join('') + '</div>' : '<div class="empty"><div class="ic">📁</div>Nenhum arquivo disponível ainda.</div>';
+  } catch (e) {
+    el.innerHTML = '<div class="empty"><div class="ic">📁</div>Nenhum arquivo disponível ainda.</div>';
+  }
+}
+async function baixarEntrega(path){
+  try { const d = await callPortal('entregas.view_url', { path }); if (d.url) window.open(d.url, '_blank', 'noopener'); }
+  catch (e) { toast('Erro ao abrir arquivo.'); }
 }
 
 // ── NOTAS FISCAIS ──

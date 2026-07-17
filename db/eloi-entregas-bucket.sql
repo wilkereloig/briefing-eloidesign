@@ -1,0 +1,19 @@
+-- db/eloi-entregas-bucket.sql
+-- Fase 4 do reorganizacao do painel: bucket privado pra tudo que o cliente
+-- baixa autenticado no /portal/ -- marca (logo/paleta/variacoes, gerado por
+-- entregas-marca/_tools/gerar-variacoes.mjs --upload) e entregas genericas
+-- (arquivo do projeto / apresentacao / fonte, upload manual via /gestao/).
+--
+-- Estrutura de path dentro do bucket:
+--   <cliente_id>/marca/manifest.json + <cliente_id>/marca/logo/...
+--   <cliente_id>/entregas/<arquivo|apresentacao|fonte>/<timestamp>_<filename>
+--
+-- Aplicado via execute_sql (nao via apply_migration -- storage.buckets nao eh
+-- schema versionado como tabelas normais, mesmo padrao de eloi-notas/anexos):
+--
+-- insert into storage.buckets (id, name, public) values ('eloi-entregas','eloi-entregas', false)
+-- on conflict (id) do nothing;
+--
+-- Sem RLS policy pra anon/authenticated -- acesso so via edge functions
+-- (portal-cliente.ts / eloi-gestao.ts) com service-role, signed URLs curtas
+-- (120-600s conforme a acao).

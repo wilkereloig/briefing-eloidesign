@@ -1,11 +1,15 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-// Portal do cliente (NF, orcamentos, briefings) -- sessao propria (portal_sessions),
-// separada da sessao de admin (admin_sessions). Marca NAO entra aqui: voltou a ser
-// bucket publico com link permanente (ver docs/painel-admin-unificado/addendum-area-cliente.md).
+// Portal do cliente (NF, orcamentos, briefings, marca, entregas) -- sessao propria
+// (portal_sessions), separada da sessao de admin (admin_sessions). Marca voltou a
+// exigir sessao (fase 4 da reorganizacao) -- bucket privado eloi-entregas, signed
+// urls, sem link publico permanente (decisao anterior do addendum-area-cliente.md
+// revertida a pedido do dono: gráfica nao precisa mais de link direto).
 
 const NF_BUCKET = "eloi-notas";
+const ENTREGAS_BUCKET = "eloi-entregas";
+const ENTREGA_CATEGORIAS = ["arquivo", "apresentacao", "fonte"];
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -140,6 +144,47 @@ Deno.serve(async (req: Request) => {
       .eq("cliente_id", clienteId).order("created_at", { ascending: false });
     if (error) return json({ error: error.message }, 500);
     return json({ orcamentos: data });
+  }
+
+  if (action === "marca.manifest") {
+    const manifestPath = `${clienteId}/marca/manifest.json`;
+    const { data: file, error: dlErr } = await supabase.storage.from(ENTREGAS_BUCKET).download(manifestPath);
+    if (dlErr || !file) return json({ manifest: null });
+    let manifest: any;
+    try { manifest = JSON.parse(await file.text()); } catch (_) { return json({ manifest: null }); }
+    const relPaths: string[] = [];
+    for (const v of manifest.variacoes ?? []) {
+      for (const hex of Object.keys(v.arquivos ?? {})) {
+        const f = v.arquivos[hex];
+        if (f.svg) relPaths.push(f.svg);
+        if (f.png) relPaths.push(f.png);
+        if (f.preview) relPaths.push(f.preview);
+      }
+    }
+    if (manifest.slug) relPaths.push(`${manifest.slug}-marca-completa.zip`);
+    const fullPaths = relPaths.map((p) => `${clienteId}/marca/${p}`);
+    const { data: signed } = await supabase.storage.from(ENTREGAS_BUCKET).createSignedUrls(fullPaths, 600);
+    const urls: Record<string, string> = {};
+    (signed ?? []).forEach((s: any, i: number) => { if (s.signedUrl) urls[relPaths[i]] = s.signedUrl; });
+    return json({ manifest, urls });
+  }
+
+  if (action === "entregas.list") {
+    const resultado: Record<string, any[]> = {};
+    for (const cat of ENTREGA_CATEGORIAS) {
+      const { data } = await supabase.storage.from(ENTREGAS_BUCKET)
+        .list(`${clienteId}/entregas/${cat}`, { limit: 200, sortBy: { column: "name", order: "asc" } });
+      resultado[cat] = (data ?? []).filter((f: any) => f.id).map((f: any) => ({ nome: f.name, path: `${clienteId}/entregas/${cat}/${f.name}` }));
+    }
+    return json({ entregas: resultado });
+  }
+
+  if (action === "entregas.view_url") {
+    const p = body?.path;
+    if (!p || typeof p !== "string" || !p.startsWith(`${clienteId}/`)) return json({ error: "acesso negado" }, 403);
+    const { data, error } = await supabase.storage.from(ENTREGAS_BUCKET).createSignedUrl(p, 120);
+    if (error) return json({ error: error.message }, 500);
+    return json({ url: data.signedUrl });
   }
 
   if (action === "briefings.list") {
