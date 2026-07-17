@@ -69,6 +69,9 @@
     .grupo{margin-bottom:20px}
     .grupo-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
     .grupo-h .gtot{margin-left:auto;font-size:.8rem;color:var(--c300)}
+    .subgrp{margin:6px 0 6px 14px;border-left:2px solid var(--c700,#3C096C);padding-left:12px}
+    .subgrp-h{display:flex;align-items:center;gap:8px;font-size:.78rem;font-variation-settings:'wght' 600;color:var(--c300);margin-bottom:6px}
+    .subgrp-h .gtot{margin-left:auto;font-variation-settings:'wght' 400;opacity:.85}
     .svc{background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:7px;cursor:pointer;transition:border-color .2s,background .2s}
     .svc:hover{border-color:var(--c500);background:rgba(45,0,85,.6)}
     .svc .desc{flex:1;min-width:0}
@@ -172,6 +175,7 @@
     <h2 id="svcTitle">Novo serviço</h2>
     <input type="hidden" id="svcId">
     <div class="fld"><label>Cliente</label><select id="svcCliente"></select></div>
+    <div class="fld"><label>Sub-cliente / marca <span style="opacity:.6">(opcional)</span></label><input type="text" id="svcSub" list="subClientes" placeholder="ex: VIBRA, ASUS, MRV"><datalist id="subClientes"></datalist></div>
     <div class="fld"><label>Serviço (descrição)</label><textarea id="svcDesc" placeholder="Ex: Layout jogo ROG (versão vertical)"></textarea></div>
     <div class="frow">
       <div class="fld"><label>Valor (R$)</label><input type="text" id="svcValor" inputmode="decimal" placeholder="1.000,00"></div>
@@ -345,13 +349,24 @@ async function carregarServicos(){
   const list = document.getElementById('servicosList');
   if(!servicos.length){ list.innerHTML = '<div class="empty">Nenhum serviço. Clique em "+ Serviço".</div>'; return; }
   const byCli = {}; servicos.forEach(s=>(byCli[s.cliente_id]??=[]).push(s));
+  const subs = new Set(); servicos.forEach(s=>{ if(s.sub_cliente) subs.add(s.sub_cliente); });
+  document.getElementById('subClientes').innerHTML = [...subs].sort().map(v=>`<option value="${esc(v)}">`).join('');
   const ordem = CLIENTES.filter(c=>byCli[c.id]);
   list.innerHTML = ordem.map(c=>{
     const itens = byCli[c.id];
     const tot = itens.reduce((a,s)=>a+(Number(s.valor_cents)||0),0);
+    // sub-agrupa por marca; serviços sem sub_cliente ficam soltos no topo
+    const bySub = {}; itens.forEach(s=>(bySub[s.sub_cliente||'']??=[]).push(s));
+    const chavesSub = Object.keys(bySub).sort((a,b)=> a===''?-1 : b===''?1 : a.localeCompare(b));
+    const corpo = chavesSub.map(sk=>{
+      const arr = bySub[sk];
+      if(!sk) return arr.map(s=>linhaServico(s,c)).join('');
+      const st = arr.reduce((a,s)=>a+(Number(s.valor_cents)||0),0);
+      return `<div class="subgrp"><div class="subgrp-h">↳ ${esc(sk)} <span class="gtot">${arr.length} • ${brl(st)}</span></div>${arr.map(s=>linhaServico(s,c)).join('')}</div>`;
+    }).join('');
     return `<div class="grupo">
       <div class="grupo-h"><span class="chip" style="background:${esc(c.cor)}">${esc(c.nome)}</span><span class="gtot">${itens.length} • ${brl(tot)}</span></div>
-      ${itens.map(s=>linhaServico(s,c)).join('')}
+      ${corpo}
     </div>`;
   }).join('');
 }
@@ -379,6 +394,7 @@ function abrirServico(s){
   document.getElementById('svcPdf').value='';
   document.getElementById('svcId').value = d?d.id:'';
   document.getElementById('svcCliente').value = d?d.cliente_id:(document.getElementById('fCliente').value||'');
+  document.getElementById('svcSub').value = d&&d.sub_cliente?d.sub_cliente:'';
   document.getElementById('svcDesc').value = d?d.descricao:'';
   document.getElementById('svcValor').value = d?centsToInput(d.valor_cents):'';
   document.getElementById('svcStatus').value = d?d.status_execucao:'em_execucao';
@@ -396,6 +412,7 @@ async function salvarServico(){
   const id=document.getElementById('svcId').value;
   const servico = {
     cliente_id: document.getElementById('svcCliente').value,
+    sub_cliente: document.getElementById('svcSub').value.trim(),
     descricao: document.getElementById('svcDesc').value.trim(),
     valor_cents: valorToCents(document.getElementById('svcValor').value),
     status_execucao: document.getElementById('svcStatus').value,

@@ -143,6 +143,7 @@ Deno.serve(async (req: Request) => {
     if (!s.descricao) return json({ error: "descricao obrigatória" }, 400);
     const row: any = {
       cliente_id: s.cliente_id,
+      sub_cliente: (s.sub_cliente || "").trim() || null,
       descricao: s.descricao,
       valor_cents: Number(s.valor_cents) || 0,
       status_execucao: ["aguardando_inicio", "em_execucao", "concluida"].includes(s.status_execucao) ? s.status_execucao : "em_execucao",
