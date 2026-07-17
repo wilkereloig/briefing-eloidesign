@@ -131,6 +131,14 @@
     .modal-err{color:#f87171;font-size:.82rem;min-height:1.1em;margin-top:6px}
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--c700);color:#fff;padding:12px 22px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20}
     .toast.show{opacity:1}
+
+    .metrics{gap:14px;margin-bottom:18px}
+    @media(max-width:640px){
+      .metrics{grid-template-columns:repeat(2,1fr)}
+      .topbar .logo{width:104px}
+      .filters{gap:6px}
+      .rank-row .rv{margin-left:0}
+    }
   </style>
 </head>
 <body>
@@ -204,6 +212,7 @@
       <div class="fld"><label>Valor (R$)</label><input type="text" id="svcValor" inputmode="decimal" placeholder="1.000,00"></div>
       <div class="fld"><label>Status</label><select id="svcStatus"><option value="aguardando_inicio">Aguardando início</option><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
     </div>
+      <div class="fld"><label>Data da NF (competência)</label><input type="date" id="svcComp"></div>
     <div class="frow">
       <div class="fld"><label>Nº Nota (NF-S)</label><input type="text" id="svcNf" placeholder="ex: 23"></div>
       <div class="fld"><label>Data pagamento</label><input type="date" id="svcData"></div>
@@ -521,6 +530,7 @@ function abrirServico(s){
   document.getElementById('svcStatus').value = d?d.status_execucao:'em_execucao';
   document.getElementById('svcNf').value = d&&d.nf_numero?d.nf_numero:'';
   document.getElementById('svcData').value = d&&d.data_pagamento?String(d.data_pagamento).slice(0,10):'';
+  document.getElementById('svcComp').value = d&&d.data_competencia?String(d.data_competencia).slice(0,10):'';
   document.getElementById('svcPago').checked = d?!!d.pago:false;
   document.getElementById('svcObs').value = d&&d.observacoes?d.observacoes:'';
   document.getElementById('svcTitle').textContent = d?'Editar serviço':'Novo serviço';
@@ -539,6 +549,7 @@ async function salvarServico(){
     status_execucao: document.getElementById('svcStatus').value,
     pago: document.getElementById('svcPago').checked,
     data_pagamento: document.getElementById('svcData').value || null,
+    data_competencia: document.getElementById('svcComp').value || null,
     nf_numero: document.getElementById('svcNf').value.trim(),
     observacoes: document.getElementById('svcObs').value.trim(),
   };
