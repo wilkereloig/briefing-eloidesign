@@ -47,6 +47,13 @@
     .stat .sl{font-size:.76rem;color:var(--c300);margin-top:3px}
     .stat.good .sv{color:var(--good)}
     .stat.warn .sv{color:var(--warn)}
+    .monthnav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+    .months{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;padding-bottom:2px}
+    .months::-webkit-scrollbar{display:none}
+    .mtab{flex:0 0 auto;background:none;border:none;color:var(--c300);font-family:var(--font);font-size:.82rem;padding:7px 13px;border-radius:99px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+    .mtab:hover{color:#fff}
+    .mtab.active{background:var(--c700);color:#fff;font-variation-settings:'wght' 600}
+    .yearsel{background:var(--c950);border:1px solid var(--c800);border-radius:99px;color:#fff;font-family:var(--font);font-size:.82rem;padding:7px 12px;outline:none}
     .rankwrap{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:14px;padding:12px 18px;margin-bottom:24px}
     .rankwrap h3{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--c300);margin-bottom:8px;font-variation-settings:'wght' 600}
     .rank-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:.88rem}
@@ -138,6 +145,7 @@
   </div>
 
   <!-- dashboard -->
+  <div class="monthnav"><div class="months" id="monthTabs"></div><select id="yearSel" class="yearsel" onchange="setAno(this.value)"></select></div>
   <div class="metrics" id="metrics"></div>
   <div class="rankwrap" id="rankwrap" style="display:none">
     <h3>Faturamento por cliente</h3>
@@ -317,8 +325,18 @@ function pagoNoPeriodo(s){ if(!s.pago||!s.data_pagamento) return false; const m=
 function anosDisponiveis(){ const set=new Set(); SERVICOS.forEach(s=>{ if(s.data_competencia) set.add(String(s.data_competencia).slice(0,4)); if(s.data_pagamento) set.add(String(s.data_pagamento).slice(0,4)); }); return [...set].map(Number).sort((a,b)=>a-b); }
 function render(){ renderNav(); renderCards(); renderRanking(); renderServicos(); if(document.getElementById('tabClientes').style.display!=='none') carregarClientes(); }
 async function recarregar(){ const { servicos } = await api('servicos.list',{filtro:{}}); SERVICOS = servicos||[]; await carregarClientes(); await carregarDashboardExtra(); render(); }
-/* stubs — substituídos nas Tasks 4-8 */
-function renderNav(){}
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function renderNav(){
+  const tabs = MESES.map((nm,i)=>`<button class="mtab${PERIODO.mes===i+1?' active':''}" onclick="setMes(${i+1})">${nm}</button>`).join('')
+    + `<button class="mtab${PERIODO.mes===null?' active':''}" onclick="setMes(null)">Todos</button>`;
+  document.getElementById('monthTabs').innerHTML = tabs;
+  const anos = anosDisponiveis(); const ys=document.getElementById('yearSel');
+  ys.style.display = anos.length>1 ? 'block' : 'none';
+  ys.innerHTML = anos.map(a=>`<option value="${a}"${a===PERIODO.ano?' selected':''}>${a}</option>`).join('');
+}
+function setMes(m){ PERIODO.mes = m; render(); }
+function setAno(a){ PERIODO.ano = Number(a); render(); }
+/* stubs — substituídos nas Tasks 5-8 */
 function renderCards(){}
 function renderRanking(){}
 function renderServicos(){}
