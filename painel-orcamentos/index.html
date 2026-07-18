@@ -283,7 +283,7 @@ function abrirView(i){
     <div class="v-dt">Orçamento #${o.numero||'—'} · Criado em ${dt}</div>`;
   const lk=document.getElementById('viewLink');
   if(o.link){ lk.href=o.link; lk.style.display='inline-flex'; } else { lk.style.display='none'; }
-  document.getElementById('viewCriarServico').style.display = st==='aprovado' ? 'inline-flex' : 'none';
+  document.getElementById('viewCriarServico').style.display = (st==='aprovado' && o.cliente_id) ? 'inline-flex' : 'none';
   document.getElementById('viewModal').classList.add('show');
 }
 async function criarServico(){
@@ -298,10 +298,10 @@ async function criarServico(){
 function fecharView(){ document.getElementById('viewModal').classList.remove('show'); }
 function editarDoView(){ fecharView(); abrirEdit(VIEW_I); }
 function linkPublico(o){
-  // proposta com pagina propria -> versao CLIENTE (view-only) em /cliente/; senao view generica por token
+  // usa o link cadastrado exatamente como esta; senao view generica por token
   if(o && o.link){
-    var base = o.link.replace(/\/+$/,'') + '/cliente/';
-    return /^https?:/i.test(base) ? base : location.origin + base;
+    var base = o.link.trim();
+    return /^https?:/i.test(base) ? base : location.origin + (base.startsWith('/') ? base : '/'+base);
   }
   return location.origin + '/orcamento/?t=' + (o&&o.share_token?o.share_token:'');
 }
