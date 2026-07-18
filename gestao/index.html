@@ -211,14 +211,14 @@
   <div class="modal">
     <h2 id="svcTitle">Novo serviço</h2>
     <input type="hidden" id="svcId">
-    <div class="fld"><label>Cliente</label><select id="svcCliente"></select></div>
+    <div class="fld"><label>Cliente</label><select id="svcCliente" onchange="atualizarDatalistSub()"></select></div>
     <div class="fld"><label>Sub-cliente / marca <span style="opacity:.6">(opcional)</span></label><input type="text" id="svcSub" list="subClientes" placeholder="ex: VIBRA, ASUS, MRV"><datalist id="subClientes"></datalist></div>
     <div class="fld"><label>Serviço (descrição)</label><textarea id="svcDesc" placeholder="Ex: Layout jogo ROG (versão vertical)"></textarea></div>
     <div class="frow">
       <div class="fld"><label>Valor (R$)</label><input type="text" id="svcValor" inputmode="decimal" placeholder="1.000,00"></div>
       <div class="fld"><label>Status</label><select id="svcStatus"><option value="aguardando_inicio">Aguardando início</option><option value="em_execucao">Em execução</option><option value="concluida">Concluída</option></select></div>
     </div>
-      <div class="fld"><label>Data da NF (competência)</label><input type="date" id="svcComp"></div>
+      <div class="fld"><label>Competência (mês de referência)</label><input type="date" id="svcComp"></div>
     <div class="frow">
       <div class="fld"><label>Nº Nota (NF-S)</label><input type="text" id="svcNf" placeholder="ex: 23"></div>
       <div class="fld"><label>Data pagamento</label><input type="date" id="svcData"></div>
@@ -550,8 +550,8 @@ function renderServicos(){
   // popula datalist de sub-clientes
   const subs=new Set(); SERVICOS.forEach(s=>{ if(s.sub_cliente) subs.add(s.sub_cliente); });
   const dl=document.getElementById('subClientes'); if(dl) dl.innerHTML=[...subs].sort().map(v=>`<option value="${esc(v)}">`).join('');
-  const doMes = filt.filter(noPeriodo);
-  const aFaturar = filt.filter(s=>!s.nf_numero);            // sem competência/sem NF = a faturar (geral)
+  const aFaturar = filt.filter(s=>!s.nf_numero);            // sem NF = a faturar (geral, sem filtro de periodo)
+  const doMes = filt.filter(s=>noPeriodo(s) && s.nf_numero); // faturado do periodo = tem competencia no periodo E ja tem NF (nao repete quem esta em aFaturar)
   const list=document.getElementById('servicosList');
   let html='';
   if(aFaturar.length){ html += `<div class="afaturar-h">A faturar (sem NF) — ${aFaturar.length} · ${brl(aFaturar.reduce((a,s)=>a+(+s.valor_cents||0),0))}</div>` + grupoHTML(aFaturar); }
@@ -595,7 +595,15 @@ function abrirServico(s){
   document.getElementById('svcTitle').textContent = d?'Editar serviço':'Novo serviço';
   document.getElementById('svcDelBtn').style.display = d?'block':'none';
   document.getElementById('svcNfAtual').innerHTML = (d&&d.nf_arquivo_url)?`<a href="#" onclick="event.preventDefault();verNF('${esc(d.nf_arquivo_url)}')">📄 Ver nota atual</a> — escolha outro PDF para substituir`:'';
+  atualizarDatalistSub();
   document.getElementById('modalServico').classList.add('show');
+}
+function atualizarDatalistSub(){
+  const clienteId = document.getElementById('svcCliente').value;
+  const subs = new Set();
+  SERVICOS.forEach(s=>{ if(s.sub_cliente && s.cliente_id===clienteId) subs.add(s.sub_cliente); });
+  const dl = document.getElementById('subClientes');
+  dl.innerHTML = [...subs].sort().map(v=>`<option value="${esc(v)}">`).join('');
 }
 async function salvarServico(){
   const err=document.getElementById('svcErr'); err.textContent='';
