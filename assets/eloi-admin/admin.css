@@ -18,7 +18,8 @@ body{font-family:var(--font);background:var(--c950);color:var(--white);min-heigh
 .err{color:#f87171;font-size:.85rem;margin-top:12px;min-height:1.2em}
 
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;position:relative;z-index:1}
-.topbar .logo{width:120px}
+.topbar .logo{height:56px}
+.topbar .logo svg{height:100%;width:auto;display:block}
 .topbar .actions{display:flex;gap:10px;align-items:center}
 .btn-ghost{background:transparent;border:1px solid var(--c800);color:var(--c300);font-family:var(--font);font-size:.82rem;text-decoration:none;padding:9px 20px;border-radius:8px;cursor:pointer;transition:border-color .2s}
 .btn-ghost:hover{border-color:var(--c500)}

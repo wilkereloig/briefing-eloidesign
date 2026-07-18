@@ -31,7 +31,8 @@
     /* ── LOGIN ── */
     .login { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; position:relative; z-index:1; }
     .login-card { background:rgba(36,0,70,0.6); border:1px solid var(--c800); border-radius:20px; padding:48px 40px; max-width:380px; width:100%; text-align:center; backdrop-filter:blur(8px); }
-    .login-card svg { width:150px; margin-bottom:28px; }
+    .login-card .logo { height:110px; margin:0 0 28px; text-align:left; }
+    .login-card svg { height:100%; width:auto; display:block; }
     .login-card h1 { font-size:1.25rem; font-variation-settings:'wght' 600; margin-bottom:20px; }
     .login-card input { width:100%; background:var(--c950); border:1px solid var(--c800); border-radius:10px; color:#fff; font-family:var(--font); font-size:0.95rem; padding:13px 16px; outline:none; transition:border-color .2s, box-shadow .2s; }
     .login-card input:focus { border-color:var(--c500); box-shadow:0 0 0 3px rgba(157,78,221,.2); }
@@ -41,7 +42,7 @@
 
     /* ── HEADER ── */
     .top { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; gap:16px; flex-wrap:wrap; }
-    .top svg { width:140px; }
+    .top svg { height:56px; width:auto; display:block; }
     .top h1 { font-size:1.05rem; font-variation-settings:'wght' 500; color:var(--c100); }
     .count-badge { background:var(--c700); color:#fff; font-size:0.8rem; font-variation-settings:'wght' 700; padding:4px 12px; border-radius:99px; }
 
