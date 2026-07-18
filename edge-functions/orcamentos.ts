@@ -43,7 +43,7 @@ Deno.serve(async (req: Request) => {
     if (!token) return json({ error: "token obrigatório" }, 400);
     const { data, error } = await supabase
       .from("orcamentos")
-      .select("cliente,titulo,itens,valor_total,created_at,status")
+      .select("cliente,titulo,itens,valor_total,created_at,status,complexidade,urgencia,desconto_pct")
       .eq("share_token", token)
       .single();
     if (error || !data) return json({ error: "não encontrado" }, 404);
@@ -74,8 +74,36 @@ Deno.serve(async (req: Request) => {
     return json({ orcamentos: data });
   }
 
+  // Ajustes de orçamento (complexidade/urgência/desconto). Os multiplicadores em si
+  // vivem no front, em assets/eloi-admin/orcamento.js — aqui só validamos as chaves.
+  const COMPLEXIDADES = ["simples", "media", "alta"];
+  const URGENCIAS = ["normal", "expressa"];
+  function lerAjustes(o: Record<string, unknown>): {
+    erro: string | null;
+    complexidade: string;
+    urgencia: string;
+    desconto_pct: number;
+  } {
+    const complexidade = (o.complexidade ?? "simples") as string;
+    const urgencia = (o.urgencia ?? "normal") as string;
+    const base = {
+      complexidade,
+      urgencia,
+      desconto_pct: Math.min(100, Math.max(0, Number(o.desconto_pct) || 0)),
+    };
+    if (!COMPLEXIDADES.includes(complexidade)) {
+      return { ...base, erro: `complexidade inválida — use uma de: ${COMPLEXIDADES.join(", ")}` };
+    }
+    if (!URGENCIAS.includes(urgencia)) {
+      return { ...base, erro: `urgencia inválida — use uma de: ${URGENCIAS.join(", ")}` };
+    }
+    return { ...base, erro: null };
+  }
+
   if (action === "create") {
     const o = body?.orcamento || {};
+    const { erro, ...aj } = lerAjustes(o);
+    if (erro) return json({ error: erro }, 400);
     const { data, error } = await supabase.from("orcamentos").insert({
       cliente: o.cliente ?? null,
       cliente_id: o.cliente_id ?? null,
@@ -85,6 +113,7 @@ Deno.serve(async (req: Request) => {
       valor_total: o.valor_total ?? 0,
       observacoes: o.observacoes ?? null,
       link: o.link ?? null,
+      ...aj,
     }).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ orcamento: data });
@@ -93,6 +122,8 @@ Deno.serve(async (req: Request) => {
   if (action === "update") {
     const o = body?.orcamento || {};
     if (!o.id) return json({ error: "id obrigatório" }, 400);
+    const { erro, ...aj } = lerAjustes(o);
+    if (erro) return json({ error: erro }, 400);
     const { data, error } = await supabase.from("orcamentos").update({
       cliente: o.cliente ?? null,
       cliente_id: o.cliente_id ?? null,
@@ -102,6 +133,7 @@ Deno.serve(async (req: Request) => {
       valor_total: o.valor_total ?? 0,
       observacoes: o.observacoes ?? null,
       link: o.link ?? null,
+      ...aj,
       updated_at: new Date().toISOString(),
     }).eq("id", o.id).select().single();
     if (error) return json({ error: error.message }, 500);
