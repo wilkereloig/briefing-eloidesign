@@ -71,9 +71,10 @@ Deno.serve(async (req: Request) => {
 
   if (action === "clientes.upsert") {
     const c = body?.cliente || {};
-    if (!c.nome) return json({ error: "nome obrigatório" }, 400);
+    const nome = String(c.nome || "").trim();
+    if (!nome) return json({ error: "nome obrigatório" }, 400);
     const row = {
-      nome: c.nome,
+      nome,
       cor: c.cor || "#7B2CBF",
       contato: c.contato ?? null,
       marca_slug: c.marca_slug || null,
@@ -139,14 +140,21 @@ Deno.serve(async (req: Request) => {
 
   if (action === "servicos.upsert") {
     const s = body?.servico || {};
+    const descricao = String(s.descricao || "").trim();
+    const statusValido = ["aguardando_inicio", "em_execucao", "concluida"];
     if (!s.cliente_id) return json({ error: "cliente_id obrigatório" }, 400);
-    if (!s.descricao) return json({ error: "descricao obrigatória" }, 400);
+    if (!descricao) return json({ error: "descricao obrigatória" }, 400);
+    if (s.status_execucao && !statusValido.includes(s.status_execucao)) {
+      return json({ error: `status_execucao inválido — use um de: ${statusValido.join(", ")}` }, 400);
+    }
+    const valorCents = Number(s.valor_cents) || 0;
+    if (valorCents < 0) return json({ error: "valor_cents não pode ser negativo" }, 400);
     const row: any = {
       cliente_id: s.cliente_id,
       sub_cliente: (s.sub_cliente || "").trim() || null,
-      descricao: s.descricao,
-      valor_cents: Number(s.valor_cents) || 0,
-      status_execucao: ["aguardando_inicio", "em_execucao", "concluida"].includes(s.status_execucao) ? s.status_execucao : "em_execucao",
+      descricao,
+      valor_cents: valorCents,
+      status_execucao: s.status_execucao || "em_execucao",
       pago: s.pago === true,
       data_pagamento: s.data_pagamento || null,
       data_competencia: s.data_competencia || null,
@@ -242,15 +250,11 @@ Deno.serve(async (req: Request) => {
       .from("eloi_servicos")
       .select("valor_cents,status_execucao,pago,data_pagamento,nf_numero,cliente_id,orcamento_id");
     if (error) return json({ error: error.message }, 500);
-    const now = new Date();
-    const ym = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
-    let faturado_mes = 0, a_receber = 0, em_execucao = 0, concluido_sem_nf = 0;
+    let em_execucao = 0, concluido_sem_nf = 0;
     const porCli: Record<string, number> = {};
     const orcamentoIdsComServico = new Set<string>();
     for (const r of rows ?? []) {
       const v = Number(r.valor_cents) || 0;
-      if (r.pago && r.data_pagamento && String(r.data_pagamento).slice(0, 7) === ym) faturado_mes += v;
-      if (!r.pago) a_receber += v;
       if (r.status_execucao === "em_execucao") em_execucao++;
       if (r.status_execucao === "concluida" && !r.nf_numero) concluido_sem_nf++;
       porCli[r.cliente_id] = (porCli[r.cliente_id] ?? 0) + v;
@@ -271,7 +275,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    return json({ faturado_mes, a_receber, em_execucao, concluido_sem_nf, por_cliente, aprovados_pendentes_count, aprovados_pendentes_cents });
+    return json({ em_execucao, concluido_sem_nf, por_cliente, aprovados_pendentes_count, aprovados_pendentes_cents });
   }
 
   return json({ error: "ação inválida" }, 400);
