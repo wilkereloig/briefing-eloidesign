@@ -96,6 +96,18 @@
 .aj-resumo{font-weight:400;opacity:.6;margin-left:6px}
 .resumo-line{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;opacity:.8}
 .resumo-line.neg{color:#f0a}
+.item-btns{display:flex;gap:8px;flex-wrap:wrap}
+.item-btns .add-item{flex:1;min-width:150px}
+.item-btns .add-item[disabled]{opacity:.45;cursor:not-allowed}
+.cat-group{margin-bottom:14px}
+.cat-title{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.5;margin-bottom:6px}
+.svc{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--c800);border-radius:8px;margin-bottom:6px;cursor:pointer}
+.svc.on{border-color:var(--c500)}
+.svc .nm{font-size:14px}
+.svc .pr{font-size:12px;opacity:.6}
+.svc-right{margin-left:auto}
+.svc .qty{width:64px}
+.cat-aviso{font-size:13px;opacity:.7;padding:10px 0}
   </style>
 </head>
 <body>
@@ -166,7 +178,10 @@
 
     <div class="itens-head"><span class="lbl">Itens</span></div>
     <div id="itensBox"></div>
-    <button class="add-item" type="button" onclick="addItem()">+ Adicionar item</button>
+    <div class="item-btns">
+      <button class="add-item" type="button" onclick="addItem()">+ Adicionar item</button>
+      <button class="add-item" type="button" id="catBtn" onclick="abrirCatalogo()">+ Do catálogo</button>
+    </div>
     <details class="ajustes" id="ajustesBox">
       <summary>Ajustes <span class="aj-resumo" id="ajResumo">nenhum</span></summary>
       <div class="two">
@@ -191,6 +206,19 @@
   </div>
 </div>
 
+<div class="modal" id="catModal">
+  <div class="form-card">
+    <h2>Adicionar do catálogo</h2>
+    <div id="catBox"></div>
+    <div class="form-actions">
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="btn btn-ghost" onclick="fecharCatalogo()">Cancelar</button>
+        <button class="btn btn-primary" onclick="aplicarCatalogo()">Adicionar aos itens</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">Salvo!</div>
 
 <script src="/assets/eloi-admin/auth.js"></script>
@@ -201,6 +229,7 @@ const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/orcamentos';
 const FN_GESTAO = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/eloi-gestao';
 let ORCS = [];
 let CLIENTES = [];
+let CATALOG = null;
 
 function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -221,12 +250,14 @@ function popularClientesSelect(){
     CLIENTES.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
 }
 async function carregarDados(){
-  const [d, cli] = await Promise.all([
+  const [d, cli, cat] = await Promise.all([
     call('list',{}),
     EloiAdminAuth.call(FN_GESTAO,{action:'clientes.list'}).catch(()=>({clientes:[]})),
+    call('catalog_list',{}).catch(()=>({servicos:null})),
   ]);
   ORCS = d.orcamentos||[];
   CLIENTES = cli.clientes||[];
+  CATALOG = cat.servicos;                 // null = falhou; [] = vazio de verdade
   popularClientesSelect();
   render();
 }
@@ -363,6 +394,54 @@ function lerItens(){
   }).filter(x=>x.nome||x.valor);
 }
 
+// ── CATÁLOGO ──
+const CAT_SEL = {};   // id -> qty
+function abrirCatalogo(){
+  Object.keys(CAT_SEL).forEach(k=>delete CAT_SEL[k]);
+  renderCatalogo();
+  document.getElementById('catModal').classList.add('show');
+}
+function fecharCatalogo(){ document.getElementById('catModal').classList.remove('show'); }
+function renderCatalogo(){
+  const box=document.getElementById('catBox');
+  if(CATALOG===null){
+    box.innerHTML='<div class="cat-aviso">Não deu pra carregar o catálogo. Recarregue a página, ou adicione os itens à mão.</div>';
+    return;
+  }
+  const ativos=(CATALOG||[]).filter(s=>s.ativo!==false);
+  if(!ativos.length){ box.innerHTML='<div class="cat-aviso">Catálogo vazio.</div>'; return; }
+  const cats=[]; const byCat={};
+  ativos.forEach(s=>{ const c=s.categoria||'Outros'; if(!byCat[c]){byCat[c]=[];cats.push(c);} byCat[c].push(s); });
+  box.innerHTML = cats.map(c=>`
+    <div class="cat-group">
+      <div class="cat-title">${esc(c)}</div>
+      ${byCat[c].map(s=>{
+        const on = CAT_SEL[s.id]!=null;
+        const zero = !Number(s.preco_base);
+        return `<label class="svc ${on?'on':''}">
+          <input type="checkbox" ${on?'checked':''} onchange="catToggle('${s.id}',this.checked)">
+          <span><span class="nm">${esc(s.nome)}</span><br><span class="pr">${brl(s.preco_base)} / ${esc(s.unidade||'un')}${zero?' — sem preço-base cadastrado':''}</span></span>
+          <span class="svc-right"><input class="qty" type="number" min="1" step="1" value="${on?CAT_SEL[s.id]:1}" ${on?'':'disabled'} onclick="event.preventDefault()" oninput="catQty('${s.id}',this.value)"></span>
+        </label>`;
+      }).join('')}
+    </div>`).join('');
+}
+function catToggle(id,on){ if(on) CAT_SEL[id]=CAT_SEL[id]||1; else delete CAT_SEL[id]; renderCatalogo(); }
+function catQty(id,v){ const n=Math.max(1,Number(v)||1); if(CAT_SEL[id]!=null) CAT_SEL[id]=n; }
+function aplicarCatalogo(){
+  const ativos=(CATALOG||[]);
+  let n=0;
+  ativos.forEach(s=>{
+    const qty=CAT_SEL[s.id];
+    if(qty==null) return;
+    const nome = qty>1 ? `${s.nome} × ${qty}` : s.nome;
+    addItem(nome, Math.round(Number(s.preco_base)*qty*100)/100);
+    n++;
+  });
+  fecharCatalogo();
+  if(n) toast(`${n} item(ns) adicionado(s).`);
+}
+
 // ── MODAL ──
 function abrirNovo(){
   document.getElementById('formTitle').textContent='Novo orçamento';
@@ -382,6 +461,9 @@ function abrirNovo(){
   addItem();
   document.getElementById('delBtn').style.display='none';
   calcTotal();
+  const cb=document.getElementById('catBtn');
+  cb.disabled = (CATALOG===null);
+  cb.title = CATALOG===null ? 'Catálogo indisponível — adicione os itens à mão' : '';
   document.getElementById('modal').classList.add('show');
 }
 function abrirEdit(i){
@@ -405,6 +487,9 @@ function abrirEdit(i){
   if(itens.length) itens.forEach(it=>addItem(it.nome,it.valor)); else addItem();
   document.getElementById('delBtn').style.display='inline-flex';
   calcTotal();
+  const cb=document.getElementById('catBtn');
+  cb.disabled = (CATALOG===null);
+  cb.title = CATALOG===null ? 'Catálogo indisponível — adicione os itens à mão' : '';
   document.getElementById('modal').classList.add('show');
 }
 function fecharModal(){ document.getElementById('modal').classList.remove('show'); }
