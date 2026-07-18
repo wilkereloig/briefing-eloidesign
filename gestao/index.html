@@ -42,6 +42,9 @@
 
     /* dashboard */
     .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+    .fallback-note{margin:10px 0;padding:9px 14px;background:rgba(157,78,221,.12);border:1px solid rgba(157,78,221,.35);border-radius:10px;font-size:.82rem;color:var(--c100)}
+    .sem-comp{margin:10px 0;padding:10px 14px;background:rgba(240,196,106,.12);border:1px solid rgba(240,196,106,.35);border-radius:10px;font-size:.82rem;cursor:pointer}
+    .sem-comp:hover{border-color:var(--amber)}
     .stat{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:14px;padding:15px 18px}
     .stat .sv{font-size:1.5rem;font-variation-settings:'wght' 700;line-height:1.1}
     .stat .sl{font-size:.76rem;color:var(--c300);margin-top:3px}
@@ -166,7 +169,9 @@
 
   <!-- dashboard -->
   <div class="monthnav"><div class="months" id="monthTabs"></div><select id="yearSel" class="yearsel" onchange="setAno(this.value)"></select></div>
+  <div class="fallback-note" id="fallbackNote" style="display:none"></div>
   <div class="metrics" id="metrics"></div>
+  <div class="sem-comp" id="semComp" style="display:none"></div>
   <div class="rankwrap" id="rankwrap" style="display:none">
     <h3>Faturamento por marca no período</h3>
     <div id="rank"></div>
@@ -302,6 +307,7 @@ const SUPA = "https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/eloi-gestao"
 let CLIENTES = [];
 let SERVICOS = [];
 let PERIODO = { ano: new Date().getFullYear(), mes: null };
+let MES_FALLBACK = null; // 'YYYY-MM' quando o painel caiu num mes com dado por nao ter nada no mes atual
 
 async function api(action, extra = {}) {
   const j = await EloiAdminAuth.call(SUPA, { action, ...extra });
@@ -332,6 +338,16 @@ async function mostrarApp(){
   if(window.EloiNav) EloiNav.mount();
   await carregarTudo();
 }
+function mesMaisRecenteComDado(){
+  let melhor = null;
+  SERVICOS.forEach(s=>{
+    if(s.data_competencia){
+      const ym = String(s.data_competencia).slice(0,7);
+      if(!melhor || ym > melhor) melhor = ym;
+    }
+  });
+  return melhor;
+}
 async function carregarTudo(){
   await carregarClientes();
   const { servicos } = await api('servicos.list', { filtro:{} });
@@ -339,8 +355,27 @@ async function carregarTudo(){
   const anos = anosDisponiveis();
   const now = new Date();
   const anoAtual = now.getFullYear();
-  PERIODO = { ano: anoAtual, mes: (now.getMonth()+1) };
-  await carregarDashboardExtra();  // só o card de orçamento (Task 5)
+  const mesAtual = now.getMonth()+1;
+  const ymAtual = `${anoAtual}-${String(mesAtual).padStart(2,'0')}`;
+  const temNoMesAtual = SERVICOS.some(s=>
+    (s.data_competencia && String(s.data_competencia).slice(0,7)===ymAtual) ||
+    (s.pago && s.data_pagamento && String(s.data_pagamento).slice(0,7)===ymAtual)
+  );
+  if(temNoMesAtual){
+    PERIODO = { ano: anoAtual, mes: mesAtual };
+    MES_FALLBACK = null;
+  } else {
+    const recente = mesMaisRecenteComDado();
+    if(recente){
+      const [ay, am] = recente.split('-').map(Number);
+      PERIODO = { ano: ay, mes: am };
+      MES_FALLBACK = recente;
+    } else {
+      PERIODO = { ano: anoAtual, mes: mesAtual };
+      MES_FALLBACK = null;
+    }
+  }
+  await carregarDashboardExtra();
   render();
 }
 function mesDe(s){ return s.data_competencia ? String(s.data_competencia).slice(0,7) : null; }
@@ -374,15 +409,36 @@ function renderCards(){
   const emExec = SERVICOS.filter(s=>s.status_execucao==='em_execucao').length;
   const semNf = SERVICOS.filter(s=>!s.nf_numero);
   const semNfCents = semNf.reduce((a,s)=>a+(+s.valor_cents||0),0);
+  const rotuloPeriodo = PERIODO.mes ? 'no mês' : 'no ano';
   const cards = [
-    `<div class="stat" onclick="filtroCard('faturado')"><div class="sv">${brl(faturado)}</div><div class="sl">Faturado no mês</div></div>`,
-    `<div class="stat good" onclick="filtroCard('recebido')"><div class="sv">${brl(recebido)}</div><div class="sl">Recebido no mês</div></div>`,
+    `<div class="stat" onclick="filtroCard('faturado')"><div class="sv">${brl(faturado)}</div><div class="sl">Faturado ${rotuloPeriodo}</div></div>`,
+    `<div class="stat good" onclick="filtroCard('recebido')"><div class="sv">${brl(recebido)}</div><div class="sl">Recebido ${rotuloPeriodo}</div></div>`,
     `<div class="stat amber" onclick="filtroCard('areceber')"><div class="sv">${brl(aReceber)}</div><div class="sl">A receber</div></div>`,
-    `<div class="stat" onclick="filtroCard('execucao')"><div class="sv">${emExec}</div><div class="sl">Em execução</div></div>`,
-    `<div class="stat warn" onclick="filtroCard('nfpend')"><div class="sv">${semNf.length}</div><div class="sl">NF pendente · ${brl(semNfCents)} a faturar</div></div>`,
+    `<div class="stat" onclick="filtroCard('execucao')"><div class="sv">${emExec}</div><div class="sl">Em execução (todos os períodos)</div></div>`,
+    `<div class="stat warn" onclick="filtroCard('nfpend')"><div class="sv">${semNf.length}</div><div class="sl">NF pendente (todos os períodos) · ${brl(semNfCents)} a faturar</div></div>`,
   ];
   if(ORC_PEND.count) cards.push(`<div class="stat amber"><div class="sv">${brl(ORC_PEND.cents)}</div><div class="sl">Orçamento aprovado sem serviço</div></div>`);
   document.getElementById('metrics').innerHTML = cards.join('');
+
+  const fbEl = document.getElementById('fallbackNote');
+  if(MES_FALLBACK){
+    const [ay, am] = MES_FALLBACK.split('-').map(Number);
+    fbEl.style.display = 'block';
+    fbEl.textContent = `Sem lançamento no mês atual — mostrando ${MESES[am-1]}/${ay}, o mês mais recente com dado.`;
+  } else {
+    fbEl.style.display = 'none';
+  }
+
+  const semComp = SERVICOS.filter(s=>!s.data_competencia);
+  const semCompCents = semComp.reduce((a,s)=>a+(+s.valor_cents||0),0);
+  const semCompEl = document.getElementById('semComp');
+  if(semComp.length){
+    semCompEl.style.display = 'block';
+    semCompEl.innerHTML = `⚠ ${semComp.length} serviço(s) sem competência definida — ${brl(semCompCents)} fora dos totais de Faturado/A receber acima`;
+    semCompEl.onclick = ()=>{ document.getElementById('fCliente').value=''; document.getElementById('fStatus').value=''; document.getElementById('fPago').value=''; document.getElementById('fNota').value=''; renderServicos(); document.getElementById('tabServicos').scrollIntoView({behavior:'smooth'}); };
+  } else {
+    semCompEl.style.display = 'none';
+  }
 }
 function filtroCard(t){
   const set=(id,v)=>{const el=document.getElementById(id); if(el){el.value=v;}};
