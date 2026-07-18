@@ -143,6 +143,12 @@
           <div class="field"><label>Cliente</label><input id="f_cliente" placeholder="Nome do cliente"></div>
           <div class="field"><label>Título</label><input id="f_titulo" placeholder="Ex: Identidade + landing"></div>
         </div>
+        <div class="field">
+          <label>Cliente cadastrado <span class="muted">(vincula ao portal do cliente)</span></label>
+          <select id="f_cliente_id" onchange="const c=CLIENTES.find(x=>x.id===this.value); if(c) document.getElementById('f_cliente').value=c.nome;">
+            <option value="">— nenhum, usar nome acima —</option>
+          </select>
+        </div>
       </div>
 
       <div class="panel">
@@ -206,7 +212,9 @@
 <script src="/assets/eloi-admin/nav.js"></script>
 <script>
 const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/orcamentos';
+const FN_GESTAO = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/eloi-gestao';
 let CATALOG = [];                 // serviços do banco
+let CLIENTES = [];                // clientes cadastrados (pra vincular ao portal)
 const SEL = {};                   // id -> qty (serviços selecionados)
 
 // multiplicadores (mudam raro; editar aqui se precisar)
@@ -234,8 +242,14 @@ fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
   document.getElementById('logoSlot').innerHTML = svg;
 });
 async function carregarApp(){
-  const d = await call('catalog_list',{});
+  const [d, dc] = await Promise.all([
+    call('catalog_list',{}),
+    EloiAdminAuth.call(FN_GESTAO,{action:'clientes.list'}).catch(()=>({clientes:[]})),
+  ]);
   CATALOG = d.servicos||[];
+  CLIENTES = dc.clientes||[];
+  document.getElementById('f_cliente_id').innerHTML = '<option value="">— nenhum, usar nome acima —</option>' +
+    CLIENTES.map(c=>`<option value="${esc(c.id)}">${esc(c.nome)}</option>`).join('');
   document.getElementById('loginView').style.display='none';
   document.getElementById('appView').style.display='block';
   initSelects();
@@ -344,6 +358,10 @@ function calc(){
     html += `<div class="sum-line muted"><span>Subtotal</span><span class="v">${brl(r.base)}</span></div>`;
     html += r.ajustes.map(a=>`<div class="sum-line ${a.valor<0?'neg':''}"><span>${esc(a.nome)}</span><span class="v">${a.valor<0?'−':'+'} ${brl(Math.abs(a.valor))}</span></div>`).join('');
   }
+  const zerados = r.linhas.filter(l=>!l.valor);
+  if(zerados.length){
+    html += `<div class="sum-line neg"><span>⚠ ${zerados.length} serviço(s) sem preço-base cadastrado — entram por R$ 0,00: ${esc(zerados.map(l=>l.nome).join(', '))}</span><span class="v"></span></div>`;
+  }
   sl.innerHTML=html;
   document.getElementById('sumTotal').textContent=brl(r.total);
   const n=r.linhas.length;
@@ -362,12 +380,15 @@ function gerar(){
   const obsBase=document.getElementById('f_obs').value.trim();
   const ajusteTxt = `Complexidade: ${r.c.label} (×${r.c.m}) · Urgência: ${r.u.label} (×${r.u.m})${r.desc>0?` · Desconto: ${r.desc}%`:''}`;
   const observacoes = (obsBase ? obsBase+'\n\n' : '') + 'Gerado pelo orçamento inteligente. ' + ajusteTxt;
+  // total = soma dos itens JÁ arredondados — senão o cliente vê linhas que não fecham com o total
+  const totalItens = itens.reduce((a,i)=>a+i.valor,0);
   const o={
     cliente: cliente||null,
+    cliente_id: document.getElementById('f_cliente_id').value || null,
     titulo,
     status:'rascunho',
     itens,
-    valor_total: Math.round(r.total*100)/100,
+    valor_total: Math.round(totalItens*100)/100,
     observacoes,
     link:null,
   };
@@ -377,6 +398,7 @@ function gerar(){
     // reset seleção
     Object.keys(SEL).forEach(k=>delete SEL[k]);
     document.getElementById('f_cliente').value='';
+    document.getElementById('f_cliente_id').value='';
     document.getElementById('f_titulo').value='';
     document.getElementById('f_obs').value='';
     document.getElementById('m_desconto').value='0';
