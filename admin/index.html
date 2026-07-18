@@ -45,6 +45,9 @@
     .sec-h{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--c300);margin:26px 4px 12px;font-variation-settings:'wght' 600}
     .fin{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
     @media(max-width:760px){.fin{grid-template-columns:1fr 1fr}}
+    .sem-comp{margin-top:10px;padding:10px 14px;background:rgba(240,196,106,.12);border:1px solid rgba(240,196,106,.35);border-radius:10px;font-size:.82rem}
+    .sem-comp a{color:var(--amber);text-decoration:none}
+    .sem-comp a:hover{text-decoration:underline}
     .fcard{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:15px;padding:16px 18px;cursor:pointer;transition:border-color .18s,transform .12s;text-decoration:none;color:inherit;display:block}
     .fcard:hover{border-color:var(--c500);transform:translateY(-2px)}
     .fcard .fl{font-size:.76rem;color:var(--c300);margin-bottom:7px}
@@ -108,6 +111,7 @@
   <div class="loading" id="loading">Carregando…</div>
   <div id="dash" style="display:none">
     <div class="fin" id="fin"></div>
+    <div class="sem-comp" id="semComp" style="display:none"></div>
 
     <div class="sec-h">Sua atenção</div>
     <div class="panel"><div id="atencao"></div></div>
@@ -212,6 +216,14 @@ function renderFin(){
     <a class="fcard good" href="/gestao/"><div class="fl">Recebido</div><div class="fv">${brl(cur.recebido)}</div>${prev?deltaHTML(cur.recebido,prev.recebido):''}</a>
     <a class="fcard amber" href="/gestao/"><div class="fl">A receber</div><div class="fv">${brl(cur.aReceber)}</div></a>
     <a class="fcard est" href="/painel-orcamentos/"><div class="fl">Estimativa</div><div class="fv">${brl(est)}</div><div class="delta">${estN} orç. aprovado(s) sem serviço</div></a>`;
+  const semComp = P.semCompetencia(SERVICOS);
+  const semCompEl = document.getElementById('semComp');
+  if(semComp.count){
+    semCompEl.style.display = 'block';
+    semCompEl.innerHTML = `<a href="/gestao/">⚠ ${semComp.count} serviço(s) sem competência definida — ${brl(semComp.cents)} fora dos totais acima</a>`;
+  } else {
+    semCompEl.style.display = 'none';
+  }
 }
 
 function renderAtencao(){
@@ -267,7 +279,10 @@ function renderClientes(){
     c.fat += (+s.valor_cents||0); if(!s.pago) c.ar += (+s.valor_cents||0);
     if(s.status_execucao==='em_execucao') c.exec++;
   });
-  SERVICOS.filter(s=>P.pagoNoPeriodo(PERIODO,s)).forEach(s=>{ if(map[s.cliente_id]){ map[s.cliente_id].rec=(map[s.cliente_id].rec||0)+(+s.valor_cents||0); } });
+  SERVICOS.filter(s=>P.pagoNoPeriodo(PERIODO,s)).forEach(s=>{
+    const c = map[s.cliente_id] || (map[s.cliente_id]={ id:s.cliente_id, nome:nomeCliente(s.cliente_id), cor:corCliente(s.cliente_id), fat:0, ar:0, exec:0 });
+    c.rec = (c.rec||0) + (+s.valor_cents||0);
+  });
   const rows=Object.values(map).sort((a,b)=>b.fat-a.fat).slice(0,5);
   const el=document.getElementById('clientes');
   if(!rows.length){ el.innerHTML='<div class="empty">Nenhum serviço no período.</div>'; return; }
