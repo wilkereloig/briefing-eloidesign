@@ -10,7 +10,6 @@
     ['/gestao/',               'Gestão',              'M4 19V9m6 10V5m6 14v-7'],
     ['/painel-briefings/',     'Briefings',           'M8 4h8v3H8zM6 7h12v13H6z'],
     ['/painel-orcamentos/',    'Orçamentos',          'M7 4h10v16H7zM10 8h4M10 12h4M10 16h3'],
-    ['/orcamento-inteligente/','Orçamento inteligente','M4 6h16v12H4zM8 18v2M16 18v2'],
     ['/gestao/#clientes',      'Portal do Cliente',   'M12 12a4 4 0 100-8 4 4 0 000 8zM5 20a7 7 0 0114 0']
   ];
   var TOOLS = [
