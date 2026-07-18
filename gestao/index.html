@@ -394,8 +394,8 @@ function renderNav(){
   ys.style.display = anos.length>1 ? 'block' : 'none';
   ys.innerHTML = anos.map(a=>`<option value="${a}"${a===PERIODO.ano?' selected':''}>${a}</option>`).join('');
 }
-function setMes(m){ PERIODO.mes = m; render(); }
-function setAno(a){ PERIODO.ano = Number(a); render(); }
+function setMes(m){ MES_FALLBACK = null; PERIODO.mes = m; render(); }
+function setAno(a){ MES_FALLBACK = null; PERIODO.ano = Number(a); render(); }
 let ORC_PEND = { count:0, cents:0 };
 async function carregarDashboardExtra(){
   try{ const s = await api('dashboard.stats'); ORC_PEND = { count:s.aprovados_pendentes_count||0, cents:s.aprovados_pendentes_cents||0 }; }
