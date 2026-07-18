@@ -230,6 +230,7 @@ const FN_GESTAO = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/eloi-ge
 let ORCS = [];
 let CLIENTES = [];
 let CATALOG = null;
+let LOAD_ERRO = false;
 
 function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -250,8 +251,17 @@ function popularClientesSelect(){
     CLIENTES.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
 }
 async function carregarDados(){
-  const [d, cli, cat] = await Promise.all([
-    call('list',{}),
+  LOAD_ERRO = false;
+  let d;
+  try{
+    d = await call('list',{});
+  }catch(e){
+    LOAD_ERRO = true;
+    ORCS = [];
+    render();
+    return;
+  }
+  const [cli, cat] = await Promise.all([
     EloiAdminAuth.call(FN_GESTAO,{action:'clientes.list'}).catch(()=>({clientes:[]})),
     call('catalog_list',{}).catch(()=>({servicos:null})),
   ]);
@@ -279,6 +289,11 @@ if (EloiAdminAuth.token()) { mostrarPainel(); carregarDados(); }
 // ── LISTA ──
 function render(){
   const lv=document.getElementById('listView');
+  if(LOAD_ERRO){
+    lv.className='';
+    lv.innerHTML='<div class="empty"><div class="ic">⚠</div>Não deu pra carregar os orçamentos. Isso é falha de conexão, não lista vazia.<br><button class="btn btn-ghost" style="margin-top:12px" onclick="carregarDados()">Tentar de novo</button></div>';
+    return;
+  }
   if(!ORCS.length){ lv.className=''; lv.innerHTML='<div class="empty"><div class="ic">💰</div>Nenhum orçamento ainda. Clique em "+ Novo orçamento".</div>'; return; }
   lv.className='grid';
   lv.innerHTML = ORCS.map((o,i)=>{
@@ -500,13 +515,18 @@ function abrirEdit(i){
 function fecharModal(){ document.getElementById('modal').classList.remove('show'); }
 
 function salvar(){
+  const itens = lerItens();
+  if(!itens.length){ toast('Adicione ao menos um item.'); return; }
+  const clienteVal = document.getElementById('f_cliente').value.trim();
+  const tituloVal  = document.getElementById('f_titulo').value.trim();
+  if(!clienteVal || !tituloVal){ toast('Preencha cliente e título.'); return; }
   const o={
     id: document.getElementById('f_id').value || undefined,
     cliente: document.getElementById('f_cliente').value,
     cliente_id: document.getElementById('f_cliente_id').value || null,
     titulo: document.getElementById('f_titulo').value,
     status: document.getElementById('f_status').value,
-    itens: lerItens(),
+    itens: itens,
     valor_total: calcTotal(),
     link: document.getElementById('f_link').value,
     observacoes: document.getElementById('f_obs').value,
