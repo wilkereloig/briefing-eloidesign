@@ -594,6 +594,59 @@ git commit -m "feat(orcamentos): seletor de catalogo dentro do painel, itens edi
 
 ---
 
+### Task 4b: Gate do "Criar serviço" + link público (absorvido da Task 8 do P0)
+
+**Files:**
+- Modify: `painel-orcamentos/index.html` — linha do `viewCriarServico` (~271), `linkPublico()` (~285)
+
+**Interfaces:** nada novo.
+
+- [ ] **Step 1: Exigir `cliente_id` pra mostrar "Criar serviço"**
+
+Hoje o botão aparece só com base no status. Criar serviço sem cliente vinculado gera órfão no `/gestao/`.
+
+Ler a função inteira primeiro pra confirmar qual variável guarda o orçamento aberto (`o` ou `ORC_ATUAL`). Depois, na linha:
+
+```js
+  document.getElementById('viewCriarServico').style.display = st==='aprovado' ? 'inline-flex' : 'none';
+```
+
+acrescentar a condição do `cliente_id`, usando a variável correta:
+
+```js
+  document.getElementById('viewCriarServico').style.display = (st==='aprovado' && o.cliente_id) ? 'inline-flex' : 'none';
+```
+
+- [ ] **Step 2: `linkPublico()` para de inventar `/cliente/`**
+
+A função anexa `/cliente/` ao `o.link` cadastrado, assumindo uma rota que pode não existir. Confirmar o nome exato do campo do token lendo a função original (`share_token` ou outro) antes de aplicar:
+
+```js
+function linkPublico(o){
+  if(o && o.link){
+    var base = o.link.trim();
+    return /^https?:/i.test(base) ? base : location.origin + (base.startsWith('/') ? base : '/'+base);
+  }
+  return location.origin + '/orcamento/?t=' + (o && o.share_token || '');
+}
+```
+
+- [ ] **Step 3: Verificar sintaxe**
+
+```bash
+node -e "const fs=require('fs');const h=fs.readFileSync('painel-orcamentos/index.html','utf8');const m=[...h.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(x=>x[1]).join('\n;\n');fs.writeFileSync(process.argv[1]+'/po-check.js',m);" <scratchpad>
+node --check <scratchpad>/po-check.js && echo SYNTAX_OK
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add painel-orcamentos/index.html
+git commit -m "fix(orcamentos): exige cliente_id pra criar servico, link publico usa o link cadastrado"
+```
+
+---
+
 ### Task 5: Ajustes visíveis na view do cliente e no view interno
 
 **Files:**
@@ -736,10 +789,12 @@ Em `salvar()`, antes da construção do objeto `o`, inserir:
 ```js
   const itens = lerItens();
   if(!itens.length){ toast('Adicione ao menos um item.'); return; }
-  if(!document.getElementById('f_titulo').value.trim() && !document.getElementById('f_cliente').value.trim()){
-    toast('Preencha o título ou o cliente.'); return;
-  }
+  const clienteVal = document.getElementById('f_cliente').value.trim();
+  const tituloVal  = document.getElementById('f_titulo').value.trim();
+  if(!clienteVal || !tituloVal){ toast('Preencha cliente e título.'); return; }
 ```
+
+Regra decidida pelo Wilke em 2026-07-18: cliente, título e ≥1 item são **todos** obrigatórios. (Absorve o Step 4 da Task 8 do P0, que foi dissolvida.)
 
 E trocar `itens: lerItens(),` por `itens: itens,` no objeto, pra não ler duas vezes.
 

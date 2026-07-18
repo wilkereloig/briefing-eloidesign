@@ -16,6 +16,8 @@
 - Onda 4 (Task 19) só executa depois de aprovação humana explícita da tabela gerada na Task 18 — não é um gate automático de código, é uma pausa real no processo.
 - Todo `git commit` usa mensagem `feat(p0): ...` ou `fix(p0): ...`, um commit por task.
 - Deploy de edge function usa a tool `mcp__<supabase>__deploy_edge_function` com `project_id: nlamznxoocmygfvnqcns`.
+- **`/tmp` não existe (Windows).** Todos os steps de verificação de sintaxe abaixo escrevem em `/tmp/*-check.js` — isso está errado. Usar o diretório de scratchpad da sessão no lugar, mantendo o mesmo nome de arquivo.
+- **Task 8 foi DISSOLVIDA** — não executar. Ver `docs/superpowers/specs/2026-07-18-execucao-pendencias-design.md`. Steps 1–2 viraram a Task 4b do plano de Orçamentos; Steps 3–4 foram absorvidos pelas Tasks 5 e 6 do mesmo plano.
 
 ---
 
@@ -916,7 +918,14 @@ git commit -m "fix(p0): orcamento-inteligente evita duplicar catalogo em retry, 
 
 ---
 
-### Task 8: `painel-orcamentos/index.html` — gate de "Criar serviço", link público, validação
+### ~~Task 8~~ — DISSOLVIDA, NÃO EXECUTAR
+
+> Conflitava com as Tasks 3–6 do plano de Orçamentos, que reescrevem as mesmas linhas de `painel-orcamentos/index.html`.
+> Steps 1–2 → Task 4b do plano de Orçamentos. Steps 3–4 → absorvidos pelas Tasks 5 e 6.
+> Ver `docs/superpowers/specs/2026-07-18-execucao-pendencias-design.md`.
+> Conteúdo original mantido abaixo só como referência para a Task 4b.
+
+### ~~Task 8 (referência)~~: `painel-orcamentos/index.html` — gate de "Criar serviço", link público, validação
 
 **Files:**
 - Modify: `painel-orcamentos/index.html`
