@@ -32,6 +32,11 @@
     if(!p.mes) return { ano: p.ano - 1, mes: null };
     return p.mes === 1 ? { ano: p.ano - 1, mes: 12 } : { ano: p.ano, mes: p.mes - 1 };
   }
+  function semCompetencia(servicos){
+    var alvo = (servicos||[]).filter(function(s){ return !s.data_competencia; });
+    var cents = alvo.reduce(function(a,s){ return a + (Number(s.valor_cents)||0); }, 0);
+    return { count: alvo.length, cents: cents, items: alvo };
+  }
 
   function brl(cents){ return (Number(cents||0)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
@@ -42,7 +47,7 @@
     MESES: MESES, PALETA_MARCA: PALETA_MARCA,
     criar: criar, ymPeriodo: ymPeriodo, mesDe: mesDe,
     noPeriodo: noPeriodo, pagoNoPeriodo: pagoNoPeriodo,
-    anosDisponiveis: anosDisponiveis, anterior: anterior,
+    anosDisponiveis: anosDisponiveis, anterior: anterior, semCompetencia: semCompetencia,
     brl: brl, esc: esc, dataBR: dataBR, corDaMarca: corDaMarca
   };
 })(window);
