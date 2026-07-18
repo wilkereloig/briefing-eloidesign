@@ -303,12 +303,17 @@ function abrirView(i){
   const linhas = itens.length
     ? itens.map(it=>`<div class="v-item"><span>${esc(it.nome||'—')}</span><span>${brl(it.valor)}</span></div>`).join('')
     : '<div class="v-empty">Sem itens cadastrados.</div>';
+  const rv = window.EloiOrcamento.calcular({itens, complexidade:o.complexidade, urgencia:o.urgencia, desconto_pct:o.desconto_pct});
+  const ajLinhas = rv.ajustes.length
+    ? `<div class="v-item"><span>Subtotal</span><span>${brl(rv.base)}</span></div>` +
+      rv.ajustes.map(a=>`<div class="v-item"><span>${esc(a.nome)}</span><span>${a.valor<0?'− ':'+ '}${brl(Math.abs(a.valor))}</span></div>`).join('')
+    : '';
   document.getElementById('viewBody').innerHTML = `
     <div class="v-head">
       <div><div class="v-cli">${esc(o.cliente||'—')}</div><h2 style="margin:0">${esc(o.titulo||'Sem título')}</h2></div>
       <span class="badge ${st}">${st}</span>
     </div>
-    <div class="v-itens">${linhas}</div>
+    <div class="v-itens">${linhas}${ajLinhas}</div>
     <div class="v-total"><span>Total</span><strong>${brl(o.valor_total)}</strong></div>
     ${o.observacoes?`<div class="v-obs"><div class="v-obs-lbl">Observações</div>${esc(o.observacoes)}</div>`:''}
     <div class="v-dt">Orçamento #${o.numero||'—'} · Criado em ${dt}</div>`;
