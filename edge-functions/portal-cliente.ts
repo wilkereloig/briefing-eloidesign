@@ -218,6 +218,18 @@ Deno.serve(async (req: Request) => {
     return json({ url: data.signedUrl });
   }
 
+  // Materiais novos (eloi_materiais): cliente só vê PUBLICADO, e só os dele —
+  // cliente_id vem da sessão, nunca do body. Download via entregas.view_url
+  // (o path já é validado contra o clienteId da sessão lá).
+  if (action === "materiais.list") {
+    const { data, error } = await supabase.from("eloi_materiais")
+      .select("id,titulo,descricao,categoria,versao,path,published_at")
+      .eq("cliente_id", clienteId).eq("status", "publicado")
+      .order("published_at", { ascending: false });
+    if (error) return json({ error: error.message }, 500);
+    return json({ materiais: data });
+  }
+
   if (action === "briefings.list") {
     const { data, error } = await supabase.from("briefing_links")
       .select("id,tipo,status,created_at,responded_at")

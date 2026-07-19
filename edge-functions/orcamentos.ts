@@ -59,8 +59,14 @@ Deno.serve(async (req: Request) => {
     const { data: o, error: findErr } = await supabase.from("orcamentos").select("id,status").eq("share_token", token).maybeSingle();
     if (findErr || !o) return json({ error: "não encontrado" }, 404);
     if (o.status !== "enviado") return json({ error: "esse orçamento já foi respondido ou ainda não foi enviado" }, 409);
+    // Aprovação dispara o trigger do banco que cria o serviço (atômico/idempotente).
+    // Se o orçamento estiver sem cliente_id, o guard do banco rejeita — não deveria
+    // acontecer (envio já exige cliente), mas devolvemos erro legível por via das dúvidas.
     const { data, error } = await supabase.from("orcamentos").update({ status: decisao, updated_at: new Date().toISOString() }).eq("id", o.id).select("status").single();
-    if (error) return json({ error: error.message }, 500);
+    if (error) {
+      const semCliente = /cliente_id/.test(error.message);
+      return json({ error: semCliente ? "orçamento sem cliente vinculado — avise o estúdio" : error.message }, semCliente ? 409 : 500);
+    }
     return json({ status: data.status });
   }
 
@@ -71,7 +77,11 @@ Deno.serve(async (req: Request) => {
     const { data, error } = await supabase
       .from("orcamentos").select("*").order("created_at", { ascending: false });
     if (error) return json({ error: error.message }, 500);
-    return json({ orcamentos: data });
+    // serviço vinculado (criado pelo trigger na aprovação) — front mostra "Serviço criado" + link
+    const { data: svc } = await supabase.from("eloi_servicos").select("id,orcamento_id").not("orcamento_id", "is", null);
+    const porOrc: Record<string, string> = {};
+    for (const s of svc ?? []) porOrc[s.orcamento_id] = s.id;
+    return json({ orcamentos: (data ?? []).map((o) => ({ ...o, servico_id: porOrc[o.id] ?? null })) });
   }
 
   // Ajustes de orçamento (complexidade/urgência/desconto). Os multiplicadores em si
@@ -100,10 +110,22 @@ Deno.serve(async (req: Request) => {
     return { ...base, erro: null };
   }
 
+  // Envio/aprovação exigem cliente cadastrado. O front bloqueia, mas a função
+  // valida de novo (front nunca é a única camada) e o banco tem o mesmo guard.
+  function exigeCliente(o: Record<string, unknown>): string | null {
+    const status = (o.status ?? "rascunho") as string;
+    if (["enviado", "aprovado"].includes(status) && !o.cliente_id) {
+      return `orçamento não pode ser ${status} sem cliente cadastrado — escolha um cliente antes`;
+    }
+    return null;
+  }
+
   if (action === "create") {
     const o = body?.orcamento || {};
     const { erro, ...aj } = lerAjustes(o);
     if (erro) return json({ error: erro }, 400);
+    const errCli = exigeCliente(o);
+    if (errCli) return json({ error: errCli }, 400);
     const { data, error } = await supabase.from("orcamentos").insert({
       cliente: o.cliente ?? null,
       cliente_id: o.cliente_id ?? null,
@@ -124,6 +146,22 @@ Deno.serve(async (req: Request) => {
     if (!o.id) return json({ error: "id obrigatório" }, 400);
     const { erro, ...aj } = lerAjustes(o);
     if (erro) return json({ error: erro }, 400);
+    const errCli = exigeCliente(o);
+    if (errCli) return json({ error: errCli }, 400);
+    // Estratégia documentada (Fase 4): orçamento APROVADO que já virou serviço fica
+    // TRAVADO para título/valor/itens/cliente — evita orçamento e serviço divergirem
+    // silenciosamente. Pra alterar, edite o serviço na Gestão (fonte da execução).
+    const { data: atual } = await supabase.from("orcamentos")
+      .select("status,titulo,valor_total,cliente_id").eq("id", o.id).maybeSingle();
+    if (atual?.status === "aprovado") {
+      const { data: svcExistente } = await supabase.from("eloi_servicos").select("id").eq("orcamento_id", o.id).maybeSingle();
+      const mudouCore = (o.titulo ?? null) !== (atual.titulo ?? null)
+        || Number(o.valor_total ?? 0) !== Number(atual.valor_total ?? 0)
+        || (o.cliente_id ?? null) !== (atual.cliente_id ?? null);
+      if (svcExistente && mudouCore) {
+        return json({ error: "orçamento aprovado já virou serviço — título, valor e cliente estão travados; ajuste o serviço na Gestão" }, 409);
+      }
+    }
     const { data, error } = await supabase.from("orcamentos").update({
       cliente: o.cliente ?? null,
       cliente_id: o.cliente_id ?? null,

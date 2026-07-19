@@ -120,6 +120,38 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true });
   }
 
+  // Perfil completo do cliente num payload só (Fase 1). SÓ admin — nunca expor no portal.
+  if (action === "clientes.detail") {
+    const id = body?.cliente_id;
+    if (!id) return json({ error: "cliente_id obrigatório" }, 400);
+    const { data: cliente, error: cErr } = await supabase.from("eloi_clientes")
+      .select("id,nome,cor,contato,created_at,marca_slug,marca_publicada,portal_ativo,portal_senha_prefix,portal_senha_gerada_em")
+      .eq("id", id).maybeSingle(); // sem hash — hash nunca sai do banco
+    if (cErr || !cliente) return json({ error: "cliente não encontrado" }, 404);
+    const [orcs, servs, briefs, movs, mats] = await Promise.all([
+      supabase.from("orcamentos").select("id,numero,titulo,status,valor_total,created_at,share_token").eq("cliente_id", id).order("created_at", { ascending: false }),
+      supabase.from("eloi_servicos").select("*").eq("cliente_id", id).order("created_at", { ascending: false }),
+      supabase.from("briefing_links").select("id,token,tipo,status,created_at,responded_at,nome,empresa").eq("cliente_id", id).order("created_at", { ascending: false }),
+      supabase.from("eloi_movimentos_financeiros").select("*").eq("cliente_id", id).order("created_at", { ascending: false }),
+      supabase.from("eloi_materiais").select("*").eq("cliente_id", id).order("created_at", { ascending: false }),
+    ]);
+    // Resumo financeiro: faturado = serviços; recebido = entradas realizadas; a receber = diferença.
+    let faturado = 0, recebido = 0;
+    for (const s of servs.data ?? []) faturado += Number(s.valor_cents) || 0;
+    for (const m of movs.data ?? []) {
+      if (m.tipo === "entrada" && m.status === "realizado") recebido += Number(m.valor_cents) || 0;
+    }
+    return json({
+      cliente,
+      orcamentos: orcs.data ?? [],
+      servicos: servs.data ?? [],
+      briefings: briefs.data ?? [],
+      movimentos: movs.data ?? [],
+      materiais: mats.data ?? [],
+      resumo: { faturado_cents: faturado, recebido_cents: recebido, a_receber_cents: Math.max(0, faturado - recebido) },
+    });
+  }
+
   // ── SERVIÇOS ──
   if (action === "servicos.list") {
     const f = body?.filtro || {};
@@ -175,10 +207,13 @@ Deno.serve(async (req: Request) => {
   if (action === "servicos.from_orcamento") {
     const orcamentoId = body?.orcamento_id;
     if (!orcamentoId) return json({ error: "orcamento_id obrigatório" }, 400);
+    // Ferramenta de REPARAÇÃO administrativa: cobre orçamentos aprovados antes do
+    // trigger do banco existir. Idempotente — devolve o serviço se já houver.
     const { data: existente } = await supabase.from("eloi_servicos").select("*").eq("orcamento_id", orcamentoId).maybeSingle();
     if (existente) return json({ servico: existente, ja_existia: true });
-    const { data: o, error: oErr } = await supabase.from("orcamentos").select("cliente_id,titulo,valor_total").eq("id", orcamentoId).single();
+    const { data: o, error: oErr } = await supabase.from("orcamentos").select("cliente_id,titulo,valor_total,status").eq("id", orcamentoId).single();
     if (oErr || !o) return json({ error: "orçamento não encontrado" }, 404);
+    if (o.status !== "aprovado") return json({ error: `orçamento está '${o.status}' — só orçamento aprovado vira serviço` }, 409);
     if (!o.cliente_id) return json({ error: "orçamento sem cliente cadastrado vinculado -- edite o orçamento e escolha um cliente cadastrado antes" }, 400);
     const { data, error } = await supabase.from("eloi_servicos").insert({
       cliente_id: o.cliente_id,
@@ -240,6 +275,43 @@ Deno.serve(async (req: Request) => {
   if (action === "entregas.delete") {
     if (!body?.path) return json({ error: "path obrigatório" }, 400);
     const { error } = await supabase.storage.from(ENTREGAS_BUCKET).remove([body.path]);
+    if (error) return json({ error: error.message }, 500);
+    return json({ ok: true });
+  }
+
+  // ── MATERIAIS (Fase 7: metadados de entregas novas; upload usa entregas.upload_url) ──
+  if (action === "materiais.upsert") {
+    const m = body?.material || {};
+    const titulo = String(m.titulo || "").trim();
+    if (!m.id && (!m.cliente_id || !titulo || !m.path)) return json({ error: "cliente_id, titulo e path obrigatórios" }, 400);
+    const CATS = ["arquivo", "apresentacao", "fonte", "nota_fiscal", "outro"];
+    const STATUS = ["rascunho", "publicado", "arquivado"];
+    if (m.categoria && !CATS.includes(m.categoria)) return json({ error: "categoria inválida" }, 400);
+    if (m.status && !STATUS.includes(m.status)) return json({ error: "status inválido" }, 400);
+    const row: any = {
+      titulo: titulo || undefined,
+      descricao: m.descricao ?? null,
+      categoria: m.categoria || undefined,
+      versao: Number(m.versao) || undefined,
+      status: m.status || undefined,
+      servico_id: m.servico_id || null,
+    };
+    if (m.status === "publicado") row.published_at = new Date().toISOString();
+    if (m.id) {
+      const { data, error } = await supabase.from("eloi_materiais").update(row).eq("id", m.id).select().single();
+      if (error) return json({ error: error.message }, 500);
+      return json({ material: data });
+    }
+    const { data, error } = await supabase.from("eloi_materiais")
+      .insert({ ...row, cliente_id: m.cliente_id, titulo, path: m.path, categoria: m.categoria || "arquivo", status: m.status || "rascunho" })
+      .select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ material: data });
+  }
+
+  if (action === "materiais.delete") {
+    if (!body?.id) return json({ error: "id obrigatório" }, 400);
+    const { error } = await supabase.from("eloi_materiais").delete().eq("id", body.id);
     if (error) return json({ error: error.message }, 500);
     return json({ ok: true });
   }
