@@ -24,6 +24,13 @@ Repositório único do **site completo** (GitHub: `wilkereloig/briefing-eloidesi
 | `/portal/` | `portal/index.html` | **Portal do Cliente** — login por senha própria (prefixo+segredo, PBKDF2), sessão `portal_sessions`. Abas: Marca (logo/paleta/variações via bucket privado `eloi-entregas`, signed URLs), Arquivos (arquivo do projeto/apresentação/fonte, mesmo bucket), Notas Fiscais, Orçamentos (view-only, link pra `/orcamento/?t=`), Briefing (view-only). Lê via edge `portal-cliente`. Senha gerada em `/gestao/` (botão "🔐 Gerar senha do portal", aba Clientes). |
 | `/marca/` | `marca/index.html` | Ferramenta admin (senha admin) pra gerar variações de logo no navegador — upload de SVG mestre + paleta, rasteriza client-side. Botão "Baixar .zip" depende de `assets/vendor/fflate.min.js` (não vendorizado ainda — TODO conhecido). Geração real de produção ainda é feita pelo script `entregas-marca/_tools/gerar-variacoes.mjs` (Node, roda local). |
 
+## Painel unificado (2026-07 — em validação)
+- `/admin-app/` — **aplicação administrativa única** (React+Vite+TS em `admin-app/`, build → `admin-app/dist`). Rotas: `/`, `/clientes`, `/clientes/:id` (perfil com abas Resumo/Orçamentos/Serviços/Financeiro/Briefings/Entregas), `/orcamentos`, `/servicos`, `/financeiro`, `/briefings`, `/entregas`. Consome as mesmas edge functions dos painéis legados (token `eloi_admin_token`). Páginas legadas continuam funcionando — migração progressiva.
+- **Orçamento aprovado → serviço é AUTOMÁTICO no banco** (trigger `trg_eloi_orcamento_aprovado`, idempotente via índice único em `orcamento_id`; guard `trg_eloi_orcamento_guard` bloqueia enviar/aprovar sem `cliente_id`). `servicos.from_orcamento` virou ferramenta de reparação (só aprovados). Orçamento aprovado com serviço fica travado p/ título/valor/cliente (edite o serviço na Gestão).
+- **Financeiro**: tabelas `eloi_caixas` + `eloi_movimentos_financeiros` (cents; entrada/saida; previsto/realizado/cancelado), edge `eloi-financeiro` (caixas.*, movimentos.*, financeiro.stats). Saldo = inicial + entradas realizadas − saídas realizadas; previsto fora do saldo.
+- **Materiais**: tabela `eloi_materiais` (metadados de entregas, rascunho/publicado/arquivado); admin via `eloi-gestao` (materiais.upsert/delete), cliente só vê publicado via `portal-cliente` (materiais.list).
+- `clientes.detail` (edge `eloi-gestao`): perfil completo do cliente num payload (orçamentos, serviços, briefings, movimentos, materiais, resumo financeiro, estado do portal). Só admin.
+
 ## Marca / Logo
 - Logo oficial = wordmark **"ELOI Design Studio"** (SVG inline, `viewBox 0 0 750.94 177.34`, **16 paths**, branco `#fff` via `.cls-1`).
 - Mesmo SVG em todas as páginas. No orçamento, em `@media print` os paths viram roxo `#3C096C`.
