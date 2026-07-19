@@ -1,0 +1,4 @@
+node_modules
+# dist E commitado de proposito: site estatico sem build na Vercel,
+# entao o build roda local (npm run build) e o resultado vai no git.
+tsconfig.tsbuildinfo

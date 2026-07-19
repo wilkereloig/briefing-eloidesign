@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/admin-app/assets/:path*", "destination": "/admin-app/dist/assets/:path*" },
+    { "source": "/admin-app/:path*", "destination": "/admin-app/dist/index.html" },
+    { "source": "/admin-app", "destination": "/admin-app/dist/index.html" }
+  ]
+}
