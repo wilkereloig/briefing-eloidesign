@@ -774,6 +774,11 @@ function trocarTab(t){
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); }));
 document.getElementById('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') entrar(); });
 if (EloiAdminAuth.token()) { mostrarApp(); }
+/* abre a aba do hash (#clientes) — o item "Clientes" do sidebar aponta pra ca.
+   Depois do mostrarApp() de proposito: carregarClientes precisa da sessao ativa. */
+function tabDoHash(){ if(location.hash==='#clientes') trocarTab('clientes'); if(location.hash==='#servicos') trocarTab('servicos'); }
+window.addEventListener('hashchange', tabDoHash);
+if (EloiAdminAuth.token()) tabDoHash();
 </script>
 </body>
 </html>
