@@ -299,11 +299,17 @@ function render(){
   lv.innerHTML = ORCS.map((o,i)=>{
     const dt = o.created_at ? new Date(o.created_at).toLocaleDateString('pt-BR') : '';
     const st = o.status||'rascunho';
+    // ponytail: badge de serviço direto no card; sem coluna dedicada
+    const svc = o.servico_id
+      ? `<div class="dt" style="color:var(--apr)">✓ Serviço criado — <a href="/gestao/?servico=${esc(o.servico_id)}" style="color:var(--apr)" onclick="event.stopPropagation()">abrir na Gestão ↗</a></div>`
+      : (st==='aprovado'
+        ? `<div class="dt" style="color:#f0c46a">⚠ Aprovado sem serviço — <a href="#" style="color:#f0c46a" onclick="event.stopPropagation();event.preventDefault();repararServico('${esc(o.id)}')">criar agora</a></div>`
+        : '');
     return `<div class="card" onclick="abrirView(${i})">
       <div class="cli">${esc(o.cliente||'—')}</div>
       <div class="tit">${esc(o.titulo||'Sem título')}</div>
       <div class="row"><span class="valor">${brl(o.valor_total)}</span><span class="badge ${st}">${st}</span></div>
-      <div class="dt">#${o.numero||'—'} · ${dt}</div>
+      <div class="dt">#${o.numero||'—'} · ${dt}</div>${svc}
     </div>`;
   }).join('');
 }
@@ -344,6 +350,14 @@ async function criarServico(){
     const d = await EloiAdminAuth.call(FN_GESTAO, {action:'servicos.from_orcamento', orcamento_id:o.id});
     if(d && d.error) throw new Error(d.error);
     toast(d.ja_existia ? 'Esse orçamento já tinha virado serviço.' : 'Serviço criado! Abra a Gestão pra tocar.');
+  }catch(e){ toast('Erro: '+e.message); }
+}
+// reparação: orçamento aprovado que ficou sem serviço (trigger falhou/antigo)
+async function repararServico(id){
+  try{
+    const d = await EloiAdminAuth.call(FN_GESTAO, {action:'servicos.from_orcamento', orcamento_id:id});
+    if(d && d.error) throw new Error(d.error);
+    refresh(d.ja_existia ? 'Esse orçamento já tinha serviço.' : 'Serviço criado!');
   }catch(e){ toast('Erro: '+e.message); }
 }
 function fecharView(){ document.getElementById('viewModal').classList.remove('show'); }
@@ -532,8 +546,12 @@ function salvar(){
     observacoes: document.getElementById('f_obs').value,
     ...lerAjustes(),
   };
+  // enviar/aprovar exige cliente cadastrado (a API também bloqueia; aqui avisa antes)
+  if((o.status==='enviado'||o.status==='aprovado') && !o.cliente_id){
+    toast('Pra marcar como '+o.status+', selecione um cliente cadastrado.'); return;
+  }
   const action = o.id ? 'update' : 'create';
-  call(action,{orcamento:o}).then(()=>refresh('Orçamento salvo!')).catch(()=>toast('Erro ao salvar.'));
+  call(action,{orcamento:o}).then(()=>refresh('Orçamento salvo!')).catch(e=>toast(e.message||'Erro ao salvar.'));
 }
 function excluir(){
   const id=document.getElementById('f_id').value;

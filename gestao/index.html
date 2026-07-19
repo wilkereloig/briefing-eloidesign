@@ -567,11 +567,12 @@ function linhaServico(s,c){
     : '<span class="badge exec">Em execução</span>';
   const pgb = s.pago ? '<span class="badge pago">Pago</span>' : '<span class="badge naopago">A receber</span>';
   const nfb = s.nf_numero ? `<span class="badge nfok">NF ${esc(s.nf_numero)}</span>` : '<span class="badge nfpend">NF pendente</span>';
+  const orcb = s.orcamento_id ? `<span class="badge" style="opacity:.65" title="orçamento ${esc(s.orcamento_id)}">via orçamento</span>` : '';
   const meta = [ s.data_competencia?('comp. '+dataBR(s.data_competencia)):'', s.data_pagamento?('pg '+dataBR(s.data_pagamento)):'', s.observacoes?esc(s.observacoes):'' ].filter(Boolean).join(' • ');
   const nfBtn = s.nf_arquivo_url ? `<button class="nf-pill" onclick="event.stopPropagation();verNF('${esc(s.nf_arquivo_url)}')">📄</button>` : '';
   return `<div class="svc" onclick='abrirServico(${JSON.stringify(s).replace(/'/g,"&#39;")})'>
     <div class="desc"><div class="d">${esc(s.descricao)}</div>${meta?`<div class="m">${meta}</div>`:''}</div>
-    ${stb}${pgb}${nfb}${nfBtn}<div class="valor">${brl(s.valor_cents)}</div>
+    ${stb}${pgb}${nfb}${orcb}${nfBtn}<div class="valor">${brl(s.valor_cents)}</div>
   </div>`;
 }
 async function verNF(path){ try{ const { url } = await api('nf.view_url',{ path }); window.open(url,'_blank'); }catch(e){ toast('Erro ao abrir NF'); } }
