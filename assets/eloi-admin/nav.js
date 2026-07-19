@@ -10,7 +10,10 @@
     ['/gestao/',               'Gestão',              'M4 19V9m6 10V5m6 14v-7'],
     ['/painel-briefings/',     'Briefings',           'M8 4h8v3H8zM6 7h12v13H6z'],
     ['/painel-orcamentos/',    'Orçamentos',          'M7 4h10v16H7zM10 8h4M10 12h4M10 16h3'],
-    ['/gestao/#clientes',      'Portal do Cliente',   'M12 12a4 4 0 100-8 4 4 0 000 8zM5 20a7 7 0 0114 0']
+    // Era 'Portal do Cliente', mas leva pra aba clientes da Gestao -- nao pro portal
+    // (/portal/, que e do cliente e pede senha dele). Preview do portal fica na
+    // propria lista de clientes, onde existe um cliente pra previsualizar.
+    ['/gestao/#clientes',      'Clientes',            'M12 12a4 4 0 100-8 4 4 0 000 8zM5 20a7 7 0 0114 0']
   ];
   var TOOLS = [
     ['/marca/', 'Entregas de Marca', 'M12 3l7 4v6c0 4-3 6-7 8-4-2-7-4-7-8V7z']

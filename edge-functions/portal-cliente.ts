@@ -40,6 +40,14 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array) { // sem early-exit, temp
 // gerado 1x offline (PBKDF2-SHA256, 600k iter, segredo dummy) -- queimado no caminho "prefixo nao existe" p/ fechar timing leak
 const DUMMY_HASH = "pbkdf2$600000$hqnSvVbexTFv5tanHOZPxw==$YqpS6qfRKNQIXygHyXF2y9P2LlrikAW6J3dmH7Co0eg=";
 
+// ── sessao de ADMIN: usada so pelo admin_preview. Mesmo formato que orcamentos.ts. ──
+async function verifyAdminToken(supabase: any, token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+  const { data } = await supabase.from("admin_sessions").select("expires_at").eq("token", token).maybeSingle();
+  if (!data || new Date(data.expires_at) < new Date()) return false;
+  return true;
+}
+
 // ── sessao do portal: resolve cliente_id a partir do token (NUNCA aceito no body) ──
 async function resolvePortalSession(supabase: any, token: string | undefined): Promise<{ clienteId: string } | null> {
   if (!token) return null;
@@ -100,6 +108,29 @@ Deno.serve(async (req: Request) => {
     const { data: sess, error } = await supabase.from("portal_sessions").insert({ cliente_id: c.id }).select("token").single();
     if (error) return json({ error: error.message }, 500);
     return json({ token: sess.token, cliente_nome: c.nome });
+  }
+
+  // ── PREVIEW DE ADMIN: emite uma sessao de portal normal para um cliente. ──
+  // Aqui (e SO aqui) cliente_id vem do body -- por isso a autoridade tem que vir
+  // do token de admin, nao do body. Sem esse if, a action seria bypass total:
+  // qualquer um forjaria sessao para qualquer cliente_id.
+  // De proposito NAO cria caminho novo nas actions de dados: a sessao emitida e
+  // igual a do cliente real, entao nao ha "modo admin" para vazar la embaixo.
+  if (action === "admin_preview") {
+    if (!(await verifyAdminToken(supabase, body?.admin_token))) return json({ error: "unauthorized" }, 401);
+    const clienteId = String(body?.cliente_id || "");
+    if (!clienteId) return json({ error: "cliente_id obrigatorio" }, 400);
+
+    const { data: c } = await supabase.from("eloi_clientes").select("id,nome").eq("id", clienteId).maybeSingle();
+    if (!c) return json({ error: "cliente nao encontrado" }, 404);
+
+    // Sessao identica a do login real (mesma tabela, mesma expiracao padrao).
+    // Tentei emitir com 1h, mas resolvePortalSession renova pra 12h na primeira
+    // chamada -- expiracao curta aqui seria so um comentario mentindo.
+    const { data: sess, error } = await supabase.from("portal_sessions")
+      .insert({ cliente_id: c.id }).select("token").single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ token: sess.token, cliente_nome: c.nome, preview: true });
   }
 
   // ── daqui pra baixo exige sessao de portal (cliente), NAO admin ──

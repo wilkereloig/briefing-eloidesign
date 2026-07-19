@@ -15,6 +15,9 @@
     .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
     .login .logo{width:150px;margin:0 auto 26px;display:block}
 
+    .preview-banner{background:#facc15;color:#3d2c00;border-radius:10px;padding:12px 18px;margin:18px 0 0;font-size:.86rem;line-height:1.45}
+    .preview-banner strong{font-variation-settings:'wght' 700}
+
     .topbar .logo{width:110px}
     .topbar h1{font-size:1.05rem;font-variation-settings:'wght' 600}
     .topbar .sub{font-size:.8rem;color:var(--c300)}
@@ -86,6 +89,9 @@
 
 <!-- PORTAL -->
 <div class="wrap hidden" id="portalView">
+  <div class="preview-banner hidden" id="previewBanner">
+    👁 <strong>Modo preview</strong> — você está vendo este portal como <span id="previewNome"></span>. O cliente não vê esta faixa.
+  </div>
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:14px">
       <div class="logo" id="logoSlotTop"></div>
@@ -316,7 +322,36 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-if (token()) { mostrarConteudo(); carregarDados(); }
+// ── PREVIEW DE ADMIN ──
+// /portal/?preview=<cliente_id>, aberto pelo botao "Ver portal" da Gestao.
+// O cliente_id na URL nao da acesso a nada sozinho: quem autoriza e o token de
+// admin do localStorage, validado no servidor (action admin_preview). Sem token
+// valido, cai na tela de login normal do cliente -- que e o que um estranho ve.
+async function tentarPreview(){
+  const id = new URLSearchParams(location.search).get('preview');
+  if (!id) return false;
+  const adminToken = localStorage.getItem('eloi_admin_token');
+  if (!adminToken) { toast('Entre no admin primeiro para pré-visualizar.'); return false; }
+  try {
+    const r = await fetch(FN, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'admin_preview', admin_token: adminToken, cliente_id: id }) });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || !d.token) throw new Error(d.error || 'falha no preview');
+    sessionStorage.setItem(PT_KEY, d.token);
+    document.getElementById('previewNome').textContent = d.cliente_nome || 'este cliente';
+    document.getElementById('previewBanner').classList.remove('hidden');
+    mostrarConteudo();
+    await carregarDados();
+    return true;
+  } catch (e) {
+    toast('Não foi possível pré-visualizar: ' + e.message);
+    return false;
+  }
+}
+
+tentarPreview().then(ok => {
+  if (!ok && token()) { mostrarConteudo(); carregarDados(); }
+});
 </script>
 </body>
 </html>

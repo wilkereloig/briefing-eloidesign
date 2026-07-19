@@ -508,6 +508,7 @@ async function carregarClientes(){
       ${c.contato?`<span style="font-size:.8rem;color:var(--c300)">${esc(c.contato)}</span>`:''}
       ${c.marca_slug?`<button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();copiarLinkMarca(${JSON.stringify(c.marca_slug)})'>🔗 ${c.marca_publicada?'link marca':'link marca (rascunho)'}</button>`:''}
       <button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();gerarSenhaPortal(${JSON.stringify(c.id)})'>🔐 Senha portal</button>
+      <button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();verPortal(${JSON.stringify(c.id)})'>👁 Ver portal</button>
       <button class="btn btn-ghost" style="font-size:.75rem;padding:4px 10px" onclick='event.stopPropagation();abrirEntregas(${JSON.stringify(c.id)},${JSON.stringify(c.nome)})'>📁 Arquivos</button>
       <span class="cmeta">Fat ${brl(fat)} · Rec ${brl(rec)} · A receber ${brl(ar)}<br>${exec} em exec. · ${semNf} NF pend.</span>
     </div>`;
@@ -670,6 +671,13 @@ async function gerarSenhaPortal(id, opts){
     document.getElementById('modalSenha').classList.add('show');
   }catch(e){ toast('Erro ao gerar senha: '+e.message); }
 }
+// Abre o portal do cliente em modo preview. Nao passa senha nem token na URL --
+// so o cliente_id. A autoridade vem do token de admin que o /portal/ le do
+// localStorage e manda no corpo do POST (ver action admin_preview).
+function verPortal(id){
+  window.open(`${location.origin}/portal/?preview=${encodeURIComponent(id)}`, '_blank');
+}
+
 function copiarSenhaPortal(){
   const link = document.getElementById('senhaPortalLink').value;
   const senha = document.getElementById('senhaPortalValor').value;
