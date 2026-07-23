@@ -656,8 +656,10 @@ async function excluirServico(){
 }
 
 function copiarLinkMarca(slug){
-  const url = `${location.origin}/entregas-marca/${slug}/`;
-  navigator.clipboard.writeText(url).then(()=>toast('Link copiado: '+url)).catch(()=>toast(url));
+  // Marca fica atrás do login (portal). O cliente acessa pela área logada, não
+  // por link público -- por isso copia o /portal/ (a senha vem de "Gerar senha").
+  const url = `${location.origin}/portal/`;
+  navigator.clipboard.writeText(url).then(()=>toast('Link do portal copiado: '+url)).catch(()=>toast(url));
 }
 
 async function gerarSenhaPortal(id, opts){

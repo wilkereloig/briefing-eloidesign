@@ -194,39 +194,48 @@ async function carregarDados(){
   } catch (e) { /* 401 já trocou pra tela de login dentro de callPortal */ }
 }
 
-// ── MARCA (autenticada -- bucket privado eloi-entregas, signed urls) ──
+// ── MARCA (dentro da área logada; arquivos estáticos on-brand /entregas-marca/<slug>/) ──
+// Servida da mesma fonte estática da página de entrega elevada. Fica atrás do
+// login como perímetro de UX (arte-final aprovada não é dado sensível — NF/CPF
+// sim, essas continuam por signed URL). Assets acessíveis por URL direta se
+// alguém souber o caminho; se a marca precisar virar privada de verdade, migra
+// pro bucket eloi-entregas + marca.manifest (tarefa maior, ver addendum §7).
 async function renderMarca(){
   const el = document.getElementById('tab-marca');
+  const slug = CLIENTE.marca_slug;
+  if (!slug || !CLIENTE.marca_publicada) {
+    el.innerHTML = '<div class="empty"><div class="ic">🎨</div>Seus arquivos de marca ainda não foram publicados.</div>';
+    return;
+  }
+  const base = `/entregas-marca/${encodeURIComponent(slug)}`;
   try {
-    const d = await callPortal('marca.manifest');
-    const m = d.manifest;
-    if (!m) { el.innerHTML = '<div class="empty"><div class="ic">🎨</div>Seus arquivos de marca ainda não foram publicados.</div>'; return; }
-    const urls = d.urls || {};
+    const m = await fetch(`${base}/manifest.json`).then(r => { if (!r.ok) throw new Error('404'); return r.json(); });
+    const url = (p) => `${base}/${p}`;
     const completa = m.variacoes.find(v => v.id === 'completa') || m.variacoes[0];
-    const heroCor = m.paleta.find(c => !c.claro) || m.paleta[0];
-    const heroPath = (completa && heroCor) ? completa.arquivos[heroCor.hex]?.svg : null;
-    const heroUrl = heroPath ? urls[heroPath] : null;
-    const zipUrl = urls[`${m.slug}-marca-completa.zip`];
+    const escuros = m.paleta.filter(c => !c.claro), claros = m.paleta.filter(c => c.claro);
+    const heroBg = (escuros[0] || m.paleta[0]).hex;                    // fundo escuro
+    const heroCor = (claros[0] || m.paleta[0]).hex;                    // logo claro por cima (visível)
+    const heroPath = completa?.arquivos[heroCor]?.svg;
+    const zipUrl = url(`${m.slug}-marca-completa.zip`);
     const paletaHtml = m.paleta.map(c => `<button class="paleta-chip" onclick="copiarHex('${esc(c.hex)}')"><span class="sw" style="background:${esc(c.hex)}"></span>${esc(c.nome)} · ${esc(c.hex)}</button>`).join('');
     const variacoesHtml = m.variacoes.map(v => `
       <div class="variacao-h">${esc(v.nome)}</div>
       <div class="swatches">${m.paleta.map(cor => {
         const f = v.arquivos[cor.hex]; if (!f) return '';
-        const prevUrl = urls[f.preview] || urls[f.png];
-        const svgUrl = urls[f.svg], pngUrl = urls[f.png];
         return `<div class="swatch">
-          <div class="prev" style="background:${cor.claro ? '#20201d' : '#f3f1ec'}">${prevUrl ? `<img src="${prevUrl}" alt="${esc(v.nome)} ${esc(cor.nome)}">` : ''}</div>
-          <div class="dl">${svgUrl ? `<a href="${svgUrl}" download>SVG</a>` : ''}${pngUrl ? `<a href="${pngUrl}" download>PNG</a>` : ''}</div>
+          <div class="prev" style="background:${cor.claro ? '#20201d' : '#f3f1ec'}"><img src="${url(f.preview)}" alt="${esc(v.nome)} ${esc(cor.nome)}" loading="lazy"></div>
+          <div class="dl"><a href="${url(f.svg)}" download>SVG</a><a href="${url(f.png)}" download>PNG</a></div>
         </div>`;
       }).join('')}</div>`).join('');
     el.innerHTML = `
-      <div class="marca-hero card-base" style="background:${heroCor ? heroCor.hex : 'transparent'};color:${heroCor && !heroCor.claro ? '#fff' : '#20201d'}">
-        ${heroUrl ? `<img src="${heroUrl}" alt="${esc(m.marca || '')}">` : ''}
+      <div class="marca-hero card-base" style="background:${heroBg};color:#fff">
+        ${heroPath ? `<img src="${url(heroPath)}" alt="${esc(m.marca || '')}">` : ''}
         <div class="nm">${esc(m.marca || '')}</div>
       </div>
       <div class="paleta-row">${paletaHtml}</div>
-      ${zipUrl ? `<div class="zip-cta"><div><strong>Baixar tudo</strong><div class="meta">Todas as variações e cores, SVG + PNG</div></div><a class="btn" href="${zipUrl}" download>Baixar .zip</a></div>` : ''}
-      ${variacoesHtml}`;
+      <div class="zip-cta"><div><strong>Baixar tudo</strong><div class="meta">Todas as variações e cores, SVG + PNG</div></div><a class="btn" href="${zipUrl}" download>Baixar .zip</a></div>
+      ${variacoesHtml}
+      <div style="text-align:center;margin-top:26px"><a class="btn btn-ghost btn-sm" href="${base}/" target="_blank" rel="noopener">Abrir página completa da marca ↗</a></div>`;
   } catch (e) {
     el.innerHTML = '<div class="empty"><div class="ic">🎨</div>Seus arquivos de marca ainda não foram publicados.</div>';
   }

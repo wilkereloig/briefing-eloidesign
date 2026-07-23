@@ -19,5 +19,29 @@
     { "nome": "Nude", "hex": "#F1E9E0", "claro": true },
     { "nome": "Taupe claro", "hex": "#B4A89D", "claro": true },
     { "nome": "Taupe profundo", "hex": "#80756D", "claro": false }
+  ],
+  "tipografia": [
+    {
+      "nome": "Meno Banner Condensed",
+      "papel": "Títulos e destaques",
+      "cssFamily": "'meno-banner-condensed', Georgia, serif",
+      "pesos": ["Regular 400", "Bold 700"],
+      "origem": "Adobe Fonts",
+      "licenca": "Licenciada via Adobe Fonts — ative na sua conta Adobe Creative Cloud. Não é redistribuível.",
+      "link": "https://fonts.adobe.com/fonts/meno-banner",
+      "acao": "Ativar no Adobe Fonts",
+      "amostra": "Estética que respeita o tempo"
+    },
+    {
+      "nome": "Bricolage Grotesque",
+      "papel": "Corpo de texto e apoio",
+      "cssFamily": "'Bricolage Grotesque', system-ui, sans-serif",
+      "pesos": ["Regular 400", "Medium 500", "SemiBold 600", "Bold 700"],
+      "origem": "Google Fonts",
+      "licenca": "Gratuita (SIL Open Font License) — pode baixar e incorporar livremente.",
+      "link": "https://fonts.google.com/specimen/Bricolage+Grotesque",
+      "acao": "Baixar no Google Fonts",
+      "amostra": "Naturalidade e sofisticação em cada detalhe."
+    }
   ]
 }

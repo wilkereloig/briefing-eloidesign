@@ -23,7 +23,7 @@ if (!configPath) {
 }
 
 const config = JSON.parse(await readFile(configPath, "utf8"));
-const { slug, cliente, marca, mastersDir, variacoes, paleta, pngWidth = 2000 } = config;
+const { slug, cliente, marca, mastersDir, variacoes, paleta, pngWidth = 2000, tipografia = null } = config;
 
 const outDir = path.resolve(import.meta.dirname, "..", slug);
 const logoDir = path.join(outDir, "logo");
@@ -66,6 +66,7 @@ const manifest = {
   slug, cliente, marca,
   gerado_em: new Date().toISOString(),
   paleta,
+  ...(tipografia ? { tipografia } : {}),
   variacoes: await Promise.all(variacoes.map(gerarVariacao)),
 };
 
