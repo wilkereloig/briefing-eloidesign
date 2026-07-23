@@ -16,7 +16,7 @@
     .login .logo{height:88px;margin:0 0 26px;display:block;text-align:left}
     .login .logo svg{height:100%;width:auto;display:block}
 
-    .preview-banner{background:var(--warn);color:#3d2c00;border-radius:10px;padding:12px 18px;margin:18px 0 0;font-size:.86rem;line-height:1.45}
+    .preview-banner{background:var(--warn-soft);color:#7A3803;border:1px solid #E7C89A;border-radius:10px;padding:12px 18px;margin:18px 0 0;font-size:.86rem;line-height:1.45}
     .preview-banner strong{font-variation-settings:'wght' 700}
 
     .topbar .logo{height:48px}
@@ -44,13 +44,13 @@
     .btn-sm{padding:7px 14px;font-size:.8rem}
 
     .badge{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-variation-settings:'wght' 700;padding:3px 10px;border-radius:99px;white-space:nowrap}
-    .badge.rascunho{background:rgba(156,163,175,.2);color:#9ca3af}
-    .badge.enviado{background:rgba(96,165,250,.2);color:#60a5fa}
-    .badge.aprovado,.badge.pago,.badge.respondido{background:rgba(74,222,128,.2);color:var(--good)}
-    .badge.recusado{background:rgba(248,113,113,.2);color:var(--bad)}
-    .badge.em_execucao,.badge.pendente{background:rgba(157,78,221,.2);color:var(--ink-2)}
-    .badge.concluida{background:rgba(96,165,250,.2);color:#60a5fa}
-    .badge.aberto{background:rgba(248,113,113,.15);color:var(--bad)}
+    .badge.rascunho{background:#EEEBF2;color:#57506B}
+    .badge.enviado{background:#E4EEFC;color:#1D4ED8}
+    .badge.aprovado,.badge.pago,.badge.respondido{background:var(--good-soft);color:var(--good)}
+    .badge.recusado{background:var(--bad-soft);color:var(--bad)}
+    .badge.em_execucao,.badge.pendente{background:var(--brand-soft);color:var(--brand)}
+    .badge.concluida{background:#E4EEFC;color:#1D4ED8}
+    .badge.aberto{background:var(--bad-soft);color:var(--bad)}
 
     .empty{text-align:center;padding:60px 24px;color:var(--muted)}
     .empty .ic{font-size:2.4rem;opacity:.5;margin-bottom:14px}
@@ -59,9 +59,9 @@
     .marca-hero img{max-width:200px;margin:0 auto 14px;display:block}
     .marca-hero .nm{font-variation-settings:'wght' 700;font-size:1.15rem}
     .paleta-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
-    .paleta-chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px 6px 6px;font-size:.82rem;color:#fff;cursor:pointer;font-family:var(--font)}
+    .paleta-chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px 6px 6px;font-size:.82rem;color:var(--ink);cursor:pointer;font-family:var(--font)}
     .paleta-chip:hover{border-color:var(--brand)}
-    .paleta-chip .sw{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.25);flex:none}
+    .paleta-chip .sw{width:22px;height:22px;border-radius:50%;border:1px solid var(--line-strong);flex:none}
     .zip-cta{display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(157,78,221,.1);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:22px;flex-wrap:wrap}
     .variacao-h{font-size:.88rem;font-variation-settings:'wght' 600;color:var(--ink-2);margin:20px 0 10px}
     .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
@@ -71,7 +71,7 @@
     .swatch .dl{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
     .swatch .dl a{flex:1;text-align:center;font-size:.7rem;color:var(--ink-2);text-decoration:none;border:1px solid var(--line-strong);border-radius:6px;padding:4px}
     .swatch .dl-bg{width:calc(100% - 16px);margin:6px 8px 8px;display:block;font-size:.68rem;color:var(--muted);background:transparent;border:1px dashed var(--c700);border-radius:6px;padding:5px;cursor:pointer;font-family:var(--font);transition:border-color .15s,color .15s}
-    .swatch .dl-bg:hover{border-color:var(--brand);color:#fff}
+    .swatch .dl-bg:hover{border-color:var(--brand);color:var(--ink)}
 
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--c700);color:#fff;padding:12px 22px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
     .toast.show{opacity:1}
@@ -85,7 +85,7 @@
   <div class="card-base login-box" style="padding:44px 40px;max-width:380px;width:100%;text-align:center">
     <div class="logo" id="logoSlot"></div>
     <h1 style="font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:4px" id="loginTitulo">Portal do Cliente</h1>
-    <p id="loginCliente" style="font-size:.86rem;color:var(--c300);margin-bottom:20px;display:none"></p>
+    <p id="loginCliente" style="font-size:.86rem;color:var(--brand);margin-bottom:20px;display:none"></p>
     <input type="password" id="pw" placeholder="Cole sua senha (ex: HC2T-eloi-cliente-2026)" autocomplete="current-password">
     <button onclick="entrar()">Entrar</button>
     <div class="err" id="err"></div>

@@ -18,7 +18,7 @@
   /* acao */
   --brand:#5A189A;--brand-hover:#3C096C;--brand-soft:#F0E7FA;--ring:rgba(90,24,154,.18);
   /* estado */
-  --good:#0F7B4F;--good-soft:#E3F5EC;--warn:#B45309;--warn-soft:#FBF0E0;
+  --good:#0F7B4F;--good-soft:#E3F5EC;--warn:#A34A08;--warn-soft:#FBF0E0;
   --bad:#BE123C;--bad-soft:#FCE8ED;
   /* superficie escura (nav, heros) */
   --dark:#1A0033;--dark-2:#25004A;--dark-line:rgba(224,170,255,.16);--on-dark:#EFE6F8;--on-dark-muted:#A992C4;
@@ -48,9 +48,11 @@ a{color:var(--brand)}
 
 /* ---------- login ---------- */
 .login{padding:38px 34px;text-align:center;max-width:390px;margin:min(12vh,96px) auto 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--sh-3)}
-/* No /portal/ .login e so o container de layout e o card real e .card-base
-   dentro dele — sem isto o wrapper vira uma coluna branca gigante. */
-.login:has(.card-base){background:none;border:0;box-shadow:none;padding:0;max-width:none}
+/* Duas formas convivem no projeto: em /admin/, /gestao/, /marca/ e nos
+   paineis-briefings/ecommerce o proprio .login E o card; em /portal/ e nos
+   paineis /painel/ e /painel-orcamentos/ ele e so o container e o card real
+   fica dentro. Sem neutralizar o wrapper, ele vira uma coluna branca. */
+.login:has(> .card-base,> .login-card,> .login-box){background:none;border:0;box-shadow:none;padding:0;max-width:none}
 .login h1{font-size:1.15rem;font-variation-settings:'wght' 620;margin-bottom:20px;color:var(--ink);letter-spacing:-.01em}
 .login input{width:100%;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r);color:var(--ink);font-family:var(--font);font-size:.95rem;padding:13px 16px;outline:none;transition:border-color .18s,box-shadow .18s}
 .login input::placeholder{color:var(--muted-2)}

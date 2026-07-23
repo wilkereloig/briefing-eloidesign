@@ -24,7 +24,7 @@
       --white:#fff;--font:'carbona-variable',sans-serif;
       /* estado: as versões claras vinham de fundo escuro; em branco
          precisam de tom fechado pra passar contraste */
-      --good:#0F7B4F;--warn:#B45309;--bad:#BE123C;--amber:var(--warn);--danger:var(--bad);
+      --good:#0F7B4F;--warn:#A34A08;--bad:#BE123C;--amber:var(--warn);--danger:var(--bad);
 
       /* semânticos — tela clara ancorada na logo (#240043/#3C0A6B) */
       --bg:#F7F4FB;
@@ -195,7 +195,7 @@
       padding:11px 15px;border-radius:12px;font-size:.82rem;line-height:1.45;
     }
     .fallback-note{background:rgba(157,78,221,.12);border:1px solid rgba(157,78,221,.32);color:var(--ink-2)}
-    .sem-comp{background:rgba(240,196,106,.1);border:1px solid rgba(240,196,106,.32);color:#f7dfae;cursor:pointer;transition:border-color .16s}
+    .sem-comp{background:var(--warn-soft);border:1px solid rgba(240,196,106,.32);color:var(--warn);cursor:pointer;transition:border-color .16s}
     .sem-comp:hover{border-color:var(--amber)}
 
     /* ── RANKING ───────────────────────────────────────── */
@@ -215,7 +215,7 @@
 
     /* ── CHIPS ─────────────────────────────────────────── */
     .chip{
-      display:inline-block;color:#fff;font-size:.73rem;font-variation-settings:'wght' 620;
+      display:inline-block;color:var(--ink);font-size:.73rem;font-variation-settings:'wght' 620;
       border-radius:99px;padding:4px 12px;white-space:nowrap;letter-spacing:.01em;
     }
 
@@ -284,10 +284,10 @@
       font-size:.67rem;border-radius:99px;padding:3px 10px;white-space:nowrap;
       border:1px solid;font-variation-settings:'wght' 560;letter-spacing:.02em;
     }
-    .badge.aguard{background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.42);color:#a8c8f0}
+    .badge.aguard{background:#E4EEFC;border-color:rgba(96,165,250,.42);color:#1D4ED8}
     .badge.exec{background:rgba(90,24,154,.12);border-color:var(--brand);color:var(--ink-2)}
     .badge.concl,.badge.pago{background:rgba(110,231,168,.12);border-color:rgba(110,231,168,.4);color:var(--good)}
-    .badge.naopago{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.4);color:#f3b4b4}
+    .badge.naopago{background:var(--bad-soft);border-color:rgba(248,113,113,.4);color:var(--bad)}
     .nf-pill{
       font-size:.72rem;color:var(--ink-2);border:1px solid var(--line);border-radius:8px;
       padding:3px 9px;background:transparent;cursor:pointer;font-family:var(--font);transition:border-color .16s,background .16s;
@@ -345,7 +345,7 @@
     .chk{display:flex;align-items:center;gap:9px;font-size:.88rem;color:var(--ink-2)}
     .chk input{width:auto;accent-color:var(--brand)}
     .modal-actions{display:flex;gap:10px;justify-content:space-between;margin-top:22px}
-    .modal-actions .btn-del{background:transparent;border:1px solid rgba(248,113,113,.45);color:#f3b4b4;box-shadow:none}
+    .modal-actions .btn-del{background:transparent;border:1px solid rgba(248,113,113,.45);color:var(--bad);box-shadow:none}
     .modal-actions .btn-del:hover{background:rgba(248,113,113,.14);filter:none;box-shadow:none}
     .modal-err{color:var(--danger);font-size:.82rem;min-height:1.1em;margin-top:6px}
 
