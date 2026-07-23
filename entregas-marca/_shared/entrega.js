@@ -4,7 +4,7 @@
    do cliente e monta a página. Nenhum cliente hardcoded.
    ============================================================ */
 (async function () {
-  const res = await fetch("./manifest.json");
+  const res = await fetch("./manifest.json", { cache: "no-store" });
   const m = await res.json();
 
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -20,7 +20,9 @@
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
     sparkle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>',
     type: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+    image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
   };
+  const corSlug = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
   // ── deriva papéis de cor da própria paleta do cliente ──
   const claros = m.paleta.filter((c) => c.claro);
@@ -68,6 +70,8 @@
         const f = v.arquivos[cor.hex];
         if (!f) return "";
         const previewBg = cor.claro ? ink : mix(bg, "#ffffff", 0.7);
+        const fundo = cor.claro ? ink : bg; // fundo contrastante da própria paleta
+        const nomeFundo = `${m.slug}-${v.id}-${corSlug(cor.nome)}-fundo.png`;
         return `
         <div class="swatch">
           <div class="preview" style="background:${previewBg}">
@@ -79,6 +83,7 @@
               <a href="./${esc(f.svg)}" download>${IC.download} SVG</a>
               <a href="./${esc(f.png)}" download>${IC.download} PNG</a>
             </div>
+            <button class="dl-bg" onclick="baixarComFundo('./${esc(f.png)}','${fundo}','${esc(nomeFundo)}')">${IC.image} PNG com fundo</button>
           </div>
         </div>`;
       })
@@ -218,5 +223,35 @@
     const t = document.getElementById("toast");
     const show = (msg) => { t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 1800); };
     navigator.clipboard?.writeText(hex).then(() => show("Copiado: " + hex.toUpperCase())).catch(() => show(hex.toUpperCase()));
+  };
+
+  // Compõe a logo (PNG transparente) sobre um fundo de cor da paleta e baixa PNG.
+  // Client-side (canvas) — assets são same-origin, sem taint. Nenhum arquivo extra no repo.
+  window.baixarComFundo = function (src, bg, nome) {
+    const t = document.getElementById("toast");
+    const show = (msg) => { t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 1800); };
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = function () {
+      const S = 2000, pad = 0.68;
+      const c = document.createElement("canvas");
+      c.width = S; c.height = S;
+      const x = c.getContext("2d");
+      x.fillStyle = bg;
+      x.fillRect(0, 0, S, S);
+      const scale = Math.min((S * pad) / img.width, (S * pad) / img.height);
+      const w = img.width * scale, h = img.height * scale;
+      x.drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
+      c.toBlob(function (blob) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = nome;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        show("Baixando com fundo…");
+      }, "image/png");
+    };
+    img.onerror = () => show("Erro ao gerar imagem.");
+    img.src = src;
   };
 })();

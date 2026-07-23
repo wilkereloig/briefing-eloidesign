@@ -70,6 +70,8 @@
     .swatch .prev img{max-width:100%;max-height:100%}
     .swatch .dl{display:flex;gap:6px;padding:8px;border-top:1px solid var(--c800)}
     .swatch .dl a{flex:1;text-align:center;font-size:.7rem;color:var(--c100);text-decoration:none;border:1px solid var(--c700);border-radius:6px;padding:4px}
+    .swatch .dl-bg{width:calc(100% - 16px);margin:6px 8px 8px;display:block;font-size:.68rem;color:var(--c300);background:transparent;border:1px dashed var(--c700);border-radius:6px;padding:5px;cursor:pointer;font-family:var(--font);transition:border-color .15s,color .15s}
+    .swatch .dl-bg:hover{border-color:var(--c500);color:#fff}
 
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--c700);color:#fff;padding:12px 22px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
     .toast.show{opacity:1}
@@ -222,9 +224,12 @@ async function renderMarca(){
       <div class="variacao-h">${esc(v.nome)}</div>
       <div class="swatches">${m.paleta.map(cor => {
         const f = v.arquivos[cor.hex]; if (!f) return '';
+        const fundo = cor.claro ? (escuros[0]||m.paleta[0]).hex : (claros[0]||m.paleta[0]).hex;
+        const nomeFundo = `${m.slug}-${v.id}-${cor.hex.replace('#','')}-fundo.png`;
         return `<div class="swatch">
           <div class="prev" style="background:${cor.claro ? '#20201d' : '#f3f1ec'}"><img src="${url(f.preview)}" alt="${esc(v.nome)} ${esc(cor.nome)}" loading="lazy"></div>
           <div class="dl"><a href="${url(f.svg)}" download>SVG</a><a href="${url(f.png)}" download>PNG</a></div>
+          <button class="dl-bg" onclick="baixarComFundo('${url(f.png)}','${fundo}','${esc(nomeFundo)}')">▦ PNG com fundo</button>
         </div>`;
       }).join('')}</div>`).join('');
     el.innerHTML = `
@@ -242,6 +247,20 @@ async function renderMarca(){
 }
 function copiarHex(hex){
   navigator.clipboard.writeText(hex).then(() => toast('Cor copiada: ' + hex)).catch(() => toast(hex));
+}
+// Compõe a logo (PNG transparente) sobre um fundo de cor da paleta e baixa PNG.
+// Client-side (canvas); assets same-origin, sem taint.
+function baixarComFundo(src, bg, nome){
+  const img = new Image(); img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const S = 2000, pad = 0.68, c = document.createElement('canvas'); c.width = S; c.height = S;
+    const x = c.getContext('2d'); x.fillStyle = bg; x.fillRect(0, 0, S, S);
+    const sc = Math.min(S*pad/img.width, S*pad/img.height), w = img.width*sc, h = img.height*sc;
+    x.drawImage(img, (S-w)/2, (S-h)/2, w, h);
+    c.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = nome; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); toast('Baixando com fundo…'); }, 'image/png');
+  };
+  img.onerror = () => toast('Erro ao gerar imagem.');
+  img.src = src;
 }
 
 // ── ARQUIVOS (projeto / apresentação / fonte) ──
