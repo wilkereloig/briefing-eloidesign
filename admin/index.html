@@ -10,7 +10,7 @@
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;--c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;--white:#fff;--good:var(--good);--amber:var(--warn);--font:'carbona-variable',sans-serif}
     body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.55}
-    .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(80px) saturate(140%);opacity:.4}
+    .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(90px);opacity:.28}
     .blob{position:absolute;border-radius:50%;}
     .blob.b1{width:40%;height:45%;left:5%;top:2%;background:radial-gradient(circle,#9D4EDD,transparent 70%);animation:d1 20s ease-in-out infinite}
     .blob.b2{width:44%;height:50%;right:3%;top:-8%;background:radial-gradient(circle,#7B2CBF,transparent 70%);animation:d2 24s ease-in-out infinite}
@@ -39,7 +39,7 @@
     .head .sub{color:var(--muted);font-size:.86rem;margin-top:2px}
     .months{display:flex;gap:4px;overflow-x:auto;margin-top:16px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
     .mtab{flex:0 0 auto;background:transparent;border:1px solid transparent;color:var(--muted);font-family:var(--font);font-size:.82rem;padding:7px 13px;border-radius:9px;cursor:pointer;transition:background .15s,color .15s}
-    .mtab:hover{color:var(--ink);background:rgba(90,24,154,.3)}
+    .mtab:hover{color:var(--ink);background:var(--brand-soft)}
     .mtab.active{background:var(--c700);color:#fff;font-variation-settings:'wght' 600}
     .yearsel{margin-left:8px;background:var(--bg);border:1px solid var(--line);color:var(--ink-2);font-family:var(--font);font-size:.82rem;padding:7px 8px;border-radius:9px;flex:0 0 auto}
 
@@ -69,7 +69,7 @@
     .tag{flex:0 0 auto;font-size:.66rem;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:6px;font-variation-settings:'wght' 600}
     .tag.nf{background:rgba(157,78,221,.25);color:var(--ink-2)}
     .tag.pay{background:rgba(240,196,106,.18);color:var(--amber)}
-    .tag.orc{background:rgba(123,44,191,.28);color:var(--ink-2)}
+    .tag.orc{background:var(--brand-soft);color:var(--ink-2)}
     .tag.brf{background:var(--brand-soft);color:var(--brand)}
     .row .rmain{flex:1;min-width:0}
     .row .rt{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
