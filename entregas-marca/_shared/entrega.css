@@ -126,7 +126,12 @@ section{padding:56px 0}
 .btn-dark{background:var(--brand-ink);color:var(--brand-bg);align-self:flex-start;position:relative;z-index:1}
 .btn-dark:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.18)}
 .btn-light{align-self:flex-start}
-@media(max-width:720px){.cta-grid{grid-template-columns:1fr}}
+.doc-actions{display:flex;flex-wrap:wrap;gap:10px;position:relative;z-index:1}
+.btn-ghost{
+  background:transparent;color:var(--brand-ink);border:1px solid var(--brand-line);
+}
+.btn-ghost:hover{background:var(--brand-bg-2);border-color:var(--brand-accent);transform:translateY(-1px)}
+@media(max-width:720px){.cta-grid{grid-template-columns:1fr}.doc-actions .btn{flex:1;justify-content:center}}
 .btn{
   display:inline-flex;align-items:center;gap:10px;
   border:none;cursor:pointer;text-decoration:none;

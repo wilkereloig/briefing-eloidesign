@@ -22,6 +22,7 @@
     type: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
     image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
     book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+    external: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
   };
   const corSlug = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -151,7 +152,10 @@
               <h3>${esc(apres.nome || "Apresentação da marca")}</h3>
               <p>A apresentação completa da identidade${apres.tamanho ? ` · ${esc(apres.tamanho)}` : ""}.</p>
             </div>
-            <a class="btn btn-dark" href="./${esc(apres.arquivo)}" download>${IC.download} Baixar apresentação</a>
+            <div class="doc-actions">
+              ${apres.html ? `<a class="btn btn-dark" href="./${esc(apres.html)}" target="_blank" rel="noopener">${IC.external} Ver online</a>` : ""}
+              <a class="btn ${apres.html ? "btn-ghost" : "btn-dark"}" href="./${esc(apres.arquivo)}" download>${IC.download} Baixar PDF</a>
+            </div>
           </div>` : ""}
         </div>
       </section>

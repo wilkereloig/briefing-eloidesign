@@ -6,6 +6,7 @@
   "apresentacao": {
     "nome": "Apresentação da marca",
     "arquivo": "apresentacao-georgia-andrade.pdf",
+    "html": "apresentacao/index.html",
     "formato": "PDF · alta resolução",
     "tamanho": "4,8 MB"
   },
