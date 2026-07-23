@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    a{color:var(--c300)}
+    a{color:var(--muted)}
     .hidden{display:none!important}
     .wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px 80px}
 
@@ -16,62 +16,62 @@
     .login .logo{height:88px;margin:0 0 26px;display:block;text-align:left}
     .login .logo svg{height:100%;width:auto;display:block}
 
-    .preview-banner{background:#facc15;color:#3d2c00;border-radius:10px;padding:12px 18px;margin:18px 0 0;font-size:.86rem;line-height:1.45}
+    .preview-banner{background:var(--warn);color:#3d2c00;border-radius:10px;padding:12px 18px;margin:18px 0 0;font-size:.86rem;line-height:1.45}
     .preview-banner strong{font-variation-settings:'wght' 700}
 
     .topbar .logo{height:48px}
     .topbar .logo svg{height:100%;width:auto;display:block}
     .topbar h1{font-size:1.05rem;font-variation-settings:'wght' 600}
-    .topbar .sub{font-size:.8rem;color:var(--c300)}
+    .topbar .sub{font-size:.8rem;color:var(--muted)}
 
     .tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
-    .tab-btn{background:transparent;border:1px solid var(--c800);color:var(--c300);border-radius:99px;padding:9px 20px;font-family:var(--font);font-size:.88rem;cursor:pointer;transition:all .2s}
-    .tab-btn:hover{border-color:var(--c500)}
-    .tab-btn.active{background:var(--c700);border-color:var(--c600);color:#fff}
+    .tab-btn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:99px;padding:9px 20px;font-family:var(--font);font-size:.88rem;cursor:pointer;transition:all .2s}
+    .tab-btn:hover{border-color:var(--brand)}
+    .tab-btn.active{background:var(--c700);border-color:var(--brand);color:#fff}
     .tab-panel{display:none}
     .tab-panel.active{display:block}
 
     .marca-card{padding:44px;text-align:center;max-width:420px;margin:20px auto}
     .marca-card .ic{font-size:2.4rem;margin-bottom:14px}
     .marca-card h2{font-size:1.2rem;font-variation-settings:'wght' 700;margin-bottom:8px}
-    .marca-card p{color:var(--c300);font-size:.9rem;margin-bottom:22px}
+    .marca-card p{color:var(--muted);font-size:.9rem;margin-bottom:22px}
 
     .rows{display:flex;flex-direction:column;gap:10px}
-    .row{background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .row{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
     .row .grow{flex:1;min-width:180px}
     .row .t{font-variation-settings:'wght' 600;font-size:.96rem}
-    .row .meta{font-size:.78rem;color:var(--c300)}
+    .row .meta{font-size:.78rem;color:var(--muted)}
     .btn-sm{padding:7px 14px;font-size:.8rem}
 
     .badge{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-variation-settings:'wght' 700;padding:3px 10px;border-radius:99px;white-space:nowrap}
     .badge.rascunho{background:rgba(156,163,175,.2);color:#9ca3af}
     .badge.enviado{background:rgba(96,165,250,.2);color:#60a5fa}
-    .badge.aprovado,.badge.pago,.badge.respondido{background:rgba(74,222,128,.2);color:#4ade80}
-    .badge.recusado{background:rgba(248,113,113,.2);color:#f87171}
-    .badge.em_execucao,.badge.pendente{background:rgba(157,78,221,.2);color:var(--c100)}
+    .badge.aprovado,.badge.pago,.badge.respondido{background:rgba(74,222,128,.2);color:var(--good)}
+    .badge.recusado{background:rgba(248,113,113,.2);color:var(--bad)}
+    .badge.em_execucao,.badge.pendente{background:rgba(157,78,221,.2);color:var(--ink-2)}
     .badge.concluida{background:rgba(96,165,250,.2);color:#60a5fa}
-    .badge.aberto{background:rgba(248,113,113,.15);color:#f87171}
+    .badge.aberto{background:rgba(248,113,113,.15);color:var(--bad)}
 
-    .empty{text-align:center;padding:60px 24px;color:var(--c300)}
+    .empty{text-align:center;padding:60px 24px;color:var(--muted)}
     .empty .ic{font-size:2.4rem;opacity:.5;margin-bottom:14px}
 
     .marca-hero{padding:32px;border-radius:16px;text-align:center;margin-bottom:20px}
     .marca-hero img{max-width:200px;margin:0 auto 14px;display:block}
     .marca-hero .nm{font-variation-settings:'wght' 700;font-size:1.15rem}
     .paleta-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
-    .paleta-chip{display:flex;align-items:center;gap:8px;background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:99px;padding:6px 14px 6px 6px;font-size:.82rem;color:#fff;cursor:pointer;font-family:var(--font)}
-    .paleta-chip:hover{border-color:var(--c500)}
+    .paleta-chip{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px 6px 6px;font-size:.82rem;color:#fff;cursor:pointer;font-family:var(--font)}
+    .paleta-chip:hover{border-color:var(--brand)}
     .paleta-chip .sw{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.25);flex:none}
-    .zip-cta{display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(157,78,221,.1);border:1px solid var(--c800);border-radius:12px;padding:14px 18px;margin-bottom:22px;flex-wrap:wrap}
-    .variacao-h{font-size:.88rem;font-variation-settings:'wght' 600;color:var(--c100);margin:20px 0 10px}
+    .zip-cta{display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(157,78,221,.1);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin-bottom:22px;flex-wrap:wrap}
+    .variacao-h{font-size:.88rem;font-variation-settings:'wght' 600;color:var(--ink-2);margin:20px 0 10px}
     .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
-    .swatch{background:rgba(36,0,70,.45);border:1px solid var(--c800);border-radius:12px;overflow:hidden}
+    .swatch{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
     .swatch .prev{aspect-ratio:1;display:flex;align-items:center;justify-content:center;padding:14px}
     .swatch .prev img{max-width:100%;max-height:100%}
-    .swatch .dl{display:flex;gap:6px;padding:8px;border-top:1px solid var(--c800)}
-    .swatch .dl a{flex:1;text-align:center;font-size:.7rem;color:var(--c100);text-decoration:none;border:1px solid var(--c700);border-radius:6px;padding:4px}
-    .swatch .dl-bg{width:calc(100% - 16px);margin:6px 8px 8px;display:block;font-size:.68rem;color:var(--c300);background:transparent;border:1px dashed var(--c700);border-radius:6px;padding:5px;cursor:pointer;font-family:var(--font);transition:border-color .15s,color .15s}
-    .swatch .dl-bg:hover{border-color:var(--c500);color:#fff}
+    .swatch .dl{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line)}
+    .swatch .dl a{flex:1;text-align:center;font-size:.7rem;color:var(--ink-2);text-decoration:none;border:1px solid var(--line-strong);border-radius:6px;padding:4px}
+    .swatch .dl-bg{width:calc(100% - 16px);margin:6px 8px 8px;display:block;font-size:.68rem;color:var(--muted);background:transparent;border:1px dashed var(--c700);border-radius:6px;padding:5px;cursor:pointer;font-family:var(--font);transition:border-color .15s,color .15s}
+    .swatch .dl-bg:hover{border-color:var(--brand);color:#fff}
 
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--c700);color:#fff;padding:12px 22px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
     .toast.show{opacity:1}
@@ -86,7 +86,7 @@
     <div class="logo" id="logoSlot"></div>
     <h1 style="font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:4px" id="loginTitulo">Portal do Cliente</h1>
     <p id="loginCliente" style="font-size:.86rem;color:var(--c300);margin-bottom:20px;display:none"></p>
-    <input type="password" id="pw" placeholder="Cole sua senha (ex: K7M2-QXTN8PLW)" autocomplete="current-password">
+    <input type="password" id="pw" placeholder="Cole sua senha (ex: HC2T-eloi-cliente-2026)" autocomplete="current-password">
     <button onclick="entrar()">Entrar</button>
     <div class="err" id="err"></div>
   </div>

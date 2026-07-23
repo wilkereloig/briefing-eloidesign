@@ -1,6 +1,6 @@
 /* ELOI Design Studio — sistema visual unificado
    Ancorado na logo (#240043 / #3C0A6B): tela clara, tinta roxo-profunda.
-   Compartilhado por /admin/, /gestao/, /portal/, /painel*/, /marca/.
+   Compartilhado por /admin/, /gestao/, /portal/, /marca/ e os paineis.
    A rampa --c950..--c100 mantem os valores da marca (sao COR, nao papel).
    Papel fica nos tokens semanticos abaixo. */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -48,6 +48,9 @@ a{color:var(--brand)}
 
 /* ---------- login ---------- */
 .login{padding:38px 34px;text-align:center;max-width:390px;margin:min(12vh,96px) auto 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--sh-3)}
+/* No /portal/ .login e so o container de layout e o card real e .card-base
+   dentro dele — sem isto o wrapper vira uma coluna branca gigante. */
+.login:has(.card-base){background:none;border:0;box-shadow:none;padding:0;max-width:none}
 .login h1{font-size:1.15rem;font-variation-settings:'wght' 620;margin-bottom:20px;color:var(--ink);letter-spacing:-.01em}
 .login input{width:100%;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r);color:var(--ink);font-family:var(--font);font-size:.95rem;padding:13px 16px;outline:none;transition:border-color .18s,box-shadow .18s}
 .login input::placeholder{color:var(--muted-2)}

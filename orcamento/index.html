@@ -6,12 +6,13 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Orçamento — ELOI Design Studio</title>
   <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{--c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;--c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;--white:#fff;--font:'carbona-variable',sans-serif}
-    body{font-family:var(--font);background:var(--c950);color:var(--white);min-height:100vh;line-height:1.65}
+    body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.65}
     .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(80px) saturate(140%);opacity:.5}
-    .blob{position:absolute;border-radius:50%;mix-blend-mode:screen}
+    .blob{position:absolute;border-radius:50%;}
     .blob.b1{width:40%;height:45%;left:5%;top:2%;background:radial-gradient(circle,#9D4EDD,transparent 70%);animation:d1 20s ease-in-out infinite}
     .blob.b2{width:44%;height:50%;right:3%;top:-8%;background:radial-gradient(circle,#7B2CBF,transparent 70%);animation:d2 24s ease-in-out infinite}
     .blob.b3{width:36%;height:44%;left:33%;bottom:0;background:radial-gradient(circle,#C77DFF,transparent 70%);animation:d3 17s ease-in-out infinite}
@@ -22,39 +23,39 @@
     .doc{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:0 22px 70px}
     .topbar{text-align:left;padding:48px 0 8px}
     .logo{height:56px;width:auto;display:block}
-    .eyebrow{text-align:center;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--c300);font-variation-settings:'wght' 600;margin:26px 0 10px}
+    .eyebrow{text-align:center;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-variation-settings:'wght' 600;margin:26px 0 10px}
 
-    .card{background:rgba(36,0,70,.5);border:1px solid var(--c800);border-radius:20px;padding:32px 34px;backdrop-filter:blur(8px)}
-    .cli{font-size:.85rem;color:var(--c300);margin-bottom:4px}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:32px 34px;backdrop-filter:blur(8px)}
+    .cli{font-size:.85rem;color:var(--muted);margin-bottom:4px}
     .card h1{font-size:clamp(1.4rem,4vw,2rem);font-variation-settings:'wght' 700;letter-spacing:-.02em;line-height:1.15;margin-bottom:22px}
 
-    .itens{border-top:1px solid var(--c800)}
-    .item{display:flex;justify-content:space-between;gap:16px;padding:15px 2px;border-bottom:1px solid var(--c800);font-size:.96rem}
+    .itens{border-top:1px solid var(--line)}
+    .item{display:flex;justify-content:space-between;gap:16px;padding:15px 2px;border-bottom:1px solid var(--line);font-size:.96rem}
     .item .nm{color:#fff}
-    .item .vl{color:var(--c100);font-variation-settings:'wght' 600;white-space:nowrap}
+    .item .vl{color:var(--ink-2);font-variation-settings:'wght' 600;white-space:nowrap}
     .item.neg .vl{color:#86efac}
-    .empty{padding:18px 2px;color:var(--c300)}
+    .empty{padding:18px 2px;color:var(--muted)}
 
     .total{display:flex;justify-content:space-between;align-items:baseline;margin-top:22px;padding-top:18px;border-top:2px solid var(--c700)}
-    .total span{font-size:.95rem;color:var(--c300)}
+    .total span{font-size:.95rem;color:var(--muted)}
     .total strong{font-size:1.7rem;color:#fff;font-variation-settings:'wght' 700}
 
-    .meta{font-size:.78rem;color:var(--c300);opacity:.8;margin-top:18px}
-    .note{background:rgba(157,78,221,.12);border:1px solid rgba(157,78,221,.3);border-radius:12px;padding:14px 18px;font-size:.86rem;color:var(--c100);margin-top:22px}
+    .meta{font-size:.78rem;color:var(--muted);opacity:.8;margin-top:18px}
+    .note{background:rgba(157,78,221,.12);border:1px solid rgba(157,78,221,.3);border-radius:12px;padding:14px 18px;font-size:.86rem;color:var(--ink-2);margin-top:22px}
 
-    .foot{text-align:center;color:var(--c300);font-size:.82rem;opacity:.75;padding-top:30px;line-height:1.8}
-    .foot a{color:var(--c100);text-decoration:none}
+    .foot{text-align:center;color:var(--muted);font-size:.82rem;opacity:.75;padding-top:30px;line-height:1.8}
+    .foot a{color:var(--ink-2);text-decoration:none}
 
     .acoes{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
     .acoes button{flex:1;min-width:160px;border:none;border-radius:12px;font-family:var(--font);font-size:.92rem;font-variation-settings:'wght' 600;padding:14px 20px;cursor:pointer;transition:transform .15s,background .2s}
     .acoes button:disabled{opacity:.5;cursor:default}
     .acoes button.btn-ok{background:var(--c700);color:#fff}
     .acoes button.btn-ok:hover:not(:disabled){background:var(--c600);transform:translateY(-1px)}
-    .acoes button.btn-no{background:transparent;border:1px solid rgba(248,113,113,.4);color:#f87171}
+    .acoes button.btn-no{background:transparent;border:1px solid rgba(248,113,113,.4);color:var(--bad)}
     .acoes button.btn-no:hover:not(:disabled){background:rgba(248,113,113,.12)}
     .note.ok{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.3);color:#aee8ae}
 
-    .state{text-align:center;padding:90px 20px;color:var(--c300);position:relative;z-index:1}
+    .state{text-align:center;padding:90px 20px;color:var(--muted);position:relative;z-index:1}
     .state .ic{font-size:2.6rem;opacity:.5;margin-bottom:14px}
     @media(max-width:560px){.card{padding:26px 22px}}
   </style>
