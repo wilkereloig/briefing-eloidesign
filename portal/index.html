@@ -130,6 +130,11 @@ const PT_KEY = 'eloi_portal_token';
 let CLIENTE = {}, SERVICOS = [], ORCAMENTOS = [], BRIEFINGS = [];
 
 function token(){ return sessionStorage.getItem(PT_KEY); }
+// ?next= só aceita caminho interno (começa com "/" e não "//") — evita open-redirect
+function nextParam(){
+  const n = new URLSearchParams(location.search).get('next');
+  return (n && /^\/(?!\/)/.test(n)) ? n : null;
+}
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtDate(s){ return s ? new Date(s).toLocaleDateString('pt-BR') : '—'; }
@@ -162,6 +167,8 @@ async function entrar(){
     if (!r.ok || !d.token) throw new Error();
     sessionStorage.setItem(PT_KEY, d.token);
     err.textContent = '';
+    const nxt = nextParam();
+    if (nxt) { location.href = nxt; return; }   // volta pra página que pediu login
     mostrarConteudo();
     await carregarDados();
   } catch (e) {
@@ -241,7 +248,7 @@ async function renderMarca(){
       <div class="zip-cta"><div><strong>Baixar tudo</strong><div class="meta">Todas as variações e cores, SVG + PNG</div></div><a class="btn" href="${zipUrl}" download>Baixar .zip</a></div>
       ${m.apresentacao ? `<div class="zip-cta"><div><strong>${esc(m.apresentacao.nome||'Apresentação da marca')}</strong><div class="meta">${esc(m.apresentacao.formato||'PDF')}${m.apresentacao.tamanho?' · '+esc(m.apresentacao.tamanho):''}</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">${m.apresentacao.html?`<a class="btn" href="${base}/${esc(m.apresentacao.html)}" target="_blank" rel="noopener">Ver online ↗</a>`:''}<a class="btn ${m.apresentacao.html?'btn-ghost':''}" href="${base}/${esc(m.apresentacao.arquivo)}" download>Baixar PDF</a></div></div>` : ''}
       ${variacoesHtml}
-      <div style="text-align:center;margin-top:26px"><a class="btn btn-ghost btn-sm" href="${base}/" target="_blank" rel="noopener">Abrir página completa da marca ↗</a></div>`;
+      <div style="text-align:center;margin-top:26px"><a class="btn btn-ghost btn-sm" href="${base}/">Abrir página completa da marca ↗</a></div>`;
   } catch (e) {
     el.innerHTML = '<div class="empty"><div class="ic">🎨</div>Seus arquivos de marca ainda não foram publicados.</div>';
   }
