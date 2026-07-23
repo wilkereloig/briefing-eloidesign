@@ -4,6 +4,12 @@
   "marca": "Georgia Andrade — Estética Avançada",
   "mastersDir": "F:/F2 Experience Dropbox/Criação ELOI Design/ELOI DESIGN STUDIO/07. GEORGIA ANDRADE/APRESENTAÇÃO MARCA/assets/logo",
   "pngWidth": 2000,
+  "apresentacao": {
+    "nome": "Apresentação da marca",
+    "arquivo": "apresentacao-georgia-andrade.pdf",
+    "formato": "PDF · alta resolução",
+    "tamanho": "4,8 MB"
+  },
   "variacoes": [
     { "id": "completa", "arquivo": "logo-completa.svg", "nome": "Assinatura completa" },
     { "id": "lockup-horizontal", "arquivo": "lockup-horizontal.svg", "nome": "Assinatura horizontal" },

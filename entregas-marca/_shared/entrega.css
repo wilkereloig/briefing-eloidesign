@@ -102,20 +102,31 @@ section{padding:56px 0}
 }
 .sec-head p{color:var(--brand-ink-soft);font-size:.95rem;margin:10px 0 0;max-width:56ch;line-height:1.5}
 
-/* ── CTA baixar tudo ─────────────────────────────────── */
-.zip-cta{
-  display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;
-  background:var(--brand-ink);color:var(--brand-bg);
-  border-radius:20px;padding:28px 32px;
-  position:relative;overflow:hidden;
+/* ── CTAs principais (pacote + apresentação) ─────────── */
+.cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.cta-eyebrow{
+  font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--brand-accent);display:flex;align-items:center;gap:8px;margin:0 0 12px;
 }
+.cta-eyebrow svg{width:15px;height:15px}
+.zip-cta,.doc-cta{
+  display:flex;flex-direction:column;justify-content:space-between;gap:20px;
+  border-radius:20px;padding:28px 30px;position:relative;overflow:hidden;
+}
+.zip-cta{background:var(--brand-ink);color:var(--brand-bg)}
+.doc-cta{background:var(--brand-card);border:1px solid var(--brand-line);color:var(--brand-ink)}
 .zip-cta::after{
-  content:"";position:absolute;right:-40px;top:-40px;width:220px;height:220px;
-  border-radius:50%;background:rgba(255,255,255,.05);
+  content:"";position:absolute;right:-40px;top:-40px;width:200px;height:200px;
+  border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none;
 }
-.zip-cta .zt{position:relative;z-index:1}
-.zip-cta h3{font-family:var(--serif);font-weight:400;font-size:1.5rem;margin:0 0 4px}
+.zip-cta .zt,.doc-cta .zt{position:relative;z-index:1}
+.zip-cta h3,.doc-cta h3{font-family:var(--serif);font-weight:400;font-size:1.5rem;margin:0 0 4px;line-height:1.05}
 .zip-cta p{margin:0;opacity:.72;font-size:.9rem;line-height:1.4}
+.doc-cta p{margin:0;color:var(--brand-ink-soft);font-size:.9rem;line-height:1.4}
+.btn-dark{background:var(--brand-ink);color:var(--brand-bg);align-self:flex-start;position:relative;z-index:1}
+.btn-dark:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.btn-light{align-self:flex-start}
+@media(max-width:720px){.cta-grid{grid-template-columns:1fr}}
 .btn{
   display:inline-flex;align-items:center;gap:10px;
   border:none;cursor:pointer;text-decoration:none;

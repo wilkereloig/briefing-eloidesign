@@ -21,6 +21,7 @@
     sparkle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>',
     type: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
     image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
   };
   const corSlug = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -58,6 +59,7 @@
   const heroSvg = completa?.arquivos[ink]?.svg;
   const markSvg = (simbolo || completa)?.arquivos[ink]?.svg;
   const zipHref = `./${m.slug}-marca-completa.zip`;
+  const apres = m.apresentacao;
 
   const nVar = m.variacoes.length;
   const nCor = m.paleta.length;
@@ -121,8 +123,7 @@
       ${markSvg ? `<div class="watermark"><img src="./${esc(markSvg)}" alt=""></div>` : ""}
       <div class="hero-inner">
         <div class="kicker"><span class="dot"></span>ELOI Design Studio · Entrega de marca</div>
-        ${heroSvg ? `<img class="logo-completa" src="./${esc(heroSvg)}" alt="${esc(m.marca)}">` : ""}
-        <h1>${esc(m.marca)}</h1>
+        ${heroSvg ? `<img class="logo-completa" src="./${esc(heroSvg)}" alt="${esc(m.marca)}">` : `<h1>${esc(m.marca)}</h1>`}
         <p class="lead">Todos os arquivos oficiais da sua marca, prontos para usar — em vetor e alta resolução, em cada versão e cor da identidade.</p>
         <div class="hero-meta">
           <span class="chip-count">${IC.layers}<b>${nVar}</b>&nbsp;versões</span>
@@ -134,12 +135,24 @@
 
     <div class="wrap">
       <section>
-        <div class="zip-cta">
-          <div class="zt">
-            <h3>Baixar tudo de uma vez</h3>
-            <p>Um único .zip com todas as versões, todas as cores, em SVG + PNG.</p>
+        <div class="cta-grid">
+          <div class="zip-cta">
+            <div class="zt">
+              <p class="cta-eyebrow" style="color:var(--brand-bg)">${IC.package} Pacote completo</p>
+              <h3>Baixar tudo de uma vez</h3>
+              <p>Um único .zip com todas as versões, todas as cores, em SVG + PNG.</p>
+            </div>
+            <a class="btn btn-light" href="${esc(zipHref)}" download>${IC.download} Baixar .zip</a>
           </div>
-          <a class="btn btn-light" href="${esc(zipHref)}" download>${IC.package} Baixar pacote completo</a>
+          ${apres ? `
+          <div class="doc-cta">
+            <div class="zt">
+              <p class="cta-eyebrow">${IC.book} ${esc(apres.formato || "PDF")}</p>
+              <h3>${esc(apres.nome || "Apresentação da marca")}</h3>
+              <p>A apresentação completa da identidade${apres.tamanho ? ` · ${esc(apres.tamanho)}` : ""}.</p>
+            </div>
+            <a class="btn btn-dark" href="./${esc(apres.arquivo)}" download>${IC.download} Baixar apresentação</a>
+          </div>` : ""}
         </div>
       </section>
 
