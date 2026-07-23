@@ -936,7 +936,13 @@ async function confirmarGerarSenha(){
   try{
     const { senha } = await api('clientes.gerar_senha_portal', { cliente_id: SENHA_CLI_ID });
     if(!senha) throw new Error('o servidor não devolveu a senha');
-    document.getElementById('senhaPortalLink').value = `${location.origin}/portal/`;
+    // link personalizado: ?c=<marca_slug> faz o /portal/ mostrar o nome do
+    // cliente na tela de login (nome vem do manifest da marca, não da URL).
+    // Sem slug cadastrado, cai no link genérico.
+    const cli = CLIENTES.find(x => x.id === SENHA_CLI_ID);
+    const slug = cli && cli.marca_slug ? cli.marca_slug : '';
+    document.getElementById('senhaPortalLink').value =
+      `${location.origin}/portal/` + (slug ? `?c=${encodeURIComponent(slug)}` : '');
     document.getElementById('senhaPortalValor').value = senha;
     document.getElementById('senhaConfirm').style.display = 'none';
     document.getElementById('senhaResultado').style.display = '';

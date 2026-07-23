@@ -84,7 +84,8 @@
 <div class="login" id="loginView">
   <div class="card-base login-box" style="padding:44px 40px;max-width:380px;width:100%;text-align:center">
     <div class="logo" id="logoSlot"></div>
-    <h1 style="font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:20px">Portal do Cliente</h1>
+    <h1 style="font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:4px" id="loginTitulo">Portal do Cliente</h1>
+    <p id="loginCliente" style="font-size:.86rem;color:var(--c300);margin-bottom:20px;display:none"></p>
     <input type="password" id="pw" placeholder="Cole sua senha (ex: K7M2-QXTN8PLW)" autocomplete="current-password">
     <button onclick="entrar()">Entrar</button>
     <div class="err" id="err"></div>
@@ -386,6 +387,30 @@ async function tentarPreview(){
     return false;
   }
 }
+
+// ── Login personalizado por cliente (?c=<marca_slug>) ──
+// O nome NÃO vem da URL: vem do manifest.json estático da marca. Assim um
+// link forjado (?c=banco-x) não consegue estampar um nome arbitrário numa
+// página do nosso domínio — slug desconhecido simplesmente cai no genérico.
+// Continua exigindo a senha; isto aqui é só identidade visual.
+async function personalizarLogin(){
+  const c = new URLSearchParams(location.search).get('c');
+  if (!c || !/^[a-z0-9-]{1,60}$/.test(c)) return;
+  try {
+    const m = await fetch(`/entregas-marca/${encodeURIComponent(c)}/manifest.json`, { cache: 'no-store' })
+      .then(r => { if (!r.ok) throw new Error('404'); return r.json(); });
+    const nome = m.cliente || m.marca;
+    if (!nome) return;
+    const el = document.getElementById('loginCliente');
+    el.textContent = nome;
+    el.style.display = '';
+    document.getElementById('loginTitulo').textContent = 'Portal do Cliente';
+    // toque da marca do cliente no botão/foco, se a paleta existir
+    const escura = (m.paleta || []).find(x => !x.claro);
+    if (escura) document.documentElement.style.setProperty('--cliente-cor', escura.hex);
+  } catch (_) { /* slug inexistente: mantém o genérico */ }
+}
+personalizarLogin();
 
 tentarPreview().then(ok => {
   if (!ok && token()) { mostrarConteudo(); carregarDados(); }
