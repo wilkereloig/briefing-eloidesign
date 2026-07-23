@@ -3,11 +3,11 @@
   <defs>
     <style>
       .eloi-a {
-        fill: var(--logo-1, #240043);
+        fill: #E0AAFF;
       }
 
       .eloi-b {
-        fill: var(--logo-2, #3c0a6b);
+        fill: #C77DFF;
       }
     </style>
   </defs>
