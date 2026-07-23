@@ -307,8 +307,10 @@
     }
 
     /* ── MODAIS ────────────────────────────────────────── */
+    /* acima do nav.js global (sidebar z-900 / barra 899) — senão o modal
+       abre por baixo da navegação e parece que "não aconteceu nada" */
     .modal-bg{
-      display:none;position:fixed;inset:0;z-index:10;background:rgba(4,0,12,.76);
+      display:none;position:fixed;inset:0;z-index:950;background:rgba(4,0,12,.76);
       backdrop-filter:blur(6px);align-items:flex-start;justify-content:center;
       padding:44px 16px;overflow-y:auto;
     }
@@ -343,7 +345,7 @@
       position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);
       background:#2E0A5C;border:1px solid var(--line-strong);color:#fff;
       padding:13px 24px;border-radius:12px;font-size:.88rem;opacity:0;
-      transition:opacity .25s,transform .25s;pointer-events:none;z-index:20;
+      transition:opacity .25s,transform .25s;pointer-events:none;z-index:960;
       box-shadow:var(--shadow);
     }
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -511,13 +513,33 @@
 <div class="modal-bg" id="modalSenha">
   <div class="modal">
     <h2>Senha do portal</h2>
-    <p style="font-size:.82rem;color:var(--c300);margin-bottom:12px">Envie por WhatsApp agora. Fechando esta janela, a senha não aparece de novo em lugar nenhum — só o hash fica salvo.</p>
-    <div class="fld"><label>Link do portal</label><input type="text" id="senhaPortalLink" readonly></div>
-    <div class="fld"><label>Senha</label><input type="text" id="senhaPortalValor" readonly></div>
-    <div class="modal-actions">
-      <div style="display:flex;gap:10px;margin-left:auto">
-        <button class="btn btn-ghost" onclick="fecharModal('modalSenha')">Fechar</button>
-        <button class="btn" onclick="copiarSenhaPortal()">Copiar link + senha</button>
+
+    <!-- passo 1: confirmar (era confirm() nativo — o Chrome suprime diálogos
+         repetidos e a função morria em silêncio, virando "clico e nada") -->
+    <div id="senhaConfirm">
+      <p style="font-size:.86rem;color:var(--txt-dim);margin-bottom:14px">
+        Gerar nova senha para <b style="color:var(--txt)" id="senhaCliNome"></b>?<br>
+        A senha atual (se houver) deixa de funcionar na hora.
+      </p>
+      <div class="modal-err" id="senhaErr"></div>
+      <div class="modal-actions">
+        <div style="display:flex;gap:10px;margin-left:auto">
+          <button class="btn btn-ghost" onclick="fecharModal('modalSenha')">Cancelar</button>
+          <button class="btn" id="senhaGerarBtn" onclick="confirmarGerarSenha()">Gerar senha</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- passo 2: resultado -->
+    <div id="senhaResultado" style="display:none">
+      <p style="font-size:.82rem;color:var(--txt-dim);margin-bottom:14px">Envie por WhatsApp agora. Fechando esta janela, a senha não aparece de novo em lugar nenhum — só o hash fica salvo.</p>
+      <div class="fld"><label>Link do portal</label><input type="text" id="senhaPortalLink" readonly></div>
+      <div class="fld"><label>Senha</label><input type="text" id="senhaPortalValor" readonly></div>
+      <div class="modal-actions">
+        <div style="display:flex;gap:10px;margin-left:auto">
+          <button class="btn btn-ghost" onclick="fecharModal('modalSenha')">Fechar</button>
+          <button class="btn" onclick="copiarSenhaPortal()">Copiar link + senha</button>
+        </div>
       </div>
     </div>
   </div>
@@ -891,17 +913,38 @@ function copiarLinkMarca(slug){
   navigator.clipboard.writeText(url).then(()=>toast('Link do portal copiado: '+url)).catch(()=>toast(url));
 }
 
-async function gerarSenhaPortal(id, opts){
+// Abre o modal no passo de confirmação. Nada de confirm() nativo: o Chrome
+// bloqueia diálogos repetidos e a função retornava false silenciosamente --
+// o clique virava no-op sem nenhuma pista pro operador.
+let SENHA_CLI_ID = null;
+function gerarSenhaPortal(id, opts){
   opts = opts || {};
+  SENHA_CLI_ID = id;
   const c = CLIENTES.find(x=>x.id===id);
-  const nome = c ? c.nome : 'este cliente';
-  if(!opts.auto && !confirm(`Gerar nova senha do portal para ${nome}? A senha atual (se houver) deixa de funcionar.`)) return;
+  document.getElementById('senhaCliNome').textContent = c ? c.nome : 'este cliente';
+  document.getElementById('senhaErr').textContent = '';
+  document.getElementById('senhaConfirm').style.display = '';
+  document.getElementById('senhaResultado').style.display = 'none';
+  document.getElementById('modalSenha').classList.add('show');
+  if(opts.auto) return confirmarGerarSenha();   // fluxo automático (novo serviço p/ cliente sem senha)
+}
+async function confirmarGerarSenha(){
+  const btn = document.getElementById('senhaGerarBtn');
+  const err = document.getElementById('senhaErr');
+  err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Gerando…';
   try{
-    const { senha } = await api('clientes.gerar_senha_portal', { cliente_id: id });
+    const { senha } = await api('clientes.gerar_senha_portal', { cliente_id: SENHA_CLI_ID });
+    if(!senha) throw new Error('o servidor não devolveu a senha');
     document.getElementById('senhaPortalLink').value = `${location.origin}/portal/`;
     document.getElementById('senhaPortalValor').value = senha;
-    document.getElementById('modalSenha').classList.add('show');
-  }catch(e){ toast('Erro ao gerar senha: '+e.message); }
+    document.getElementById('senhaConfirm').style.display = 'none';
+    document.getElementById('senhaResultado').style.display = '';
+  }catch(e){
+    err.textContent = 'Erro ao gerar: ' + (e && e.message ? e.message : e);
+  }finally{
+    btn.disabled = false; btn.textContent = 'Gerar senha';
+  }
 }
 // Abre o portal do cliente em modo preview. Nao passa senha nem token na URL --
 // so o cliente_id. A autoridade vem do token de admin que o /portal/ le do
