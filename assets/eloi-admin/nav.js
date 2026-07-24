@@ -51,39 +51,56 @@
 
   function styleTag(){
     return '<style id="eloi-nav-style">'
-      // Trilho escuro sobre tela clara. --logo-1/--logo-2 recolorem a wordmark
-      // injetada (os fills da SVG sao var()), sem precisar de um 2o arquivo aqui.
-      + '.eloi-nav,.eloi-nav-bar{--logo-1:#E0AAFF;--logo-2:#C77DFF}'
+      // Trilho CLARO. A wordmark fica na cor natural (escura) — nenhuma troca de
+      // --logo-1/--logo-2 aqui, e por isso o wordmark.svg serve os dois usos sem
+      // segunda colorizacao. O trilho branco da 1.09:1 contra o canvas --bg, ou
+      // seja: quem separa e a aresta (borda + sombra), nao o preenchimento.
       + '.eloi-nav{position:fixed;top:0;left:0;bottom:0;width:'+W+'px;z-index:900;'
-      + 'background:#1A0033;border-right:1px solid rgba(224,170,255,.14);'
-      + 'display:flex;flex-direction:column;padding:22px 14px 16px;overflow-y:auto;'
-      + 'font-family:carbona-variable,system-ui,sans-serif;color:#EFE6F8;transition:transform .25s ease}'
-      + '.eloi-nav .eloi-nav-logo{height:58px;margin:0 6px 24px}'
+      + 'background:var(--surface,#fff);border-right:1px solid var(--line-strong,#D5C6E9);'
+      + 'box-shadow:2px 0 18px rgba(36,0,67,.045);'
+      + 'display:flex;flex-direction:column;padding:24px 14px 16px;overflow-y:auto;'
+      + 'font-family:carbona-variable,system-ui,sans-serif;color:var(--ink,#240043);transition:transform .25s ease}'
+      + '.eloi-nav .eloi-nav-logo{height:62px;margin:0 6px 26px}'
       + '.eloi-nav .eloi-nav-logo svg{height:100%;width:auto;display:block}'
-      + '.eloi-nav-sec{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:#A992C4;margin:18px 8px 6px;font-weight:600}'
-      + '.eloi-nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;'
-      + 'color:#D9C8EC;text-decoration:none;font-size:.9rem;line-height:1;transition:background .15s,color .15s}'
-      + '.eloi-nav-item svg{flex:0 0 auto;opacity:.8}'
-      + '.eloi-nav-item:hover{background:rgba(224,170,255,.1);color:#fff}'
-      + '.eloi-nav-on{background:rgba(224,170,255,.15);color:#fff;box-shadow:inset 3px 0 0 #C77DFF}'
+      // --muted (6.37:1), nao --muted-2 (3.88:1): rotulo minusculo nao pode
+      // ficar no limite. Filete acima faz o trabalho que o espaco vago fazia.
+      + '.eloi-nav-sec{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted,#6B5685);'
+      + 'margin:20px 8px 8px;padding-top:14px;border-top:1px solid var(--line,#E7DEF2);font-weight:600}'
+      + '.eloi-nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r-sm,8px);'
+      + 'color:var(--muted,#6B5685);text-decoration:none;font-size:.9rem;line-height:1;transition:background .15s,color .15s}'
+      + '.eloi-nav-item svg{flex:0 0 auto;opacity:.75}'
+      + '.eloi-nav-item:hover{background:var(--surface-2,#F2ECF9);color:var(--ink,#240043)}'
+      + '.eloi-nav-item:hover svg{opacity:1}'
+      // Ativo: preenchimento + cor + barra, tres sinais. Nao depende de borda,
+      // entao nao esbarra no minimo de 3:1 pra contorno de componente.
+      + '.eloi-nav-on,.eloi-nav-on:hover{background:var(--brand-soft,#F0E7FA);color:var(--brand,#5A189A);'
+      + 'font-variation-settings:\'wght\' 620;box-shadow:inset 3px 0 0 var(--brand,#5A189A)}'
       + '.eloi-nav-on svg{opacity:1}'
       + '.eloi-nav-spacer{flex:1;min-height:20px}'
-      + '.eloi-nav-quick{display:flex;flex-wrap:wrap;gap:6px;margin:4px 4px 10px}'
-      + '.eloi-nav-quick a{flex:1 1 auto;text-align:center;font-size:.74rem;padding:7px 8px;border-radius:8px;'
-      + 'background:rgba(224,170,255,.08);border:1px solid rgba(224,170,255,.18);color:#D9C8EC;text-decoration:none;white-space:nowrap}'
-      + '.eloi-nav-quick a:hover{border-color:#C77DFF;color:#fff}'
-      + '.eloi-nav-out{margin:0 4px;text-align:left;background:transparent;border:1px solid rgba(224,170,255,.2);color:#C77DFF;'
-      + 'font-family:inherit;font-size:.8rem;padding:9px 12px;border-radius:9px;cursor:pointer;transition:border-color .15s,color .15s}'
-      + '.eloi-nav-out:hover{border-color:#C77DFF;color:#fff}'
+      + '.eloi-nav-quick{display:flex;flex-wrap:wrap;gap:6px;margin:4px 4px 10px;padding-top:14px;border-top:1px solid var(--line,#E7DEF2)}'
+      + '.eloi-nav-quick a{flex:1 1 auto;text-align:center;font-size:.75rem;padding:8px;border-radius:var(--r-sm,8px);'
+      + 'background:var(--surface,#fff);border:1px solid var(--line-strong,#D5C6E9);color:var(--ink-2,#3C0A6B);'
+      + 'text-decoration:none;white-space:nowrap;transition:border-color .15s,background .15s}'
+      + '.eloi-nav-quick a:hover{border-color:var(--brand,#5A189A);background:var(--brand-soft,#F0E7FA)}'
+      // Sair usava #C77DFF, a MESMA cor do indicador de item ativo — uma saida
+      // vestida de "voce esta aqui". Agora e neutro, e so o hover se compromete.
+      // Preenchimento tonal, nao transparente: borda fina + fundo branco +
+      // largura total e a assinatura de um <input>, e o Sair estava sendo lido
+      // como campo. Fundo --surface-2 devolve a afordancia de botao.
+      + '.eloi-nav-out{margin:0 4px;text-align:left;background:var(--surface-2,#F2ECF9);border:1px solid var(--line-strong,#D5C6E9);'
+      + 'color:var(--muted,#6B5685);font-family:inherit;font-size:.8rem;padding:10px 12px;border-radius:var(--r-sm,8px);'
+      + 'cursor:pointer;display:flex;align-items:center;gap:9px;transition:border-color .15s,color .15s,background .15s}'
+      + '.eloi-nav-out svg{flex:0 0 auto}'
+      + '.eloi-nav-out:hover{border-color:var(--bad,#BE123C);color:var(--bad,#BE123C);background:var(--bad-soft,#FCE8ED)}'
       + '.eloi-nav-bar{position:fixed;top:0;left:0;right:0;height:52px;z-index:899;display:none;'
-      + 'align-items:center;gap:12px;padding:0 14px;background:#1A0033;border-bottom:1px solid rgba(224,170,255,.14);'
+      + 'align-items:center;gap:12px;padding:0 14px;background:var(--surface,#fff);border-bottom:1px solid var(--line-strong,#D5C6E9);'
       + 'font-family:carbona-variable,system-ui,sans-serif}'
-      + '.eloi-nav-burger{background:none;border:none;color:#E0AAFF;cursor:pointer;padding:6px;display:flex}'
+      + '.eloi-nav-burger{background:none;border:none;color:var(--ink,#240043);cursor:pointer;padding:6px;display:flex}'
       + '.eloi-nav-bar .eloi-nav-logo{height:34px;margin:0}'
       + '.eloi-nav-bar .eloi-nav-logo svg{height:100%;width:auto;display:block}'
       + '.eloi-nav-scrim{position:fixed;inset:0;z-index:898;background:rgba(26,0,51,.55);display:none}'
       + '@media(max-width:'+(BP-1)+'px){'
-      + '.eloi-nav{transform:translateX(-100%);box-shadow:0 0 40px rgba(0,0,0,.5)}'
+      + '.eloi-nav{transform:translateX(-100%);box-shadow:0 0 40px rgba(36,0,67,.22)}'
       + 'body.eloi-nav-open .eloi-nav{transform:translateX(0)}'
       + 'body.eloi-nav-open .eloi-nav-scrim{display:block}'
       + '.eloi-nav-bar{display:flex}}'
@@ -114,7 +131,9 @@
       + TOOLS.map(function(it){ return link(it, active); }).join('')
       + '<div class="eloi-nav-spacer"></div>'
       + '<div class="eloi-nav-quick">' + QUICK.map(function(q){ return '<a href="'+q[1]+'">'+q[0]+'</a>'; }).join('') + '</div>'
-      + '<button class="eloi-nav-out" id="eloiNavOut">Sair</button>';
+      + '<button class="eloi-nav-out" id="eloiNavOut">'
+      + icon('M15 17l5-5-5-5M20 12H9M13 3H6a1 1 0 00-1 1v16a1 1 0 001 1h7')
+      + '<span>Sair</span></button>';
 
     var bar = d.createElement('div');
     bar.className = 'eloi-nav-bar';
