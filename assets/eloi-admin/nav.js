@@ -1,8 +1,13 @@
-/* nav.js — sidebar admin compartilhado. Injetado por JS (1 <script> por pagina).
+/* nav.js — navegacao admin compartilhada. Injetado por JS (1 <script> por pagina).
    window.EloiNav = { mount, unmount }. Auth-aware: so injeta se logado.
+
+   Duas formas, uma fonte:
+   - >=900px  trilho lateral claro a esquerda (.eloi-nav)
+   - <900px   barra de abas fixa no rodape (.eloi-tabs) + topo com marca e Sair
+
    Deslocamento do conteudo por inline style no body (sobrepoe padding shorthand). */
 (function (w, d) {
-  var W = 236, BP = 900, MOUNTED = false, mq = null;
+  var W = 236, BP = 900, TABH = 58, MOUNTED = false, mq = null;
 
   // rota, label, href (icone = SVG minimalista inline)
   var PRIMARY = [
@@ -15,9 +20,15 @@
     // propria lista de clientes, onde existe um cliente pra previsualizar.
     ['/gestao/#clientes',      'Clientes',            'M12 12a4 4 0 100-8 4 4 0 000 8zM5 20a7 7 0 0114 0']
   ];
-  var TOOLS = [
-    ['/marca/', 'Entregas de Marca', 'M12 3l7 4v6c0 4-3 6-7 8-4-2-7-4-7-8V7z']
-  ];
+  var MARCA = ['/marca/', 'Entregas de Marca', 'M12 3l7 4v6c0 4-3 6-7 8-4-2-7-4-7-8V7z'];
+  var TOOLS = [MARCA];
+
+  // Abas != trilho, de proposito. 'Clientes' apontava pro MESMO documento que
+  // 'Gestao' (/gestao/#clientes) -- duas abas pro mesmo lugar quebram a premissa
+  // da barra, e em /marca/ nenhuma acenderia. Clientes ja e aba DENTRO da Gestao.
+  var TABS = PRIMARY.slice(0, 4).concat([[MARCA[0], 'Marca', MARCA[2]]]);
+
+  // So no trilho: no celular sao links para destinos que ja sao abas.
   var QUICK = [
     ['+ Serviço',  '/gestao/'],
     ['+ Orçamento','/painel-orcamentos/'],
@@ -26,15 +37,15 @@
 
   function logged(){ try { return !!(w.EloiAdminAuth && EloiAdminAuth.token()); } catch(e){ return false; } }
 
-  function icon(pathD){
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="'+pathD+'"/></svg>';
+  function icon(pathD, sz){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" width="'+(sz||18)+'" height="'+(sz||18)+'"><path d="'+pathD+'"/></svg>';
   }
   // item ativo: melhor match de pathname; desempate por hash.
-  function activeHref(){
+  function activeHref(lista){
     var path = location.pathname.replace(/\/+$/,'/') || '/';
     var hash = location.hash;
     var best = '', bestLen = -1;
-    PRIMARY.concat(TOOLS).forEach(function(it){
+    lista.forEach(function(it){
       var href = it[0], hp = href.split('#')[0], hh = href.indexOf('#')>=0 ? '#'+href.split('#')[1] : '';
       if(path === hp || path.indexOf(hp) === 0){
         var score = hp.length + (hh && hh === hash ? 100 : 0) - (hh && hh !== hash ? 50 : 0);
@@ -48,9 +59,14 @@
     var on = it[0] === active ? ' eloi-nav-on' : '';
     return '<a class="eloi-nav-item'+on+'" href="'+it[0]+'">'+icon(it[2])+'<span>'+it[1]+'</span></a>';
   }
+  function tab(it, active){
+    var on = it[0] === active ? ' eloi-tab-on' : '';
+    return '<a class="eloi-tab'+on+'" href="'+it[0]+'">'+icon(it[2],21)+'<span>'+it[1]+'</span></a>';
+  }
 
   function styleTag(){
     return '<style id="eloi-nav-style">'
+      // ---------- trilho (desktop) ----------
       // Trilho CLARO. A wordmark fica na cor natural (escura) — nenhuma troca de
       // --logo-1/--logo-2 aqui, e por isso o wordmark.svg serve os dois usos sem
       // segunda colorizacao. O trilho branco da 1.09:1 contra o canvas --bg, ou
@@ -59,7 +75,7 @@
       + 'background:var(--surface,#fff);border-right:1px solid var(--line-strong,#D5C6E9);'
       + 'box-shadow:2px 0 18px rgba(36,0,67,.045);'
       + 'display:flex;flex-direction:column;padding:24px 14px 16px;overflow-y:auto;'
-      + 'font-family:carbona-variable,system-ui,sans-serif;color:var(--ink,#240043);transition:transform .25s ease}'
+      + 'font-family:carbona-variable,system-ui,sans-serif;color:var(--ink,#240043)}'
       + '.eloi-nav .eloi-nav-logo{height:62px;margin:0 6px 26px}'
       + '.eloi-nav .eloi-nav-logo svg{height:100%;width:auto;display:block}'
       // --muted (6.37:1), nao --muted-2 (3.88:1): rotulo minusculo nao pode
@@ -82,8 +98,6 @@
       + 'background:var(--surface,#fff);border:1px solid var(--line-strong,#D5C6E9);color:var(--ink-2,#3C0A6B);'
       + 'text-decoration:none;white-space:nowrap;transition:border-color .15s,background .15s}'
       + '.eloi-nav-quick a:hover{border-color:var(--brand,#5A189A);background:var(--brand-soft,#F0E7FA)}'
-      // Sair usava #C77DFF, a MESMA cor do indicador de item ativo — uma saida
-      // vestida de "voce esta aqui". Agora e neutro, e so o hover se compromete.
       // Preenchimento tonal, nao transparente: borda fina + fundo branco +
       // largura total e a assinatura de um <input>, e o Sair estava sendo lido
       // como campo. Fundo --surface-2 devolve a afordancia de botao.
@@ -92,35 +106,62 @@
       + 'cursor:pointer;display:flex;align-items:center;gap:9px;transition:border-color .15s,color .15s,background .15s}'
       + '.eloi-nav-out svg{flex:0 0 auto}'
       + '.eloi-nav-out:hover{border-color:var(--bad,#BE123C);color:var(--bad,#BE123C);background:var(--bad-soft,#FCE8ED)}'
-      + '.eloi-nav-bar{position:fixed;top:0;left:0;right:0;height:52px;z-index:899;display:none;'
-      + 'align-items:center;gap:12px;padding:0 14px;background:var(--surface,#fff);border-bottom:1px solid var(--line-strong,#D5C6E9);'
-      + 'font-family:carbona-variable,system-ui,sans-serif}'
-      + '.eloi-nav-burger{background:none;border:none;color:var(--ink,#240043);cursor:pointer;padding:6px;display:flex}'
-      + '.eloi-nav-bar .eloi-nav-logo{height:34px;margin:0}'
+
+      // ---------- topo + abas (mobile) ----------
+      + '.eloi-nav-bar,.eloi-tabs{display:none;font-family:carbona-variable,system-ui,sans-serif}'
+      + '.eloi-nav-bar{position:fixed;top:0;left:0;right:0;z-index:899;'
+      + 'align-items:center;justify-content:space-between;gap:12px;'
+      + 'height:calc(52px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 14px 0;'
+      + 'background:var(--surface,#fff);border-bottom:1px solid var(--line,#E7DEF2)}'
+      + '.eloi-nav-bar .eloi-nav-logo{height:34px}'
       + '.eloi-nav-bar .eloi-nav-logo svg{height:100%;width:auto;display:block}'
-      + '.eloi-nav-scrim{position:fixed;inset:0;z-index:898;background:rgba(26,0,51,.55);display:none}'
+      + '.eloi-bar-out{display:flex;align-items:center;gap:7px;background:none;border:0;'
+      + 'color:var(--muted,#6B5685);font-family:inherit;font-size:.82rem;padding:8px 6px;cursor:pointer;min-height:44px}'
+      // Barra de abas: rodape e onde o polegar alcanca. Altura + safe-area
+      // (a faixa do gesto de home no iPhone come o ultimo terco sem isso).
+      + '.eloi-tabs{position:fixed;left:0;right:0;bottom:0;z-index:900;'
+      + 'background:var(--surface,#fff);border-top:1px solid var(--line,#E7DEF2);'
+      + 'box-shadow:0 -2px 14px rgba(36,0,67,.06);'
+      + 'padding-bottom:env(safe-area-inset-bottom)}'
+      + '.eloi-tabs-in{display:flex;align-items:stretch;height:'+TABH+'px}'
+      + '.eloi-tab{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;'
+      + 'text-decoration:none;color:var(--muted,#6B5685);font-size:.66rem;line-height:1;padding:6px 2px;'
+      + '-webkit-tap-highlight-color:transparent;transition:color .12s}'
+      + '.eloi-tab span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+      + '.eloi-tab svg{flex:0 0 auto;opacity:.7;transition:opacity .12s}'
+      + '.eloi-tab:active{color:var(--ink,#240043)}'
+      // Aba ativa: cor + peso + filete no topo. Tres sinais, nenhum so por cor
+      // (daltonismo continua lendo o filete e o peso).
+      + '.eloi-tab-on{color:var(--brand,#5A189A);font-variation-settings:\'wght\' 620;'
+      + 'box-shadow:inset 0 2px 0 var(--brand,#5A189A)}'
+      + '.eloi-tab-on svg{opacity:1}'
+
       + '@media(max-width:'+(BP-1)+'px){'
-      + '.eloi-nav{transform:translateX(-100%);box-shadow:0 0 40px rgba(36,0,67,.22)}'
-      + 'body.eloi-nav-open .eloi-nav{transform:translateX(0)}'
-      + 'body.eloi-nav-open .eloi-nav-scrim{display:block}'
-      + '.eloi-nav-bar{display:flex}}'
+      + '.eloi-nav{display:none}'
+      + '.eloi-nav-bar{display:flex}'
+      + '.eloi-tabs{display:block}}'
       + '</style>';
   }
 
   function applyPad(){
-    if(mq && mq.matches){ d.body.style.paddingLeft = W + 'px'; d.body.style.paddingTop = ''; d.body.classList.remove('eloi-nav-open'); }
-    else { d.body.style.paddingLeft = ''; d.body.style.paddingTop = '52px'; }
-  }
-  function toggle(open){
-    if(open === undefined) open = !d.body.classList.contains('eloi-nav-open');
-    d.body.classList.toggle('eloi-nav-open', open);
+    if(mq && mq.matches){
+      d.body.style.paddingLeft = W + 'px';
+      d.body.style.paddingTop = '';
+      d.body.style.paddingBottom = '';
+    } else {
+      d.body.style.paddingLeft = '';
+      d.body.style.paddingTop = 'calc(52px + env(safe-area-inset-top))';
+      // reserva a barra de abas + a faixa do gesto de home
+      d.body.style.paddingBottom = 'calc(' + TABH + 'px + env(safe-area-inset-bottom))';
+    }
   }
 
   function mount(){
     if(MOUNTED || !logged()) return;
     MOUNTED = true;
-    var active = activeHref();
-    var burger = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+    var active = activeHref(PRIMARY.concat(TOOLS));
+    var activeTab = activeHref(TABS);
+    var sairIcon = 'M15 17l5-5-5-5M20 12H9M13 3H6a1 1 0 00-1 1v16a1 1 0 001 1h7';
 
     var aside = d.createElement('aside');
     aside.className = 'eloi-nav';
@@ -131,19 +172,21 @@
       + TOOLS.map(function(it){ return link(it, active); }).join('')
       + '<div class="eloi-nav-spacer"></div>'
       + '<div class="eloi-nav-quick">' + QUICK.map(function(q){ return '<a href="'+q[1]+'">'+q[0]+'</a>'; }).join('') + '</div>'
-      + '<button class="eloi-nav-out" id="eloiNavOut">'
-      + icon('M15 17l5-5-5-5M20 12H9M13 3H6a1 1 0 00-1 1v16a1 1 0 001 1h7')
-      + '<span>Sair</span></button>';
+      + '<button class="eloi-nav-out" id="eloiNavOut">' + icon(sairIcon) + '<span>Sair</span></button>';
 
     var bar = d.createElement('div');
     bar.className = 'eloi-nav-bar';
-    bar.innerHTML = '<button class="eloi-nav-burger" id="eloiNavBurger">'+burger+'</button><div class="eloi-nav-logo" id="eloiNavLogoBar"></div>';
+    bar.innerHTML = '<div class="eloi-nav-logo" id="eloiNavLogoBar"></div>'
+      + '<button class="eloi-bar-out" id="eloiBarOut">' + icon(sairIcon, 17) + '<span>Sair</span></button>';
 
-    var scrim = d.createElement('div');
-    scrim.className = 'eloi-nav-scrim';
+    var tabs = d.createElement('nav');
+    tabs.className = 'eloi-tabs';
+    tabs.setAttribute('aria-label', 'Navegação principal');
+    tabs.innerHTML = '<div class="eloi-tabs-in">'
+      + TABS.map(function(it){ return tab(it, activeTab); }).join('') + '</div>';
 
     d.body.insertAdjacentHTML('afterbegin', styleTag());
-    d.body.insertBefore(scrim, d.body.firstChild);
+    d.body.insertBefore(tabs, d.body.firstChild);
     d.body.insertBefore(bar, d.body.firstChild);
     d.body.insertBefore(aside, d.body.firstChild);
 
@@ -153,13 +196,12 @@
       if(a) a.innerHTML = svg; if(b) b.innerHTML = svg;
     }).catch(function(){});
 
-    d.getElementById('eloiNavBurger').addEventListener('click', function(){ toggle(); });
-    scrim.addEventListener('click', function(){ toggle(false); });
-    d.getElementById('eloiNavOut').addEventListener('click', function(){
+    function sair(){
       try { EloiAdminAuth.logout(); } catch(e){}
       location.href = '/admin/';
-    });
-    aside.addEventListener('click', function(e){ if(e.target.closest('a')) toggle(false); });
+    }
+    d.getElementById('eloiNavOut').addEventListener('click', sair);
+    d.getElementById('eloiBarOut').addEventListener('click', sair);
 
     mq = w.matchMedia('(min-width:'+BP+'px)');
     (mq.addEventListener ? mq.addEventListener('change', applyPad) : mq.addListener(applyPad));
@@ -168,10 +210,10 @@
 
   function unmount(){
     if(!MOUNTED) return; MOUNTED = false;
-    ['.eloi-nav','.eloi-nav-bar','.eloi-nav-scrim','#eloi-nav-style'].forEach(function(sel){
+    ['.eloi-nav','.eloi-nav-bar','.eloi-tabs','#eloi-nav-style'].forEach(function(sel){
       var el = d.querySelector(sel); if(el) el.remove();
     });
-    d.body.style.paddingLeft = ''; d.body.style.paddingTop = ''; d.body.classList.remove('eloi-nav-open');
+    d.body.style.paddingLeft = ''; d.body.style.paddingTop = ''; d.body.style.paddingBottom = '';
   }
 
   w.EloiNav = { mount: mount, unmount: unmount };

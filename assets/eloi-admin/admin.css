@@ -113,3 +113,72 @@ a{color:var(--brand)}
 
 /* ---------- superficie escura reutilizavel ---------- */
 .on-dark{background:var(--dark);color:var(--on-dark);--logo-1:#E0AAFF;--logo-2:#C77DFF;--ink:var(--on-dark);--muted:var(--on-dark-muted);--line:var(--dark-line);--surface:var(--dark-2)}
+
+/* ==================== MOBILE: comportamento de app ====================
+   Depende de viewport-fit=cover no <meta> — sem ele env(safe-area-inset-*)
+   resolve pra 0 e o notch come o conteudo. */
+
+/* Dedo nao tem hover: o retorno vem da pressao. O realce cinza padrao do
+   WebKit atrasa e suja, entao ele sai e o :active entra explicito. */
+@media(hover:none){
+  a,button,.btn,.btn-ghost,[role=button]{-webkit-tap-highlight-color:transparent}
+  .btn:active,.login button:active,.login-card button:active,.login-box button:active{background:var(--brand-hover);transform:scale(.985)}
+  .btn-ghost:active{background:var(--brand-soft);transform:scale(.985)}
+  .btn:hover,.btn-ghost:hover{box-shadow:none}
+}
+
+@media(max-width:900px){
+  /* Abaixo de 16px o iOS da zoom automatico ao focar o campo e a tela salta.
+     Nao e preferencia de tamanho: e o gatilho do zoom. */
+  input,select,textarea{font-size:16px}
+  /* 44px e o minimo de alvo de toque (WCAG 2.5.8 / HIG). */
+  .btn,.btn-ghost,button{min-height:44px}
+  .btn-sm{min-height:38px}
+  /* 100vh no celular conta a barra de URL que some ao rolar, entao estoura.
+     dvh acompanha a viewport real. */
+  .login:has(> .card-base,> .login-card,> .login-box){min-height:100dvh}
+}
+
+/* Full-bleed: o card e gesto de desktop (moldura sobre uma mesa). No celular
+   a tela E o card, entao borda, sombra, raio e goteira saem. */
+@media(max-width:600px){
+  /* o wrapper tambem precisa zerar: sem isso o padding dele deixa faixas do
+     canvas nas bordas e o "full-bleed" fica pela metade */
+  .login-wrap{padding:0;min-height:100dvh}
+  .login,.login-card,.login-box{
+    max-width:none;width:100%;margin:0;border:0;border-radius:0;box-shadow:none;
+    min-height:100dvh;display:flex;flex-direction:column;justify-content:center;
+    padding:max(env(safe-area-inset-top),20px) 24px max(env(safe-area-inset-bottom),24px)}
+  .login:has(> .card-base,> .login-card,> .login-box){padding:0;display:block}
+  .login .logo,.login-card .logo,.login-box .logo{flex:0 0 auto}
+}
+
+/* ---------- briefings no celular ----------
+   Escopado por body:has(.progress-wrap): .main e .step-nav sao nomes genericos
+   e existem noutras telas. O :has garante que so a pagina de briefing pegue.
+   Vale pra /briefing/, /briefing-ecommerce/ e /briefing-solarium/, que
+   compartilham a mesma estrutura e o mesmo admin.css. */
+@media(max-width:900px){
+  /* Progresso gruda: e a unica pista de "quanto falta" num formulario longo.
+     O padding-top absorve o notch — com viewport-fit=cover o topo da viewport
+     fica SOB a barra de status, entao top:0 sozinho enfia o texto embaixo dela. */
+  body:has(.progress-wrap) .progress-wrap{position:sticky;top:0;z-index:50;
+    background:var(--bg);border-bottom:1px solid var(--line);
+    padding:calc(env(safe-area-inset-top) + 12px) 16px 10px}
+  /* So a etapa ativa e exibida, entao fixar .step.active .step-nav basta —
+     sem markup novo e sem JS. */
+  body:has(.progress-wrap) .step.active .step-nav{position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:var(--surface);border-top:1px solid var(--line);
+    padding:12px 16px max(env(safe-area-inset-bottom),12px);
+    box-shadow:0 -2px 14px rgba(36,0,67,.06)}
+  /* .step-nav-right e o pai real do botao; sem flex nele o flex do filho
+     nao tem o que dividir e o botao encolhe pro canto direito. */
+  body:has(.progress-wrap) .step.active .step-nav .step-nav-right{flex:1;gap:10px}
+  body:has(.progress-wrap) .step.active .step-nav .btn-next,
+  body:has(.progress-wrap) .step.active .step-nav .btn-submit{flex:1;justify-content:space-between}
+  body:has(.progress-wrap) .main{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+  /* Com o teclado aberto a barra fixa gruda nele e cobre o campo seguinte.
+     :has(:focus) devolve ela ao fluxo enquanto se digita — sem JS. */
+  body:has(.progress-wrap):has(:is(input,textarea,select):focus) .step.active .step-nav{
+    position:static;box-shadow:none;padding:20px 16px 28px}
+}
