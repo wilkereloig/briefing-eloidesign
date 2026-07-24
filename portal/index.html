@@ -12,9 +12,6 @@
     .hidden{display:none!important}
     .wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px 80px}
 
-    .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
-    .login .logo{height:88px;margin:0 0 26px;display:block;text-align:left}
-    .login .logo svg{height:100%;width:auto;display:block}
 
     .preview-banner{background:var(--warn-soft);color:#7A3803;border:1px solid #E7C89A;border-radius:10px;padding:12px 18px;margin:18px 0 0;font-size:.86rem;line-height:1.45}
     .preview-banner strong{font-variation-settings:'wght' 700}
@@ -82,10 +79,10 @@
 
 <!-- LOGIN -->
 <div class="login" id="loginView">
-  <div class="card-base login-box" style="padding:44px 40px;max-width:380px;width:100%;text-align:center">
+  <div class="card-base login-box">
     <div class="logo" id="logoSlot"></div>
-    <h1 style="font-size:1.15rem;font-variation-settings:'wght' 600;margin-bottom:4px" id="loginTitulo">Portal do Cliente</h1>
-    <p id="loginCliente" style="font-size:.86rem;color:var(--brand);margin-bottom:20px;display:none"></p>
+    <h1 id="loginTitulo">Portal do Cliente</h1>
+    <p class="sub" id="loginCliente" style="color:var(--brand);display:none"></p>
     <input type="password" id="pw" placeholder="Cole sua senha (ex: HC2T-eloi-cliente-2026)" autocomplete="current-password">
     <button onclick="entrar()">Entrar</button>
     <div class="err" id="err"></div>

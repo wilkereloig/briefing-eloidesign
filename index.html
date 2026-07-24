@@ -96,80 +96,91 @@
       50%      { opacity: 1; transform: translateX(-50%) scale(1.1); }
     }
 
+    /* Um eixo a esquerda: logo, titulo, texto, botao e rodape na mesma linha
+       vertical. Raio pequeno e filete no lugar de espaco vago — a wordmark e
+       blocada e sem curva, o container acompanha em vez de contradizer. */
     .card {
       position: relative;
       z-index: 1;
-      max-width: 560px;
+      max-width: 520px;
       width: 100%;
-      text-align: center;
+      text-align: left;
       background: var(--surface);
       border:1px solid var(--line);
-      border-radius: 24px;
-      padding: 56px 48px;
+      border-radius: var(--r-sm);
+      padding: 48px 44px;
       box-shadow: var(--sh-3);
     }
 
     .logo {
       display: block;
-      text-align: left;
-      margin-bottom: 36px;
+      margin-bottom: 26px;
       opacity: 0;
       animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.1s forwards;
     }
-    .logo img { height: 88px; width: auto; display: block; }
+    .logo img { height: clamp(72px, 13vw, 96px); width: auto; display: block; }
 
     .title {
       font-size: clamp(1.5rem, 5vw, 2.125rem);
       font-variation-settings: 'wght' 600;
       letter-spacing: -0.02em;
-      margin-bottom: 16px;
+      line-height: 1.15;
+      margin-bottom: 14px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
       opacity: 0;
       animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.25s forwards;
     }
 
+    /* Medida em ch: o limite e a linha legivel (~52 caracteres), nao um px
+       arbitrario — ele acompanha a fonte em vez de brigar com ela. */
     .subtitle {
       font-size: 1.0625rem;
       font-variation-settings: 'wght' 400;
       color:var(--ink-2);
-      max-width: 420px;
-      margin: 0 auto 40px;
+      max-width: 52ch;
+      margin: 0 0 32px;
       opacity: 0;
       animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.4s forwards;
     }
 
+    /* Barra, nao pilula: largura total, rotulo a esquerda, seta empurrada pelo
+       space-between. Mesmo gesto do botao de login — as duas portas combinam. */
     .cta {
-      display: inline-flex;
+      display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
       background: var(--brand);
       color: #fff;
       text-decoration: none;
-      font-size: 1.0625rem;
+      font-size: 1rem;
       font-variation-settings: 'wght' 600;
       letter-spacing: 0.01em;
-      padding: 18px 44px;
-      border-radius: 12px;
-      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      padding: 17px 22px;
+      border-radius: var(--r-sm);
+      transition: background 0.2s, box-shadow 0.2s;
       opacity: 0;
       animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.55s forwards;
     }
     .cta:hover {
       background: var(--brand-hover);
-      box-shadow: 0 10px 24px rgba(90,24,154,.28);
-      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(90,24,154,.22);
     }
-    .cta svg { width: 18px; height: 18px; transition: transform 0.2s; }
+    .cta svg { width: 18px; height: 18px; flex: 0 0 auto; transition: transform 0.2s; }
     .cta:hover svg { transform: translateX(4px); }
 
     .meta {
-      margin-top: 40px;
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--line);
       font-size: 0.8125rem;
       color:var(--muted);
       opacity: 0;
       animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.7s forwards;
     }
-    .meta a { color:var(--muted); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
-    .meta a:hover { border-color:var(--muted); }
+    .meta a { color:var(--muted); text-decoration: none; border-bottom: 1px solid var(--line-strong); transition: border-color 0.2s, color 0.2s; }
+    .meta a:hover { border-color:var(--brand); color:var(--brand); }
 
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
@@ -177,8 +188,7 @@
     }
 
     @media (max-width: 600px) {
-      .card { padding: 40px 28px; }
-      .logo img { height: 72px; }
+      .card { padding: 34px 24px; }
     }
   </style>
 </head>

@@ -69,32 +69,6 @@
     @media (prefers-reduced-motion:reduce){.blob{animation:none}}
 
     /* ── LOGIN ─────────────────────────────────────────── */
-    .login{
-      position:relative;z-index:1;max-width:400px;margin:14vh auto 0;
-      background:var(--surface);border:1px solid var(--line);
-      border-radius:var(--radius-lg);padding:40px 38px 34px;
-      backdrop-filter:blur(14px);box-shadow:var(--shadow);
-    }
-    .login .logo{height:72px;margin:0 0 30px;display:block}
-    .login .logo svg{height:100%;width:auto;display:block}
-    .login h1{
-      font-size:1.5rem;font-variation-settings:'wght' 680;letter-spacing:-.02em;
-      margin-bottom:6px;line-height:1.15;
-    }
-    .login .sub{font-size:.86rem;color:var(--txt-dim);margin-bottom:24px}
-    .login input{
-      width:100%;background:var(--surface);border:1px solid var(--line);
-      border-radius:12px;color:var(--ink);font-family:var(--font);font-size:.95rem;
-      padding:14px 16px;outline:none;transition:border-color .18s,box-shadow .18s;
-    }
-    .login input:focus{border-color:var(--brand);box-shadow:var(--sh-2)}
-    .login button{
-      width:100%;margin-top:14px;background:linear-gradient(135deg,var(--c600),var(--c700));
-      color:#fff;border:none;border-radius:12px;font-family:var(--font);font-size:.95rem;
-      font-variation-settings:'wght' 640;padding:15px;cursor:pointer;
-      transition:filter .18s,transform .14s;
-    }
-    .login button:hover{filter:brightness(1.14);transform:translateY(-1px)}
     .err{color:var(--danger);font-size:.85rem;margin-top:12px;min-height:1.2em}
 
     /* ── SHELL ─────────────────────────────────────────── */
