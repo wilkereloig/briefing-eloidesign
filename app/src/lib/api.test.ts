@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { api, TOKEN_KEY } from './api'
+import { api, TOKEN_KEY, onSessaoExpirada } from './api'
 
 const store: Record<string, string> = {}
 vi.stubGlobal('localStorage', {
@@ -31,5 +31,15 @@ describe('api', () => {
       new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 })))
     await expect(api.call('eloi-gestao', 'x')).rejects.toThrow()
     expect(store[TOKEN_KEY]).toBeUndefined()
+  })
+  it('401 notifica assinantes de sessão expirada', async () => {
+    store[TOKEN_KEY] = 'morto'
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 })))
+    let avisado = false
+    const off = onSessaoExpirada(() => { avisado = true })
+    await expect(api.call('eloi-gestao', 'x')).rejects.toThrow()
+    expect(avisado).toBe(true)
+    off()
   })
 })

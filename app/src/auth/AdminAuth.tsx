@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
-import { api } from '../lib/api'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { api, onSessaoExpirada } from '../lib/api'
 
 // Guard ÚNICO do perímetro /admin/* (D4): telas novas nascem protegidas
 // porque o router as coloca DENTRO de <RequireAdmin> — não porque alguém
@@ -9,6 +9,7 @@ export const useAdmin = () => useContext(Ctx)
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [logado, setLogado] = useState(api.temSessao())
+  useEffect(() => onSessaoExpirada(() => setLogado(false)), [])
   return (
     <Ctx.Provider value={{
       logado,

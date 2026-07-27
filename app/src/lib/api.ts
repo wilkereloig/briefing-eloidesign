@@ -5,6 +5,15 @@ export const TOKEN_KEY = 'eloi_admin_token' // mesmo do painel legado — sessã
 // Financeiro (clients/services) não existem pra este código.
 type Fn = 'admin-auth' | 'eloi-gestao' | 'eloi-financeiro' | 'orcamentos' | 'briefing-links'
 
+// Assinantes avisados quando um 401 derruba o token — o AdminAuthProvider
+// usa isso pra sincronizar o estado React (`logado`) com a sessão real.
+type Cb = () => void
+const expiradaCbs = new Set<Cb>()
+export function onSessaoExpirada(cb: Cb): () => void {
+  expiradaCbs.add(cb)
+  return () => expiradaCbs.delete(cb)
+}
+
 async function call<T = unknown>(fn: Fn, action: string, payload: Record<string, unknown> = {}): Promise<T> {
   const token = localStorage.getItem(TOKEN_KEY) || ''
   const res = await fetch(BASE + fn, {
@@ -14,6 +23,7 @@ async function call<T = unknown>(fn: Fn, action: string, payload: Record<string,
   })
   if (res.status === 401) {
     localStorage.removeItem(TOKEN_KEY)
+    expiradaCbs.forEach((cb) => cb())
     throw new Error('sessão expirada')
   }
   if (!res.ok) {
@@ -39,6 +49,10 @@ export const api = {
   logout() {
     const t = localStorage.getItem(TOKEN_KEY)
     localStorage.removeItem(TOKEN_KEY)
-    if (t) fetch(BASE + 'admin-auth', { method: 'POST', body: JSON.stringify({ action: 'logout', token: t }) })
+    if (t) fetch(BASE + 'admin-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'logout', token: t }),
+    }).catch(() => {})
   },
 }
