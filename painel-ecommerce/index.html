@@ -81,19 +81,17 @@
 
   <!-- LISTA -->
   <div id="listView" class="hidden">
+    <!-- Logo, Sair e o link Admin sairam daqui: o trilho do nav.js ja traz os
+         tres. O slot #logoSlotTop fica (o JS escreve nele), so oculto. -->
+    <div id="logoSlotTop" hidden></div>
     <div class="topbar">
-      <div style="display:flex;align-items:center;gap:14px">
-        <div id="logoSlotTop" style="width:110px"></div>
-        <div>
-          <h1>Briefings E-commerce</h1>
-          <span class="sub" id="countSub"></span>
-        </div>
+      <div>
+        <h1>Briefings E-commerce</h1>
+        <span class="sub" id="countSub"></span>
       </div>
       <div style="display:flex;gap:10px">
-        <a class="btn btn-ghost" href="/admin/">← Admin</a>
         <button class="btn btn-ghost" onclick="carregar()">Atualizar</button>
         <a class="btn" href="/briefing-ecommerce/?mode=admin" target="_blank">+ Novo briefing</a>
-        <button class="btn btn-ghost" onclick="sair()">Sair</button>
       </div>
     </div>
     <div class="cards" id="cards"></div>
@@ -110,6 +108,9 @@
 </div>
 
 <script src="/assets/eloi-admin/auth.js"></script>
+<!-- Pagina interna: ganha o mesmo trilho lateral de /admin, /gestao e os
+     outros paineis. So faltava aqui — a auth ja era a mesma. -->
+<script src="/assets/eloi-admin/nav.js"></script>
 <script>
 fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
   document.getElementById('logoSlotLogin').innerHTML = svg;

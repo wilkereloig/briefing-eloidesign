@@ -82,13 +82,9 @@
 
 <!-- APP -->
 <div id="app">
-  <div class="topbar">
-    <div class="logo" id="logoSlotApp"></div>
-    <div class="actions">
-      <a class="btn-ghost" href="/admin/">← Painel</a>
-      <button class="btn-ghost" onclick="sair()">Sair</button>
-    </div>
-  </div>
+  <!-- Logo, Painel e Sair sairam do header: o trilho do nav.js ja traz os
+       tres. O slot fica oculto porque o JS ainda escreve nele. -->
+  <div class="logo" id="logoSlotApp" hidden></div>
 
   <h1 class="pagetitle">Gerador de variações de marca</h1>
   <p class="sub">SVG mestre (fill:currentColor) → paleta → PNG/SVG por cor, gerado 100% no navegador.</p>

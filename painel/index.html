@@ -129,12 +129,13 @@
 
 <!-- PAINEL -->
 <div class="wrap" id="panelView" style="display:none">
+  <!-- Logo e Sair sairam daqui: o trilho do nav.js ja traz os dois.
+       O slot #logoSlotTop fica (o JS escreve nele), so nao e mais exibido. -->
+  <div id="logoSlotTop" hidden></div>
   <div class="top">
-    <div id="logoSlotTop"></div>
     <div style="display:flex;align-items:center;gap:12px">
       <h1>Briefings recebidos</h1>
       <span class="count-badge" id="countBadge">0</span>
-      <button class="btn-ghost" onclick="sair()">Sair</button>
     </div>
   </div>
 
@@ -148,6 +149,9 @@
 <div class="toast" id="toast">Copiado!</div>
 
 <script src="/assets/eloi-admin/auth.js"></script>
+<!-- Pagina interna: ganha o mesmo trilho lateral de /admin, /gestao e os
+     outros paineis. So faltava aqui — a auth ja era a mesma. -->
+<script src="/assets/eloi-admin/nav.js"></script>
 <script>
 fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
   document.getElementById('logoSlotLogin').innerHTML = svg;

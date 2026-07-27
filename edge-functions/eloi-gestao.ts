@@ -1,6 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+// Sincronizado com a producao (v12) em 2026-07-27: o repo estava com o gerador
+// de senha ANTIGO (8 chars aleatorios) enquanto producao ja gerava senha
+// legivel <RAND4>-eloi-<slug>-<ano>. Foi esse drift que fez o diagnostico da
+// senha da Georgia concluir "secret irrecuperavel" — o codigo daqui mentia
+// sobre o que rodava la. Este arquivo agora E a fonte da verdade de novo.
+
 const BUCKET = "eloi-notas";
 const ENTREGAS_BUCKET = "eloi-entregas";
 const ENTREGA_CATEGORIAS = ["arquivo", "apresentacao", "fonte"];
@@ -39,6 +45,10 @@ async function hashPassword(secret: string): Promise<string> {
 function randomToken(len: number) {
   return Array.from(crypto.getRandomValues(new Uint8Array(len)), (b) => PORTAL_ALPHABET[b % PORTAL_ALPHABET.length]).join("");
 }
+function slugify(s: string) {
+  return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -66,7 +76,16 @@ Deno.serve(async (req: Request) => {
       const a = agg[s.cliente_id] ?? (agg[s.cliente_id] = { total_servicos: 0, total_cents: 0 });
       a.total_servicos++; a.total_cents += Number(s.valor_cents) || 0;
     }
-    return json({ clientes: (clientes ?? []).map((c) => ({ ...c, ...(agg[c.id] ?? { total_servicos: 0, total_cents: 0 }) })) });
+    // O select acima é "*" (a UI consome muita coluna); o hash sai aqui, na saída.
+    // Mesma promessa que clientes.detail já fazia: hash nunca sai do banco. Descartar
+    // na resposta em vez de listar colunas no select evita que uma coluna nova futura
+    // fique de fora da UI por esquecimento — o único campo que precisa sumir é fixo.
+    return json({
+      clientes: (clientes ?? []).map(({ portal_senha_hash: _drop, ...c }) => ({
+        ...c,
+        ...(agg[c.id] ?? { total_servicos: 0, total_cents: 0 }),
+      })),
+    });
   }
 
   if (action === "clientes.upsert") {
@@ -93,21 +112,37 @@ Deno.serve(async (req: Request) => {
   if (action === "clientes.gerar_senha_portal") {
     const clienteId = body?.cliente_id;
     if (!clienteId) return json({ error: "cliente_id obrigatório" }, 400);
+
+    const { data: cli } = await supabase.from("eloi_clientes")
+      .select("nome,marca_slug").eq("id", clienteId).maybeSingle();
+    if (!cli) return json({ error: "cliente não encontrado" }, 404);
+
     let prefix = "";
     for (let tries = 0; tries < 5; tries++) {
       prefix = randomToken(4);
       const { count } = await supabase.from("eloi_clientes").select("id", { count: "exact", head: true }).eq("portal_senha_prefix", prefix);
       if (!count) break;
     }
-    const secret = randomToken(8);
+
+    // Formato: <ALEATORIO4>-eloi-<cliente>-<ano>, ex K7M2-eloi-georgia-andrade-2026.
+    // O bloco aleatorio vai na FRENTE de proposito: o login resolve o cliente
+    // pelos 4 primeiros caracteres da senha normalizada. Se a senha comecasse
+    // com "eloi", TODOS os clientes colidiriam no mesmo prefixo e o
+    // maybeSingle() do login pararia de resolver -- ninguem entraria.
+    const base = cli.marca_slug || slugify(cli.nome);
+    const legivel = `eloi-${base || randomToken(6).toLowerCase()}-${new Date().getFullYear()}`;
+    // O login faz senha.replace(/[\s-]/g,"").toUpperCase() e confere o que sobra
+    // depois do prefixo -- entao o hash tem que ser dessa forma normalizada.
+    const secret = legivel.replace(/[\s-]/g, "").toUpperCase();
     const hash = await hashPassword(secret);
+
     const { error } = await supabase.from("eloi_clientes").update({
       portal_senha_prefix: prefix, portal_senha_hash: hash,
       portal_senha_gerada_em: new Date().toISOString(),
       portal_tentativas_falhas: 0, portal_bloqueado_ate: null, portal_ativo: true,
     }).eq("id", clienteId);
     if (error) return json({ error: error.message }, 500);
-    return json({ senha: `${prefix}-${secret}` });
+    return json({ senha: `${prefix}-${legivel}` });
   }
 
   if (action === "clientes.delete") {

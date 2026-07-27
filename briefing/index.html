@@ -107,7 +107,11 @@
     }
     .logo-wrap, .header-title, .header-sub { position: relative; z-index: 1; }
     .logo-wrap {
-      display: inline-block;
+      /* A wordmark ELOI nunca e centralizada (regra da marca). display:block +
+         fit-content tira ela do text-align:center do header sem mexer no
+         titulo/subtitulo, que continuam centrados. */
+      display: block;
+      width: fit-content;
       margin-bottom: 28px;
       opacity: 0;
       animation: logoIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s forwards;
