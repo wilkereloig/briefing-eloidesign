@@ -94,9 +94,11 @@ Estas URLs já estão na mão de clientes. A SPA passa a servir de `/` e **adota
 
 ---
 
-## Pendências operacionais fora do brainstorming
+## Pendências operacionais — RESOLVIDAS em 2026-07-27 (mesma data, mais tarde)
 
-- Senha do portal da Georgia Andrade continua inválida → botão "🔐 Senha portal" em `/gestao/`
-- Fix do vazamento de `portal_senha_hash` em `clientes.list` está no código, **não deployado**
-- `CLAUDE.md` desatualizado: cita `sessionStorage eloi_pw` (morto); real é `localStorage eloi_admin_token`
-- Furos de segurança S1/S2 do diagnóstico (apresentação de marca aberta; gate fail-open) seguem abertos
+- ~~Senha da Georgia~~ → Wilke regenerou às 14:35 (prefixo K883). Causa raiz do erro original: produção gera senha legível `<RAND4>-eloi-<slug>-<ano>` e a mensagem de WhatsApp estava truncada (faltava o `6` de `2026`). O repo tinha o gerador ANTIGO — drift, ver abaixo.
+- ~~Fix do hash não deployado~~ → deployado (eloi-gestao v13) e verificado: `clientes.list` não devolve mais `portal_senha_hash`.
+- ~~CLAUDE.md desatualizado~~ → corrigido (`eloi_admin_token` + `admin_sessions`).
+- ~~S1 (apresentação aberta)~~ → `gate.js` adicionado em `entregas-marca/*/apresentacao/`.
+- **S2 segue aberto** (gate fail-open + estáticos públicos) — é o sub-projeto 5 do rebuild.
+- **Drift descoberto:** o repo estava atrás da produção na `eloi-gestao` (S4 do diagnóstico em ação). Repo sincronizado com a v12 + fix. Regra: `get_edge_function` antes de diagnosticar/deployar.
