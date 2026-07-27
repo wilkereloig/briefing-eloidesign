@@ -69,15 +69,39 @@ Reforçado por haver **1 admin para sempre**: `admin_sessions` tem no máximo um
 
 `/admin-app/*` desaparece.
 
+### D5 — Corte: big-bang POR SUB-PROJETO, validado em branch
+
+Cada sub-projeto entra inteiro num push, depois de validado no deployment de preview que o Vercel gera pra branch. Produção nunca fica meio-nova-meio-velha numa mesma tela; o raio de um erro é um subsistema. Dos 6 pushes, só 3 tocam página que cliente abre (briefings, portal, marca).
+
+**Ressalva operacional:** o preview de branch aponta pro MESMO Supabase de produção. Testar submit de briefing/login no preview grava linha real e dispara Formspree real → usar cliente/token de teste descartável, nunca os da Georgia.
+
+**Rejeitado:** paralelo em produção — prolongaria o estado de duas arquiteturas vivas que gerou a bagunça atual.
+
 ---
 
-## Perguntas ainda EM ABERTO (retomar aqui)
+### D6 — Edge functions: separadas como estão + `_shared/auth.ts` + deploy pelo repo
 
-1. **Corte:** big-bang (troca tudo num push) ou paralelo com fallback (SPA e legado convivendo por rota, desligando aos poucos)?
-3. **Edge functions:** mantidas como estão (`plano.md:261` proíbe consolidar, por blast radius) e só ganham `_shared/auth.ts`? Ou o rebuild reabre essa decisão também?
-4. **Tokens permanentes:** `share_token` e `briefing_links.token` ganham expiração/revogação no rebuild, ou seguem eternos?
-5. **Marca pública vs privada:** o motivo original do link permanente era repasse pra gráfica/agência sem depender de sessão. Isso ainda vale? Define o sub-projeto #5.
-6. **Testes:** o repo não tem nenhum hoje. O rebuild introduz? Em que nível?
+`plano.md:261` segue valendo (não consolidar; raio de explosão limitado). D3 já unificou o código de auth. Requisito novo da Fundação, nascido do drift descoberto em 2026-07-27: **deploy das edges sai do repo** (script/CI via MCP ou supabase CLI) — produção nunca mais diverge do código versionado.
+
+### D7 — Tokens `?t=`: revogação manual, sem expiração automática
+
+Coluna `revogado_em` em `orcamentos` (share_token) e `briefing_links` + botão de revogar no painel. Link continua eterno por padrão — cliente abre orçamento semanas depois sem fricção — mas link vazado pode ser morto individualmente. Links já enviados seguem funcionando (nascem com `revogado_em = null`). Fecha o S3 sem quebrar nada.
+
+---
+
+### D8 — Marca: privada de verdade + link de repasse revogável
+
+Arquivos migram pro bucket privado `eloi-entregas` (já existe, já usado pelo portal) com signed URLs — curl direto morre, fecha o S2. Pro repasse gráfica/agência: botão "link de repasse" gera token revogável (mesmo mecanismo do D7); fornecedor acessa sem senha do cliente, e o link pode ser morto depois. Resolve a incoerência atual (página pede login, arquivos estáticos públicos) escolhendo um lado de verdade. Define o sub-projeto 5.
+
+### D9 — Testes: caminhos críticos, sem meta de cobertura
+
+Unitário onde erro custa dinheiro ou cliente: cálculo monetário (cents/competência), auth/token nas edges, normalização de senha do portal. Mais 3-4 smoke E2E (login, briefing com token de teste, `orcamento/?t=`). Rodam em CI antes do push. Pirâmide completa rejeitada: pra 1 pessoa, a manutenção da suíte competiria com o trabalho que paga as contas.
+
+---
+
+## TODAS as perguntas do brainstorm estão respondidas (D1–D9)
+
+Próximo passo do skill: apresentar o design da **Fundação (sub-projeto 1)** por seções → aprovação → spec em `docs/superpowers/specs/` → writing-plans.
 
 ---
 
