@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { requireAdmin } from "./_shared/auth.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -12,16 +13,6 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...cors, "Content-Type": "application/json" },
   });
-}
-
-async function verifyAdminToken(supabase: any, token: string | undefined): Promise<boolean> {
-  if (!token) return false;
-  const { data } = await supabase.from("admin_sessions").select("expires_at").eq("token", token).maybeSingle();
-  if (!data || new Date(data.expires_at) < new Date()) return false;
-  await supabase.from("admin_sessions")
-    .update({ last_seen_at: new Date().toISOString(), expires_at: new Date(Date.now() + 12 * 3600 * 1000).toISOString() })
-    .eq("token", token);
-  return true;
 }
 
 Deno.serve(async (req: Request) => {
@@ -71,7 +62,7 @@ Deno.serve(async (req: Request) => {
   }
 
   // ── daqui pra baixo exige sessão admin ──
-  if (!(await verifyAdminToken(supabase, body?.token))) return json({ error: "unauthorized" }, 401);
+  if (!(await requireAdmin(supabase, body?.token))) return json({ error: "unauthorized" }, 401);
 
   if (action === "list") {
     const { data, error } = await supabase

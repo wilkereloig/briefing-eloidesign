@@ -1,5 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { requireCliente } from "./_shared/auth.ts";
+import { normalizarSenha } from "./_shared/senha.ts";
 
 // Portal do cliente (NF, orcamentos, briefings, marca, entregas) -- sessao propria
 // (portal_sessions), separada da sessao de admin (admin_sessions). Marca voltou a
@@ -40,23 +42,15 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array) { // sem early-exit, temp
 // gerado 1x offline (PBKDF2-SHA256, 600k iter, segredo dummy) -- queimado no caminho "prefixo nao existe" p/ fechar timing leak
 const DUMMY_HASH = "pbkdf2$600000$hqnSvVbexTFv5tanHOZPxw==$YqpS6qfRKNQIXygHyXF2y9P2LlrikAW6J3dmH7Co0eg=";
 
-// ── sessao de ADMIN: usada so pelo admin_preview. Mesmo formato que orcamentos.ts. ──
+// ── sessao de ADMIN: usada so pelo admin_preview. Mesmo formato que orcamentos.ts,
+// mas SEM sliding-renewal (nao usa _shared/auth.ts:requireAdmin de proposito --
+// requireAdmin renova a expiracao a cada chamada, o que mudaria o comportamento
+// aqui; ver task-8-report.md). ──
 async function verifyAdminToken(supabase: any, token: string | undefined): Promise<boolean> {
   if (!token) return false;
   const { data } = await supabase.from("admin_sessions").select("expires_at").eq("token", token).maybeSingle();
   if (!data || new Date(data.expires_at) < new Date()) return false;
   return true;
-}
-
-// ── sessao do portal: resolve cliente_id a partir do token (NUNCA aceito no body) ──
-async function resolvePortalSession(supabase: any, token: string | undefined): Promise<{ clienteId: string } | null> {
-  if (!token) return null;
-  const { data } = await supabase.from("portal_sessions").select("cliente_id,expires_at").eq("token", token).maybeSingle();
-  if (!data || new Date(data.expires_at) < new Date()) return null;
-  await supabase.from("portal_sessions")
-    .update({ last_seen_at: new Date().toISOString(), expires_at: new Date(Date.now() + 12 * 3600 * 1000).toISOString() })
-    .eq("token", token);
-  return { clienteId: data.cliente_id };
 }
 
 Deno.serve(async (req: Request) => {
@@ -80,8 +74,7 @@ Deno.serve(async (req: Request) => {
     if ((count ?? 0) >= 20) return json({ error: "muitas tentativas, aguarde" }, 429); // limite alto: so pega scan de prefixo
     await supabase.from("portal_login_ip_attempts").insert({ ip }); // conta antes de validar, sem branch pra burlar
 
-    const raw = String(body?.senha || "").replace(/[\s-]/g, "").toUpperCase();
-    const prefix = raw.slice(0, 4), secret = raw.slice(4);
+    const { prefix, secret } = normalizarSenha(body?.senha);
 
     const { data: c } = await supabase.from("eloi_clientes")
       .select("id,nome,portal_senha_hash,portal_tentativas_falhas,portal_bloqueado_ate,portal_ativo")
@@ -125,8 +118,8 @@ Deno.serve(async (req: Request) => {
     if (!c) return json({ error: "cliente nao encontrado" }, 404);
 
     // Sessao identica a do login real (mesma tabela, mesma expiracao padrao).
-    // Tentei emitir com 1h, mas resolvePortalSession renova pra 12h na primeira
-    // chamada -- expiracao curta aqui seria so um comentario mentindo.
+    // Tentei emitir com 1h, mas requireCliente (_shared/auth.ts) renova pra 12h
+    // na primeira chamada -- expiracao curta aqui seria so um comentario mentindo.
     const { data: sess, error } = await supabase.from("portal_sessions")
       .insert({ cliente_id: c.id }).select("token").single();
     if (error) return json({ error: error.message }, 500);
@@ -134,9 +127,9 @@ Deno.serve(async (req: Request) => {
   }
 
   // ── daqui pra baixo exige sessao de portal (cliente), NAO admin ──
-  const session = await resolvePortalSession(supabase, body?.token);
+  const session = await requireCliente(supabase, body?.token);
   if (!session) return json({ error: "unauthorized" }, 401);
-  const clienteId = session.clienteId;
+  const clienteId = session.cliente_id;
 
   if (action === "logout") {
     await supabase.from("portal_sessions").delete().eq("token", body.token);
