@@ -39,6 +39,7 @@ Deno.serve(async (req: Request) => {
       responded_at: new Date().toISOString(),
     })
     .eq("token", token)
+    .is("revogado_em", null) // D7: revogado -> mesmo caminho de token inexistente
     .select("token, status")
     .single();
 

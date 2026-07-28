@@ -36,6 +36,7 @@ Deno.serve(async (req: Request) => {
       .from("orcamentos")
       .select("cliente,titulo,itens,valor_total,created_at,status,complexidade,urgencia,desconto_pct")
       .eq("share_token", token)
+      .is("revogado_em", null) // D7: revogado -> mesmo caminho de token inexistente
       .single();
     if (error || !data) return json({ error: "não encontrado" }, 404);
     return json({ orcamento: data });
@@ -47,7 +48,7 @@ Deno.serve(async (req: Request) => {
     const decisao = body?.decisao;
     if (!token) return json({ error: "token obrigatório" }, 400);
     if (!["aprovado", "recusado"].includes(decisao)) return json({ error: "decisão inválida" }, 400);
-    const { data: o, error: findErr } = await supabase.from("orcamentos").select("id,status").eq("share_token", token).maybeSingle();
+    const { data: o, error: findErr } = await supabase.from("orcamentos").select("id,status").eq("share_token", token).is("revogado_em", null).maybeSingle(); // D7: revogado -> mesmo caminho de token inexistente
     if (findErr || !o) return json({ error: "não encontrado" }, 404);
     if (o.status !== "enviado") return json({ error: "esse orçamento já foi respondido ou ainda não foi enviado" }, 409);
     // Aprovação dispara o trigger do banco que cria o serviço (atômico/idempotente).
