@@ -11,6 +11,8 @@ jobs:
         with: { node-version: 20, cache: npm, cache-dependency-path: app/package-lock.json }
       - run: npm ci
         working-directory: app
+      - run: npm run lint
+        working-directory: app
       - run: npx tsc --noEmit
         working-directory: app
       - run: npx vitest run
@@ -23,4 +25,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: denoland/setup-deno@v2
         with: { deno-version: v2.x }
+      - run: deno check edge-functions/*.ts
       - run: deno test edge-functions/_tests/

@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { requireAdmin } from "./_shared/auth.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +43,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "logout_all") {
-    if (!body?.token) return json({ error: "token obrigatório" }, 400);
+    if (!(await requireAdmin(supabase, body?.token))) return json({ error: "unauthorized" }, 401);
     await supabase.from("admin_sessions").delete().neq("token", "");
     return json({ ok: true });
   }

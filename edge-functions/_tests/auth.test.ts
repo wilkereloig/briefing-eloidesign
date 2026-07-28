@@ -1,8 +1,8 @@
 import { assertEquals } from "jsr:@std/assert";
-import { requireAdmin } from "../_shared/auth.ts";
+import { requireAdmin, requireCliente } from "../_shared/auth.ts";
 
 // Stub mínimo do supabase-js: só o encadeamento que auth.ts usa.
-function stub(row: { expires_at: string } | null) {
+function stub(row: Record<string, string> | null) {
   const updates: unknown[] = [];
   return {
     updates,
@@ -27,4 +27,17 @@ Deno.test("token vivo → true e desliza a sessão", async () => {
   const s = stub({ expires_at: new Date(Date.now() + 3600_000).toISOString() });
   assertEquals(await requireAdmin(s, "x"), true);
   assertEquals(s.updates.length, 1);
+});
+
+Deno.test("requireCliente: sem token → null", async () => {
+  assertEquals(await requireCliente(stub(null), undefined), null);
+});
+Deno.test("requireCliente: sessão viva → {cliente_id} e desliza", async () => {
+  const s = stub({ expires_at: new Date(Date.now() + 3600_000).toISOString(), cliente_id: "abc-123" });
+  assertEquals(await requireCliente(s, "x"), { cliente_id: "abc-123" });
+  assertEquals(s.updates.length, 1);
+});
+Deno.test("requireCliente: expirada → null", async () => {
+  const s = stub({ expires_at: new Date(Date.now() - 1000).toISOString(), cliente_id: "abc-123" });
+  assertEquals(await requireCliente(s, "x"), null);
 });

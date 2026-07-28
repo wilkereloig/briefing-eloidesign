@@ -13,7 +13,6 @@ export default function Shell() {
       <main className="shell-main">
         <h1>Painel novo</h1>
         <p>Fundação instalada. As telas chegam no próximo sub-projeto.</p>
-        <p><a href="/admin/">← voltar pro painel atual</a></p>
       </main>
     </div>
   )
