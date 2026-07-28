@@ -99,6 +99,13 @@ Unitário onde erro custa dinheiro ou cliente: cálculo monetário (cents/compet
 
 ---
 
+## Avisos da revisão final da Fundação para os PRÓXIMOS sub-projetos
+
+- **Sub-projeto 4 (briefings):** a revogação de token de briefing é MEIA-eficaz hoje — nenhuma edge serve o token na abertura da página (o form só POSTa no submit), então `?t=` revogado ABRE o form normalmente e só falha no envio; e no `briefing-guia-viver-bem` o sucesso é `supabase.ok || formspree.ok`, então com token revogado o cliente vê SUCESSO e a resposta chega só por e-mail. A UI de revogação do sub-projeto 4 precisa validar o token no load E consertar essa semântica de sucesso.
+- **Sub-projeto 2:** `admin-auth.login` não tem throttle/lockout/comparação constante (o portal tem os três) — brute-force da senha admin é livre. Ticket próprio.
+- **`admin_preview`** (`portal-cliente.ts`) mantém cópia local de verificação admin SEM sliding, de propósito (trocar por `requireAdmin` estenderia a sessão a cada preview). Decisão do dono se um dia unificar.
+- **`scripts/deploy-edges.mjs`** nunca rodou de ponta a ponta (falta `SUPABASE_ACCESS_TOKEN`, só o dono gera; deploys da Fundação foram via MCP com os mesmos arquivos). Validar o script no primeiro deploy do sub-projeto 2. Atenção: mudou `_shared/`, TODAS as consumidoras precisam de redeploy — o script não avisa (débito).
+
 ## TODAS as perguntas do brainstorm estão respondidas (D1–D9)
 
 Próximo passo do skill: apresentar o design da **Fundação (sub-projeto 1)** por seções → aprovação → spec em `docs/superpowers/specs/` → writing-plans.
