@@ -1,4 +1,7 @@
 @import './ui/tokens.css';
+/* Ponte temporária: .shell-top/.btn-ghost/.carregando ainda usam os nomes
+   antigos até a Task 8 os substituir. Remover quando essas 3 regras saírem. */
+:root{--surface:#fff;--line:#E7DEF2;--muted:#6B5685;--r:8px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--pagina);color:var(--tinta-forte);line-height:1.6}
 .login{max-width:min(430px,calc(100% - 40px));margin:11vh auto 0;background:var(--chao);
