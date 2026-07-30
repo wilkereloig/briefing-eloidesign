@@ -1,19 +1,16 @@
-import { useAdmin } from '../../auth/AdminAuth'
+import { Outlet } from 'react-router-dom'
+import { Sidebar } from './Sidebar'
 
-// Shell VAZIO de propósito: a Fundação termina aqui. As telas de negócio
-// (clientes, orçamentos, financeiro) entram no sub-projeto 2.
+// Shell monta sidebar + área de conteúdo; cada rota filha (telas/) cuida do
+// próprio cabeçalho, porque o design varia por tela (seletor de mês em Hoje,
+// filtros em Projetos etc.) — ver design-assets/painel-kv3/README.md.
 export default function Shell() {
-  const { sair } = useAdmin()
   return (
-    <div className="shell">
-      <header className="shell-top">
-        <strong>ELOI Design Studio</strong>
-        <button className="btn-ghost" onClick={sair}>Sair</button>
-      </header>
-      <main className="shell-main">
-        <h1>Painel novo</h1>
-        <p>Fundação instalada. As telas chegam no próximo sub-projeto.</p>
-      </main>
+    <div className="app-shell">
+      <Sidebar />
+      <div className="app-main">
+        <Outlet />
+      </div>
     </div>
   )
 }

@@ -1,7 +1,4 @@
 @import './ui/tokens.css';
-/* Ponte temporária: .shell-top/.btn-ghost/.carregando ainda usam os nomes
-   antigos até a Task 8 os substituir. Remover quando essas 3 regras saírem. */
-:root{--surface:#fff;--line:#E7DEF2;--muted:#6B5685;--r:8px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--pagina);color:var(--tinta-forte);line-height:1.6}
 .login{max-width:min(430px,calc(100% - 40px));margin:11vh auto 0;background:var(--chao);
@@ -13,9 +10,44 @@ body{font-family:var(--font);background:var(--pagina);color:var(--tinta-forte);l
   border-radius:0;padding:15px 18px;font:inherit;font-weight:640;cursor:pointer}
 .login button:disabled{opacity:.6;cursor:default}
 .err{color:var(--laranja);font-size:.85rem;margin-top:12px;min-height:1.2em}
-.shell-top{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;
-  background:var(--surface);border-bottom:1px solid var(--line)}
-.shell-main{padding:24px 28px}
-.btn-ghost{background:none;border:1px solid var(--line);border-radius:var(--r);
-  padding:8px 16px;font:inherit;cursor:pointer;color:var(--muted)}
-.carregando{padding:40px;color:var(--muted)}
+.carregando{padding:40px;color:var(--tinta-fraca)}
+.btn-ghost{background:none;border:1px solid var(--linha-forte);border-radius:0;
+  padding:8px 16px;font:inherit;cursor:pointer;color:var(--tinta-media)}
+
+.app-shell{display:grid;grid-template-columns:var(--malha) minmax(0,1fr);min-height:100vh;
+  background-color:var(--pagina);
+  background-image:repeating-linear-gradient(90deg,rgba(253,213,211,.05) 0 1px,transparent 1px var(--malha)),
+    repeating-linear-gradient(0deg,rgba(253,213,211,.03) 0 1px,transparent 1px var(--malha))}
+.app-main{min-width:0;padding:30px 34px}
+
+.trilho{background:var(--trilho);border-right:1px solid var(--linha);display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh}
+.trilho-marca{padding:0 22px 26px}
+.trilho nav{display:flex;flex-direction:column}
+.trilho-item{display:flex;align-items:center;gap:10px;padding:11px 22px;color:var(--tinta-media);
+  font-size:13.5px;text-decoration:none;border-left:3px solid transparent}
+.trilho-item:hover{background:var(--chao)}
+.trilho-item.ativo{background:var(--chao);border-left-color:var(--lima);color:var(--tinta-forte);font-weight:620}
+.trilho-ferramentas{margin-top:auto;padding-top:12px;border-top:1px solid var(--linha)}
+.trilho-rotulo{display:block;padding:10px 22px 4px;font-size:10px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--tinta-fraca)}
+.trilho-rodape{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;
+  border-top:1px solid var(--linha);font-size:11px;color:var(--tinta-fraca)}
+
+.tela h1{font-size:38px;line-height:1;letter-spacing:-.035em;font-weight:620;color:var(--tinta-forte)}
+.tela p{color:var(--tinta-media);margin-top:10px}
+
+@media (max-width:1199px){
+  .app-shell{grid-template-columns:var(--malha) minmax(0,1fr)}
+}
+@media (max-width:899px){
+  .app-shell{grid-template-columns:1fr;padding-bottom:58px}
+  .trilho{position:fixed;bottom:0;left:0;right:0;top:auto;height:58px;flex-direction:row;
+    border-right:0;border-top:1px solid var(--linha);padding-bottom:env(safe-area-inset-bottom)}
+  .trilho-marca,.trilho-ferramentas,.trilho-rodape{display:none}
+  .trilho nav{flex-direction:row;width:100%;justify-content:space-around}
+  .trilho-item{flex-direction:column;gap:2px;padding:6px 4px;font-size:10px;border-left:0;
+    border-top:3px solid transparent;min-width:44px}
+  .trilho-item.ativo{border-left-color:transparent;border-top-color:var(--lima)}
+  .app-main{padding:20px}
+}
