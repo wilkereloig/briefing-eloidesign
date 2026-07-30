@@ -61,6 +61,26 @@ Deno.serve(async (req: Request) => {
     });
   }
 
+  if (action === "vincular_cliente") {
+    const id = (body?.id || "").toString();
+    const cliente_id = body?.cliente_id || null;
+    if (!id || !cliente_id) {
+      return new Response(JSON.stringify({ error: "id e cliente_id obrigatorios" }), {
+        status: 400, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+    const { data, error } = await supabase.from("briefing_links")
+      .update({ cliente_id }).eq("id", id).select().single();
+    if (error) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500, headers: { ...cors, "Content-Type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ invite: data }), {
+      headers: { ...cors, "Content-Type": "application/json" },
+    });
+  }
+
   // default: list
   const { data, error } = await supabase
     .from("briefing_links")
