@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <style>
+    body { margin: 0; background: #120432; color: #FDD5D3; font-family: 'carbona-variable', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #C0A0FA; text-decoration: none; }
+    a:hover { color: #EEB4E7; }
+    *, *::before, *::after { box-sizing: border-box; }
+    ::selection { background: #4A18B0; color: #FFF1F0; }
+    :focus-visible { outline: 2px solid #DFF806; outline-offset: 2px; }
+    button { font: inherit; color: inherit; cursor: pointer; }
+    /* o modulo em execucao gira: o estado do projeto E a forma do KV */
+    @keyframes mod-turn { 0%,18%{transform:rotate(0)} 25%,43%{transform:rotate(90deg)} 50%,68%{transform:rotate(180deg)} 75%,93%{transform:rotate(270deg)} 100%{transform:rotate(360deg)} }
+    /* o cursor da malha desce a coluna: e o unico movimento ambiente */
+    @keyframes malha-cursor { 0%,10%{transform:translateY(0)} 25%,35%{transform:translateY(202px)} 50%,60%{transform:translateY(404px)} 75%,85%{transform:translateY(202px)} 100%{transform:translateY(0)} }
+    @keyframes entra { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    @media (prefers-reduced-motion: reduce) { *{animation:none!important} }
+  </style>
+</helmet>
+<div style="min-height:100vh;display:grid;grid-template-columns:202px minmax(0,1fr);background:#120432">
+
+  <nav style="position:relative;background:#0C0220;border-right:1px solid rgba(253,213,211,.14);padding:26px 0 18px;display:flex;flex-direction:column;gap:2px">
+    <div style="padding:0 22px 26px">
+      <img src="kv-sistema/assets/eloi-admin/wordmark-kv.svg" alt="ELOI Design Studio" style="height:52px;width:auto;display:block">
+    </div>
+
+    <sc-for list="{{ menu }}" as="it" hint-placeholder-count="5">
+      <button type="button" onClick="{{ it.abrir }}" style="{{ it.estilo }}" style-hover="background:#1B0647;color:#FFF1F0">
+        <span style="{{ it.glifo }}"></span>
+        <span style="flex:1;text-align:left">{{ it.rotulo }}</span>
+        <span style="{{ it.contagem }}">{{ it.n }}</span>
+      </button>
+    </sc-for>
+
+    <div style="margin:26px 22px 10px;padding-top:16px;border-top:1px solid rgba(253,213,211,.14);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#8E77A6;font-variation-settings:'wght' 620">Ferramentas</div>
+    <sc-for list="{{ ferramentas }}" as="it" hint-placeholder-count="2">
+      <button type="button" onClick="{{ it.abrir }}" style="{{ it.estilo }}" style-hover="background:#1B0647;color:#FFF1F0">
+        <span style="{{ it.glifo }}"></span>
+        <span style="flex:1;text-align:left">{{ it.rotulo }}</span>
+      </button>
+    </sc-for>
+
+    <div style="flex:1;min-height:20px"></div>
+    <div style="margin:0 22px;padding-top:14px;border-top:1px solid rgba(253,213,211,.14);display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8E77A6">Malha 202</span>
+      <span style="font-size:11px;color:#B79FC4">Wilker · admin</span>
+    </div>
+  </nav>
+
+  <main style="position:relative;min-width:0;display:flex;flex-direction:column">
+    <div style="position:absolute;inset:0;pointer-events:none;opacity:{{ malhaOpacidade }};background-image:repeating-linear-gradient(to right,rgba(253,213,211,.05) 0 1px,transparent 1px 202px),repeating-linear-gradient(to bottom,rgba(253,213,211,.03) 0 1px,transparent 1px 202px)"></div>
+
+    <header style="position:sticky;top:0;z-index:5;background:rgba(18,4,50,.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(253,213,211,.14);padding:24px 34px 20px;display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap">
+      <div style="min-width:0;flex:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="width:22px;height:3px;background:#DFF806;flex:none"></span>
+          <span style="font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#DFF806;font-variation-settings:'wght' 620">{{ contexto }}</span>
+        </div>
+        <h1 style="margin:0;font-size:38px;line-height:1;letter-spacing:-.035em;font-variation-settings:'wght' 620;color:#FFF1F0">{{ titulo }}</h1>
+        <p style="margin:8px 0 0;font-size:14px;color:#B79FC4;max-width:62ch">{{ subtitulo }}</p>
+      </div>
+      <div style="display:flex;align-items:stretch;gap:10px;height:46px">
+        <div style="display:flex;align-items:stretch;border:1px solid rgba(253,213,211,.28)">
+          <sc-for list="{{ meses }}" as="m" hint-placeholder-count="3">
+            <button type="button" onClick="{{ m.abrir }}" style="{{ m.estilo }}">{{ m.rotulo }}</button>
+          </sc-for>
+        </div>
+        <button type="button" style="background:#DFF806;color:#120432;border:0;padding:0 22px;font-size:13px;font-variation-settings:'wght' 640;letter-spacing:.02em" style-hover="filter:brightness(1.08)">+ Novo projeto</button>
+      </div>
+    </header>
+
+    <div style="position:relative;padding:30px 34px 90px;display:flex;flex-direction:column;gap:34px">
+
+      <sc-if value="{{ emHoje }}" hint-placeholder-val="{{ true }}">
+        <section style="display:flex;flex-direction:column;gap:16px;animation:entra .4s ease-out both">
+          <div style="display:flex;align-items:baseline;gap:14px">
+            <h2 style="margin:0;font-size:15px;letter-spacing:.02em;font-variation-settings:'wght' 640;color:#FFF1F0">Precisa de você</h2>
+            <span style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8E77A6">{{ nAcoes }} decisões travando dinheiro</span>
+          </div>
+          <sc-for list="{{ acoes }}" as="a" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:44px minmax(0,1fr) 140px 168px;align-items:center;gap:20px;padding:18px 20px;background:#1B0647;border-left:3px solid {{ a.cor }}" style-hover="background:#24085C">
+              <span style="{{ a.glifo }}"></span>
+              <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:15px;font-variation-settings:'wght' 620;color:#FFF1F0">{{ a.titulo }}</span>
+                <span style="font-size:12.5px;color:#B79FC4">{{ a.detalhe }}</span>
+              </div>
+              <span style="font-size:15px;font-variation-settings:'wght' 620;font-variant-numeric:tabular-nums;color:#FDD5D3;text-align:right">{{ a.valor }}</span>
+              <button type="button" style="{{ a.botao }}">{{ a.acao }}</button>
+            </div>
+          </sc-for>
+        </section>
+
+        <section style="display:flex;flex-direction:column;gap:18px">
+          <h2 style="margin:0;font-size:15px;font-variation-settings:'wght' 640;color:#FFF1F0">O mês em números</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:rgba(253,213,211,.14)">
+            <sc-for list="{{ numeros }}" as="n" hint-placeholder-count="4">
+              <div style="background:#120432;padding:22px 20px 20px;display:flex;flex-direction:column;gap:10px">
+                <span style="width:20px;height:3px;background:{{ n.cor }}"></span>
+                <span style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8E77A6">{{ n.rotulo }}</span>
+                <span style="font-size:30px;line-height:1;letter-spacing:-.03em;font-variation-settings:'wght' 620;font-variant-numeric:tabular-nums;color:#FFF1F0">{{ n.valor }}</span>
+                <span style="font-size:12px;color:#B79FC4">{{ n.nota }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:34px">
+          <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+            <h2 style="margin:0;font-size:15px;font-variation-settings:'wght' 640;color:#FFF1F0">Onde os projetos estão</h2>
+            <div style="display:flex;align-items:stretch;gap:12px;flex-wrap:wrap">
+              <sc-for list="{{ etapas }}" as="e" hint-placeholder-count="5">
+                <button type="button" onClick="{{ e.abrir }}" style="flex:1 1 130px;min-width:0;text-align:left;background:#1B0647;border:0;border-top:3px solid {{ e.cor }};padding:16px 16px 18px;display:flex;flex-direction:column;gap:12px" style-hover="background:#24085C">
+                  <span style="{{ e.glifo }}"></span>
+                  <span style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8E77A6">{{ e.rotulo }}</span>
+                  <span style="font-size:26px;line-height:1;letter-spacing:-.03em;font-variation-settings:'wght' 620;color:#FFF1F0">{{ e.n }}</span>
+                  <span style="font-size:12px;font-variant-numeric:tabular-nums;color:#B79FC4">{{ e.valor }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+            <h2 style="margin:0;font-size:15px;font-variation-settings:'wght' 640;color:#FFF1F0">Prazos</h2>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ prazos }}" as="p" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid rgba(253,213,211,.14)">
+                  <span style="width:52px;flex:none;font-size:12px;letter-spacing:.06em;font-variant-numeric:tabular-nums;color:{{ p.cor }};font-variation-settings:'wght' 620">{{ p.quando }}</span>
+                  <span style="flex:1;min-width:0;font-size:13.5px;color:#FDD5D3">{{ p.titulo }}</span>
+                  <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8E77A6">{{ p.cliente }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ emProjetos }}" hint-placeholder-val="{{ true }}">
+        <section style="display:flex;flex-direction:column;gap:20px;animation:entra .4s ease-out both">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{ filtros }}" as="f" hint-placeholder-count="6">
+              <button type="button" onClick="{{ f.abrir }}" style="{{ f.estilo }}">{{ f.rotulo }}</button>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+            <sc-for list="{{ projetosVisiveis }}" as="p" hint-placeholder-count="6">
+              <div style="background:#1B0647;border-top:3px solid {{ p.cor }};padding:18px 18px 16px;display:flex;flex-direction:column;gap:14px;min-width:0" style-hover="background:#24085C">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                  <span style="{{ p.glifo }}"></span>
+                  <span style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:{{ p.cor }};font-variation-settings:'wght' 620">{{ p.etapaRotulo }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+                  <span style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8E77A6">{{ p.origem }}</span>
+                  <span style="font-size:16px;line-height:1.15;letter-spacing:-.02em;font-variation-settings:'wght' 620;color:#FFF1F0">{{ p.titulo }}</span>
+                </div>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-top:12px;border-top:1px solid rgba(253,213,211,.14)">
+                  <span style="font-size:16px;font-variation-settings:'wght' 620;font-variant-numeric:tabular-nums;color:#FDD5D3">{{ p.valor }}</span>
+                  <span style="font-size:11.5px;color:{{ p.prazoCor }}">{{ p.prazo }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ emClientes }}" hint-placeholder-val="{{ true }}">
+        <section style="display:flex;flex-direction:column;gap:1px;background:rgba(253,213,211,.14);animation:entra .4s ease-out both">
+          <sc-for list="{{ clientes }}" as="c" hint-placeholder-count="4">
+            <button type="button" onClick="{{ c.abrir }}" style="background:#120432;border:0;text-align:left;padding:22px 24px;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) auto;align-items:center;gap:24px" style-hover="background:#1B0647">
+              <div style="min-width:0;display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:19px;letter-spacing:-.02em;font-variation-settings:'wght' 620;color:#FFF1F0">{{ c.nome }}</span>
+                <span style="font-size:11.5px;letter-spacing:.06em;color:#8E77A6">{{ c.marcas }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8E77A6">No mês</span>
+                <span style="font-size:16px;font-variant-numeric:tabular-nums;font-variation-settings:'wght' 620;color:#FDD5D3">{{ c.mes }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8E77A6">Em aberto</span>
+                <span style="font-size:16px;font-variant-numeric:tabular-nums;color:{{ c.abertoCor }}">{{ c.aberto }}</span>
+              </div>
+              <span style="{{ c.portalEstilo }}">{{ c.portal }}</span>
+            </button>
+          </sc-for>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ emFicha }}" hint-placeholder-val="{{ true }}">
+        <section style="display:flex;flex-direction:column;gap:30px;animation:entra .4s ease-out both">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:rgba(253,213,211,.14)">
+            <sc-for list="{{ fichaNumeros }}" as="n" hint-placeholder-count="4">
+              <div style="background:#1B0647;padding:20px;display:flex;flex-direction:column;gap:8px">
+                <span style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#8E77A6">{{ n.rotulo }}</span>
+                <span style="font-size:24px;line-height:1;letter-spacing:-.03em;font-variation-settings:'wght' 620;font-variant-numeric:tabular-nums;color:#FFF1F0">{{ n.valor }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <h2 style="margin:0;font-size:15px;font-variation-settings:'wght' 640;color:#FFF1F0">Projetos deste cliente</h2>
+            <sc-for list="{{ fichaProjetos }}" as="p" hint-placeholder-count="3">
+              <div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;align-items:center;gap:18px;padding:15px 18px;background:#1B0647;border-left:3px solid {{ p.cor }}">
+                <span style="{{ p.glifo }}"></span>
+                <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:14.5px;font-variation-settings:'wght' 620;color:#FFF1F0">{{ p.titulo }}</span>
+                  <span style="font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#8E77A6">{{ p.etapaRotulo }} · {{ p.origem }}</span>
+                </div>
+                <span style="font-size:11.5px;color:{{ p.prazoCor }}">{{ p.prazo }}</span>
+                <span style="font-size:15px;font-variation-settings:'wght' 620;font-variant-numeric:tabular-nums;color:#FDD5D3">{{ p.valor }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:22px;border-top:1px solid rgba(253,213,211,.14)">
+            <button type="button" style="background:#7D2AE8;color:#FFF1F0;border:0;padding:13px 18px;font-size:13px;font-variation-settings:'wght' 620">Abrir portal do cliente</button>
+            <button type="button" style="background:transparent;color:#FDD5D3;border:1px solid rgba(253,213,211,.28);padding:13px 18px;font-size:13px">Gerar senha</button>
+            <button type="button" style="background:transparent;color:#FDD5D3;border:1px solid rgba(253,213,211,.28);padding:13px 18px;font-size:13px">Publicar entrega</button>
+            <span style="font-size:11.5px;color:#8E77A6;margin-left:auto">{{ fichaAcesso }}</span>
+          </div>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ emDinheiro }}" hint-placeholder-val="{{ true }}">
+        <section style="display:flex;flex-direction:column;gap:30px;animation:entra .4s ease-out both">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <h2 style="margin:0;font-size:15px;font-variation-settings:'wght' 640;color:#FFF1F0">Previsto e realizado</h2>
+            <div style="display:flex;align-items:flex-end;gap:14px;height:202px;padding:0 2px">
+              <sc-for list="{{ barras }}" as="b" hint-placeholder-count="6">
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;height:100%">
+                  <div style="flex:1;display:flex;align-items:flex-end;gap:5px;min-height:0">
+                    <div style="flex:1;height:{{ b.altura }};background:{{ b.cor }};min-height:2px"></div>
+                    <div style="flex:1;height:{{ b.alturaPrev }};border:1px solid {{ b.corPrev }};min-height:2px"></div>
+                  </div>
+                  <span style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8E77A6;text-align:center">{{ b.rotulo }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:22px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8E77A6">
+              <span style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:10px;background:#DFF806;display:block"></span>Realizado</span>
+              <span style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:10px;border:1px solid #9457F0;display:block"></span>Previsto</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <h2 style="margin:0;font-size:15px;font-variation-settings:'wght' 640;color:#FFF1F0">Movimentos</h2>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ movimentos }}" as="m" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:64px minmax(0,1fr) auto auto;align-items:center;gap:20px;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.14)">
+                  <span style="font-size:12px;font-variant-numeric:tabular-nums;color:#8E77A6">{{ m.data }}</span>
+                  <span style="font-size:13.5px;color:#FDD5D3;min-width:0">{{ m.descricao }}</span>
+                  <span style="{{ m.estadoEstilo }}">{{ m.estado }}</span>
+                  <span style="font-size:14.5px;font-variation-settings:'wght' 620;font-variant-numeric:tabular-nums;color:{{ m.cor }};min-width:110px;text-align:right">{{ m.valor }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ emBriefings }}" hint-placeholder-val="{{ true }}">
+        <section style="display:flex;flex-direction:column;gap:14px;animation:entra .4s ease-out both">
+          <sc-for list="{{ briefings }}" as="b" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:44px minmax(0,1fr) 140px 168px;align-items:center;gap:20px;padding:18px 20px;background:#1B0647;border-left:3px solid {{ b.cor }}" style-hover="background:#24085C">
+              <span style="{{ b.glifo }}"></span>
+              <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                <span style="font-size:15px;font-variation-settings:'wght' 620;color:#FFF1F0">{{ b.cliente }}</span>
+                <span style="font-size:12.5px;color:#B79FC4">{{ b.tipo }}</span>
+              </div>
+              <span style="{{ b.estadoEstilo }}">{{ b.estado }}</span>
+              <button type="button" style="{{ b.botao }}">{{ b.acao }}</button>
+            </div>
+          </sc-for>
+          <p style="margin:6px 0 0;font-size:12.5px;color:#8E77A6;max-width:70ch">Os três painéis antigos de briefing viraram um: os formulários sem token entram nesta mesma lista marcados como <b style="color:#B79FC4;font-variation-settings:'wght' 620">legado</b>, em vez de morar em página própria.</p>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{ emEntregas }}" hint-placeholder-val="{{ true }}">
+        <section style="display:flex;flex-direction:column;gap:20px;animation:entra .4s ease-out both">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
+            <sc-for list="{{ entregas }}" as="e" hint-placeholder-count="4">
+              <div style="background:#1B0647;padding:20px;display:flex;flex-direction:column;gap:16px;border-top:3px solid {{ e.cor }}">
+                <span style="{{ e.glifo }}"></span>
+                <div style="display:flex;flex-direction:column;gap:5px">
+                  <span style="font-size:15.5px;font-variation-settings:'wght' 620;color:#FFF1F0">{{ e.cliente }}</span>
+                  <span style="font-size:12.5px;color:#B79FC4">{{ e.conteudo }}</span>
+                </div>
+                <span style="{{ e.estadoEstilo }}">{{ e.estado }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:0;font-size:12.5px;color:#8E77A6;max-width:70ch">Gerar variações de logo deixou de ser uma página do menu: é uma ação daqui, dentro da entrega do cliente onde ela é usada.</p>
+        </section>
+      </sc-if>
+
+    </div>
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960},&quot;acento&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#DFF806&quot;,&quot;options&quot;:[&quot;#DFF806&quot;,&quot;#EEB4E7&quot;,&quot;#FD4400&quot;,&quot;#5B7CFD&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;KV&quot;},&quot;malha&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;KV&quot;},&quot;movimento&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;KV&quot;}}">
+class Component extends DCLogic {
+  state = { rota: 'hoje', filtro: 'todos', mes: 'jul', cliente: 'f2' };
+
+  /* ---------- dados (regras de negocio do repo, estrutura nova) ---------- */
+  clientes() {
+    return [
+      { id:'f2',  nome:'F2 EXPERIENCE',        marcas:'VIBRA · ASUS · MRV', mes:970000, aberto:550000, portal:true },
+      { id:'sol', nome:'Solarium Cosméticos',  marcas:'B2B · e-commerce',   mes:680000, aberto:200000, portal:true },
+      { id:'gvb', nome:'Guia Viver Bem',       marcas:'Portal de saúde RN', mes:425000, aberto:0,      portal:false },
+      { id:'ga',  nome:'Georgia Andrade',      marcas:'Marca pessoal',      mes:340000, aberto:120000, portal:true }
+    ];
+  }
+  /* um projeto atravessa orcamento → aprovado → execucao → entregue → pago.
+     Orcamento e servico eram duas telas para o mesmo dinheiro; aqui sao etapas. */
+  projetos() {
+    return [
+      { cliente:'sol', origem:'Solarium', titulo:'Migração de loja — fase 2',      etapa:'orcamento', valor:940000, dias:null },
+      { cliente:'ga',  origem:'Georgia Andrade', titulo:'Papelaria e social kit',   etapa:'orcamento', valor:280000, dias:null },
+      { cliente:'f2',  origem:'MRV',      titulo:'Landing de lançamento',           etapa:'execucao',  valor:240000, dias:-1 },
+      { cliente:'sol', origem:'Solarium', titulo:'Diagnóstico de operação',         etapa:'execucao',  valor:200000, dias:1 },
+      { cliente:'gvb', origem:'Guia Viver Bem', titulo:'Reestruturação — fase 2',   etapa:'aprovado',  valor:610000, dias:6 },
+      { cliente:'f2',  origem:'ASUS',     titulo:'Adaptação de peças — 14 formatos',etapa:'entregue',  valor:310000, dias:null },
+      { cliente:'ga',  origem:'Georgia Andrade', titulo:'Marca completa',           etapa:'entregue',  valor:340000, dias:null },
+      { cliente:'f2',  origem:'VIBRA',    titulo:'Key visual de campanha',          etapa:'pago',      valor:420000, dias:null },
+      { cliente:'gvb', origem:'Guia Viver Bem', titulo:'Arquitetura de informação', etapa:'pago',      valor:425000, dias:null }
+    ];
+  }
+  defEtapas() {
+    return [
+      { id:'orcamento', rotulo:'Orçamento', forma:'quadrado', cor:'#9457F0' },
+      { id:'aprovado',  rotulo:'Aprovado',  forma:'quadrado', cor:'#7D2AE8' },
+      { id:'execucao',  rotulo:'Execução',  forma:'arco',     cor:'#FD4400', gira:true },
+      { id:'entregue',  rotulo:'Entregue',  forma:'circulo',  cor:'#EEB4E7' },
+      { id:'pago',      rotulo:'Pago',      forma:'circulo',  cor:'#DFF806' }
+    ];
+  }
+
+  /* ---------- formato ---------- */
+  brl(c) { return 'R$ ' + (c/100).toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 }); }
+  curto(c) { return 'R$ ' + Math.round(c/100).toLocaleString('pt-BR'); }
+
+  /* ---------- o modulo do KV como glifo de estado ---------- */
+  glifo(forma, cor, px, gira) {
+    const t = px || 22;
+    let raio = '0';
+    if (forma === 'circulo') raio = '50%';
+    if (forma === 'arco') raio = '0 0 100% 0';
+    let s = 'display:block;flex:none;width:' + t + 'px;height:' + t + 'px;border-radius:' + raio + ';';
+    s += forma === 'vazio' ? ('background:transparent;border:2px solid ' + cor + ';') : ('background:' + cor + ';');
+    if (gira && (this.props.movimento ?? true)) s += 'animation:mod-turn 16s ease-in-out infinite;';
+    return s;
+  }
+
+  /* os botoes de acao ocupam a mesma coluna: mesma largura e mesma altura,
+     para a coluna de valor e a de acao formarem duas linhas retas */
+  botao(tom) {
+    const base = 'width:100%;height:44px;display:flex;align-items:center;justify-content:center;border:0;padding:0 14px;font-size:12.5px;font-variation-settings:\'wght\' 620;letter-spacing:.02em;white-space:nowrap;';
+    if (tom === 'sinal') return base + 'background:#DFF806;color:#120432;';
+    if (tom === 'quente') return base + 'background:#FD4400;color:#FFF1F0;';
+    return base + 'background:transparent;color:#FDD5D3;border:1px solid rgba(253,213,211,.28);';
+  }
+  selo(cor, fundo) {
+    return 'display:inline-block;justify-self:center;padding:5px 11px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-variation-settings:\'wght\' 620;white-space:nowrap;color:' + cor + ';background:' + (fundo || 'transparent') + ';border:1px solid ' + cor + ';';
+  }
+
+  ir(rota) { return () => this.setState({ rota, filtro:'todos' }); }
+
+  renderVals() {
+    const rota = this.state.rota;
+    const projetos = this.projetos();
+    const etapas = this.defEtapas();
+    const clientes = this.clientes();
+    const acento = this.props.acento ?? '#DFF806';
+
+    /* --- menu: cinco areas, uma pergunta cada. Portal do Cliente saiu do menu
+       (era atalho para a aba Clientes) e virou estado dentro da ficha. --- */
+    const areas = [
+      { id:'hoje',      rotulo:'Hoje',      forma:'quadrado', n:3 },
+      { id:'projetos',  rotulo:'Projetos',  forma:'arco',     n:projetos.length },
+      { id:'clientes',  rotulo:'Clientes',  forma:'circulo',  n:clientes.length },
+      { id:'dinheiro',  rotulo:'Dinheiro',  forma:'quadrado', n:null },
+      { id:'briefings', rotulo:'Briefings', forma:'vazio',    n:2 }
+    ];
+    const naRota = (id) => rota === id || (id === 'clientes' && rota === 'ficha');
+    const itemMenu = (a) => {
+      const on = naRota(a.id);
+      return {
+        rotulo: a.rotulo, n: a.n == null ? '' : a.n, abrir: this.ir(a.id),
+        glifo: this.glifo(a.forma, on ? acento : '#7D2AE8', 14),
+        estilo: 'display:flex;align-items:center;gap:12px;width:100%;padding:11px 22px;background:' + (on ? '#1B0647' : 'transparent') + ';border:0;border-left:3px solid ' + (on ? acento : 'transparent') + ';font-size:13.5px;color:' + (on ? '#FFF1F0' : '#B79FC4') + ';font-variation-settings:\'wght\' ' + (on ? 620 : 400) + ';',
+        contagem: 'font-size:11px;font-variant-numeric:tabular-nums;color:' + (on ? acento : '#8E77A6') + ';'
+      };
+    };
+
+    const cabecalhos = {
+      hoje:      ['Terça, 30 de julho', 'Hoje', 'O que está travado, o que vence e o que entrou. Nada além disso.'],
+      projetos:  ['Um projeto, do orçamento ao pago', 'Projetos', 'Orçamento e serviço eram duas telas para o mesmo dinheiro. Aqui são etapas do mesmo projeto.'],
+      clientes:  ['Quatro clientes ativos', 'Clientes', 'A ficha do cliente é a única fonte: projetos, dinheiro, briefing, entregas e acesso ao portal.'],
+      ficha:     ['Ficha do cliente', 'F2 EXPERIENCE', 'VIBRA, ASUS e MRV são marcas dentro deste cliente — agrupam e somam, não viram cliente próprio.'],
+      dinheiro:  ['Competência de julho', 'Dinheiro', 'Saldo = inicial + entradas realizadas − saídas realizadas. Previsto fica fora do saldo.'],
+      briefings: ['Convites e respostas', 'Briefings', 'Um link por cliente, uma lista só — com o tipo de formulário como filtro.'],
+      entregas:  ['Publicado para o cliente', 'Entregas', 'O que o cliente vê no portal, e o que ainda está em rascunho.']
+    };
+    const cab = cabecalhos[rota] || cabecalhos.hoje;
+
+    /* --- Hoje: acao antes de numero. Cada linha e uma decisao com dinheiro parado --- */
+    const acoes = [
+      { titulo:'Aprovar orçamento — Migração de loja fase 2', detalhe:'Solarium · enviado há 6 dias, sem resposta', valor:this.brl(940000), acao:'Cobrar retorno', tom:'sinal',  forma:'quadrado', cor:'#9457F0' },
+      { titulo:'Emitir nota fiscal', detalhe:'F2 EXPERIENCE / ASUS · concluído em 19/07', valor:this.brl(310000), acao:'Emitir NF', tom:'quente', forma:'circulo', cor:'#FD4400' },
+      { titulo:'Publicar entrega no portal', detalhe:'Georgia Andrade · 12 arquivos em rascunho', valor:this.brl(340000), acao:'Publicar', tom:'linha', forma:'arco', cor:'#EEB4E7' }
+    ].map(a => ({ ...a, glifo:this.glifo(a.forma, a.cor, 24), botao:this.botao(a.tom) }));
+
+    const numeros = [
+      { rotulo:'Faturado (jul)', valor:this.curto(1845000), nota:'7 projetos · 5 com NF', cor:'#DFF806' },
+      { rotulo:'A receber',      valor:this.curto(790000),  nota:'3 projetos · 1 vence em 4 dias', cor:'#FD4400' },
+      { rotulo:'Em execução',    valor:this.curto(1230000), nota:'4 projetos abertos', cor:'#7D2AE8' },
+      { rotulo:'Sem NF',         valor:this.curto(320000),  nota:'2 concluídos aguardando', cor:'#EEB4E7' }
+    ];
+
+    const porEtapa = etapas.map(e => {
+      const lista = projetos.filter(p => p.etapa === e.id);
+      return {
+        rotulo:e.rotulo, cor:e.cor, n:lista.length,
+        valor:this.curto(lista.reduce((s,p) => s + p.valor, 0)),
+        glifo:this.glifo(e.forma, e.cor, 26, e.gira),
+        abrir: () => this.setState({ rota:'projetos', filtro:e.id })
+      };
+    });
+
+    const prazoTexto = (d) => d == null ? '—' : (d < 0 ? Math.abs(d) + 'd atraso' : (d === 0 ? 'hoje' : 'em ' + d + 'd'));
+    const prazoCor = (d) => d == null ? '#8E77A6' : (d < 0 ? '#FD4400' : (d <= 2 ? '#DFF806' : '#B79FC4'));
+    const prazos = projetos.filter(p => p.dias != null).sort((a,b) => a.dias - b.dias).map(p => ({
+      quando: prazoTexto(p.dias), cor: prazoCor(p.dias), titulo: p.titulo, cliente: p.origem
+    }));
+
+    /* --- Projetos: um quadro, filtro por etapa --- */
+    const filtros = [{ id:'todos', rotulo:'Todos' }].concat(etapas.map(e => ({ id:e.id, rotulo:e.rotulo }))).map(f => {
+      const on = this.state.filtro === f.id;
+      return { rotulo:f.rotulo, abrir: () => this.setState({ filtro:f.id }),
+        estilo:'padding:9px 15px;font-size:12.5px;background:' + (on ? acento : 'transparent') + ';color:' + (on ? '#120432' : '#B79FC4') + ';border:1px solid ' + (on ? acento : 'rgba(253,213,211,.28)') + ';font-variation-settings:\'wght\' ' + (on ? 620 : 400) + ';' };
+    });
+    const cartao = (p) => {
+      const e = etapas.find(x => x.id === p.etapa);
+      return { titulo:p.titulo, origem:p.origem, etapaRotulo:e.rotulo, cor:e.cor,
+        glifo:this.glifo(e.forma, e.cor, 22, e.gira), valor:this.brl(p.valor),
+        prazo:prazoTexto(p.dias), prazoCor:prazoCor(p.dias) };
+    };
+    const visiveis = (this.state.filtro === 'todos' ? projetos : projetos.filter(p => p.etapa === this.state.filtro)).map(cartao);
+
+    /* --- Clientes + ficha --- */
+    const listaClientes = clientes.map(c => ({
+      nome:c.nome, marcas:c.marcas, mes:this.brl(c.mes),
+      aberto: c.aberto ? this.brl(c.aberto) : '—',
+      abertoCor: c.aberto ? '#FD4400' : '#8E77A6',
+      portal: c.portal ? 'portal ativo' : 'sem senha',
+      portalEstilo: this.selo(c.portal ? '#DFF806' : '#8E77A6'),
+      abrir: () => this.setState({ rota:'ficha', cliente:c.id })
+    }));
+    const cAtivo = clientes.find(c => c.id === this.state.cliente) || clientes[0];
+    const doCliente = projetos.filter(p => p.cliente === cAtivo.id);
+    const fichaNumeros = [
+      { rotulo:'No mês', valor:this.curto(cAtivo.mes) },
+      { rotulo:'Em aberto', valor:cAtivo.aberto ? this.curto(cAtivo.aberto) : '—' },
+      { rotulo:'Projetos', valor:String(doCliente.length) },
+      { rotulo:'Marcas', valor:String(cAtivo.marcas.split('·').length) }
+    ];
+
+    /* --- Dinheiro: previsto vs realizado, barras na malha --- */
+    const dados = [
+      { rotulo:'Mar', real:1120000, prev:1200000 }, { rotulo:'Abr', real:1480000, prev:1400000 },
+      { rotulo:'Mai', real:960000,  prev:1300000 }, { rotulo:'Jun', real:1710000, prev:1600000 },
+      { rotulo:'Jul', real:1845000, prev:1900000 }, { rotulo:'Ago', real:0,       prev:1230000 }
+    ];
+    const teto = 2000000;
+    const barras = dados.map(d => ({
+      rotulo:d.rotulo,
+      altura: Math.round(d.real / teto * 100) + '%',
+      alturaPrev: Math.round(d.prev / teto * 100) + '%',
+      cor: d.real ? '#DFF806' : 'transparent',
+      corPrev: '#9457F0'
+    }));
+    const movimentos = [
+      { data:'28/07', descricao:'VIBRA — key visual de campanha', estado:'realizado', valor:420000, entrada:true },
+      { data:'26/07', descricao:'Assinaturas e ferramentas', estado:'realizado', valor:-38000, entrada:false },
+      { data:'22/07', descricao:'Guia Viver Bem — arquitetura', estado:'realizado', valor:425000, entrada:true },
+      { data:'05/08', descricao:'ASUS — adaptação de peças', estado:'previsto', valor:310000, entrada:true },
+      { data:'10/08', descricao:'Solarium — diagnóstico', estado:'previsto', valor:200000, entrada:true }
+    ].map(m => ({
+      data:m.data, descricao:m.descricao, estado:m.estado,
+      estadoEstilo:this.selo(m.estado === 'previsto' ? '#9457F0' : '#DFF806'),
+      valor:(m.entrada ? '+ ' : '− ') + this.brl(Math.abs(m.valor)).replace('R$ ',''),
+      cor:m.entrada ? '#FDD5D3' : '#B79FC4'
+    }));
+
+    const briefings = [
+      { cliente:'Solarium Cosméticos', tipo:'E-commerce dirigido · token ativo', estado:'respondido', acao:'Ver resposta', tom:'sinal', forma:'circulo', cor:'#DFF806' },
+      { cliente:'Georgia Andrade', tipo:'Identidade visual · enviado há 2 dias', estado:'pendente', acao:'Reenviar link', tom:'linha', forma:'quadrado', cor:'#9457F0' },
+      { cliente:'Guia Viver Bem', tipo:'Reestruturação · 9 etapas', estado:'respondido', acao:'Ver resposta', tom:'linha', forma:'circulo', cor:'#EEB4E7' },
+      { cliente:'Sem cliente', tipo:'Formulário aberto (legado, sem token)', estado:'legado', acao:'Vincular cliente', tom:'linha', forma:'vazio', cor:'#8E77A6' }
+    ].map(b => ({ ...b, glifo:this.glifo(b.forma, b.cor, 24), botao:this.botao(b.tom),
+      estadoEstilo:this.selo(b.estado === 'respondido' ? '#DFF806' : (b.estado === 'legado' ? '#8E77A6' : '#9457F0')) }));
+
+    const entregas = [
+      { cliente:'Georgia Andrade', conteudo:'Marca completa · 12 arquivos', estado:'rascunho', cor:'#FD4400', forma:'arco' },
+      { cliente:'Solarium Cosméticos', conteudo:'Logo, paleta e variações', estado:'publicado', cor:'#DFF806', forma:'circulo' },
+      { cliente:'F2 EXPERIENCE', conteudo:'Peças ASUS · 14 formatos', estado:'publicado', cor:'#DFF806', forma:'circulo' },
+      { cliente:'Guia Viver Bem', conteudo:'Arquivos do portal', estado:'arquivado', cor:'#8E77A6', forma:'vazio' }
+    ].map(e => ({ ...e, glifo:this.glifo(e.forma, e.cor, 26), estadoEstilo:this.selo(e.cor) }));
+
+    const meses = ['Mai','Jun','Jul'].map(m => {
+      const on = m.toLowerCase() === this.state.mes;
+      return { rotulo:m, abrir: () => this.setState({ mes:m.toLowerCase() }),
+        estilo:'padding:11px 15px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;border:0;background:' + (on ? '#7D2AE8' : 'transparent') + ';color:' + (on ? '#FFF1F0' : '#B79FC4') + ';font-variation-settings:\'wght\' ' + (on ? 620 : 400) + ';' };
+    });
+
+    return {
+      menu: areas.map(itemMenu),
+      ferramentas: [
+        { rotulo:'Entregas', forma:'arco', id:'entregas' }
+      ].map(f => {
+        const on = rota === f.id;
+        return { rotulo:f.rotulo, abrir:this.ir(f.id), glifo:this.glifo(f.forma, on ? acento : '#7D2AE8', 14),
+          estilo:'display:flex;align-items:center;gap:12px;width:100%;padding:11px 22px;background:' + (on ? '#1B0647' : 'transparent') + ';border:0;border-left:3px solid ' + (on ? acento : 'transparent') + ';font-size:13.5px;color:' + (on ? '#FFF1F0' : '#B79FC4') + ';' };
+      }),
+      contexto: cab[0], titulo: cab[1], subtitulo: cab[2], meses,
+      malhaOpacidade: (this.props.malha ?? true) ? '1' : '0',
+      emHoje: rota === 'hoje', emProjetos: rota === 'projetos', emClientes: rota === 'clientes',
+      emFicha: rota === 'ficha', emDinheiro: rota === 'dinheiro', emBriefings: rota === 'briefings',
+      emEntregas: rota === 'entregas',
+      nAcoes: acoes.length, acoes, numeros, etapas: porEtapa, prazos,
+      filtros, projetosVisiveis: visiveis,
+      clientes: listaClientes,
+      fichaNumeros, fichaProjetos: doCliente.map(cartao),
+      fichaAcesso: cAtivo.portal ? 'Portal com senha ativa' : 'Sem senha gerada',
+      barras, movimentos, briefings, entregas
+    };
+  }
+}
+
+</script>
+</body>
+</html>
