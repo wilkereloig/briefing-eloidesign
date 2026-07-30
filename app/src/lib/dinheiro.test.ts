@@ -3,8 +3,8 @@ import { fmtBRL, centsDeBRL, centsDeReais } from './dinheiro'
 
 describe('dinheiro', () => {
   it('formata cents em BRL', () => {
-    expect(fmtBRL(1165000)).toBe('R$ 11.650,00')
-    expect(fmtBRL(0)).toBe('R$ 0,00')
+    expect(fmtBRL(1165000)).toBe('R$ 11.650,00')
+    expect(fmtBRL(0)).toBe('R$ 0,00')
   })
   it('parseia entrada humana pra cents sem float', () => {
     expect(centsDeBRL('11.650,00')).toBe(1165000)
