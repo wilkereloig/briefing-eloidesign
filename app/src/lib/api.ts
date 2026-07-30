@@ -4,6 +4,7 @@ export const TOKEN_KEY = 'eloi_admin_token' // mesmo do painel legado — sessã
 // ALLOWLIST: este client só fala com estas functions. Tabelas do app
 // Financeiro (clients/services) não existem pra este código.
 type Fn = 'admin-auth' | 'eloi-gestao' | 'eloi-financeiro' | 'orcamentos' | 'briefing-links'
+  | 'get-briefings' | 'get-ecommerce-briefings'
 
 // Assinantes avisados quando um 401 derruba o token — o AdminAuthProvider
 // usa isso pra sincronizar o estado React (`logado`) com a sessão real.
@@ -55,4 +56,63 @@ export const api = {
       body: JSON.stringify({ action: 'logout', token: t }),
     }).catch(() => {})
   },
+}
+
+// ── Wrappers por domínio — nomes de campo batem com app/src/lib/tipos.ts,
+// não com admin-app/src/lib/api.ts (que vaza os bugs de campo do domain.ts antigo).
+import type {
+  ClienteRow, ServicoRow, OrcamentoRow, CaixaRow, MovimentoRow,
+  MaterialRow, BriefingLinkRow, BriefingLegadoRow, FinanceiroStats,
+} from './tipos'
+
+export const clientes = {
+  list: () => call<{ clientes: ClienteRow[] }>('eloi-gestao', 'clientes.list').then((r) => r.clientes),
+  detail: (cliente_id: string) => call<{
+    cliente: ClienteRow; orcamentos: OrcamentoRow[]; servicos: ServicoRow[]
+    briefings: unknown[]; movimentos: MovimentoRow[]; materiais: MaterialRow[]
+    resumo: { faturado_cents: number; recebido_cents: number; a_receber_cents: number }
+  }>('eloi-gestao', 'clientes.detail', { cliente_id }),
+  upsert: (cliente: Partial<ClienteRow> & { id?: string }) =>
+    call<{ cliente: ClienteRow }>('eloi-gestao', 'clientes.upsert', { cliente }).then((r) => r.cliente),
+  gerarSenhaPortal: (cliente_id: string) =>
+    call<{ senha: string }>('eloi-gestao', 'clientes.gerar_senha_portal', { cliente_id }).then((r) => r.senha),
+}
+
+export const servicos = {
+  list: (filtro?: Record<string, unknown>) =>
+    call<{ servicos: ServicoRow[] }>('eloi-gestao', 'servicos.list', filtro ? { filtro } : {}).then((r) => r.servicos),
+  upsert: (servico: Partial<ServicoRow> & { id?: string }) =>
+    call<{ servico: ServicoRow }>('eloi-gestao', 'servicos.upsert', { servico }).then((r) => r.servico),
+}
+
+export const orcamentos = {
+  list: () => call<{ orcamentos: OrcamentoRow[] }>('orcamentos', 'list').then((r) => r.orcamentos),
+  update: (orcamento: Partial<OrcamentoRow> & { id: string }) =>
+    call<{ orcamento: OrcamentoRow }>('orcamentos', 'update', { orcamento }).then((r) => r.orcamento),
+}
+
+export const financeiro = {
+  caixasList: () => call<{ caixas: CaixaRow[] }>('eloi-financeiro', 'caixas.list').then((r) => r.caixas),
+  movimentosList: (filtro?: Record<string, unknown>) =>
+    call<{ movimentos: MovimentoRow[] }>('eloi-financeiro', 'movimentos.list', filtro ? { filtro } : {}).then((r) => r.movimentos),
+  movimentoUpsert: (movimento: Partial<MovimentoRow> & { id?: string }) =>
+    call<{ movimento: MovimentoRow }>('eloi-financeiro', 'movimentos.upsert', { movimento }).then((r) => r.movimento),
+  stats: () => call<FinanceiroStats>('eloi-financeiro', 'financeiro.stats'),
+}
+
+export const briefingsApi = {
+  convites: () => call<{ invites: BriefingLinkRow[] }>('briefing-links', 'list').then((r) => r.invites),
+  legadoVisual: () => call<{ briefings: BriefingLegadoRow[] }>('get-briefings', 'list').then((r) => r.briefings),
+  legadoEcommerce: () => call<{ briefings: BriefingLegadoRow[] }>('get-ecommerce-briefings', 'list').then((r) => r.briefings),
+  vincularLegadoVisual: (id: string, cliente_id: string) =>
+    call('get-briefings', 'vincular_cliente', { id, cliente_id }),
+  vincularLegadoEcommerce: (id: string, cliente_id: string) =>
+    call('get-ecommerce-briefings', 'vincular_cliente', { id, cliente_id }),
+  vincularConvite: (id: string, cliente_id: string) =>
+    call('briefing-links', 'vincular_cliente', { id, cliente_id }),
+}
+
+export const materiaisApi = {
+  list: (filtro?: Record<string, unknown>) =>
+    call<{ materiais: MaterialRow[] }>('eloi-gestao', 'materiais.list', filtro ? { filtro } : {}).then((r) => r.materiais),
 }
