@@ -342,6 +342,16 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true });
   }
 
+  if (action === "materiais.list") {
+    const filtro = body?.filtro || {};
+    let q = supabase.from("eloi_materiais").select("*").order("created_at", { ascending: false });
+    if (filtro.status) q = q.eq("status", filtro.status);
+    if (filtro.cliente_id) q = q.eq("cliente_id", filtro.cliente_id);
+    const { data, error } = await q;
+    if (error) return json({ error: error.message }, 500);
+    return json({ materiais: data });
+  }
+
   // ── DASHBOARD ──
   if (action === "dashboard.stats") {
     const { data: rows, error } = await supabase
