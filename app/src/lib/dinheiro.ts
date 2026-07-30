@@ -12,3 +12,10 @@ export function centsDeBRL(s: string): number {
   const dec = (decParte + '00').slice(0, 2)
   return parseInt(intParte.replace(/\D/g, '') || '0', 10) * 100 + parseInt(dec, 10)
 }
+
+// orcamentos.valor_total é o ÚNICO campo monetário do sistema em reais, não
+// cents (ver CONTEXT.md). Mesma conta do trigger SQL trg_eloi_orcamento_aprovado
+// (round(valor_total * 100)) — manter os dois em sincronia se um dia mudar.
+export function centsDeReais(valorReais: number): number {
+  return Math.round(valorReais * 100)
+}
