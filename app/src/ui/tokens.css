@@ -1,0 +1,30 @@
+:root {
+  --pagina: #120432;
+  --chao: #1B0647;
+  --chao-2: #24085C;
+  --trilho: #0C0220;
+  --roxo: #7D2AE8;
+  --roxo-claro: #9457F0;
+  --roxo-texto: #C0A0FA; /* #7D2AE8 sobre --chao dá ~2,4:1 -- nunca usar pra texto */
+  --lima: #DFF806;
+  --laranja: #FD4400;
+  --lilas: #EEB4E7;
+  --azul: #5B7CFD;
+  --rosa: #FDD5D3;
+  --tinta-forte: #FFF1F0;
+  --tinta-media: #B79FC4;
+  --tinta-fraca: #8E77A6;
+  --linha: rgba(253, 213, 211, .14);
+  --linha-forte: rgba(253, 213, 211, .28);
+  --malha: 202px;
+  --font: 'carbona-variable', system-ui, -apple-system, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+:focus-visible {
+  outline: 2px solid var(--lima);
+  outline-offset: 2px;
+}
