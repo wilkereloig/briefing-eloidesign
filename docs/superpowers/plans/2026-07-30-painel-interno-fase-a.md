@@ -408,8 +408,8 @@ import { fmtBRL, centsDeBRL, centsDeReais } from './dinheiro'
 
 describe('dinheiro', () => {
   it('formata cents em BRL', () => {
-    expect(fmtBRL(1165000)).toBe('R$ 11.650,00')
-    expect(fmtBRL(0)).toBe('R$ 0,00')
+    expect(fmtBRL(1165000)).toBe('R$ 11.650,00')
+    expect(fmtBRL(0)).toBe('R$ 0,00')
   })
   it('parseia entrada humana pra cents sem float', () => {
     expect(centsDeBRL('11.650,00')).toBe(1165000)
@@ -1256,6 +1256,11 @@ Por (KV v3 — fundo escuro, mesma estrutura de campos):
 
 ```css
 @import './ui/tokens.css';
+
+/* Ponte temporária: .shell-top/.btn-ghost/.carregando (abaixo) ainda usam os
+   nomes antigos até a Task 8 os substituir — sem isso ficam com var()
+   indefinida (sem cor de fundo/borda) assim que o :root antigo sai daqui. */
+:root{--surface:#fff;--line:#E7DEF2;--muted:#6B5685;--r:8px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--pagina);color:var(--tinta-forte);line-height:1.6}
 .login{max-width:min(430px,calc(100% - 40px));margin:11vh auto 0;background:var(--chao);
