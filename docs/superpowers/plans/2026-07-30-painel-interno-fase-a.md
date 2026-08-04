@@ -1678,6 +1678,9 @@ create table if not exists public.admin_login_seguranca (
   bloqueado_ate timestamptz
 );
 insert into public.admin_login_seguranca (id) values (true) on conflict (id) do nothing;
+
+-- sem policies: só service-role (edge functions) acessa, igual admin_sessions.
+alter table public.admin_login_seguranca enable row level security;
 ```
 
 Aplicar via MCP `apply_migration` (name `admin_login_throttle`). Verificar: `select * from admin_login_seguranca;` → 1 linha, `tentativas_falhas=0`, `bloqueado_ate=null`.
