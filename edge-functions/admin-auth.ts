@@ -29,8 +29,22 @@ Deno.serve(async (req: Request) => {
   if (action === "login") {
     const expected = Deno.env.get("ADMIN_PASSWORD");
     if (!expected) return json({ error: "ADMIN_PASSWORD não configurado no projeto" }, 500);
-    if (body?.password !== expected) return json({ error: "senha inválida" }, 401);
 
+    const { data: seg } = await supabase.from("admin_login_seguranca")
+      .select("tentativas_falhas, bloqueado_ate").eq("id", true).maybeSingle();
+    if (seg?.bloqueado_ate && new Date(seg.bloqueado_ate) > new Date()) {
+      return json({ error: "muitas tentativas, tente novamente mais tarde" }, 429);
+    }
+
+    if (body?.password !== expected) {
+      const tentativas = (seg?.tentativas_falhas ?? 0) + 1;
+      const patch: Record<string, unknown> = { tentativas_falhas: tentativas };
+      if (tentativas >= 5) { patch.bloqueado_ate = new Date(Date.now() + 15 * 60_000).toISOString(); patch.tentativas_falhas = 0; }
+      await supabase.from("admin_login_seguranca").update(patch).eq("id", true);
+      return json({ error: "senha inválida" }, 401);
+    }
+
+    await supabase.from("admin_login_seguranca").update({ tentativas_falhas: 0, bloqueado_ate: null }).eq("id", true);
     const { data, error } = await supabase.from("admin_sessions").insert({}).select("token, expires_at").single();
     if (error) return json({ error: error.message }, 500);
     return json({ token: data.token, expires_at: data.expires_at });
