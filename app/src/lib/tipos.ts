@@ -19,6 +19,11 @@ export interface ClienteRow {
   total_cents: number
 }
 
+// clientes.detail (edge eloi-gestao) só seleciona um subconjunto de colunas —
+// não inclui total_servicos/total_cents (só clientes.list calcula) nem os
+// campos de bloqueio de portal. Ver edge-functions/eloi-gestao.ts.
+export type ClienteDetalhe = Omit<ClienteRow, 'total_servicos' | 'total_cents' | 'portal_tentativas_falhas' | 'portal_bloqueado_ate'>
+
 export type StatusExecucao = 'aguardando_inicio' | 'em_execucao' | 'concluida'
 
 export interface ServicoRow {

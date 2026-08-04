@@ -61,14 +61,14 @@ export const api = {
 // ── Wrappers por domínio — nomes de campo batem com app/src/lib/tipos.ts,
 // não com admin-app/src/lib/api.ts (que vaza os bugs de campo do domain.ts antigo).
 import type {
-  ClienteRow, ServicoRow, OrcamentoRow, CaixaRow, MovimentoRow,
+  ClienteRow, ClienteDetalhe, ServicoRow, OrcamentoRow, CaixaRow, MovimentoRow,
   MaterialRow, BriefingLinkRow, BriefingLegadoRow, FinanceiroStats,
 } from './tipos'
 
 export const clientes = {
   list: () => call<{ clientes: ClienteRow[] }>('eloi-gestao', 'clientes.list').then((r) => r.clientes),
   detail: (cliente_id: string) => call<{
-    cliente: ClienteRow; orcamentos: OrcamentoRow[]; servicos: ServicoRow[]
+    cliente: ClienteDetalhe; orcamentos: OrcamentoRow[]; servicos: ServicoRow[]
     briefings: unknown[]; movimentos: MovimentoRow[]; materiais: MaterialRow[]
     resumo: { faturado_cents: number; recebido_cents: number; a_receber_cents: number }
   }>('eloi-gestao', 'clientes.detail', { cliente_id }),

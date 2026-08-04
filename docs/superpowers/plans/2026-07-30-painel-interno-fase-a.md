@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Base de dados e layout do sub-projeto 2 (Painel interno): fecha os 3 gaps de backend que o design pressupõe, constrói a camada de domínio (`Projeto`/`Etapa`/`Decisão`) e o client de API com nomes de campo corretos, aplica o sistema visual KV v3 (tokens, sidebar 202px, topbar, silhuetas) com as 7 rotas registradas (telas ainda placeholder). Fase A termina com `/admin` navegável nas 7 áreas, visual final, dado real já disponível pela camada de API — só falta preencher o conteúdo de cada tela (Fase B, plano separado, depois desta).
+**Goal:** Base de dados e layout do sub-projeto 2 (Painel interno): fecha os 3 gaps de backend que o design pressupõe, constrói a camada de domínio (`Projeto`/`Etapa`/`Decisão`) e o client de API com nomes de campo corretos, aplica o sistema visual KV v3 (tokens, sidebar 202px, silhuetas) com as 7 rotas registradas (telas ainda placeholder). Fase A termina com `/admin` navegável nas 7 áreas, visual final, dado real já disponível pela camada de API — só falta preencher o conteúdo de cada tela (Fase B, plano separado, depois desta).
 
 **Architecture:** Camada de domínio pura (`app/src/domain/`) sem dependência de React, testada com Vitest, consumida por um client de API por domínio (`app/src/lib/api.ts`) que já existe e ganha wrappers. Layout novo (`app/src/routes/admin/`) com rotas aninhadas do react-router-dom v7 (`children` + `<Outlet/>`), sidebar fixo 202px. 3 edge functions ganham 1 action nova cada (sem criar function nova — regra D6 da Fundação).
 

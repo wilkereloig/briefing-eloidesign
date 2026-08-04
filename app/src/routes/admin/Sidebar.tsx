@@ -8,7 +8,7 @@ export function Sidebar() {
   return (
     <aside className="trilho">
       <div className="trilho-marca">
-        <img src="/wordmark-kv.svg" alt="ELOI Design Studio" height={52} />
+        <img src={import.meta.env.BASE_URL + 'wordmark-kv.svg'} alt="ELOI Design Studio" height={52} />
       </div>
       <nav>
         {NAV_PRIMARIA.map((item) => (

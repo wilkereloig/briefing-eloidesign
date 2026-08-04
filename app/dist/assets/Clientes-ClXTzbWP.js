@@ -1,1 +1,0 @@
-import{n as e}from"./index-CexYkWoW.js";var t=e();function n(){return(0,t.jsxs)(`div`,{className:`tela`,children:[(0,t.jsx)(`h1`,{children:`Clientes`}),(0,t.jsx)(`p`,{children:`Chega no próximo plano (Fase B — telas).`})]})}export{n as default};
