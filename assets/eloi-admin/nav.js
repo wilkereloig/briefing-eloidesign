@@ -1,3 +1,8 @@
+// TODO (painel interno, Fase B): quando /gestao/, /painel-briefings/,
+// /painel-orcamentos/, /painel/ e /painel-ecommerce/ saírem do ar, PRIMARY
+// abaixo fica com 4 links mortos — /marca/ é a única página que ainda usa
+// este nav. Trocar por um link único "← Painel" pra /admin nessa hora.
+
 /* nav.js — navegacao admin compartilhada. Injetado por JS (1 <script> por pagina).
    window.EloiNav = { mount, unmount }. Auth-aware: so injeta se logado.
 
