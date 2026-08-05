@@ -16,6 +16,11 @@ const ClienteFicha = lazy(() => import('./routes/admin/telas/ClienteFicha'))
 const Dinheiro = lazy(() => import('./routes/admin/telas/Dinheiro'))
 const Briefings = lazy(() => import('./routes/admin/telas/Briefings'))
 const Entregas = lazy(() => import('./routes/admin/telas/Entregas'))
+const Notas = lazy(() => import('./routes/admin/telas/Notas'))
+const Relatorios = lazy(() => import('./routes/admin/telas/Relatorios'))
+const Calendario = lazy(() => import('./routes/admin/telas/Calendario'))
+const Arquivos = lazy(() => import('./routes/admin/telas/Arquivos'))
+const Config = lazy(() => import('./routes/admin/telas/Config'))
 
 const router = createBrowserRouter([
   {
@@ -29,6 +34,11 @@ const router = createBrowserRouter([
       { path: 'dinheiro', element: <Dinheiro /> },
       { path: 'briefings', element: <Briefings /> },
       { path: 'entregas', element: <Entregas /> },
+      { path: 'notas', element: <Notas /> },
+      { path: 'relatorios', element: <Relatorios /> },
+      { path: 'calendario', element: <Calendario /> },
+      { path: 'arquivos', element: <Arquivos /> },
+      { path: 'config', element: <Config /> },
     ],
   },
 ])

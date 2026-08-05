@@ -1,0 +1,20 @@
+{
+  "name": "Gestão ELOI",
+  "short_name": "ELOI",
+  "description": "Controle financeiro pessoal e do ELOI Studio, clientes e projetos.",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#08011A",
+  "background_color": "#08011A",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/app/dist/icone-app.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

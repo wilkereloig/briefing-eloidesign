@@ -1,50 +1,206 @@
 @import './ui/tokens.css';
+@import './ui/componentes.css';
+
+/* ── base ───────────────────────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--pagina);color:var(--tinta-forte);line-height:1.6}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--fonte-corpo);font-size:15px;line-height:1.65;font-weight:400;
+  background:var(--pagina);color:var(--texto);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+img,svg{display:block;max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--acento);text-decoration:none}
+a:hover{color:var(--texto)}
+
+/* ── escala tipográfica (secao 5 do design system) ───────────────────────── */
+.t-h1,.t-pagina,.t-h2,.t-card,.t-valor-g,.t-valor{
+  font-family:var(--fonte-titulo);
+  font-variation-settings:'wdth' var(--titulo-wdth);
+}
+.t-h1     {font-weight:600;font-size:28px;line-height:1.10;letter-spacing:-.02em}
+.t-pagina {font-weight:600;font-size:27px;line-height:1.10;letter-spacing:-.02em}
+.t-h2     {font-weight:600;font-size:22px;line-height:1.20;letter-spacing:-.01em}
+.t-card   {font-weight:600;font-size:18px;line-height:1.25;letter-spacing:-.01em}
+.t-valor-g{font-weight:700;font-size:24px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.t-valor  {font-weight:600;font-size:16px;line-height:1.2;font-variant-numeric:tabular-nums}
+.t-corpo  {font-size:15px;line-height:1.65}
+.t-ui     {font-size:14px;line-height:1.4;font-weight:600}
+.t-sec    {font-size:13px;line-height:1.5;color:var(--texto-3)}
+.t-legenda{font-size:12px;line-height:1.5;color:var(--texto-3)}
+.t-msg    {font-size:13px;line-height:1.5;font-weight:600}
+.etiqueta {font-size:11px;font-weight:700;letter-spacing:.20em;text-transform:uppercase;line-height:1}
+.etiqueta-mini{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1;color:var(--texto-4)}
+.etiqueta-acento{color:var(--acento)}
+
+/* dinheiro é sempre Archivo (regra da secao 5) */
+.dinheiro{font-family:var(--fonte-titulo);font-variation-settings:'wdth' var(--titulo-wdth);
+  font-variant-numeric:tabular-nums}
+
+/* ── assinatura ─────────────────────────────────────────────────────────── */
+/* ELOI + complemento: mesma largura (wdth 72) e peso, cores diferentes, sem
+   espaço entre as palavras. Regras 1–3 das oito que não se quebram. */
+.marca{display:inline-flex;align-items:baseline;font-family:var(--fonte-titulo);
+  font-size:20px;line-height:1.24;user-select:none}
+.marca b{font-variation-settings:'wdth' var(--marca-wdth),'wght' 700;font-weight:400;
+  letter-spacing:-.02em;color:var(--rosa)}
+.marca i{font-variation-settings:'wdth' var(--marca-wdth),'wght' 700;font-weight:400;
+  font-style:normal;color:var(--acento)}
+
+/* ── shell ──────────────────────────────────────────────────────────────── */
+/* Mobile primeiro (RESPONSIVE_GUIDELINES): base é uma coluna com barra
+   inferior; o trilho lateral só existe a partir de 768. */
+/* linhas explícitas: sem isso a grade estica o cabeçalho de toque para metade
+   da altura da tela, porque linhas automáticas dividem a sobra igualmente */
+.app-shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr;
+  min-height:100dvh;background:var(--pagina)}
+.app-main{min-width:0;width:100%;max-width:var(--conteudo-max);
+  padding:18px var(--margem) calc(var(--barra-mobile) + env(safe-area-inset-bottom) + 44px)}
+
+/* ── trilho / barra inferior ────────────────────────────────────────────── */
+.trilho{
+  position:fixed;bottom:0;left:0;right:0;z-index:var(--z-trilho);
+  display:grid;grid-template-columns:repeat(5,1fr);align-items:center;
+  height:calc(var(--barra-mobile) + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  background:var(--chao);border-top:1px solid var(--linha);user-select:none;
+}
+/* display:contents faz os links do <nav> virarem colunas da grade da barra */
+.trilho nav{display:contents}
+.trilho-marca,.trilho-rotulo,.trilho-rodape,.trilho-ferramentas,
+.trilho-item .rotulo-longo,.trilho-criar .rotulo-longo{display:none}
+/* fora da barra (sem data-barra) o destino vive no menu em folha do Shell */
+.trilho-item:not([data-barra]){display:none}
+.trilho-item[data-barra='1']{order:1}
+.trilho-item[data-barra='2']{order:2}
+.trilho-criar{order:3}
+.trilho-item[data-barra='3']{order:4}
+.trilho-item[data-barra='4']{order:5}
+
+.trilho-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  min-height:var(--alvo-toque);padding:6px 2px;position:relative;
+  font-size:10px;font-weight:700;line-height:1;color:var(--texto-3);
+  text-decoration:none;transition:color var(--t-micro) var(--curva);
+}
+.trilho-item .marca-ativa{display:none}
+.trilho-item.ativo{color:var(--acento)}
+.trilho-item:active{color:var(--texto)}
+
+/* botão central de criação — 56x56, elevado, borda na cor da página */
+.trilho-criar{
+  justify-self:center;display:flex;align-items:center;justify-content:center;
+  width:56px;height:56px;transform:translateY(-16px);
+  background:var(--roxo);color:#FFF;border:4px solid var(--pagina);
+  border-radius:var(--raio-painel);cursor:pointer;
+  transition:background var(--t-micro) var(--curva);
+}
+.trilho-criar:hover{background:var(--roxo-hover)}
+.trilho-criar:active{background:var(--roxo-press)}
+
+/* cabeçalho de toque: 54 px fixos, não some na rolagem */
+.cabecalho-toque{
+  position:sticky;top:0;z-index:var(--z-cabecalho);
+  display:flex;align-items:center;justify-content:space-between;gap:var(--e-3);
+  height:54px;padding:0 var(--e-5);padding-top:env(safe-area-inset-top);
+  background:var(--pagina);border-bottom:1px solid var(--linha);user-select:none;
+}
+.cabecalho-toque .marca{font-size:17px}
+
+/* folha "Criar": ícone em quadrado colorido + rótulo */
+.criar-opcao{width:100%;min-height:64px;cursor:pointer;text-align:left;
+  transition:background var(--t-micro) var(--curva)}
+.criar-opcao:active{background:var(--chao-2)}
+.criar-icone{display:flex;align-items:center;justify-content:center;flex:none;
+  width:40px;height:40px;border-radius:var(--raio-chip);color:var(--tinta)}
+
+/* ── cabeçalho ──────────────────────────────────────────────────────────── */
+.cabecalho{display:flex;align-items:center;gap:var(--e-5);min-height:54px;
+  margin-bottom:var(--e-8)}
+.cabecalho-titulo{min-width:0;flex:1}
+.cabecalho-titulo .etiqueta{color:var(--acento);margin-bottom:var(--e-3);display:block}
+.cabecalho-acoes{display:flex;align-items:center;gap:var(--e-3);flex:none}
+
+/* ── login ──────────────────────────────────────────────────────────────── */
 .login{max-width:min(430px,calc(100% - 40px));margin:11vh auto 0;background:var(--chao);
-  border:1px solid var(--linha);border-radius:0;padding:40px 38px;text-align:left}
-.login h1{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--tinta-fraca);margin-bottom:22px;font-weight:400}
-.login input{width:100%;background:var(--pagina);color:var(--tinta-forte);border:1px solid var(--linha-forte);
-  border-radius:0;padding:14px 16px;font:inherit}
-.login button{width:100%;margin-top:12px;background:var(--lima);color:var(--pagina);border:0;
-  border-radius:0;padding:15px 18px;font:inherit;font-weight:640;cursor:pointer}
-.login button:disabled{opacity:.6;cursor:default}
-.err{color:var(--laranja);font-size:.85rem;margin-top:12px;min-height:1.2em}
-.carregando{padding:40px;color:var(--tinta-fraca)}
-.btn-ghost{background:none;border:1px solid var(--linha-forte);border-radius:0;
-  padding:8px 16px;font:inherit;cursor:pointer;color:var(--tinta-media)}
+  border:1px solid var(--linha);border-radius:var(--raio-painel);padding:var(--e-10) var(--e-9)}
+.login .marca{margin-bottom:var(--e-9)}
+.login h1{font-size:11px;font-weight:700;letter-spacing:.20em;text-transform:uppercase;
+  color:var(--texto-3);margin-bottom:var(--e-5)}
+.login input{width:100%;min-height:48px;background:var(--pagina);color:var(--texto);
+  border:1px solid var(--linha-campo);border-radius:var(--raio-controle);padding:13px 15px;font-size:14px}
+.login input::placeholder{color:var(--texto-off)}
+.login input:focus{border-color:var(--roxo-claro);outline:2px solid var(--lima);outline-offset:2px}
+.login button{width:100%;margin-top:var(--e-5)}
+.err{color:var(--coral);font-size:13px;font-weight:600;margin-top:var(--e-5);min-height:1.2em}
 
-.app-shell{display:grid;grid-template-columns:var(--malha) minmax(0,1fr);min-height:100vh;
-  background-color:var(--pagina);
-  background-image:repeating-linear-gradient(90deg,rgba(253,213,211,.05) 0 1px,transparent 1px var(--malha)),
-    repeating-linear-gradient(0deg,rgba(253,213,211,.03) 0 1px,transparent 1px var(--malha))}
-.app-main{min-width:0;padding:30px 34px}
+.carregando{padding:var(--e-11);color:var(--texto-3)}
+.tela{min-width:0}
 
-.trilho{background:var(--trilho);border-right:1px solid var(--linha);display:flex;flex-direction:column;
-  position:sticky;top:0;height:100vh}
-.trilho-marca{padding:0 22px 26px}
-.trilho nav{display:flex;flex-direction:column}
-.trilho-item{display:flex;align-items:center;gap:10px;padding:11px 22px;color:var(--tinta-media);
-  font-size:13.5px;text-decoration:none;border-left:3px solid transparent}
-.trilho-item:hover{background:var(--chao)}
-.trilho-item.ativo{background:var(--chao);border-left-color:var(--lima);color:var(--tinta-forte);font-weight:620}
-.trilho-ferramentas{margin-top:auto;padding-top:12px;border-top:1px solid var(--linha)}
-.trilho-rotulo{display:block;padding:10px 22px 4px;font-size:10px;letter-spacing:.22em;
-  text-transform:uppercase;color:var(--tinta-fraca)}
-.trilho-rodape{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;
-  border-top:1px solid var(--linha);font-size:11px;color:var(--tinta-fraca)}
+/* ── faixas (RESPONSIVE_GUIDELINES) ─────────────────────────────────────── */
+@media (min-width:360px){ :root{--margem:var(--e-7)} }
 
-.tela h1{font-size:38px;line-height:1;letter-spacing:-.035em;font-weight:620;color:var(--tinta-forte)}
-.tela p{color:var(--tinta-media);margin-top:10px}
+@media (min-width:768px){
+  :root{--margem:var(--e-9);--gap-grade:var(--e-7);--padding-card:var(--e-9)}
+  body{font-size:16px}
+  .t-h1{font-size:44px}
+  .t-pagina{font-size:32px}
+  .t-h2{font-size:28px}
+  .t-card{font-size:20px}
+  .t-valor-g{font-size:30px}
+  .t-valor{font-size:17px}
+  .t-corpo{font-size:16px}
 
-@media (max-width:899px){
-  .app-shell{grid-template-columns:1fr;padding-bottom:58px}
-  .trilho{position:fixed;bottom:0;left:0;right:0;top:auto;height:58px;flex-direction:row;
-    border-right:0;border-top:1px solid var(--linha);padding-bottom:env(safe-area-inset-bottom)}
-  .trilho-marca,.trilho-ferramentas,.trilho-rodape{display:none}
-  .trilho nav{flex-direction:row;width:100%;justify-content:space-around}
-  .trilho-item{flex-direction:column;gap:2px;padding:6px 4px;font-size:10px;border-left:0;
-    border-top:3px solid transparent;min-width:44px}
-  .trilho-item.ativo{border-left-color:transparent;border-top-color:var(--lima)}
-  .app-main{padding:20px}
+  /* trilho recolhido: 72 px, só ícone */
+  .app-shell{grid-template-columns:72px minmax(0,1fr)}
+  .app-main{padding:var(--e-9) var(--margem) var(--e-12)}
+  .trilho{position:sticky;top:0;bottom:auto;height:100dvh;
+    display:flex;flex-direction:column;gap:var(--e-1);
+    padding:var(--e-9) var(--e-6) var(--e-8);
+    border-top:0;border-right:1px solid var(--linha)}
+  .trilho nav{display:flex;flex-direction:column;gap:var(--e-1)}
+  .trilho-marca{display:block;margin:0 var(--e-3) var(--e-9)}
+  .trilho-ferramentas{display:block;margin-top:var(--e-7)}
+  .trilho-item:not([data-barra]){display:flex}
+  .trilho-item[data-barra],.trilho-criar{order:0}
+  .trilho-item .rotulo-curto{display:none}
+  .cabecalho-toque{display:none}
+  .trilho-item{flex-direction:row;justify-content:center;gap:0;
+    min-height:var(--alvo-toque);padding:11px 12px;border-radius:var(--raio-controle);
+    font-size:14px;font-weight:600;color:var(--texto-2);
+    transition:background var(--t-micro) var(--curva),color var(--t-micro) var(--curva)}
+  .trilho-item:hover{background:var(--chao-2);color:var(--texto)}
+  .trilho-item.ativo{color:var(--texto);background:none}
+  /* marca ativa: 3 px em Lima colada na aresta esquerda */
+  .trilho-item .marca-ativa{display:block;position:absolute;left:0;top:9px;bottom:9px;
+    width:3px;background:transparent;border-radius:0}
+  .trilho-item.ativo .marca-ativa{background:var(--acento)}
+  .trilho-criar{transform:none;width:auto;height:auto;min-height:var(--alvo-toque);
+    border:1px solid var(--linha-forte);background:none;color:var(--texto);
+    border-radius:var(--raio-controle);margin-top:var(--e-3)}
+  .trilho-criar:hover{background:none;border-color:var(--acento);color:var(--acento)}
+  .trilho-rodape{display:flex;margin-top:auto;padding-top:var(--e-5)}
+  .cabecalho{margin-bottom:var(--e-9)}
+}
+
+@media (min-width:1024px){
+  /* trilho completo: 236 px com rótulos, criação rápida e Sair */
+  .app-shell{grid-template-columns:var(--trilho-largura) minmax(0,1fr)}
+  :root{--margem:var(--e-10)}
+  .trilho-item{justify-content:flex-start;gap:11px}
+  .trilho-item .rotulo-longo,.trilho-criar .rotulo-longo{display:inline;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .trilho-rotulo{display:block;padding:var(--e-6) var(--e-5) var(--e-2);
+    color:var(--texto-4)}
+  .trilho-criar{justify-content:flex-start;gap:11px;padding:11px 12px}
+}
+
+@media (min-width:1280px){
+  :root{--margem:36px}
+  .t-valor-g{font-size:34px}
+}
+
+@media (min-width:1600px){
+  .app-main{margin-inline:auto}
 }

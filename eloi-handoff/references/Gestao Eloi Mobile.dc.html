@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#05010f}
+    a{color:#dff806;text-decoration:none}
+    a:hover{color:#fdd5d3}
+    input::placeholder,textarea::placeholder{color:rgba(253,213,211,.38)}
+    @keyframes eloi-skel{0%{opacity:.35}50%{opacity:.7}100%{opacity:.35}}
+    [data-scroll]{scrollbar-width:none;-ms-overflow-style:none}
+    [data-scroll]::-webkit-scrollbar{display:none;width:0;height:0}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</helmet>
+
+<div style="min-height:100vh;display:flex;align-items:flex-start;justify-content:center;gap:34px;padding:40px 24px;background:#05010f;font-family:Manrope,sans-serif;flex-wrap:wrap">
+
+  <div style="display:flex;flex-direction:column;gap:14px;max-width:320px;padding-top:8px">
+    <span style="display:inline-flex;align-items:baseline;font-family:Archivo;font-size:22px;line-height:1.24">
+      <span style="font-variation-settings:'wdth' 72,'wght' 700;letter-spacing:-.02em;color:#fdd5d3">ELOI</span>
+      <span style="font-variation-settings:'wdth' 72,'wght' 700;color:#dff806">Design</span>
+    </span>
+    <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">Gestão · aplicativo</span>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:rgba(253,213,211,.68);text-wrap:pretty">Versão de toque do painel. Barra inferior fixa, criação em folha deslizante, tabelas viradas em cartão e cada ação a um polegar de distância.</p>
+    <div style="display:flex;flex-direction:column;gap:9px;padding-top:6px">
+      <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Telas</span>
+      <span style="font-size:13px;color:rgba(253,213,211,.6)">Início · Serviços · Clientes · Dinheiro · Estados</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;padding-top:6px">
+      <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Interações vivas</span>
+      <span style="font-size:13px;line-height:1.6;color:rgba(253,213,211,.6)">Menu lateral, folha de criação, folha de status, busca, filtros e aviso de confirmação.</span>
+    </div>
+  </div>
+
+  <div style="flex:none;width:390px;height:844px;position:relative;border-radius:{{ molduraRaio }};overflow:hidden;background:#08011a;border:{{ molduraBorda }};box-shadow:{{ molduraSombra }}">
+
+    <div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:13px;font-weight:700;color:#fdd5d3;letter-spacing:.02em">
+      <span>9:41</span>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="width:16px;height:9px;border-radius:1px;border:1px solid rgba(253,213,211,.6)"></span>
+        <span style="width:15px;height:9px;background:#fdd5d3;clip-path:polygon(0 100%,25% 100%,25% 60%,0 60%,0 100%,35% 100%,35% 35%,60% 35%,60% 100%,70% 100%,70% 0,100% 0,100% 100%)"></span>
+      </div>
+    </div>
+
+    <header style="height:54px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 8px 0 6px;background:#0d0225;border-bottom:1px solid rgba(253,213,211,.12)">
+      <span onClick="{{ abrirMenu }}" style="display:grid;place-items:center;width:44px;height:44px;border-radius:10px;cursor:pointer;color:#fdd5d3" style-active="background:#170b33">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" style="width:20px;height:20px"><path d="M4 7h16M4 12h16M4 17h11"></path></svg>
+      </span>
+      <span style="display:inline-flex;align-items:baseline;font-family:Archivo;font-size:17px;line-height:1.24">
+        <span style="font-variation-settings:'wdth' 72,'wght' 700;letter-spacing:-.02em;color:#fdd5d3">ELOI</span>
+        <span style="font-variation-settings:'wdth' 72,'wght' 700;color:{{ acc }}">Design</span>
+      </span>
+      <span style="display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:999px;background:#170b33;font-size:12px;font-weight:700;color:#fdd5d3;white-space:nowrap;cursor:pointer">
+        ago 26
+        <svg viewBox="0 0 24 24" fill="none" stroke="{{ acc }}" stroke-width="2" stroke-linecap="square" style="width:13px;height:13px"><path d="M6 9l6 6 6-6"></path></svg>
+      </span>
+    </header>
+
+    <div data-scroll style="position:absolute;left:0;right:0;top:98px;bottom:0;overflow-y:auto;overflow-x:hidden">
+
+      <sc-if value="{{ ehInicio }}" hint-placeholder-val="{{ true }}">
+        <div data-screen-label="Mobile · Início" style="display:flex;flex-direction:column;gap:18px;padding:18px 16px 118px">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">Agosto 2026</span>
+            <h1 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:27px;line-height:1.1;letter-spacing:-.02em;color:#fdd5d3">Bom dia, Wilke</h1>
+          </div>
+
+          <div style="border-radius:18px;background:#7d2ae8;padding:20px;display:flex;flex-direction:column;gap:12px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.78)">Faturado no mês</span>
+            <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:38px;line-height:1;letter-spacing:-.03em;color:#fff">{{ faturado }}</span>
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,.8)">
+              <span style="width:6px;height:6px;background:{{ acc }}"></span>{{ faturadoNota }}
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="border-radius:14px;background:#170b33;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:104px">
+              <span style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(253,213,211,.5)">A receber</span>
+              <span style="margin-top:auto;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:19px;line-height:1.15;letter-spacing:-.02em;white-space:nowrap;color:{{ acc }}">{{ aReceber }}</span>
+              <span style="font-size:11px;color:rgba(253,213,211,.55)">{{ aReceberNota }}</span>
+            </div>
+            <div style="border-radius:14px;background:#170b33;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:104px">
+              <span style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#fd4400">Sem NF</span>
+              <span style="margin-top:auto;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:19px;line-height:1.15;letter-spacing:-.02em;white-space:nowrap;color:#fd4400">{{ semNota }}</span>
+              <span style="font-size:11px;color:rgba(253,213,211,.55)">emitir nota fiscal</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">Precisa de você</span>
+              <span style="font-size:12px;color:rgba(253,213,211,.5)">{{ qtdDecisoes }}</span>
+            </div>
+            <sc-for list="{{ decisoes }}" as="d" hint-placeholder-count="3">
+              <div onClick="{{ d.acao }}" style="display:flex;align-items:center;gap:13px;border-radius:14px;background:#0d0225;border:1px solid rgba(253,213,211,.12);padding:14px;cursor:pointer;min-height:64px" style-active="background:#170b33">
+                <span style="flex:none;width:4px;align-self:stretch;background:{{ d.cor }}"></span>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:14px;font-weight:600;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.titulo }}</span>
+                  <span style="font-size:12px;color:rgba(253,213,211,.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.nota }}</span>
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,213,211,.5)" stroke-width="2" stroke-linecap="square" style="width:17px;height:17px;flex:none"><path d="M9 5l7 7-7 7"></path></svg>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">Em execução</span>
+            <sc-for list="{{ execucao }}" as="e" hint-placeholder-count="2">
+              <div style="border-radius:14px;background:#170b33;padding:15px;display:flex;flex-direction:column;gap:11px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                  <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                    <span style="font-size:14px;font-weight:600;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ e.titulo }}</span>
+                    <span style="font-size:12px;color:rgba(253,213,211,.55)">{{ e.cliente }}</span>
+                  </div>
+                  <span style="flex:none;font-family:Archivo;font-variation-settings:'wght' 600;font-size:15px;color:#fdd5d3">{{ e.valor }}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="flex:1;height:6px;background:#08011a;position:relative;overflow:hidden"><span style="position:absolute;left:0;top:0;bottom:0;background:#5b7cfd;width:{{ e.pct }}"></span></span>
+                  <span style="flex:none;font-size:11px;font-weight:700;color:rgba(253,213,211,.6)">{{ e.prazo }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">Atalhos</span>
+            <div style="display:flex;gap:9px;flex-wrap:wrap">
+              <span onClick="{{ abrirNovo }}" style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1 1 auto;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid rgba(253,213,211,.2);font-size:13px;font-weight:600;color:#fdd5d3;cursor:pointer;white-space:nowrap" style-active="border-color:{{ acc }};color:{{ acc }}">+ Serviço</span>
+              <span onClick="{{ abrirNovo }}" style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1 1 auto;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid rgba(253,213,211,.2);font-size:13px;font-weight:600;color:#fdd5d3;cursor:pointer;white-space:nowrap" style-active="border-color:{{ acc }};color:{{ acc }}">+ Orçamento</span>
+              <span onClick="{{ irDinheiro }}" style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1 1 auto;min-height:44px;padding:0 14px;border-radius:10px;border:1px solid rgba(253,213,211,.2);font-size:13px;font-weight:600;color:#fdd5d3;cursor:pointer;white-space:nowrap" style-active="border-color:{{ acc }};color:{{ acc }}">Registrar pagamento</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehServicos }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Mobile · Serviços" style="display:flex;flex-direction:column;gap:16px;padding:18px 16px 118px">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">Agosto 2026</span>
+            <h1 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:27px;line-height:1.1;letter-spacing:-.02em;color:#fdd5d3">Serviços</h1>
+          </div>
+
+          <div style="display:flex;align-items:center;position:relative">
+            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,213,211,.45)" stroke-width="2" style="width:17px;height:17px;position:absolute;left:14px;pointer-events:none"><circle cx="10.5" cy="10.5" r="7.5"></circle><path d="M15.8 15.8L21 21" stroke-linecap="square"></path></svg>
+            <input onInput="{{ buscar }}" placeholder="Buscar cliente, marca ou serviço" style="width:100%;min-height:46px;padding:12px 14px 12px 40px;border-radius:12px;background:#0d0225;border:1px solid rgba(253,213,211,.16);color:#fdd5d3;font-family:Manrope,sans-serif;font-size:14px;outline:none" style-focus="border-color:#9184d9">
+          </div>
+
+          <div data-scroll style="display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 2px">
+            <span onClick="{{ filtroTodos }}" style="flex:none;padding:9px 15px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;background:{{ fTodosBg }};color:{{ fTodosFg }}">Todos</span>
+            <span onClick="{{ filtroExecucao }}" style="flex:none;padding:9px 15px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;background:{{ fExecBg }};color:{{ fExecFg }}">Em execução</span>
+            <span onClick="{{ filtroAberto }}" style="flex:none;padding:9px 15px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;background:{{ fAbertoBg }};color:{{ fAbertoFg }}">A receber</span>
+            <span onClick="{{ filtroSemNf }}" style="flex:none;padding:9px 15px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;background:{{ fSemNfBg }};color:{{ fSemNfFg }}">Sem NF</span>
+          </div>
+
+          <span style="font-size:12px;color:rgba(253,213,211,.55)">{{ resultado }}</span>
+
+          <sc-if value="{{ semResultado }}" hint-placeholder-val="{{ false }}">
+            <div style="border-radius:16px;background:#0d0225;border:1px dashed rgba(253,213,211,.2);padding:38px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,213,211,.4)" stroke-width="2" style="width:30px;height:30px"><circle cx="10.5" cy="10.5" r="7.5"></circle><path d="M15.8 15.8L21 21" stroke-linecap="square"></path></svg>
+              <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:17px;color:#fdd5d3">Nada por aqui</span>
+              <span style="font-size:13px;line-height:1.5;color:rgba(253,213,211,.55)">Ajuste a busca ou toque em Todos.</span>
+              <span onClick="{{ filtroTodos }}" style="margin-top:6px;display:flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;background:{{ acc }};font-size:13px;font-weight:700;color:#1b0647;cursor:pointer">Limpar filtro</span>
+            </div>
+          </sc-if>
+
+          <sc-for list="{{ grupos }}" as="g" hint-placeholder-count="2">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px;padding-top:4px">
+                <span style="flex:none;width:8px;height:20px;background:{{ g.cor }}"></span>
+                <span style="flex:1;min-width:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:16px;letter-spacing:-.01em;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ g.nome }}</span>
+                <span style="flex:none;font-family:Archivo;font-variation-settings:'wght' 600;font-size:14px;color:rgba(253,213,211,.7)">{{ g.total }}</span>
+              </div>
+              <sc-for list="{{ g.itens }}" as="s" hint-placeholder-count="2">
+                <div onClick="{{ s.acao }}" style="border-radius:14px;background:#170b33;padding:15px;display:flex;flex-direction:column;gap:12px;cursor:pointer" style-active="background:#20114a">
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                    <div style="min-width:0;display:flex;flex-direction:column;gap:4px">
+                      <span style="font-size:15px;font-weight:600;line-height:1.35;color:#fdd5d3">{{ s.titulo }}</span>
+                      <span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:{{ s.marcaCor }}">{{ s.marca }}</span>
+                    </div>
+                    <span style="flex:none;font-family:Archivo;font-variation-settings:'wght' 600;font-size:17px;color:#fdd5d3">{{ s.valor }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+                    <span style="padding:5px 11px;border-radius:999px;font-size:11px;font-weight:600;background:{{ s.execBg }};color:{{ s.execFg }}">{{ s.exec }}</span>
+                    <span style="padding:5px 11px;border-radius:999px;font-size:11px;font-weight:600;background:{{ s.pagBg }};color:{{ s.pagFg }}">{{ s.pag }}</span>
+                    <span style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:{{ s.nfCor }}">
+                      <span style="width:6px;height:6px;background:{{ s.nfCor }}"></span>{{ s.nfRotulo }}
+                    </span>
+                    <span style="margin-left:auto;font-size:11px;color:rgba(253,213,211,.45)">{{ s.data }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehClientes }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Mobile · Clientes" style="display:flex;flex-direction:column;gap:14px;padding:18px 16px 118px">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">Carteira</span>
+            <h1 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:27px;line-height:1.1;letter-spacing:-.02em;color:#fdd5d3">Clientes</h1>
+          </div>
+          <sc-for list="{{ fichas }}" as="c" hint-placeholder-count="3">
+            <div style="border-radius:16px;background:#170b33;padding:18px;display:flex;flex-direction:column;gap:14px" style-active="background:#20114a">
+              <div style="display:flex;align-items:flex-start;gap:12px">
+                <span style="flex:none;width:8px;height:22px;background:{{ c.cor }}"></span>
+                <span style="flex:1;min-width:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:18px;line-height:1.2;letter-spacing:-.01em;color:#fdd5d3">{{ c.nome }}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,213,211,.5)" stroke-width="2" stroke-linecap="square" style="width:17px;height:17px;flex:none"><path d="M9 5l7 7-7 7"></path></svg>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(253,213,211,.45)">Total</span>
+                  <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:16px;color:#fdd5d3">{{ c.total }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(253,213,211,.45)">A receber</span>
+                  <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:16px;color:{{ acc }}">{{ c.aberto }}</span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span style="padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;background:{{ c.portalBg }};color:{{ c.portalFg }}">{{ c.portal }}</span>
+                <span style="padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid rgba(253,213,211,.2);color:rgba(253,213,211,.72)">{{ c.marcas }}</span>
+                <span style="padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid rgba(253,213,211,.2);color:rgba(253,213,211,.72)">{{ c.qtd }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehDinheiro }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Mobile · Dinheiro" style="display:flex;flex-direction:column;gap:18px;padding:18px 0 118px">
+          <div style="display:flex;flex-direction:column;gap:3px;padding:0 16px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">Caixas e movimentos</span>
+            <h1 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:27px;line-height:1.1;letter-spacing:-.02em;color:#fdd5d3">Dinheiro</h1>
+          </div>
+          <div data-scroll style="display:flex;gap:12px;overflow-x:auto;padding:0 16px 4px">
+            <sc-for list="{{ caixas }}" as="k" hint-placeholder-count="3">
+              <div style="flex:none;width:200px;border-radius:16px;background:#170b33;padding:18px;display:flex;flex-direction:column;gap:12px;min-height:138px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+                  <span style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(253,213,211,.5);line-height:1.4">{{ k.nome }}</span>
+                  <span style="flex:none;width:8px;height:8px;background:{{ k.cor }}"></span>
+                </div>
+                <span style="margin-top:auto;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:24px;line-height:1;letter-spacing:-.03em;color:#fdd5d3">{{ k.saldo }}</span>
+                <span style="font-size:11px;line-height:1.4;color:rgba(253,213,211,.55)">{{ k.nota }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;padding:0 16px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">Movimentos</span>
+            <sc-for list="{{ movimentos }}" as="mv" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:13px;border-radius:14px;background:#0d0225;border:1px solid rgba(253,213,211,.12);padding:14px;min-height:66px">
+                <span style="flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:9px;background:{{ mv.iconBg }}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="{{ mv.cor }}" stroke-width="2" stroke-linecap="square" style="width:16px;height:16px"><path d="{{ mv.seta }}"></path></svg>
+                </span>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                  <span style="font-size:14px;font-weight:600;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ mv.titulo }}</span>
+                  <span style="font-size:11px;color:rgba(253,213,211,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ mv.caixa }} · {{ mv.data }}</span>
+                </div>
+                <div style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+                  <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:15px;white-space:nowrap;color:{{ mv.cor }}">{{ mv.valor }}</span>
+                  <span style="padding:3px 9px;border-radius:999px;font-size:10px;font-weight:700;background:{{ mv.bg }};color:{{ mv.fg }}">{{ mv.situacao }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehEstados }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Mobile · Estados" style="display:flex;flex-direction:column;gap:20px;padding:18px 16px 118px">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">Referência</span>
+            <h1 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:27px;line-height:1.1;letter-spacing:-.02em;color:#fdd5d3">Estados</h1>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">Carregando · esqueleto</span>
+            <div style="border-radius:14px;background:#170b33;padding:15px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="flex:none;width:34px;height:34px;border-radius:9px;background:rgba(253,213,211,.14);animation:eloi-skel 1.4s ease-in-out infinite"></span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:7px">
+                  <span style="height:11px;width:70%;background:rgba(253,213,211,.14);animation:eloi-skel 1.4s ease-in-out infinite"></span>
+                  <span style="height:9px;width:45%;background:rgba(253,213,211,.1);animation:eloi-skel 1.4s ease-in-out .2s infinite"></span>
+                </div>
+              </div>
+              <span style="height:9px;width:90%;background:rgba(253,213,211,.1);animation:eloi-skel 1.4s ease-in-out .35s infinite"></span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">Vazio</span>
+            <div style="border-radius:16px;background:#0d0225;border:1px dashed rgba(253,213,211,.2);padding:30px 22px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,213,211,.4)" stroke-width="2" stroke-linejoin="miter" style="width:28px;height:28px"><path d="M4 7h16v13H4z"></path><path d="M4 11h16"></path><path d="M10 15h4"></path></svg>
+              <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:16px;color:#fdd5d3">Nenhum cliente ainda</span>
+              <span style="font-size:12px;line-height:1.5;color:rgba(253,213,211,.55)">Cadastre o primeiro para começar a lançar serviços.</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">Erro e sem conexão</span>
+            <div style="border-radius:14px;background:#0d0225;border:1px solid #fd4400;padding:15px;display:flex;gap:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fd4400" stroke-width="2" stroke-linecap="square" style="width:20px;height:20px;flex:none"><path d="M12 4v10M12 18v2"></path></svg>
+              <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+                <span style="font-size:14px;font-weight:600;color:#fdd5d3">Não foi possível carregar os serviços</span>
+                <span style="font-size:12px;line-height:1.5;color:rgba(253,213,211,.6)">Sem conexão com a base. Os dados exibidos são os do último acesso.</span>
+                <span style="align-self:flex-start;display:flex;align-items:center;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid rgba(253,213,211,.28);font-size:13px;font-weight:600;color:#fdd5d3;cursor:pointer" style-active="border-color:{{ acc }};color:{{ acc }}">Tentar de novo</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">Aviso e confirmação</span>
+            <div style="display:flex;align-items:center;gap:11px;border-radius:12px;background:{{ acc }};padding:13px 15px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#1b0647" stroke-width="2.4" stroke-linecap="square" style="width:18px;height:18px;flex:none"><path d="M4 12.5l5.5 5.5L20 7"></path></svg>
+              <span style="font-size:13px;font-weight:700;color:#1b0647">Pagamento registrado</span>
+            </div>
+            <span onClick="{{ abrirExcluir }}" style="align-self:flex-start;display:flex;align-items:center;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid #fd4400;font-size:13px;font-weight:600;color:#fd4400;cursor:pointer">Ver confirmação de exclusão</span>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <nav style="position:absolute;left:0;right:0;bottom:0;height:74px;padding-bottom:12px;background:#0d0225;border-top:1px solid rgba(253,213,211,.12);display:grid;grid-template-columns:repeat(5,1fr);align-items:center">
+      <span onClick="{{ irInicio }}" style="display:flex;flex-direction:column;align-items:center;gap:5px;min-height:52px;justify-content:center;cursor:pointer;color:{{ corInicio }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="miter" style="width:21px;height:21px"><path d="M3 12l9-8 9 8M5 10v10h14V10"></path></svg>
+        <span style="font-size:10px;font-weight:700;letter-spacing:.04em">Início</span>
+      </span>
+      <span onClick="{{ irServicos }}" style="display:flex;flex-direction:column;align-items:center;gap:5px;min-height:52px;justify-content:center;cursor:pointer;color:{{ corServicos }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="miter" style="width:21px;height:21px"><path d="M4 19V9m6 10V5m6 14v-7"></path></svg>
+        <span style="font-size:10px;font-weight:700;letter-spacing:.04em">Serviços</span>
+      </span>
+      <span onClick="{{ abrirNovo }}" style="display:grid;place-items:center;justify-self:center;width:56px;height:56px;border-radius:16px;background:#7d2ae8;border:4px solid #08011a;transform:translateY(-16px);cursor:pointer" style-active="background:#6a1fd0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="square" style="width:22px;height:22px"><path d="M12 5v14M5 12h14"></path></svg>
+      </span>
+      <span onClick="{{ irClientes }}" style="display:flex;flex-direction:column;align-items:center;gap:5px;min-height:52px;justify-content:center;cursor:pointer;color:{{ corClientes }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="miter" style="width:21px;height:21px"><circle cx="12" cy="8" r="4"></circle><path d="M5 20a7 7 0 0114 0"></path></svg>
+        <span style="font-size:10px;font-weight:700;letter-spacing:.04em">Clientes</span>
+      </span>
+      <span onClick="{{ irDinheiro }}" style="display:flex;flex-direction:column;align-items:center;gap:5px;min-height:52px;justify-content:center;cursor:pointer;color:{{ corDinheiro }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="miter" style="width:21px;height:21px"><path d="M3 7h18v11H3z"></path><path d="M3 11h18"></path><path d="M17 15h2"></path></svg>
+        <span style="font-size:10px;font-weight:700;letter-spacing:.04em">Dinheiro</span>
+      </span>
+    </nav>
+
+    <div onClick="{{ fechar }}" style="position:absolute;inset:0;background:rgba(8,1,26,.72);backdrop-filter:blur(5px);opacity:{{ veuOp }};pointer-events:{{ veuPe }};transition:opacity 220ms cubic-bezier(.4,0,.2,1)"></div>
+
+    <aside style="position:absolute;top:0;bottom:0;left:0;width:278px;background:#0d0225;border-right:1px solid rgba(253,213,211,.12);padding:52px 12px 22px;display:flex;flex-direction:column;gap:4px;transform:{{ menuX }};transition:transform 260ms cubic-bezier(.4,0,.2,1)">
+      <span style="display:inline-flex;align-items:baseline;font-family:Archivo;font-size:19px;line-height:1.24;margin:0 10px 22px">
+        <span style="font-variation-settings:'wdth' 72,'wght' 700;letter-spacing:-.02em;color:#fdd5d3">ELOI</span>
+        <span style="font-variation-settings:'wdth' 72,'wght' 700;color:{{ acc }}">Design</span>
+      </span>
+      <span onClick="{{ irInicio }}" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.78);cursor:pointer" style-active="background:#170b33;color:#fdd5d3">Início</span>
+      <span onClick="{{ irServicos }}" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.78);cursor:pointer" style-active="background:#170b33;color:#fdd5d3">Serviços</span>
+      <span onClick="{{ irClientes }}" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.78);cursor:pointer" style-active="background:#170b33;color:#fdd5d3">Clientes</span>
+      <span onClick="{{ irDinheiro }}" style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.78);cursor:pointer" style-active="background:#170b33;color:#fdd5d3">Dinheiro</span>
+      <span style="font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(253,213,211,.45);margin:18px 12px 8px;padding-top:14px;border-top:1px solid rgba(253,213,211,.12)">Mais</span>
+      <span style="display:flex;align-items:center;min-height:48px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.78);cursor:pointer" style-active="background:#170b33;color:#fdd5d3">Orçamentos</span>
+      <span style="display:flex;align-items:center;min-height:48px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.78);cursor:pointer" style-active="background:#170b33;color:#fdd5d3">Briefings</span>
+      <span style="display:flex;align-items:center;min-height:48px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.78);cursor:pointer" style-active="background:#170b33;color:#fdd5d3">Entregas de marca</span>
+      <span onClick="{{ irEstados }}" style="display:flex;align-items:center;min-height:48px;padding:0 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.78);cursor:pointer" style-active="background:#170b33;color:#fdd5d3">Estados da interface</span>
+      <div style="flex:1;min-height:12px"></div>
+      <span style="display:flex;align-items:center;gap:10px;min-height:48px;padding:0 12px;border-radius:10px;background:#170b33;font-size:13px;font-weight:600;color:rgba(253,213,211,.6);cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="miter" style="width:17px;height:17px"><path d="M15 17l5-5-5-5M20 12H9"></path><path d="M13 3H6v18h7"></path></svg>
+        Sair
+      </span>
+    </aside>
+
+    <div data-scroll style="position:absolute;left:0;right:0;bottom:0;max-height:86%;overflow-y:auto;border-radius:22px 22px 0 0;background:#0d0225;border-top:1px solid rgba(253,213,211,.16);transform:{{ folhaY }};transition:transform 280ms cubic-bezier(.32,0,.24,1)">
+      <div style="display:flex;justify-content:center;padding:10px 0 4px"><span style="width:46px;height:4px;border-radius:999px;background:rgba(253,213,211,.28)"></span></div>
+
+      <sc-if value="{{ folhaNovo }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 18px 30px;display:flex;flex-direction:column;gap:14px">
+          <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:21px;letter-spacing:-.01em;color:#fdd5d3">Criar</span>
+          <span onClick="{{ abrirForm }}" style="display:flex;align-items:center;gap:14px;min-height:64px;padding:0 16px;border-radius:14px;background:#170b33;cursor:pointer" style-active="background:#20114a">
+            <span style="flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:#7d2ae8">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="miter" style="width:18px;height:18px"><path d="M4 19V9m6 10V5m6 14v-7"></path></svg>
+            </span>
+            <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <span style="font-size:15px;font-weight:600;color:#fdd5d3">Serviço</span>
+              <span style="font-size:12px;color:rgba(253,213,211,.55)">lançar trabalho do mês</span>
+            </span>
+          </span>
+          <span style="display:flex;align-items:center;gap:14px;min-height:64px;padding:0 16px;border-radius:14px;background:#170b33;cursor:pointer" style-active="background:#20114a">
+            <span style="flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:{{ acc }}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#1b0647" stroke-width="2" stroke-linejoin="miter" style="width:18px;height:18px"><path d="M7 4h10v16H7z"></path><path d="M10 9h4M10 13h4"></path></svg>
+            </span>
+            <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <span style="font-size:15px;font-weight:600;color:#fdd5d3">Orçamento</span>
+              <span style="font-size:12px;color:rgba(253,213,211,.55)">proposta para aprovação</span>
+            </span>
+          </span>
+          <span style="display:flex;align-items:center;gap:14px;min-height:64px;padding:0 16px;border-radius:14px;background:#170b33;cursor:pointer" style-active="background:#20114a">
+            <span style="flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:#5b7cfd">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="miter" style="width:18px;height:18px"><circle cx="12" cy="8" r="4"></circle><path d="M5 20a7 7 0 0114 0"></path></svg>
+            </span>
+            <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+              <span style="font-size:15px;font-weight:600;color:#fdd5d3">Cliente</span>
+              <span style="font-size:12px;color:rgba(253,213,211,.55)">cadastro e acesso ao portal</span>
+            </span>
+          </span>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ folhaForm }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 18px 30px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:21px;letter-spacing:-.01em;color:#fdd5d3">Novo serviço</span>
+            <span onClick="{{ fechar }}" style="display:grid;place-items:center;width:44px;height:44px;border-radius:10px;cursor:pointer;color:rgba(253,213,211,.6)" style-active="background:#170b33">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" style="width:18px;height:18px"><path d="M5 5l14 14M19 5L5 19"></path></svg>
+            </span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(253,213,211,.5)">Cliente</span>
+            <div data-scroll style="display:flex;gap:8px;overflow-x:auto;margin:0 -18px;padding:0 18px 2px">
+              <sc-for list="{{ opcoesCliente }}" as="oc" hint-placeholder-count="3">
+                <span onClick="{{ oc.acao }}" style="flex:none;display:flex;align-items:center;min-height:44px;padding:0 15px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ oc.bg }};color:{{ oc.fg }};border:1px solid {{ oc.borda }}">{{ oc.nome }}</span>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(253,213,211,.5)">Título do serviço</span>
+            <input placeholder="Campanha, identidade, peça…" style="width:100%;min-height:48px;padding:13px 15px;border-radius:10px;background:#08011a;border:1px solid rgba(253,213,211,.16);color:#fdd5d3;font-family:Manrope,sans-serif;font-size:14px;outline:none" style-focus="border-color:#9184d9">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(253,213,211,.5)">Valor</span>
+              <input placeholder="R$ 0,00" style="width:100%;min-height:48px;padding:13px 15px;border-radius:10px;background:#08011a;border:1px solid rgba(253,213,211,.16);color:#fdd5d3;font-family:Archivo,sans-serif;font-variation-settings:'wght' 600;font-size:15px;outline:none" style-focus="border-color:#9184d9">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(253,213,211,.5)">Competência</span>
+              <input placeholder="08/2026" style="width:100%;min-height:48px;padding:13px 15px;border-radius:10px;background:#08011a;border:1px solid rgba(253,213,211,.16);color:#fdd5d3;font-family:Manrope,sans-serif;font-size:14px;outline:none" style-focus="border-color:#9184d9">
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(253,213,211,.5)">Sub-cliente · opcional</span>
+            <input placeholder="VIBRA, ASUS, MRV…" style="width:100%;min-height:48px;padding:13px 15px;border-radius:10px;background:#08011a;border:1px solid rgba(253,213,211,.16);color:#fdd5d3;font-family:Manrope,sans-serif;font-size:14px;outline:none" style-focus="border-color:#9184d9">
+          </div>
+          <span style="font-size:12px;line-height:1.5;color:rgba(253,213,211,.5)">Sub-cliente agrupa marcas dentro do mesmo cliente. Não cria portal nem cobrança separada.</span>
+          <div style="display:flex;gap:10px;padding-top:4px">
+            <span onClick="{{ fechar }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:10px;border:1px solid rgba(253,213,211,.24);font-size:14px;font-weight:600;color:#fdd5d3;cursor:pointer">Cancelar</span>
+            <span onClick="{{ salvar }}" style="flex:2;display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:10px;background:#7d2ae8;font-size:14px;font-weight:600;color:#fff;cursor:pointer" style-active="background:#6a1fd0">Salvar serviço</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ folhaStatus }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 18px 30px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:{{ acc }}">{{ alvoCliente }}</span>
+            <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:20px;line-height:1.25;letter-spacing:-.01em;color:#fdd5d3">{{ alvoTitulo }}</span>
+            <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:17px;color:rgba(253,213,211,.7)">{{ alvoValor }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(253,213,211,.5)">Execução</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ opcoesExec }}" as="oe" hint-placeholder-count="3">
+                <span onClick="{{ oe.acao }}" style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;min-height:46px;padding:0 12px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ oe.bg }};color:{{ oe.fg }};border:1px solid {{ oe.borda }}">{{ oe.rotulo }}</span>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(253,213,211,.5)">Cobrança</span>
+            <div onClick="{{ trocarPago }}" style="display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:56px;padding:0 16px;border-radius:12px;background:#170b33;cursor:pointer">
+              <span style="font-size:14px;font-weight:600;color:#fdd5d3">Pagamento recebido</span>
+              <span style="flex:none;width:50px;height:28px;border-radius:999px;background:{{ pagoTrilho }};position:relative;transition:background 180ms linear"><span style="position:absolute;top:3px;left:{{ pagoBolaX }};width:22px;height:22px;border-radius:999px;background:{{ pagoBola }};transition:left 180ms cubic-bezier(.4,0,.2,1)"></span></span>
+            </div>
+            <div onClick="{{ trocarNf }}" style="display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:56px;padding:0 16px;border-radius:12px;background:#170b33;cursor:pointer">
+              <span style="font-size:14px;font-weight:600;color:#fdd5d3">Nota fiscal emitida</span>
+              <span style="flex:none;width:50px;height:28px;border-radius:999px;background:{{ nfTrilho }};position:relative;transition:background 180ms linear"><span style="position:absolute;top:3px;left:{{ nfBolaX }};width:22px;height:22px;border-radius:999px;background:{{ nfBola }};transition:left 180ms cubic-bezier(.4,0,.2,1)"></span></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;padding-top:4px">
+            <span onClick="{{ abrirExcluir }}" style="flex:none;display:grid;place-items:center;width:50px;height:50px;border-radius:10px;border:1px solid rgba(253,68,0,.5);cursor:pointer;color:#fd4400">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter" style="width:18px;height:18px"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"></path></svg>
+            </span>
+            <span onClick="{{ salvar }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:10px;background:{{ acc }};font-size:14px;font-weight:700;color:#1b0647;cursor:pointer">Salvar alterações</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ folhaExcluir }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:8px 18px 30px;display:flex;flex-direction:column;gap:14px">
+          <span style="display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:rgba(253,68,0,.14)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fd4400" stroke-width="2" stroke-linejoin="miter" style="width:20px;height:20px"><path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13"></path></svg>
+          </span>
+          <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:21px;line-height:1.2;letter-spacing:-.01em;color:#fdd5d3">Excluir este serviço?</span>
+          <span style="font-size:14px;line-height:1.6;color:rgba(253,213,211,.65)">A movimentação financeira ligada a ele também sai do mês. Não dá para desfazer.</span>
+          <div style="display:flex;gap:10px;padding-top:6px">
+            <span onClick="{{ fechar }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:10px;border:1px solid rgba(253,213,211,.24);font-size:14px;font-weight:600;color:#fdd5d3;cursor:pointer">Manter</span>
+            <span onClick="{{ fechar }}" style="flex:1;display:flex;align-items:center;justify-content:center;min-height:50px;border-radius:10px;background:#fd4400;font-size:14px;font-weight:700;color:#fff;cursor:pointer">Excluir</span>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="position:absolute;left:16px;right:16px;bottom:88px;display:flex;align-items:center;gap:11px;border-radius:12px;background:{{ acc }};padding:13px 15px;opacity:{{ avisoOp }};transform:{{ avisoY }};pointer-events:none;transition:opacity 200ms linear,transform 240ms cubic-bezier(.4,0,.2,1)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#1b0647" stroke-width="2.4" stroke-linecap="square" style="width:18px;height:18px;flex:none"><path d="M4 12.5l5.5 5.5L20 7"></path></svg>
+      <span style="font-size:13px;font-weight:700;color:#1b0647">{{ avisoTexto }}</span>
+    </div>
+
+    <div style="position:absolute;left:50%;bottom:5px;transform:translateX(-50%);width:132px;height:4px;border-radius:999px;background:rgba(253,213,211,.3);pointer-events:none"></div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:820,&quot;height&quot;:940},&quot;acento&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#dff806&quot;,&quot;#eeb4e7&quot;,&quot;#5b7cfd&quot;,&quot;#fd4400&quot;],&quot;default&quot;:&quot;#dff806&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Cor&quot;},&quot;telaInicial&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;inicio&quot;,&quot;servicos&quot;,&quot;clientes&quot;,&quot;dinheiro&quot;,&quot;estados&quot;],&quot;default&quot;:&quot;inicio&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tela&quot;},&quot;moldura&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Tela&quot;}}">
+const CHIP = {
+  concluido: ['#dff806', '#1b0647'],
+  execucao:  ['#5b7cfd', '#ffffff'],
+  fila:      ['rgba(253,213,211,.12)', '#fdd5d3'],
+  pago:      ['#dff806', '#1b0647'],
+  aberto:    ['rgba(253,213,211,.12)', '#fdd5d3'],
+  atrasado:  ['#fd4400', '#ffffff'],
+  realizado: ['#dff806', '#1b0647'],
+  previsto:  ['rgba(253,213,211,.12)', '#fdd5d3']
+};
+const brl = c => 'R$ ' + (c / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+const CLIENTES = [
+  { nome: 'F2 EXPERIENCE', cor: '#7d2ae8', portal: 'portal ativo', servicos: [
+    { titulo: 'Campanha de lançamento', marca: 'VIBRA', valor: 480000, exec: 'concluído', pag: 'pago', nf: true, data: '04/08', pct: '100%', prazo: 'entregue' },
+    { titulo: 'Key visual de evento', marca: 'ASUS', valor: 320000, exec: 'concluído', pag: 'aberto', nf: false, data: '11/08', pct: '100%', prazo: 'entregue' },
+    { titulo: 'Peças de ponto de venda', marca: 'MRV', valor: 175000, exec: 'em execução', pag: 'aberto', nf: false, data: '19/08', pct: '62%', prazo: '6 dias' }
+  ]},
+  { nome: 'Solarium Cosméticos', cor: '#dff806', portal: 'portal ativo', servicos: [
+    { titulo: 'Identidade visual completa', marca: '', valor: 650000, exec: 'em execução', pag: 'aberto', nf: false, data: '06/08', pct: '45%', prazo: '11 dias' },
+    { titulo: 'Papelaria e diretriz', marca: '', valor: 180000, exec: 'na fila', pag: 'aberto', nf: false, data: '25/08', pct: '0%', prazo: 'a iniciar' }
+  ]},
+  { nome: 'Guia Viver Bem', cor: '#5b7cfd', portal: 'sem senha', servicos: [
+    { titulo: 'Reestruturação do portal', marca: '', valor: 890000, exec: 'concluído', pag: 'pago', nf: true, data: '01/08', pct: '100%', prazo: 'entregue' },
+    { titulo: 'Projeto gráfico do guia', marca: '', valor: 240000, exec: 'concluído', pag: 'atrasado', nf: false, data: '08/08', pct: '100%', prazo: 'entregue' }
+  ]}
+];
+const CAIXAS = [
+  { nome: 'Conta principal', cents: 2840000, cor: '#dff806', nota: 'entradas realizadas − saídas' },
+  { nome: 'Reserva de impostos', cents: 960000, cor: '#5b7cfd', nota: 'provisão de NF e DAS' },
+  { nome: 'Caixa do estúdio', cents: 145000, cor: '#eeb4e7', nota: 'despesa miúda e assinaturas' }
+];
+const MOVIMENTOS = [
+  { titulo: 'Campanha VIBRA · parcela 2', caixa: 'Conta principal', cents: 240000, tipo: 'entrada', situacao: 'realizado', data: '02/08' },
+  { titulo: 'Portal Guia Viver Bem', caixa: 'Conta principal', cents: 890000, tipo: 'entrada', situacao: 'realizado', data: '01/08' },
+  { titulo: 'Assinaturas de software', caixa: 'Caixa do estúdio', cents: 38000, tipo: 'saida', situacao: 'realizado', data: '05/08' },
+  { titulo: 'Identidade Solarium · entrada', caixa: 'Conta principal', cents: 325000, tipo: 'entrada', situacao: 'previsto', data: '15/08' },
+  { titulo: 'Provisão de impostos', caixa: 'Reserva de impostos', cents: 172000, tipo: 'saida', situacao: 'previsto', data: '20/08' }
+];
+const SETA_ENTRADA = 'M12 19V5M6 11l6-6 6 6';
+const SETA_SAIDA = 'M12 5v14M6 13l6 6 6-6';
+
+class Component extends DCLogic {
+  state = { view: null, folha: null, menu: false, q: '', filtro: 'todos', alvo: null, pago: false, nf: false, cliente: 0, aviso: '' };
+
+  componentWillUnmount() { clearTimeout(this.t); }
+
+  get view() { return this.state.view ?? (this.props.telaInicial ?? 'inicio'); }
+  get acc() { return this.props.acento ?? '#dff806'; }
+
+  ir(view) { this.setState({ view, menu: false, folha: null }); }
+  fechar() { this.setState({ menu: false, folha: null }); }
+  toast(texto) {
+    this.setState({ aviso: texto, folha: null, menu: false });
+    clearTimeout(this.t);
+    this.t = setTimeout(() => this.setState({ aviso: '' }), 2600);
+  }
+
+  passa(s, cliente) {
+    const q = this.state.q.trim().toLowerCase();
+    if (q && !(s.titulo + ' ' + s.marca + ' ' + cliente).toLowerCase().includes(q)) return false;
+    const fl = this.state.filtro;
+    if (fl === 'execucao') return s.exec === 'em execução';
+    if (fl === 'aberto') return s.pag !== 'pago';
+    if (fl === 'semnf') return s.exec === 'concluído' && !s.nf;
+    return true;
+  }
+
+  renderVals() {
+    const acc = this.acc, v = this.view, f = this.state.folha, aberto = !!f || this.state.menu;
+    const fChip = on => on ? { bg: acc, fg: '#1b0647' } : { bg: '#170b33', fg: 'rgba(253,213,211,.72)' };
+    const fT = fChip(this.state.filtro === 'todos'), fE = fChip(this.state.filtro === 'execucao');
+    const fA = fChip(this.state.filtro === 'aberto'), fN = fChip(this.state.filtro === 'semnf');
+    const corAba = k => v === k ? acc : 'rgba(253,213,211,.5)';
+
+    const todos = CLIENTES.flatMap(c => c.servicos.map(s => ({ ...s, cliente: c.nome, cor: c.cor })));
+    const soma = fn => todos.filter(fn).reduce((a, s) => a + s.valor, 0);
+    const visiveis = todos.filter(s => this.passa(s, s.cliente));
+
+    const cardServico = s => {
+      const ek = s.exec === 'concluído' ? 'concluido' : s.exec === 'em execução' ? 'execucao' : 'fila';
+      const pk = s.pag === 'pago' ? 'pago' : s.pag === 'atrasado' ? 'atrasado' : 'aberto';
+      return {
+        titulo: s.titulo, valor: brl(s.valor), data: 'competência ' + s.data,
+        marca: s.marca || s.cliente, marcaCor: s.marca ? acc : 'rgba(253,213,211,.45)',
+        exec: s.exec, execBg: CHIP[ek][0], execFg: CHIP[ek][1],
+        pag: s.pag, pagBg: CHIP[pk][0], pagFg: CHIP[pk][1],
+        nfRotulo: s.nf ? 'NF emitida' : 'sem NF', nfCor: s.nf ? acc : '#fd4400',
+        acao: () => this.setState({ folha: 'status', alvo: s, pago: s.pag === 'pago', nf: s.nf })
+      };
+    };
+
+    const grupos = CLIENTES.map(c => {
+      const itens = c.servicos.filter(s => this.passa(s, c.nome));
+      return { nome: c.nome, cor: c.cor, total: brl(itens.reduce((a, s) => a + s.valor, 0)),
+        itens: itens.map(s => cardServico({ ...s, cliente: c.nome })), vazio: itens.length === 0 };
+    }).filter(g => !g.vazio);
+
+    const fichas = CLIENTES.map(c => {
+      const marcas = [...new Set(c.servicos.map(s => s.marca).filter(Boolean))];
+      return { nome: c.nome, cor: c.cor,
+        total: brl(c.servicos.reduce((a, s) => a + s.valor, 0)),
+        aberto: brl(c.servicos.filter(s => s.pag !== 'pago').reduce((a, s) => a + s.valor, 0)),
+        qtd: c.servicos.length + (c.servicos.length === 1 ? ' serviço' : ' serviços'),
+        marcas: marcas.length ? marcas.length + ' marcas' : 'marca única',
+        portal: c.portal,
+        portalBg: c.portal === 'portal ativo' ? acc : 'rgba(253,213,211,.12)',
+        portalFg: c.portal === 'portal ativo' ? '#1b0647' : '#fdd5d3' };
+    });
+
+    const decisoes = [
+      { titulo: '2 serviços concluídos sem NF', nota: 'F2 EXPERIENCE · Guia Viver Bem', cor: '#fd4400', acao: () => this.setState({ view: 'servicos', filtro: 'semnf', menu: false, folha: null }) },
+      { titulo: 'Pagamento atrasado', nota: 'Projeto gráfico do guia · venceu 08/08', cor: acc, acao: () => this.setState({ view: 'servicos', filtro: 'aberto', menu: false, folha: null }) },
+      { titulo: 'Orçamento enviado há 6 dias', nota: 'Solarium · site + catálogo B2B', cor: '#5b7cfd', acao: () => this.toast('Lembrete enviado ao cliente') }
+    ];
+
+    const alvo = this.state.alvo;
+    const optExec = ['na fila', 'em execução', 'concluído'].map(r => {
+      const on = alvo ? alvo.exec === r : false;
+      return { rotulo: r, bg: on ? acc : 'transparent', fg: on ? '#1b0647' : 'rgba(253,213,211,.75)',
+        borda: on ? 'transparent' : 'rgba(253,213,211,.22)',
+        acao: () => this.setState({ alvo: { ...alvo, exec: r } }) };
+    });
+
+    const opcoesCliente = CLIENTES.map((c, i) => {
+      const on = this.state.cliente === i;
+      return { nome: c.nome, bg: on ? acc : 'transparent', fg: on ? '#1b0647' : 'rgba(253,213,211,.75)',
+        borda: on ? 'transparent' : 'rgba(253,213,211,.22)', acao: () => this.setState({ cliente: i }) };
+    });
+
+    return {
+      acc,
+      molduraRaio: (this.props.moldura ?? true) ? '38px' : '0px',
+      molduraBorda: (this.props.moldura ?? true) ? '8px solid #170b33' : '1px solid rgba(253,213,211,.12)',
+      molduraSombra: (this.props.moldura ?? true) ? '0 0 0 1px rgba(253,213,211,.14)' : 'none',
+
+      ehInicio: v === 'inicio', ehServicos: v === 'servicos', ehClientes: v === 'clientes',
+      ehDinheiro: v === 'dinheiro', ehEstados: v === 'estados',
+      irInicio: () => this.ir('inicio'), irServicos: () => this.ir('servicos'),
+      irClientes: () => this.ir('clientes'), irDinheiro: () => this.ir('dinheiro'),
+      irEstados: () => this.ir('estados'),
+      corInicio: corAba('inicio'), corServicos: corAba('servicos'),
+      corClientes: corAba('clientes'), corDinheiro: corAba('dinheiro'),
+
+      abrirMenu: () => this.setState({ menu: true }),
+      abrirNovo: () => this.setState({ folha: 'novo', menu: false }),
+      abrirForm: () => this.setState({ folha: 'form' }),
+      abrirExcluir: () => this.setState({ folha: 'excluir' }),
+      fechar: () => this.fechar(),
+      salvar: () => this.toast('Serviço atualizado'),
+      menuX: this.state.menu ? 'translateX(0)' : 'translateX(-100%)',
+      folhaY: f ? 'translateY(0)' : 'translateY(102%)',
+      veuOp: aberto ? '1' : '0', veuPe: aberto ? 'auto' : 'none',
+      folhaNovo: f === 'novo', folhaForm: f === 'form', folhaStatus: f === 'status', folhaExcluir: f === 'excluir',
+
+      faturado: brl(soma(s => s.pag === 'pago')),
+      faturadoNota: todos.filter(s => s.pag === 'pago').length + ' serviços pagos de ' + todos.length,
+      aReceber: brl(soma(s => s.pag !== 'pago')),
+      aReceberNota: todos.filter(s => s.pag !== 'pago').length + ' em aberto',
+      semNota: brl(soma(s => s.exec === 'concluído' && !s.nf)),
+
+      decisoes, qtdDecisoes: decisoes.length + ' itens',
+      execucao: todos.filter(s => s.exec === 'em execução').map(s => ({
+        titulo: s.titulo, cliente: s.cliente, valor: brl(s.valor), pct: s.pct, prazo: s.prazo })),
+
+      buscar: e => this.setState({ q: e.target.value }),
+      filtroTodos: () => this.setState({ filtro: 'todos', q: '' }),
+      filtroExecucao: () => this.setState({ filtro: 'execucao' }),
+      filtroAberto: () => this.setState({ filtro: 'aberto' }),
+      filtroSemNf: () => this.setState({ filtro: 'semnf' }),
+      fTodosBg: fT.bg, fTodosFg: fT.fg, fExecBg: fE.bg, fExecFg: fE.fg,
+      fAbertoBg: fA.bg, fAbertoFg: fA.fg, fSemNfBg: fN.bg, fSemNfFg: fN.fg,
+      resultado: visiveis.length + ' de ' + todos.length + ' serviços · ' + brl(visiveis.reduce((a, s) => a + s.valor, 0)),
+      semResultado: visiveis.length === 0,
+      grupos, fichas,
+
+      caixas: CAIXAS.map(k => ({ nome: k.nome, cor: k.cor, saldo: brl(k.cents), nota: k.nota })),
+      movimentos: MOVIMENTOS.map(m => ({
+        titulo: m.titulo, caixa: m.caixa, data: m.data,
+        valor: (m.tipo === 'saida' ? '− ' : '+ ') + brl(m.cents),
+        cor: m.tipo === 'saida' ? '#fd4400' : acc,
+        iconBg: m.tipo === 'saida' ? 'rgba(253,68,0,.14)' : 'rgba(223,248,6,.12)',
+        seta: m.tipo === 'saida' ? SETA_SAIDA : SETA_ENTRADA,
+        situacao: m.situacao, bg: CHIP[m.situacao][0], fg: CHIP[m.situacao][1] })),
+
+      alvoCliente: alvo ? alvo.cliente : '', alvoTitulo: alvo ? alvo.titulo : '',
+      alvoValor: alvo ? brl(alvo.valor) : '',
+      opcoesExec: optExec, opcoesCliente,
+      trocarPago: () => this.setState(s => ({ pago: !s.pago })),
+      trocarNf: () => this.setState(s => ({ nf: !s.nf })),
+      pagoTrilho: this.state.pago ? acc : 'rgba(253,213,211,.16)',
+      pagoBola: this.state.pago ? '#1b0647' : '#fdd5d3',
+      pagoBolaX: this.state.pago ? '25px' : '3px',
+      nfTrilho: this.state.nf ? acc : 'rgba(253,213,211,.16)',
+      nfBola: this.state.nf ? '#1b0647' : '#fdd5d3',
+      nfBolaX: this.state.nf ? '25px' : '3px',
+
+      avisoTexto: this.state.aviso,
+      avisoOp: this.state.aviso ? '1' : '0',
+      avisoY: this.state.aviso ? 'translateY(0)' : 'translateY(14px)'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

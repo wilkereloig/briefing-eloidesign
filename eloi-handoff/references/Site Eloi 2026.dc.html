@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#08011a}
+    a{color:var(--eloi-acc,#dff806);text-decoration:none}
+    a:hover{color:#fdd5d3}
+    @keyframes eloi-roll{0%,38%{transform:translateY(0)}50%,88%{transform:translateY(-50%)}100%{transform:translateY(0)}}
+    @media (prefers-reduced-motion: reduce){[data-anim]{animation:none!important}}
+  </style>
+</helmet>
+
+<div style="background:#08011a;font-family:Manrope,sans-serif;color:#fdd5d3;overflow-x:hidden">
+
+  <nav style="position:sticky;top:0;z-index:20;background:rgba(8,1,26,.92);backdrop-filter:blur(10px);border-bottom:1px solid rgba(253,213,211,.12)">
+    <div style="max-width:1240px;margin:0 auto;padding:0 40px;height:74px;display:flex;align-items:center;justify-content:space-between;gap:32px">
+      <span style="display:inline-flex;align-items:baseline;font-family:Archivo;font-size:21px;line-height:1.24;white-space:nowrap">
+        <span style="font-variation-settings:'wdth' 72,'wght' 700;letter-spacing:-.02em;color:#fdd5d3">ELOI</span>
+        <span style="font-variation-settings:'wdth' 72,'wght' 700;color:var(--eloi-acc,#dff806)">Design</span>
+      </span>
+      <div style="display:flex;align-items:center;gap:30px">
+        <a href="#projetos" style="font-size:14px;font-weight:600;color:rgba(253,213,211,.72)" style-hover="color:#fdd5d3">Projetos</a>
+        <a href="#servicos" style="font-size:14px;font-weight:600;color:rgba(253,213,211,.72)" style-hover="color:#fdd5d3">Serviços</a>
+        <a href="#processo" style="font-size:14px;font-weight:600;color:rgba(253,213,211,.72)" style-hover="color:#fdd5d3">Processo</a>
+        <a href="#contato" style="font-size:14px;font-weight:600;color:rgba(253,213,211,.72)" style-hover="color:#fdd5d3">Estúdio</a>
+        <a href="#contato" style="padding:11px 20px;border-radius:10px;background:var(--eloi-acc,#dff806);font-size:14px;font-weight:700;color:#1b0647;white-space:nowrap" style-hover="color:#1b0647;opacity:.88">Começar projeto</a>
+      </div>
+    </div>
+  </nav>
+
+  <header style="max-width:1240px;margin:0 auto;padding:72px 40px 88px;display:grid;grid-template-columns:7fr 5fr;gap:56px;align-items:center">
+    <div style="display:flex;flex-direction:column;gap:26px;min-width:0">
+      <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--eloi-acc,#dff806)">Estúdio de design · desde 2019</span>
+      <h1 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:66px;line-height:1.02;letter-spacing:-.03em;color:#fdd5d3;text-wrap:pretty">Marcas que ficam de pé quando as luzes apagam.</h1>
+      <p style="margin:0;font-size:17px;line-height:1.6;max-width:44ch;color:rgba(253,213,211,.75);text-wrap:pretty">Identidade, sites e campanhas para negócios que precisam ser lembrados. Do briefing à entrega, num processo só.</p>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:6px">
+        <a href="#contato" style="padding:15px 28px;border-radius:10px;background:#7d2ae8;font-size:15px;font-weight:600;color:#fff" style-hover="background:#6a1fd0;color:#fff">Começar um projeto</a>
+        <a href="#projetos" style="padding:15px 24px;border-radius:10px;border:1px solid rgba(253,213,211,.28);font-size:15px;font-weight:600;color:#fdd5d3" style-hover="border-color:#dff806;color:#dff806">Ver projetos</a>
+      </div>
+      <div style="display:flex;gap:4px;padding-top:14px;max-width:420px">
+        <span style="flex:2.4;height:6px;background:#7d2ae8"></span><span style="flex:1;height:6px;background:#fd4400"></span><span style="flex:1.5;height:6px;background:#dff806"></span><span style="flex:1;height:6px;background:#5b7cfd"></span><span style="flex:.6;height:6px;background:#eeb4e7"></span>
+      </div>
+    </div>
+    <div style="min-width:0;aspect-ratio:4/5;border-radius:18px;overflow:hidden;background:#170b33">
+      <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="site-hero" shape="rect" placeholder="Foto do estúdio ou de um projeto em uso — vertical 4:5" hint-size="100%,100%"></x-import>
+    </div>
+  </header>
+
+  <section style="border-top:1px solid rgba(253,213,211,.12);border-bottom:1px solid rgba(253,213,211,.12)">
+    <div style="max-width:1240px;margin:0 auto;padding:26px 40px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">Marcas atendidas</span>
+      <div style="display:flex;align-items:center;gap:36px;flex-wrap:wrap">
+        <span style="font-family:Archivo;font-variation-settings:'wdth' 72,'wght' 700;font-size:16px;letter-spacing:.04em;color:rgba(253,213,211,.62)">SOLARIUM</span>
+        <span style="font-family:Archivo;font-variation-settings:'wdth' 72,'wght' 700;font-size:16px;letter-spacing:.04em;color:rgba(253,213,211,.62)">GUIA VIVER BEM</span>
+        <span style="font-family:Archivo;font-variation-settings:'wdth' 72,'wght' 700;font-size:16px;letter-spacing:.04em;color:rgba(253,213,211,.62)">F2 EXPERIENCE</span>
+        <span style="font-family:Archivo;font-variation-settings:'wdth' 72,'wght' 700;font-size:16px;letter-spacing:.04em;color:rgba(253,213,211,.62)">VIBRA</span>
+        <span style="font-family:Archivo;font-variation-settings:'wdth' 72,'wght' 700;font-size:16px;letter-spacing:.04em;color:rgba(253,213,211,.62)">ASUS</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="servicos" data-screen-label="Serviços" style="max-width:1240px;margin:0 auto;padding:96px 40px 0;display:flex;flex-direction:column;gap:40px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap">
+      <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:44px;line-height:1.08;letter-spacing:-.02em;color:#fdd5d3;max-width:20ch">Um estúdio, o projeto inteiro.</h2>
+      <p style="margin:0;font-size:16px;line-height:1.6;max-width:48ch;color:rgba(253,213,211,.72)">Do primeiro briefing ao arquivo final, sem terceirizar o que importa. Você fala com quem desenha.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+      <div style="grid-row:span 2;border-radius:16px;background:#7d2ae8;padding:36px;display:flex;flex-direction:column;justify-content:space-between;min-height:340px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="miter" style="width:34px;height:34px"><rect x="3" y="3" width="18" height="18"></rect><rect x="3" y="3" width="7" height="7" fill="var(--eloi-acc,#dff806)" stroke="none"></rect></svg>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.72)">01</span>
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:30px;line-height:1.1;letter-spacing:-.02em;color:#fff">Identidade visual</h3>
+          <p style="margin:0;font-size:15px;line-height:1.6;max-width:36ch;color:rgba(255,255,255,.82)">Logo, paleta, tipografia e as regras que mantêm a marca de pé em qualquer aplicação.</p>
+        </div>
+      </div>
+      <div style="border-radius:16px;background:#170b33;padding:32px;display:flex;flex-direction:column;justify-content:space-between;min-height:162px" style-hover="background:#20114a">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fdd5d3" stroke-width="2" stroke-linejoin="miter" style="width:30px;height:30px"><rect x="3" y="3" width="18" height="18"></rect><path d="M9 3v18"></path><rect x="12" y="7" width="6" height="2.5" fill="var(--eloi-acc,#dff806)" stroke="none"></rect><path d="M12 13h6M12 17h4"></path></svg>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Sites &amp; sistemas</h3>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)">Do institucional ao painel interno, rápido e sob medida.</p>
+        </div>
+      </div>
+      <div style="border-radius:16px;background:#170b33;padding:32px;display:flex;flex-direction:column;justify-content:space-between;min-height:162px" style-hover="background:#20114a">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fdd5d3" stroke-width="2" stroke-linejoin="miter" style="width:30px;height:30px"><path d="M3 21V3"></path><path d="M3 4h14v7H3"></path><rect x="3" y="14" width="9" height="5" fill="var(--eloi-acc,#dff806)" stroke="none"></rect></svg>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Campanhas</h3>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)">Peças que convertem, prontas pra rodar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="processo" data-screen-label="Processo" style="max-width:1240px;margin:0 auto;padding:96px 40px 0;display:flex;flex-direction:column;gap:36px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;border-bottom:1px solid rgba(253,213,211,.12);padding-bottom:18px;flex-wrap:wrap">
+      <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:38px;line-height:1.1;letter-spacing:-.02em;color:#fdd5d3">Quatro etapas, nenhuma surpresa.</h2>
+      <span style="font-size:13px;line-height:1.5;color:rgba(253,213,211,.6)">Prazo médio de um projeto de identidade: 4 semanas.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+      <div style="border-radius:14px;background:#170b33;padding:28px;display:flex;flex-direction:column;gap:18px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fdd5d3" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px"><path d="M5 3h9l5 5v13H5z"></path><path d="M14 3v5h5"></path><path d="M8 17h6"></path><rect x="8" y="11" width="4" height="3" fill="var(--eloi-acc,#dff806)" stroke="none"></rect></svg>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--eloi-acc,#dff806)">Etapa 01</span>
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:20px;color:#fdd5d3">Briefing</h3>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)">Formulário guiado e uma conversa. Sai daqui com escopo e prazo fechados.</p>
+        </div>
+      </div>
+      <div style="border-radius:14px;background:#170b33;padding:28px;display:flex;flex-direction:column;gap:18px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fdd5d3" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px"><rect x="3" y="3" width="18" height="18"></rect><rect x="3" y="3" width="7" height="7" fill="var(--eloi-acc,#dff806)" stroke="none"></rect></svg>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--eloi-acc,#dff806)">Etapa 02</span>
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:20px;color:#fdd5d3">Estratégia</h3>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)">Posicionamento, referências e a direção visual antes de qualquer desenho.</p>
+        </div>
+      </div>
+      <div style="border-radius:14px;background:#170b33;padding:28px;display:flex;flex-direction:column;gap:18px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fdd5d3" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px"><path d="M3 21V12A9 9 0 0 1 12 3h9"></path><circle cx="19.4" cy="19.4" r="2.6" fill="var(--eloi-acc,#dff806)" stroke="none"></circle></svg>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--eloi-acc,#dff806)">Etapa 03</span>
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:20px;color:#fdd5d3">Execução</h3>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)">Duas rodadas de ajuste, tudo revisado no navegador e no impresso.</p>
+        </div>
+      </div>
+      <div style="border-radius:14px;background:var(--eloi-acc,#dff806);padding:28px;display:flex;flex-direction:column;gap:18px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1b0647" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px"><path d="M3 13v8h18v-8"></path><path d="M12 3v11"></path><path d="M8 10l4 4 4-4"></path></svg>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(27,6,71,.62)">Etapa 04</span>
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:20px;color:#1b0647">Entrega</h3>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(27,6,71,.78)">Arquivos abertos, manual de marca e uma área para baixar tudo quando quiser.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="projetos" data-screen-label="Projetos" style="max-width:1240px;margin:0 auto;padding:96px 40px 0;display:flex;flex-direction:column;gap:36px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:40px;border-bottom:1px solid rgba(253,213,211,.12);padding-bottom:18px;flex-wrap:wrap">
+      <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:38px;line-height:1.1;letter-spacing:-.02em;color:#fdd5d3">Projetos recentes</h2>
+      <a href="#contato" style="font-size:14px;font-weight:600">Quero um assim</a>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:#170b33">
+          <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="site-proj-1" shape="rect" placeholder="Solarium — aplicação da marca" hint-size="100%,100%"></x-import>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="padding:6px 12px;border-radius:999px;background:#7d2ae8;font-size:11px;font-weight:600;color:#fff">Identidade</span>
+            <span style="font-size:12px;color:rgba(253,213,211,.55)">2026</span>
+          </div>
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Solarium</h3>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)">Marca, papelaria e diretriz de aplicação para uma rede de estética avançada.</p>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:#170b33">
+          <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="site-proj-2" shape="rect" placeholder="Guia Viver Bem — peça editorial" hint-size="100%,100%"></x-import>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="padding:6px 12px;border-radius:999px;background:#5b7cfd;font-size:11px;font-weight:600;color:#fff">Editorial</span>
+            <span style="font-size:12px;color:rgba(253,213,211,.55)">2025</span>
+          </div>
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Guia Viver Bem</h3>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)">Projeto gráfico do guia impresso e das versões para redes.</p>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:#170b33">
+          <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="site-proj-3" shape="rect" placeholder="F2 Experience — campanha" hint-size="100%,100%"></x-import>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="padding:6px 12px;border-radius:999px;background:#fd4400;font-size:11px;font-weight:600;color:#fff">Campanha</span>
+            <span style="font-size:12px;color:rgba(253,213,211,.55)">2025</span>
+          </div>
+          <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">F2 Experience</h3>
+          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)">Campanha de lançamento: chave visual, peças de mídia e material de ponto de venda.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width:1240px;margin:0 auto;padding:96px 40px 0">
+    <div style="border-radius:18px;background:#1b0647;padding:48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:40px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:52px;line-height:1;letter-spacing:-.03em;color:var(--eloi-acc,#dff806)">40</span>
+        <span style="font-size:14px;line-height:1.5;color:rgba(253,213,211,.72)">peças entregues por mês, em média</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:52px;line-height:1;letter-spacing:-.03em;color:var(--eloi-acc,#dff806)">12</span>
+        <span style="font-size:14px;line-height:1.5;color:rgba(253,213,211,.72)">clientes ativos na carteira</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:52px;line-height:1;letter-spacing:-.03em;color:var(--eloi-acc,#dff806)">3</span>
+        <span style="font-size:14px;line-height:1.5;color:rgba(253,213,211,.72)">entregas por semana, todo mês</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:52px;line-height:1;letter-spacing:-.03em;color:var(--eloi-acc,#dff806)">7</span>
+        <span style="font-size:14px;line-height:1.5;color:rgba(253,213,211,.72)">anos de estúdio, sem intermediário</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="contato" data-screen-label="Contato" style="max-width:1240px;margin:0 auto;padding:96px 40px 0">
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px">
+      <div style="border-radius:18px;background:#170b33;padding:48px;display:flex;flex-direction:column;gap:22px">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--eloi-acc,#dff806)">Começar</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:44px;line-height:1.04;letter-spacing:-.03em;color:#fdd5d3;max-width:22ch;text-wrap:pretty">Conte o que precisa. Respondo em um dia útil.</h2>
+        <p style="margin:0;font-size:16px;line-height:1.6;max-width:44ch;color:rgba(253,213,211,.72)">O briefing é um formulário guiado: dez minutos e eu já sei o escopo, o prazo e o orçamento do seu projeto.</p>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:6px">
+          <a href="#contato" style="padding:15px 28px;border-radius:10px;background:var(--eloi-acc,#dff806);font-size:15px;font-weight:700;color:#1b0647" style-hover="color:#1b0647;opacity:.88">Preencher o briefing</a>
+          <a href="#contato" style="padding:15px 24px;border-radius:10px;border:1px solid rgba(253,213,211,.28);font-size:15px;font-weight:600;color:#fdd5d3" style-hover="border-color:#dff806;color:#dff806">Falar no WhatsApp</a>
+        </div>
+      </div>
+      <div style="border-radius:18px;background:#0d0225;border:1px solid rgba(253,213,211,.12);padding:40px;display:flex;flex-direction:column;gap:26px">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">Contato direto</span>
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;gap:14px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--eloi-acc,#dff806)" stroke-width="2" stroke-linejoin="miter" style="width:24px;height:24px;flex:none"><rect x="3" y="5" width="18" height="14"></rect><path d="M3 5l9 7 9-7"></path></svg>
+            <span style="font-size:15px;font-weight:600;color:#fdd5d3">contato@eloidesign.com.br</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--eloi-acc,#dff806)" stroke-width="2" stroke-linejoin="miter" style="width:24px;height:24px;flex:none"><rect x="6" y="2" width="12" height="20"></rect><path d="M6 6h12M6 18h12"></path><circle cx="12" cy="20" r="1.4" fill="var(--eloi-acc,#dff806)" stroke="none"></circle></svg>
+            <span style="font-size:15px;font-weight:600;color:#fdd5d3">WhatsApp do estúdio</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--eloi-acc,#dff806)" stroke-width="2" stroke-linejoin="miter" style="width:24px;height:24px;flex:none"><circle cx="12" cy="8" r="5"></circle><path d="M12 13v8"></path><path d="M7 21h10"></path><circle cx="12" cy="8" r="1.8" fill="var(--eloi-acc,#dff806)" stroke="none"></circle></svg>
+            <span style="font-size:15px;font-weight:600;color:#fdd5d3">Atendimento remoto, Brasil</span>
+          </div>
+        </div>
+        <span style="margin-top:auto;font-size:13px;line-height:1.55;color:rgba(253,213,211,.55)">Já é cliente? O portal tem seus arquivos, orçamentos e entregas.</span>
+      </div>
+    </div>
+  </section>
+
+  <footer style="margin-top:96px;border-top:1px solid rgba(253,213,211,.12)">
+    <div style="max-width:1240px;margin:0 auto;padding:44px 40px;display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <span style="display:inline-flex;align-items:baseline;font-family:Archivo;font-size:30px;line-height:1.24;white-space:nowrap">
+          <span style="font-variation-settings:'wdth' 72,'wght' 700;letter-spacing:-.02em;color:#fdd5d3">ELOI</span>
+          <span style="display:block;height:1.24em;overflow:hidden">
+            <span data-anim style="display:flex;flex-direction:column;animation:eloi-roll 5.6s cubic-bezier(.72,0,.16,1) infinite">
+              <span style="height:1.24em;line-height:1.24em;font-variation-settings:'wdth' 72,'wght' 700;color:#eeb4e7">Studio</span>
+              <span style="height:1.24em;line-height:1.24em;font-variation-settings:'wdth' 72,'wght' 700;color:var(--eloi-acc,#dff806)">Design</span>
+            </span>
+          </span>
+        </span>
+        <span style="font-size:13px;color:rgba(253,213,211,.55)">Identidade, sites e campanhas · eloidesign.com.br</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:22px">
+        <a href="#projetos" style="font-size:13px;font-weight:600;color:rgba(253,213,211,.6)" style-hover="color:#fdd5d3">Projetos</a>
+        <a href="#servicos" style="font-size:13px;font-weight:600;color:rgba(253,213,211,.6)" style-hover="color:#fdd5d3">Serviços</a>
+        <a href="#contato" style="font-size:13px;font-weight:600;color:rgba(253,213,211,.6)" style-hover="color:#fdd5d3">Contato</a>
+        <span style="font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(253,213,211,.4)">© 2026</span>
+      </div>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;acento&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#dff806&quot;,&quot;#eeb4e7&quot;,&quot;#5b7cfd&quot;,&quot;#fd4400&quot;],&quot;default&quot;:&quot;#dff806&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Cor&quot;}}">
+class Component extends DCLogic {
+  componentDidMount() { this.sync(); }
+  componentDidUpdate() { this.sync(); }
+  sync() {
+    document.documentElement.style.setProperty('--eloi-acc', this.props.acento ?? '#dff806');
+  }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

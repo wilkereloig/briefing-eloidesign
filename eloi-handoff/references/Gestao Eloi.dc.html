@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#08011a}
+    a{color:var(--eloi-acc,#dff806);text-decoration:none}
+    a:hover{color:#fdd5d3}
+    input::placeholder{color:rgba(253,213,211,.4)}
+  </style>
+</helmet>
+
+<div style="display:flex;min-height:100vh;background:#08011a;font-family:Manrope,sans-serif;color:#fdd5d3">
+
+  <aside style="flex:none;width:236px;background:#0d0225;border-right:1px solid rgba(253,213,211,.12);padding:26px 14px 18px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh">
+    <span style="display:inline-flex;align-items:baseline;font-family:Archivo;font-size:20px;line-height:1.24;margin:0 8px 26px">
+      <span style="font-variation-settings:'wdth' 72,'wght' 700;letter-spacing:-.02em;color:#fdd5d3">ELOI</span>
+      <span style="font-variation-settings:'wdth' 72,'wght' 700;color:var(--eloi-acc,#dff806)">Design</span>
+    </span>
+
+    <div onClick="{{ irPainel }}" style="position:relative;display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.72);cursor:pointer;min-height:44px" style-hover="background:#170b33;color:#fdd5d3">
+      <span style="position:absolute;left:0;top:9px;bottom:9px;width:3px;background:{{ barraPainel }}"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter" style="width:18px;height:18px;flex:none"><path d="M3 12l9-8 9 8M5 10v10h14V10"></path></svg>
+      <span>Painel</span>
+    </div>
+    <div onClick="{{ irGestao }}" style="position:relative;display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.72);cursor:pointer;min-height:44px" style-hover="background:#170b33;color:#fdd5d3">
+      <span style="position:absolute;left:0;top:9px;bottom:9px;width:3px;background:{{ barraGestao }}"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter" style="width:18px;height:18px;flex:none"><path d="M4 19V9m6 10V5m6 14v-7"></path></svg>
+      <span>Gestão</span>
+    </div>
+    <div style="position:relative;display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.72);cursor:pointer;min-height:44px" style-hover="background:#170b33;color:#fdd5d3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter" style="width:18px;height:18px;flex:none"><path d="M8 4h8v3H8z"></path><path d="M6 7h12v13H6z"></path></svg>
+      <span>Briefings</span>
+    </div>
+    <div onClick="{{ irOrcamentos }}" style="position:relative;display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.72);cursor:pointer;min-height:44px" style-hover="background:#170b33;color:#fdd5d3">
+      <span style="position:absolute;left:0;top:9px;bottom:9px;width:3px;background:{{ barraOrcamentos }}"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter" style="width:18px;height:18px;flex:none"><path d="M7 4h10v16H7z"></path><path d="M10 8h4M10 12h4M10 16h3"></path></svg>
+      <span>Orçamentos</span>
+    </div>
+    <div style="position:relative;display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.72);cursor:pointer;min-height:44px" style-hover="background:#170b33;color:#fdd5d3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter" style="width:18px;height:18px;flex:none"><circle cx="12" cy="8" r="4"></circle><path d="M5 20a7 7 0 0114 0"></path></svg>
+      <span>Clientes</span>
+    </div>
+
+    <span style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(253,213,211,.45);margin:22px 12px 8px;padding-top:14px;border-top:1px solid rgba(253,213,211,.12)">Ferramentas</span>
+    <div style="display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:600;color:rgba(253,213,211,.72);cursor:pointer;min-height:44px" style-hover="background:#170b33;color:#fdd5d3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter" style="width:18px;height:18px;flex:none"><path d="M12 3l7 4v6c0 4-3 6-7 8-4-2-7-4-7-8V7z"></path></svg>
+      <span>Entregas de Marca</span>
+    </div>
+
+    <div style="flex:1;min-height:20px"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin:0 4px 12px;padding-top:14px;border-top:1px solid rgba(253,213,211,.12)">
+      <span style="flex:1 1 auto;text-align:center;padding:9px 8px;border-radius:8px;border:1px solid rgba(253,213,211,.2);font-size:12px;font-weight:600;color:#fdd5d3;cursor:pointer;white-space:nowrap" style-hover="border-color:var(--eloi-acc,#dff806);color:var(--eloi-acc,#dff806)">+ Serviço</span>
+      <span style="flex:1 1 auto;text-align:center;padding:9px 8px;border-radius:8px;border:1px solid rgba(253,213,211,.2);font-size:12px;font-weight:600;color:#fdd5d3;cursor:pointer;white-space:nowrap" style-hover="border-color:var(--eloi-acc,#dff806);color:var(--eloi-acc,#dff806)">+ Orçamento</span>
+      <span style="flex:1 1 auto;text-align:center;padding:9px 8px;border-radius:8px;border:1px solid rgba(253,213,211,.2);font-size:12px;font-weight:600;color:#fdd5d3;cursor:pointer;white-space:nowrap" style-hover="border-color:var(--eloi-acc,#dff806);color:var(--eloi-acc,#dff806)">+ Cliente</span>
+    </div>
+    <span style="display:flex;align-items:center;gap:9px;margin:0 4px;padding:11px 12px;border-radius:10px;background:#170b33;font-size:13px;font-weight:600;color:rgba(253,213,211,.6);cursor:pointer;min-height:44px" style-hover="color:#fd4400">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="miter" style="width:17px;height:17px;flex:none"><path d="M15 17l5-5-5-5M20 12H9"></path><path d="M13 3H6v18h7"></path></svg>
+      Sair
+    </span>
+  </aside>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="border-bottom:1px solid rgba(253,213,211,.12);padding:26px 36px;display:flex;align-items:flex-end;justify-content:space-between;gap:28px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--eloi-acc,#dff806)">{{ secao }}</span>
+        <h1 style="margin:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:32px;line-height:1.1;letter-spacing:-.02em;color:#fdd5d3">{{ titulo }}</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:10px;background:#170b33;font-size:13px;font-weight:600;color:#fdd5d3;cursor:pointer;min-height:44px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--eloi-acc,#dff806)" stroke-width="2" stroke-linejoin="miter" style="width:17px;height:17px"><rect x="3" y="5" width="18" height="16"></rect><path d="M3 10h18"></path><path d="M8 3v4M16 3v4"></path></svg>
+          Agosto 2026
+        </span>
+        <span style="padding:12px 20px;border-radius:10px;background:#7d2ae8;font-size:14px;font-weight:600;color:#fff;cursor:pointer;min-height:44px;display:flex;align-items:center" style-hover="background:#6a1fd0">+ Serviço</span>
+      </div>
+    </header>
+
+    <sc-if value="{{ ehPainel }}" hint-placeholder-val="{{ true }}">
+      <div style="padding:32px 36px 56px;display:flex;flex-direction:column;gap:20px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px">
+          <div style="border-radius:16px;background:#7d2ae8;padding:26px;display:flex;flex-direction:column;gap:14px;min-height:150px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.75)">Faturado no mês</span>
+            <span style="margin-top:auto;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:34px;line-height:1;letter-spacing:-.03em;color:#fff">{{ faturado }}</span>
+            <span style="font-size:12px;color:rgba(255,255,255,.75)">{{ faturadoNota }}</span>
+          </div>
+          <div style="border-radius:16px;background:#170b33;padding:26px;display:flex;flex-direction:column;gap:14px;min-height:150px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">A receber</span>
+            <span style="margin-top:auto;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:34px;line-height:1;letter-spacing:-.03em;color:var(--eloi-acc,#dff806)">{{ aReceber }}</span>
+            <span style="font-size:12px;color:rgba(253,213,211,.6)">{{ aReceberNota }}</span>
+          </div>
+          <div style="border-radius:16px;background:#170b33;padding:26px;display:flex;flex-direction:column;gap:14px;min-height:150px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">Em execução</span>
+            <span style="margin-top:auto;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:34px;line-height:1;letter-spacing:-.03em;color:#5b7cfd">{{ emExecucao }}</span>
+            <span style="font-size:12px;color:rgba(253,213,211,.6)">{{ emExecucaoNota }}</span>
+          </div>
+          <div style="border-radius:16px;background:#170b33;padding:26px;display:flex;flex-direction:column;gap:14px;min-height:150px">
+            <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#fd4400">Concluído sem NF</span>
+            <span style="margin-top:auto;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:34px;line-height:1;letter-spacing:-.03em;color:#fd4400">{{ semNota }}</span>
+            <span style="font-size:12px;color:rgba(253,213,211,.6)">{{ semNotaNota }}</span>
+          </div>
+        </div>
+
+        <div style="border-radius:16px;background:#0d0225;border:1px solid rgba(253,213,211,.12);padding:28px;display:flex;flex-direction:column;gap:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--eloi-acc,#dff806)">Faturamento · últimos 6 meses</span>
+            <div style="display:flex;align-items:center;gap:18px">
+              <span style="display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(253,213,211,.6)"><span style="width:11px;height:11px;background:#7d2ae8"></span>recebido</span>
+              <span style="display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(253,213,211,.6)"><span style="width:11px;height:11px;background:#170b33;border:1px solid rgba(253,213,211,.28)"></span>a receber</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:14px;height:180px">
+            <sc-for list="{{ serie }}" as="m" hint-placeholder-count="6">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:9px;height:100%;justify-content:flex-end">
+                <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:12px;color:rgba(253,213,211,.7);white-space:nowrap">{{ m.rotulo }}</span>
+                <span style="width:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:3px;height:{{ m.altura }}">
+                  <span style="width:100%;background:#170b33;border:1px solid rgba(253,213,211,.22);height:{{ m.hAberto }}"></span>
+                  <span style="width:100%;background:#7d2ae8;height:{{ m.hPago }}"></span>
+                </span>
+                <span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(253,213,211,.5)">{{ m.mes }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px">
+          <div style="border-radius:16px;background:#0d0225;border:1px solid rgba(253,213,211,.12);padding:28px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--eloi-acc,#dff806)">Ranking por cliente</span>
+              <span style="font-size:12px;color:rgba(253,213,211,.5)">competência · agosto</span>
+            </div>
+            <sc-for list="{{ ranking }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(253,213,211,.08)">
+                <span style="flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.cliente }}</span>
+                <span style="flex:1 1 90px;min-width:60px;height:8px;background:#170b33;position:relative;overflow:hidden"><span style="position:absolute;left:0;top:0;bottom:0;background:#7d2ae8;width:{{ r.pct }}"></span></span>
+                <span style="flex:none;width:104px;text-align:right;font-family:Archivo;font-variation-settings:'wght' 600;font-size:15px;color:#fdd5d3">{{ r.valor }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="border-radius:16px;background:#0d0225;border:1px solid rgba(253,213,211,.12);padding:28px;display:flex;flex-direction:column;gap:16px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--eloi-acc,#dff806)">Orçamentos abertos</span>
+            <sc-for list="{{ orcamentos }}" as="o" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid rgba(253,213,211,.08)">
+                <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                  <span style="font-size:14px;font-weight:600;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.cliente }}</span>
+                  <span style="font-size:12px;color:rgba(253,213,211,.55);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.titulo }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none">
+                  <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:14px;color:#fdd5d3">{{ o.valor }}</span>
+                  <span style="padding:4px 10px;border-radius:999px;font-size:10px;font-weight:700;background:{{ o.bg }};color:{{ o.fg }}">{{ o.status }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ ehGestao }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:32px 36px 56px;display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span onClick="{{ verServicos }}" style="padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;background:{{ abaServicosBg }};color:{{ abaServicosFg }};border:1px solid {{ abaServicosBorda }}">Serviços</span>
+            <span onClick="{{ verClientes }}" style="padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;background:{{ abaClientesBg }};color:{{ abaClientesFg }};border:1px solid {{ abaClientesBorda }}">Clientes</span>
+            <span onClick="{{ verFinanceiro }}" style="padding:10px 18px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;background:{{ abaFinBg }};color:{{ abaFinFg }};border:1px solid {{ abaFinBorda }}">Financeiro</span>
+          </div>
+          <div style="display:flex;align-items:center;position:relative">
+            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,213,211,.45)" stroke-width="2" style="width:18px;height:18px;position:absolute;left:14px;pointer-events:none"><circle cx="10.5" cy="10.5" r="7.5"></circle><path d="M15.8 15.8L21 21" stroke-linecap="square"></path></svg>
+            <input onInput="{{ buscar }}" placeholder="Buscar cliente, marca ou serviço" style="width:300px;padding:12px 14px 12px 42px;border-radius:10px;background:#0d0225;border:1px solid rgba(253,213,211,.16);color:#fdd5d3;font-family:Manrope,sans-serif;font-size:13px;outline:none;min-height:44px" style-focus="border-color:#9184d9">
+          </div>
+        </div>
+
+        <sc-if value="{{ abaServicos }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(253,213,211,.45);margin-right:6px">Filtro</span>
+              <span onClick="{{ filtroTodos }}" style="padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ fTodosBg }};color:{{ fTodosFg }}">Todos</span>
+              <span onClick="{{ filtroExecucao }}" style="padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ fExecBg }};color:{{ fExecFg }}">Em execução</span>
+              <span onClick="{{ filtroAberto }}" style="padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ fAbertoBg }};color:{{ fAbertoFg }}">A receber</span>
+              <span onClick="{{ filtroSemNf }}" style="padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;background:{{ fSemNfBg }};color:{{ fSemNfFg }}">Sem NF</span>
+              <span style="margin-left:auto;font-size:12px;color:rgba(253,213,211,.55)">{{ resultado }}</span>
+            </div>
+
+            <sc-if value="{{ semResultado }}" hint-placeholder-val="{{ false }}">
+              <div style="border-radius:16px;background:#0d0225;border:1px dashed rgba(253,213,211,.2);padding:48px;display:flex;flex-direction:column;align-items:center;gap:12px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,213,211,.4)" stroke-width="2" style="width:34px;height:34px"><circle cx="10.5" cy="10.5" r="7.5"></circle><path d="M15.8 15.8L21 21" stroke-linecap="square"></path></svg>
+                <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:18px;color:#fdd5d3">Nenhum serviço encontrado</span>
+                <span style="font-size:13px;color:rgba(253,213,211,.55)">Ajuste a busca ou volte para o filtro Todos.</span>
+              </div>
+            </sc-if>
+
+            <sc-for list="{{ clientes }}" as="c" hint-placeholder-count="3">
+              <div style="border-radius:16px;background:#0d0225;border:1px solid rgba(253,213,211,.12);overflow:hidden">
+                <div style="padding:22px 26px;display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid rgba(253,213,211,.1);flex-wrap:wrap">
+                  <div style="display:flex;align-items:center;gap:14px;min-width:0">
+                    <span style="flex:none;width:10px;height:26px;background:{{ c.cor }}"></span>
+                    <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                      <span style="font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:20px;letter-spacing:-.01em;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.nome }}</span>
+                      <span style="font-size:12px;color:rgba(253,213,211,.55)">{{ c.resumo }}</span>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:22px;flex:none">
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+                      <span style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(253,213,211,.45)">Total</span>
+                      <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:19px;color:#fdd5d3">{{ c.total }}</span>
+                    </div>
+                    <span style="display:flex;align-items:center;padding:11px 14px;border-radius:8px;border:1px solid rgba(253,213,211,.2);font-size:12px;font-weight:600;color:#fdd5d3;cursor:pointer;white-space:nowrap;min-height:44px" style-hover="border-color:var(--eloi-acc,#dff806);color:var(--eloi-acc,#dff806)">Abrir perfil</span>
+                  </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:minmax(120px,1fr) 96px 104px 104px 40px;gap:12px;align-items:center;padding:12px 26px;background:#08011a;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(253,213,211,.45)">
+                  <span style="min-width:0">Serviço</span>
+                  <span style="text-align:right">Valor</span>
+                  <span>Execução</span>
+                  <span>Pagamento</span>
+                  <span style="text-align:center">NF</span>
+                </div>
+
+                <sc-for list="{{ c.linhas }}" as="l" hint-placeholder-count="3">
+                  <div style="border-top:1px solid rgba(253,213,211,.07)">
+                    <sc-if value="{{ l.ehGrupo }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px 26px;background:#0a0132">
+                        <span style="display:flex;align-items:center;gap:9px;min-width:0;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--eloi-acc,#dff806)"><span style="flex:none;width:6px;height:6px;background:var(--eloi-acc,#dff806)"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.marca }}</span></span>
+                        <span style="flex:none;font-family:Archivo;font-variation-settings:'wght' 600;font-size:13px;color:rgba(253,213,211,.72);white-space:nowrap">subtotal {{ l.subtotal }}</span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ l.ehServico }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:grid;grid-template-columns:minmax(120px,1fr) 96px 104px 104px 40px;gap:12px;align-items:center;padding:15px 26px" style-hover="background:#150733">
+                        <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                          <span style="font-size:14px;font-weight:600;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.titulo }}</span>
+                          <span style="font-size:11px;color:rgba(253,213,211,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.data }}</span>
+                        </div>
+                        <span style="text-align:right;font-family:Archivo;font-variation-settings:'wght' 600;font-size:14px;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ l.valor }}</span>
+                        <span style="min-width:0"><span style="display:inline-flex;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;background:{{ l.execBg }};color:{{ l.execFg }}">{{ l.exec }}</span></span>
+                        <span style="min-width:0"><span style="display:inline-flex;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;background:{{ l.pagBg }};color:{{ l.pagFg }}">{{ l.pag }}</span></span>
+                        <span style="display:flex;justify-content:center">
+                          <sc-if value="{{ l.nf }}" hint-placeholder-val="{{ true }}"><svg viewBox="0 0 24 24" fill="none" stroke="var(--eloi-acc,#dff806)" stroke-width="2" stroke-linecap="square" style="width:20px;height:20px"><path d="M4 12.5l5.5 5.5L20 7"></path></svg></sc-if>
+                          <sc-if value="{{ l.semNf }}" hint-placeholder-val="{{ false }}"><svg viewBox="0 0 24 24" fill="none" stroke="#fd4400" stroke-width="2" style="width:20px;height:20px"><path d="M5 5l14 14M19 5L5 19"></path></svg></sc-if>
+                        </span>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ abaClientes }}" hint-placeholder-val="{{ false }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+            <sc-for list="{{ clientes }}" as="c" hint-placeholder-count="3">
+              <div style="border-radius:16px;background:#170b33;padding:26px;display:flex;flex-direction:column;gap:18px" style-hover="background:#20114a">
+                <div style="display:flex;align-items:flex-start;gap:14px">
+                  <span style="flex:none;width:10px;height:26px;background:{{ c.cor }}"></span>
+                  <span style="flex:1;min-width:0;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 600;font-size:20px;letter-spacing:-.01em;color:#fdd5d3">{{ c.nome }}</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:9px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px"><span style="color:rgba(253,213,211,.6)">Serviços no mês</span><span style="font-weight:600;color:#fdd5d3">{{ c.qtd }}</span></div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px"><span style="color:rgba(253,213,211,.6)">Total</span><span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:15px;color:#fdd5d3">{{ c.total }}</span></div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px"><span style="color:rgba(253,213,211,.6)">A receber</span><span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:15px;color:var(--eloi-acc,#dff806)">{{ c.aberto }}</span></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span style="padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;background:{{ c.portalBg }};color:{{ c.portalFg }}">{{ c.portal }}</span>
+                  <span style="padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid rgba(253,213,211,.2);color:rgba(253,213,211,.72)">{{ c.marcas }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ abaFinanceiro }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+              <sc-for list="{{ caixas }}" as="k" hint-placeholder-count="3">
+                <div style="border-radius:16px;background:#170b33;padding:26px;display:flex;flex-direction:column;gap:14px;min-height:148px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                    <span style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.5)">{{ k.nome }}</span>
+                    <span style="width:8px;height:8px;background:{{ k.cor }}"></span>
+                  </div>
+                  <span style="margin-top:auto;font-family:Archivo;font-variation-settings:'wdth' 100,'wght' 700;font-size:30px;line-height:1;letter-spacing:-.03em;color:#fdd5d3">{{ k.saldo }}</span>
+                  <span style="font-size:12px;color:rgba(253,213,211,.55)">{{ k.nota }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="border-radius:16px;background:#0d0225;border:1px solid rgba(253,213,211,.12);overflow:hidden">
+              <div style="display:grid;grid-template-columns:minmax(140px,1fr) 110px 116px 104px;gap:12px;align-items:center;padding:12px 26px;background:#08011a;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(253,213,211,.45)">
+                <span style="min-width:0">Movimento</span>
+                <span>Caixa</span>
+                <span style="text-align:right">Valor</span>
+                <span>Situação</span>
+              </div>
+              <sc-for list="{{ movimentos }}" as="mv" hint-placeholder-count="5">
+                <div style="display:grid;grid-template-columns:minmax(140px,1fr) 110px 116px 104px;gap:12px;align-items:center;padding:15px 26px;border-top:1px solid rgba(253,213,211,.07)" style-hover="background:#150733">
+                  <div style="min-width:0;display:flex;flex-direction:column;gap:3px">
+                    <span style="font-size:14px;font-weight:600;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ mv.titulo }}</span>
+                    <span style="font-size:11px;color:rgba(253,213,211,.5)">{{ mv.data }}</span>
+                  </div>
+                  <span style="font-size:12px;color:rgba(253,213,211,.7);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ mv.caixa }}</span>
+                  <span style="text-align:right;font-family:Archivo;font-variation-settings:'wght' 600;font-size:14px;white-space:nowrap;color:{{ mv.cor }}">{{ mv.valor }}</span>
+                  <span style="min-width:0"><span style="display:inline-flex;padding:5px 11px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;background:{{ mv.bg }};color:{{ mv.fg }}">{{ mv.situacao }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ ehOrcamentos }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:32px 36px 56px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:grid;grid-template-columns:minmax(150px,1fr) 100px 110px 150px;gap:12px;align-items:center;padding:12px 26px;border-radius:12px;background:#0d0225;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(253,213,211,.45)">
+          <span style="min-width:0">Cliente e proposta</span>
+          <span style="text-align:right">Valor</span>
+          <span>Status</span>
+          <span style="text-align:right">Ações</span>
+        </div>
+        <sc-for list="{{ orcamentos }}" as="o" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:minmax(150px,1fr) 100px 110px 150px;gap:12px;align-items:center;padding:20px 26px;border-radius:12px;background:#170b33" style-hover="background:#20114a">
+            <div style="min-width:0;display:flex;flex-direction:column;gap:4px">
+              <span style="font-family:Archivo;font-variation-settings:'wght' 600;font-size:17px;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.cliente }}</span>
+              <span style="font-size:13px;color:rgba(253,213,211,.6);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.titulo }}</span>
+            </div>
+            <span style="text-align:right;font-family:Archivo;font-variation-settings:'wght' 600;font-size:16px;color:#fdd5d3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.valor }}</span>
+            <span style="min-width:0"><span style="display:inline-flex;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;background:{{ o.bg }};color:{{ o.fg }}">{{ o.status }}</span></span>
+            <div style="display:flex;justify-content:flex-end;gap:8px;min-width:0">
+              <span style="display:grid;place-items:center;width:36px;height:36px;border-radius:8px;border:1px solid rgba(253,213,211,.2);cursor:pointer;color:#fdd5d3" style-hover="border-color:var(--eloi-acc,#dff806);color:var(--eloi-acc,#dff806)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter" style="width:17px;height:17px"><path d="M13 3h8v8"></path><path d="M21 3l-9 9"></path><path d="M18 14v7H3V6h7"></path></svg></span>
+              <span style="display:flex;align-items:center;padding:0 14px;height:36px;border-radius:8px;background:var(--eloi-acc,#dff806);font-size:12px;font-weight:700;color:#1b0647;cursor:pointer;white-space:nowrap">Aprovar</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:900},&quot;acento&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#dff806&quot;,&quot;#eeb4e7&quot;,&quot;#5b7cfd&quot;,&quot;#fd4400&quot;],&quot;default&quot;:&quot;#dff806&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Cor&quot;}}">
+const CHIP = {
+  concluido: ['#dff806', '#1b0647'],
+  execucao:  ['#5b7cfd', '#ffffff'],
+  fila:      ['rgba(253,213,211,.12)', '#fdd5d3'],
+  pago:      ['#dff806', '#1b0647'],
+  aberto:    ['rgba(253,213,211,.12)', '#fdd5d3'],
+  atrasado:  ['#fd4400', '#ffffff'],
+  enviado:   ['#5b7cfd', '#ffffff'],
+  rascunho:  ['rgba(253,213,211,.12)', '#fdd5d3'],
+  aprovado:  ['#dff806', '#1b0647'],
+  realizado: ['#dff806', '#1b0647'],
+  previsto:  ['rgba(253,213,211,.12)', '#fdd5d3']
+};
+const ACC = 'var(--eloi-acc,#dff806)';
+const brl = c => 'R$ ' + (c / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const curto = c => 'R$ ' + Math.round(c / 100000) + 'k';
+
+const CLIENTES = [
+  { nome: 'F2 EXPERIENCE', cor: '#7d2ae8', portal: 'portal ativo', servicos: [
+    { titulo: 'Campanha de lançamento', marca: 'VIBRA', valor: 480000, exec: 'concluído', pag: 'pago', nf: true, data: 'competência 04/08' },
+    { titulo: 'Key visual de evento', marca: 'ASUS', valor: 320000, exec: 'concluído', pag: 'aberto', nf: false, data: 'competência 11/08' },
+    { titulo: 'Peças de ponto de venda', marca: 'MRV', valor: 175000, exec: 'em execução', pag: 'aberto', nf: false, data: 'competência 19/08' }
+  ]},
+  { nome: 'Solarium Cosméticos', cor: '#dff806', portal: 'portal ativo', servicos: [
+    { titulo: 'Identidade visual completa', marca: '', valor: 650000, exec: 'em execução', pag: 'aberto', nf: false, data: 'competência 06/08' },
+    { titulo: 'Papelaria e diretriz', marca: '', valor: 180000, exec: 'na fila', pag: 'aberto', nf: false, data: 'competência 25/08' }
+  ]},
+  { nome: 'Guia Viver Bem', cor: '#5b7cfd', portal: 'sem senha', servicos: [
+    { titulo: 'Reestruturação do portal', marca: '', valor: 890000, exec: 'concluído', pag: 'pago', nf: true, data: 'competência 01/08' },
+    { titulo: 'Projeto gráfico do guia', marca: '', valor: 240000, exec: 'concluído', pag: 'atrasado', nf: false, data: 'competência 08/08' }
+  ]}
+];
+const SERIE = [
+  { mes: 'mar', pago: 1420000, aberto: 210000 },
+  { mes: 'abr', pago: 1680000, aberto: 320000 },
+  { mes: 'mai', pago: 1250000, aberto: 180000 },
+  { mes: 'jun', pago: 1930000, aberto: 410000 },
+  { mes: 'jul', pago: 2140000, aberto: 260000 },
+  { mes: 'ago', pago: 1370000, aberto: 1565000 }
+];
+const CAIXAS = [
+  { nome: 'Conta principal', cents: 2840000, cor: '#dff806', nota: 'entradas realizadas − saídas' },
+  { nome: 'Reserva de impostos', cents: 960000, cor: '#5b7cfd', nota: 'provisão de NF e DAS' },
+  { nome: 'Caixa do estúdio', cents: 145000, cor: '#eeb4e7', nota: 'despesa miúda e assinaturas' }
+];
+const MOVIMENTOS = [
+  { titulo: 'Campanha VIBRA · parcela 2', caixa: 'Conta principal', cents: 240000, tipo: 'entrada', situacao: 'realizado', data: '02/08/2026' },
+  { titulo: 'Portal Guia Viver Bem', caixa: 'Conta principal', cents: 890000, tipo: 'entrada', situacao: 'realizado', data: '01/08/2026' },
+  { titulo: 'Assinaturas de software', caixa: 'Caixa do estúdio', cents: 38000, tipo: 'saida', situacao: 'realizado', data: '05/08/2026' },
+  { titulo: 'Identidade Solarium · entrada', caixa: 'Conta principal', cents: 325000, tipo: 'entrada', situacao: 'previsto', data: '15/08/2026' },
+  { titulo: 'Provisão de impostos', caixa: 'Reserva de impostos', cents: 172000, tipo: 'saida', situacao: 'previsto', data: '20/08/2026' }
+];
+
+class Component extends DCLogic {
+  state = { view: 'painel', aba: 'servicos', q: '', filtro: 'todos' };
+  componentDidMount() { this.sync(); }
+  componentDidUpdate() { this.sync(); }
+  sync() { document.documentElement.style.setProperty('--eloi-acc', this.props.acento ?? '#dff806'); }
+
+  passa(s, cliente) {
+    const q = this.state.q.trim().toLowerCase();
+    if (q && !(s.titulo + ' ' + s.marca + ' ' + cliente).toLowerCase().includes(q)) return false;
+    const fl = this.state.filtro;
+    if (fl === 'execucao') return s.exec === 'em execução';
+    if (fl === 'aberto') return s.pag !== 'pago';
+    if (fl === 'semnf') return s.exec === 'concluído' && !s.nf;
+    return true;
+  }
+
+  renderVals() {
+    const v = this.state.view, aba = this.state.aba;
+    const abaChip = on => on ? { bg: ACC, fg: '#1b0647', borda: 'transparent' }
+                             : { bg: 'transparent', fg: 'rgba(253,213,211,.72)', borda: 'rgba(253,213,211,.2)' };
+    const fChip = on => on ? { bg: ACC, fg: '#1b0647' } : { bg: '#170b33', fg: 'rgba(253,213,211,.72)' };
+    const aS = abaChip(aba === 'servicos'), aC = abaChip(aba === 'clientes'), aF = abaChip(aba === 'financeiro');
+    const fT = fChip(this.state.filtro === 'todos'), fE = fChip(this.state.filtro === 'execucao');
+    const fA = fChip(this.state.filtro === 'aberto'), fN = fChip(this.state.filtro === 'semnf');
+
+    const linha = s => {
+      const ek = s.exec === 'concluído' ? 'concluido' : s.exec === 'em execução' ? 'execucao' : 'fila';
+      const pk = s.pag === 'pago' ? 'pago' : s.pag === 'atrasado' ? 'atrasado' : 'aberto';
+      return { ehGrupo: false, ehServico: true, marca: '', subtotal: '',
+        titulo: s.titulo, data: s.data, valor: brl(s.valor),
+        exec: s.exec, execBg: CHIP[ek][0], execFg: CHIP[ek][1],
+        pag: s.pag, pagBg: CHIP[pk][0], pagFg: CHIP[pk][1], nf: s.nf, semNf: !s.nf };
+    };
+
+    const clientes = CLIENTES.map(c => {
+      const vis = c.servicos.filter(s => this.passa(s, c.nome));
+      const total = vis.reduce((a, s) => a + s.valor, 0);
+      const aberto = vis.filter(s => s.pag !== 'pago').reduce((a, s) => a + s.valor, 0);
+      const marcas = [...new Set(vis.map(s => s.marca).filter(Boolean))];
+      const linhas = [];
+      marcas.forEach(m => {
+        const ss = vis.filter(s => s.marca === m);
+        linhas.push({ ehGrupo: true, ehServico: false, marca: m,
+          subtotal: brl(ss.reduce((a, s) => a + s.valor, 0)),
+          titulo: '', data: '', valor: '', exec: '', execBg: '', execFg: '',
+          pag: '', pagBg: '', pagFg: '', nf: false, semNf: false });
+        ss.forEach(s => linhas.push(linha(s)));
+      });
+      vis.filter(s => !s.marca).forEach(s => linhas.push(linha(s)));
+      return { nome: c.nome, cor: c.cor, total: brl(total), aberto: brl(aberto), qtd: vis.length,
+        resumo: vis.length + (vis.length === 1 ? ' serviço' : ' serviços') + ' · agosto 2026',
+        marcas: marcas.length ? marcas.length + ' marcas' : 'marca única',
+        portal: c.portal,
+        portalBg: c.portal === 'portal ativo' ? '#dff806' : 'rgba(253,213,211,.12)',
+        portalFg: c.portal === 'portal ativo' ? '#1b0647' : '#fdd5d3',
+        linhas, vazio: vis.length === 0 };
+    }).filter(c => !c.vazio);
+
+    const todos = CLIENTES.flatMap(c => c.servicos);
+    const soma = fn => todos.filter(fn).reduce((a, s) => a + s.valor, 0);
+    const visiveis = CLIENTES.flatMap(c => c.servicos.filter(s => this.passa(s, c.nome)));
+    const porCliente = CLIENTES.map(c => ({ cliente: c.nome, cents: c.servicos.reduce((a, s) => a + s.valor, 0) }))
+      .sort((a, b) => b.cents - a.cents);
+    const topo = porCliente[0] ? porCliente[0].cents : 1;
+    const maxSerie = Math.max(...SERIE.map(m => m.pago + m.aberto));
+
+    const orc = [
+      { cliente: 'Solarium Cosméticos', titulo: 'Site institucional + catálogo B2B', cents: 1240000, status: 'enviado' },
+      { cliente: 'F2 EXPERIENCE', titulo: 'Campanha de fim de ano · VIBRA', cents: 760000, status: 'enviado' },
+      { cliente: 'Guia Viver Bem', titulo: 'Manutenção mensal do portal', cents: 190000, status: 'aprovado' },
+      { cliente: 'Clínica Andrade', titulo: 'Identidade visual', cents: 580000, status: 'rascunho' }
+    ];
+
+    return {
+      ehPainel: v === 'painel', ehGestao: v === 'gestao', ehOrcamentos: v === 'orcamentos',
+      barraPainel: v === 'painel' ? ACC : 'transparent',
+      barraGestao: v === 'gestao' ? ACC : 'transparent',
+      barraOrcamentos: v === 'orcamentos' ? ACC : 'transparent',
+      irPainel: () => this.setState({ view: 'painel' }),
+      irGestao: () => this.setState({ view: 'gestao' }),
+      irOrcamentos: () => this.setState({ view: 'orcamentos' }),
+      secao: v === 'painel' ? 'Visão do mês' : v === 'gestao' ? 'Gestão' : 'Orçamentos',
+      titulo: v === 'painel' ? 'Painel' : v === 'gestao' ? 'Serviços prestados' : 'Propostas em aberto',
+
+      abaServicos: aba === 'servicos', abaClientes: aba === 'clientes', abaFinanceiro: aba === 'financeiro',
+      verServicos: () => this.setState({ aba: 'servicos' }),
+      verClientes: () => this.setState({ aba: 'clientes' }),
+      verFinanceiro: () => this.setState({ aba: 'financeiro' }),
+      abaServicosBg: aS.bg, abaServicosFg: aS.fg, abaServicosBorda: aS.borda,
+      abaClientesBg: aC.bg, abaClientesFg: aC.fg, abaClientesBorda: aC.borda,
+      abaFinBg: aF.bg, abaFinFg: aF.fg, abaFinBorda: aF.borda,
+
+      buscar: e => this.setState({ q: e.target.value }),
+      filtroTodos: () => this.setState({ filtro: 'todos' }),
+      filtroExecucao: () => this.setState({ filtro: 'execucao' }),
+      filtroAberto: () => this.setState({ filtro: 'aberto' }),
+      filtroSemNf: () => this.setState({ filtro: 'semnf' }),
+      fTodosBg: fT.bg, fTodosFg: fT.fg, fExecBg: fE.bg, fExecFg: fE.fg,
+      fAbertoBg: fA.bg, fAbertoFg: fA.fg, fSemNfBg: fN.bg, fSemNfFg: fN.fg,
+      resultado: visiveis.length + ' de ' + todos.length + ' serviços · ' + brl(visiveis.reduce((a, s) => a + s.valor, 0)),
+      semResultado: visiveis.length === 0,
+
+      faturado: brl(soma(s => s.pag === 'pago')), faturadoNota: todos.filter(s => s.pag === 'pago').length + ' serviços pagos',
+      aReceber: brl(soma(s => s.pag !== 'pago')), aReceberNota: todos.filter(s => s.pag !== 'pago').length + ' serviços em aberto',
+      emExecucao: brl(soma(s => s.exec === 'em execução')), emExecucaoNota: todos.filter(s => s.exec === 'em execução').length + ' projetos rodando',
+      semNota: brl(soma(s => s.exec === 'concluído' && !s.nf)), semNotaNota: 'emitir nota fiscal',
+
+      serie: SERIE.map(m => {
+        const t = m.pago + m.aberto;
+        return { mes: m.mes, rotulo: curto(t), altura: Math.round(t / maxSerie * 100) + '%',
+          hPago: Math.round(m.pago / t * 100) + '%', hAberto: Math.round(m.aberto / t * 100) + '%' };
+      }),
+      ranking: porCliente.map(r => ({ cliente: r.cliente, valor: brl(r.cents), pct: Math.round(r.cents / topo * 100) + '%' })),
+      clientes,
+      caixas: CAIXAS.map(k => ({ nome: k.nome, cor: k.cor, saldo: brl(k.cents), nota: k.nota })),
+      movimentos: MOVIMENTOS.map(m => ({ titulo: m.titulo, caixa: m.caixa, data: m.data,
+        valor: (m.tipo === 'saida' ? '− ' : '+ ') + brl(m.cents),
+        cor: m.tipo === 'saida' ? '#fd4400' : '#fdd5d3',
+        situacao: m.situacao, bg: CHIP[m.situacao][0], fg: CHIP[m.situacao][1] })),
+      orcamentos: orc.map(o => ({ cliente: o.cliente, titulo: o.titulo, valor: brl(o.cents),
+        status: o.status, bg: CHIP[o.status][0], fg: CHIP[o.status][1] }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+/* ELOI Studio — tokens do sistema visual aprovado (KV Completo, 04/08/2026).
+   Fonte única de valores. Substitui app/src/ui/tokens.css.
+   Convenção de nomes mantida em português, como no arquivo atual do projeto. */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap');
+
+:root {
+  /* chão — elevação é tom, não sombra */
+  --pagina: #08011A;
+  --chao: #0D0225;
+  --chao-2: #170B33;
+  --chao-3: #20114A;
+  --trilho: #0D0225;
+  --faixa-grupo: #0A0132;
+  --linha-hover: #150733;
+
+  /* marca */
+  --roxo: #7D2AE8;
+  --roxo-hover: #6A1FD0;
+  --roxo-press: #5A17B0;
+  --roxo-claro: #9184D9;
+  --lima: #DFF806;
+  --coral: #FD4400;
+  --lilas: #EEB4E7;
+  --azul: #5B7CFD;
+  --rosa: #FDD5D3;
+  --tinta: #1B0647;
+  --marinho: #0A0A60;
+
+  /* texto */
+  --texto: #FDD5D3;
+  --texto-2: rgba(253, 213, 211, .72);
+  --texto-3: rgba(253, 213, 211, .55);
+  --texto-4: rgba(253, 213, 211, .45);
+  --texto-off: rgba(253, 213, 211, .35);
+
+  /* linhas */
+  --linha: rgba(253, 213, 211, .12);
+  --linha-fraca: rgba(253, 213, 211, .07);
+  --linha-forte: rgba(253, 213, 211, .28);
+  --linha-campo: rgba(253, 213, 211, .16);
+
+  /* acento da interface — trocável por peça, Lima por padrão */
+  --acento: var(--lima);
+  --acento-texto: var(--tinta);
+
+  /* tipografia */
+  --fonte-titulo: 'Archivo', system-ui, sans-serif;
+  --fonte-corpo: 'Manrope', system-ui, sans-serif;
+  --marca-wdth: 72;
+  --titulo-wdth: 100;
+
+  /* espaço */
+  --e-1: 4px;  --e-2: 6px;  --e-3: 8px;  --e-4: 10px;
+  --e-5: 12px; --e-6: 14px; --e-7: 16px; --e-8: 20px;
+  --e-9: 26px; --e-10: 32px; --e-11: 40px; --e-12: 56px;
+
+  /* forma */
+  --raio-controle: 10px;
+  --raio-chip: 8px;
+  --raio-card: 14px;
+  --raio-painel: 16px;
+  --raio-bloco: 18px;
+  --raio-folha: 22px;
+  --raio-etiqueta: 999px;
+
+  /* medidas */
+  --alvo-toque: 44px;
+  --trilho-largura: 236px;
+  --barra-mobile: 74px;
+  --conteudo-max: 1240px;
+
+  /* movimento */
+  --t-micro: 140ms;
+  --t-padrao: 260ms;
+  --t-folha: 280ms;
+  --curva: cubic-bezier(.4, 0, .2, 1);
+  --curva-folha: cubic-bezier(.32, 0, .24, 1);
+  --curva-marca: cubic-bezier(.72, 0, .16, 1);
+
+  /* camadas */
+  --z-trilho: 10;
+  --z-cabecalho: 20;
+  --z-dropdown: 30;
+  --z-veu: 40;
+  --z-folha: 50;
+  --z-aviso: 60;
+}
+
+:focus-visible {
+  outline: 2px solid var(--lima);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--lima);
+  color: var(--tinta);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

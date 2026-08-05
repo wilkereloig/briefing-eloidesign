@@ -1,37 +1,49 @@
 import { NavLink } from 'react-router-dom'
 import { useAdmin } from '../../auth/AdminAuth'
-import { NAV_PRIMARIA, NAV_FERRAMENTAS } from './nav'
-import { Silhueta } from './Silhueta'
+import { NAV_PRIMARIA, NAV_FERRAMENTAS, type ItemNav } from './nav'
+import { Botao, Icone, Marca } from '../../ui/componentes'
 
-export function Sidebar() {
+// Mesmo componente serve trilho lateral (≥768) e barra inferior (≤767): o que
+// muda é CSS, não árvore. Os itens fora da barra (data-barra ausente) somem no
+// mobile e vivem no menu em folha do Shell.
+function Item({ item, ordem }: { item: ItemNav; ordem?: number }) {
+  return (
+    <NavLink to={item.path} end={item.path === '/admin'} data-barra={ordem}
+      className={({ isActive }) => 'trilho-item' + (isActive ? ' ativo' : '')}>
+      <span className="marca-ativa" aria-hidden />
+      <Icone nome={item.icone} tamanho={18} />
+      <span className="rotulo-longo">{item.label}</span>
+      <span className="rotulo-curto" aria-hidden>{item.label}</span>
+    </NavLink>
+  )
+}
+
+export function Sidebar({ aoCriar }: { aoCriar: () => void }) {
   const { sair } = useAdmin()
+  const naBarra = NAV_PRIMARIA.filter((i) => i.barra)
   return (
     <aside className="trilho">
-      <div className="trilho-marca">
-        <img src={import.meta.env.BASE_URL + 'wordmark-kv.svg'} alt="ELOI Design Studio" height={52} />
-      </div>
-      <nav>
+      <div className="trilho-marca"><Marca /></div>
+      <nav aria-label="Seções">
         {NAV_PRIMARIA.map((item) => (
-          <NavLink key={item.path} to={item.path} end={item.path === '/admin'}
-            className={({ isActive }) => 'trilho-item' + (isActive ? ' ativo' : '')}>
-            <Silhueta forma={item.glifo} cor="currentColor" />
-            <span>{item.label}</span>
-          </NavLink>
+          <Item key={item.path} item={item}
+            ordem={item.barra ? naBarra.indexOf(item) + 1 : undefined} />
         ))}
       </nav>
       <div className="trilho-ferramentas">
-        <span className="trilho-rotulo">Ferramentas</span>
-        {NAV_FERRAMENTAS.map((item) => (
-          <NavLink key={item.path} to={item.path}
-            className={({ isActive }) => 'trilho-item' + (isActive ? ' ativo' : '')}>
-            <Silhueta forma={item.glifo} cor="currentColor" />
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
+        <span className="trilho-rotulo etiqueta-mini">Ferramentas</span>
+        <nav aria-label="Ferramentas">
+          {NAV_FERRAMENTAS.map((item) => <Item key={item.path} item={item} />)}
+        </nav>
       </div>
+      <button type="button" className="trilho-criar" onClick={aoCriar} aria-label="Criar">
+        <Icone nome="adicionar" tamanho={22} />
+        <span className="rotulo-longo">Criar</span>
+      </button>
       <div className="trilho-rodape">
-        <span>Malha 202</span>
-        <button className="btn-ghost" onClick={sair}>Sair</button>
+        <Botao variante="terciario" compacto onClick={sair}>
+          <Icone nome="sair" tamanho={16} />Sair
+        </Botao>
       </div>
     </aside>
   )

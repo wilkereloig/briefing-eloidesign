@@ -128,6 +128,142 @@ export interface BriefingLegadoRow {
   raw: unknown
 }
 
+// ── núcleo financeiro (db/2026-08-04-gestao-eloi-financeiro.sql) ────────────
+// Pessoal e empresa convivem nas MESMAS tabelas, separados por `contexto`. Duas
+// árvores de tabela dariam dois lugares para calcular saldo consolidado.
+
+export type Contexto = 'pessoal' | 'empresa'
+export type TipoMov = 'entrada' | 'saida' | 'transferencia'
+export type StatusMov = 'previsto' | 'pendente' | 'parcial' | 'realizado' | 'vencido' | 'cancelada'
+export type TipoConta = 'corrente' | 'poupanca' | 'digital' | 'dinheiro' | 'cartao_credito'
+  | 'investimento' | 'reserva' | 'outro'
+export type StatusNF = 'pendente' | 'pronta' | 'emitida' | 'enviada' | 'cancelada' | 'substituida'
+
+export interface Conta {
+  id: string
+  nome: string
+  tipo: TipoConta
+  contexto: Contexto
+  instituicao: string | null
+  cor: string | null
+  saldo_inicial_cents: number
+  /** Só cartão de crédito. */
+  limite_cents: number | null
+  dia_fechamento: number | null
+  dia_vencimento: number | null
+  ativa: boolean
+  created_at: string
+}
+
+export interface Categoria {
+  id: string
+  nome: string
+  contexto: Contexto
+  tipo: TipoMov
+  pai_id: string | null
+  cor: string | null
+  icone: string | null
+  ativa: boolean
+}
+
+export interface Transacao {
+  id: string
+  tipo: TipoMov
+  contexto: Contexto
+  status: StatusMov
+  descricao: string
+  /** Combinado. Sempre cents inteiros e sempre > 0. */
+  valor_cents: number
+  /** Efetivamente movimentado. Pagamento parcial é primeira classe. */
+  recebido_cents: number
+  conta_id: string | null
+  /** Só em transferência: o outro lado. */
+  conta_destino_id: string | null
+  categoria_id: string | null
+  cliente_id: string | null
+  servico_id: string | null
+  fornecedor: string | null
+  data_competencia: string | null
+  data_vencimento: string | null
+  data_liquidacao: string | null
+  forma_pagamento: string | null
+  /** Parcelas irmãs compartilham grupo_id. */
+  grupo_id: string | null
+  parcela_num: number | null
+  parcela_de: number | null
+  recorrencia_id: string | null
+  observacoes: string | null
+  created_at: string
+}
+
+export type Periodicidade = 'semanal' | 'quinzenal' | 'mensal' | 'bimestral'
+  | 'trimestral' | 'semestral' | 'anual'
+
+export interface Recorrencia {
+  id: string
+  nome: string
+  tipo: TipoMov
+  contexto: Contexto
+  valor_cents: number
+  periodicidade: Periodicidade
+  dia_cobranca: number | null
+  conta_id: string | null
+  categoria_id: string | null
+  fornecedor: string | null
+  inicio: string
+  fim: string | null
+  proxima_cobranca: string | null
+  ativa: boolean
+  pausada_em: string | null
+  encerrada_em: string | null
+  observacoes: string | null
+}
+
+export interface NotaFiscal {
+  id: string
+  cliente_id: string | null
+  servico_id: string | null
+  transacao_id: string | null
+  numero: string | null
+  status: StatusNF
+  valor_cents: number
+  imposto_cents: number
+  competencia: string | null
+  emitida_em: string | null
+  enviada_em: string | null
+  arquivo_path: string | null
+  observacoes: string | null
+}
+
+export interface Meta {
+  id: string
+  /** 'orcamento' limita gasto no período; 'meta' acumula rumo a um alvo. */
+  especie: 'meta' | 'orcamento'
+  nome: string
+  contexto: Contexto
+  categoria_id: string | null
+  conta_id: string | null
+  alvo_cents: number
+  inicio: string
+  fim: string | null
+  ativa: boolean
+}
+
+export interface Arquivo {
+  id: string
+  titulo: string
+  path: string
+  mime: string | null
+  tamanho_bytes: number | null
+  categoria: 'contrato' | 'proposta' | 'nota_fiscal' | 'comprovante' | 'boleto'
+    | 'documento' | 'relatorio' | 'outro'
+  cliente_id: string | null
+  servico_id: string | null
+  transacao_id: string | null
+  nota_fiscal_id: string | null
+  created_at: string
+}
+
 export interface FinanceiroStats {
   faturado_cents: number
   recebido_cents: number

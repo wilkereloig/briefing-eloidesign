@@ -1,0 +1,460 @@
+{
+  "$schema": "eloi-design-tokens/1.0",
+  "marca": "ELOI Studio",
+  "origem": "ELOI — KV Completo (aprovado 04/08/2026)",
+  "atualizado": "2026-08-04",
+  "colors": {
+    "primaria": {
+      "roxo-eloi": {
+        "hex": "#7D2AE8",
+        "rgb": "125 42 232",
+        "hsl": "265 81% 54%",
+        "uso": "marca, botão primário, bloco de cor, série paga no gráfico"
+      },
+      "tinta": {
+        "hex": "#1B0647",
+        "rgb": "27 6 71",
+        "hsl": "258 84% 15%",
+        "uso": "texto sobre claro, chão do site, fundo de etiqueta em Lima"
+      }
+    },
+    "secundaria": {
+      "lima": {
+        "hex": "#DFF806",
+        "rgb": "223 248 6",
+        "hsl": "65 95% 50%",
+        "uso": "sinal, acento da interface, confirmação, valor a receber"
+      },
+      "coral": {
+        "hex": "#FD4400",
+        "rgb": "253 68 0",
+        "hsl": "16 100% 50%",
+        "uso": "erro, atraso, sem NF, saída de dinheiro"
+      },
+      "lilas": {
+        "hex": "#EEB4E7",
+        "rgb": "238 180 231",
+        "hsl": "306 60% 82%",
+        "uso": "complemento Studio da assinatura, terceiro caixa"
+      },
+      "azul": {
+        "hex": "#5B7CFD",
+        "rgb": "91 124 253",
+        "hsl": "228 97% 67%",
+        "uso": "em execução, informação, reserva de impostos"
+      }
+    },
+    "apoio": {
+      "rosa-papel": {
+        "hex": "#FDD5D3",
+        "rgb": "253 213 211",
+        "hsl": "2 88% 91%",
+        "uso": "texto principal sobre chão escuro"
+      },
+      "roxo-claro": {
+        "hex": "#9184D9",
+        "rgb": "145 132 217",
+        "hsl": "249 51% 68%",
+        "uso": "borda de campo em foco"
+      },
+      "marinho": {
+        "hex": "#0A0A60",
+        "rgb": "10 10 96",
+        "hsl": "240 81% 21%",
+        "uso": "chão alternativo em peça de marca"
+      }
+    },
+    "chao": {
+      "base": {
+        "hex": "#08011A",
+        "uso": "fundo da página e cabeçalho de tabela"
+      },
+      "superficie": {
+        "hex": "#0D0225",
+        "uso": "painel, trilho, campo, card com borda"
+      },
+      "elevada": {
+        "hex": "#170B33",
+        "uso": "card sem borda, chip inativo, botão de mês"
+      },
+      "hover": {
+        "hex": "#20114A",
+        "uso": "hover de card e de linha"
+      },
+      "linha-tabela": {
+        "hex": "#150733",
+        "uso": "hover de linha de tabela"
+      },
+      "faixa-grupo": {
+        "hex": "#0A0132",
+        "uso": "faixa de sub-cliente dentro da tabela"
+      }
+    },
+    "texto": {
+      "texto": {
+        "valor": "#FDD5D3",
+        "uso": "corpo, título, valor"
+      },
+      "texto-2": {
+        "valor": "rgba(253,213,211,.72)",
+        "uso": "item de menu inativo, texto de apoio"
+      },
+      "texto-3": {
+        "valor": "rgba(253,213,211,.55)",
+        "uso": "legenda, nota de card"
+      },
+      "texto-4": {
+        "valor": "rgba(253,213,211,.45)",
+        "uso": "rótulo de coluna, etiqueta rebaixada"
+      },
+      "texto-off": {
+        "valor": "rgba(253,213,211,.35)",
+        "uso": "desabilitado e placeholder"
+      }
+    },
+    "linha": {
+      "linha": {
+        "valor": "rgba(253,213,211,.12)",
+        "uso": "borda de painel e card"
+      },
+      "linha-fraca": {
+        "valor": "rgba(253,213,211,.07)",
+        "uso": "divisor de linha de tabela"
+      },
+      "linha-forte": {
+        "valor": "rgba(253,213,211,.28)",
+        "uso": "borda de botão secundário"
+      }
+    },
+    "estado": {
+      "sucesso": {
+        "fundo": "#DFF806",
+        "texto": "#1B0647",
+        "uso": "pago, realizado, concluído, aprovado"
+      },
+      "execucao": {
+        "fundo": "#5B7CFD",
+        "texto": "#FFFFFF",
+        "uso": "em execução, enviado, em revisão"
+      },
+      "atencao": {
+        "fundo": "#FD4400",
+        "texto": "#FFFFFF",
+        "uso": "atrasado, sem NF, exclusão"
+      },
+      "neutro": {
+        "fundo": "rgba(253,213,211,.12)",
+        "texto": "#FDD5D3",
+        "uso": "na fila, aberto, previsto, rascunho"
+      }
+    },
+    "interacao": {
+      "hover-primario": "#6A1FD0",
+      "press-primario": "#5A17B0",
+      "hover-superficie": "#20114A",
+      "hover-contorno": "borda e texto passam a Lima #DFF806",
+      "foco": "outline 2px #DFF806 com offset 2px",
+      "selecionado": "fundo Lima #DFF806 com texto Tinta #1B0647"
+    },
+    "grafico": {
+      "serie_paga": "#7D2AE8",
+      "serie_aberta": "#170B33 com borda rgba(253,213,211,.22)",
+      "progresso": "#5B7CFD",
+      "trilho": "#08011A",
+      "identificador_cliente": [
+        "#7D2AE8",
+        "#DFF806",
+        "#5B7CFD",
+        "#EEB4E7",
+        "#FD4400"
+      ]
+    }
+  },
+  "typography": {
+    "familias": {
+      "titulo": {
+        "nome": "Archivo",
+        "fallback": "system-ui, sans-serif",
+        "variavel": true,
+        "eixos": [
+          "wdth 62..125",
+          "wght 100..900"
+        ],
+        "import": "https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap"
+      },
+      "corpo": {
+        "nome": "Manrope",
+        "fallback": "system-ui, sans-serif",
+        "variavel": true,
+        "eixos": [
+          "wght 300..800"
+        ],
+        "import": "https://fonts.googleapis.com/css2?family=Manrope:wght@300..800&display=swap"
+      }
+    },
+    "escala": {
+      "display": {
+        "familia": "Archivo",
+        "wdth": 100,
+        "wght": 700,
+        "size": 72,
+        "line": 1.05,
+        "tracking": "-.03em",
+        "mobile": 40
+      },
+      "hero": {
+        "familia": "Archivo",
+        "wdth": 100,
+        "wght": 700,
+        "size": 54,
+        "line": 1.06,
+        "tracking": "-.03em",
+        "mobile": 34
+      },
+      "h1": {
+        "familia": "Archivo",
+        "wdth": 100,
+        "wght": 600,
+        "size": 44,
+        "line": 1.1,
+        "tracking": "-.02em",
+        "mobile": 28
+      },
+      "titulo-pagina": {
+        "familia": "Archivo",
+        "wdth": 100,
+        "wght": 600,
+        "size": 32,
+        "line": 1.1,
+        "tracking": "-.02em",
+        "mobile": 27
+      },
+      "h2": {
+        "familia": "Archivo",
+        "wdth": 100,
+        "wght": 600,
+        "size": 28,
+        "line": 1.2,
+        "tracking": "-.01em",
+        "mobile": 22
+      },
+      "titulo-card": {
+        "familia": "Archivo",
+        "wdth": 100,
+        "wght": 600,
+        "size": 20,
+        "line": 1.25,
+        "tracking": "-.01em",
+        "mobile": 18
+      },
+      "subtitulo": {
+        "familia": "Manrope",
+        "wght": 500,
+        "size": 20,
+        "line": 1.45,
+        "mobile": 17
+      },
+      "corpo": {
+        "familia": "Manrope",
+        "wght": 400,
+        "size": 16,
+        "line": 1.65,
+        "medida": "60–75 caracteres",
+        "mobile": 15
+      },
+      "corpo-ui": {
+        "familia": "Manrope",
+        "wght": 600,
+        "size": 14,
+        "line": 1.4,
+        "uso": "item de menu, linha de tabela, botão"
+      },
+      "texto-2": {
+        "familia": "Manrope",
+        "wght": 400,
+        "size": 13,
+        "line": 1.5,
+        "uso": "texto secundário e legenda"
+      },
+      "legenda": {
+        "familia": "Manrope",
+        "wght": 400,
+        "size": 12,
+        "line": 1.5
+      },
+      "etiqueta": {
+        "familia": "Manrope",
+        "wght": 700,
+        "size": 11,
+        "tracking": ".20em",
+        "caixa": "alta",
+        "uso": "rótulo de seção e sobretítulo"
+      },
+      "etiqueta-mini": {
+        "familia": "Manrope",
+        "wght": 700,
+        "size": 10,
+        "tracking": ".16em",
+        "caixa": "alta",
+        "uso": "cabeçalho de coluna e rótulo de card"
+      },
+      "valor-grande": {
+        "familia": "Archivo",
+        "wdth": 100,
+        "wght": 700,
+        "size": 34,
+        "line": 1,
+        "tracking": "-.03em",
+        "uso": "indicador financeiro",
+        "mobile": 24
+      },
+      "valor": {
+        "familia": "Archivo",
+        "wght": 600,
+        "size": 17,
+        "line": 1.2,
+        "uso": "dinheiro em lista e tabela",
+        "mobile": 16
+      },
+      "chip": {
+        "familia": "Manrope",
+        "wght": 600,
+        "size": 11,
+        "line": 1,
+        "uso": "etiqueta de estado"
+      },
+      "mensagem": {
+        "familia": "Manrope",
+        "wght": 600,
+        "size": 13,
+        "line": 1.5,
+        "uso": "aviso, erro de formulário, toast"
+      }
+    },
+    "assinatura": {
+      "familia": "Archivo",
+      "wdth": 72,
+      "wght": 700,
+      "line": 1.24,
+      "tracking-eloi": "-.02em",
+      "tracking-complemento": "0",
+      "minimo_px": 14
+    },
+    "regras": [
+      "Dois pesos altos nunca concorrem na mesma linha.",
+      "Caixa-alta só em etiqueta curta com tracking .20em.",
+      "Texto alinhado à esquerda, nunca justificado.",
+      "Dinheiro sempre em Archivo; nunca em Manrope."
+    ]
+  },
+  "spacing": {
+    "1": 4,
+    "2": 6,
+    "3": 8,
+    "4": 10,
+    "5": 12,
+    "6": 14,
+    "7": 16,
+    "8": 20,
+    "9": 26,
+    "10": 32,
+    "11": 40,
+    "12": 56,
+    "unidade": "px"
+  },
+  "sizing": {
+    "alvo-toque-min": 44,
+    "altura-controle": 44,
+    "altura-controle-compacto": 36,
+    "trilho-desktop": 236,
+    "barra-mobile": 74,
+    "cabecalho-desktop": 88,
+    "cabecalho-mobile": 54,
+    "largura-conteudo-max": 1240,
+    "largura-texto-max": "68ch",
+    "icone": [
+      16,
+      17,
+      18,
+      20,
+      24,
+      40
+    ]
+  },
+  "radius": {
+    "controle": 10,
+    "card": 14,
+    "painel": 16,
+    "bloco": 18,
+    "folha": 22,
+    "etiqueta": 999,
+    "chip": 8,
+    "dispositivo": 38,
+    "unidade": "px"
+  },
+  "borders": {
+    "painel": "1px solid rgba(253,213,211,.12)",
+    "tabela": "1px solid rgba(253,213,211,.07)",
+    "botao": "1px solid rgba(253,213,211,.28)",
+    "campo": "1px solid rgba(253,213,211,.16)",
+    "campo-foco": "1px solid #9184D9",
+    "vazio": "1px dashed rgba(253,213,211,.2)",
+    "erro": "1px solid #FD4400",
+    "marca-ativa": "3px de Lima na aresta do item de menu"
+  },
+  "shadows": {
+    "nenhuma": "none",
+    "regra": "Elevação é diferença de tom: #08011A → #0D0225 → #170B33 → #20114A. Sombra só no véu de folha/modal."
+  },
+  "opacity": {
+    "texto-2": 0.72,
+    "texto-3": 0.55,
+    "texto-4": 0.45,
+    "desabilitado": 0.35,
+    "veu": 0.72,
+    "borda": 0.12
+  },
+  "motion": {
+    "duracao": {
+      "micro": 140,
+      "padrao": 260,
+      "folha": 280,
+      "veu": 220,
+      "aviso": 240,
+      "assinatura": 5600
+    },
+    "easing": {
+      "padrao": "cubic-bezier(.4,0,.2,1)",
+      "folha": "cubic-bezier(.32,0,.24,1)",
+      "marca": "cubic-bezier(.72,0,.16,1)"
+    },
+    "padroes": {
+      "hover": "troca de papel de cor em 140ms — nunca clarear a mesma cor",
+      "folha": "translateY(102%) → 0 em 280ms",
+      "menu": "translateX(-100%) → 0 em 260ms",
+      "veu": "opacity 0 → 1 em 220ms com blur 5px",
+      "aviso": "opacity + translateY(14px) → 0 em 240ms, sai em 2,6s",
+      "esqueleto": "opacity .35 → .7 → .35 em 1,4s, defasagem de 200ms por linha"
+    },
+    "reduced_motion": "prefers-reduced-motion: reduce desliga animação e transição em tudo."
+  },
+  "breakpoints": {
+    "cel-pequeno": 360,
+    "cel-padrao": 390,
+    "cel-grande": 430,
+    "tablet": 768,
+    "notebook": 1024,
+    "desktop": 1280,
+    "ampla": 1600,
+    "unidade": "px"
+  },
+  "zIndex": {
+    "base": 0,
+    "trilho": 10,
+    "cabecalho": 20,
+    "dropdown": 30,
+    "veu": 40,
+    "folha": 50,
+    "aviso": 60
+  }
+}

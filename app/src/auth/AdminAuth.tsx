@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api, onSessaoExpirada } from '../lib/api'
+import { Botao, Marca } from '../ui/componentes'
 
 // Guard ÚNICO do perímetro /admin/* (D4): telas novas nascem protegidas
 // porque o router as coloca DENTRO de <RequireAdmin> — não porque alguém
@@ -35,10 +36,13 @@ function LoginGate() {
       e.preventDefault(); setIndo(true); setErro('')
       try { await entrar(pw) } catch (err) { setErro((err as Error).message) } finally { setIndo(false) }
     }}>
+      <Marca />
       <h1>Área do Wilke</h1>
       <input type="password" value={pw} onChange={(e) => setPw(e.target.value)}
         placeholder="Senha de acesso" autoComplete="current-password" autoFocus />
-      <button disabled={indo}>{indo ? 'Verificando…' : 'Entrar'}</button>
+      <Botao type="submit" variante="destaque" disabled={indo} carregando={indo}>
+        {indo ? 'Verificando…' : 'Entrar'}
+      </Botao>
       <div className="err">{erro}</div>
     </form>
   )

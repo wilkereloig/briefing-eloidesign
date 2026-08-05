@@ -1,1 +1,0 @@
-import{a as e,n as t}from"./index-Bc8sR1Bx.js";var n=t();function r(){let{id:t}=e();return(0,n.jsxs)(`div`,{className:`tela`,children:[(0,n.jsx)(`h1`,{children:`Ficha do cliente`}),(0,n.jsxs)(`p`,{children:[`id=`,t,` — chega no próximo plano (Fase B).`]})]})}export{r as default};

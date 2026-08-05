@@ -1,8 +1,10 @@
-import type { ServicoRow, MovimentoRow, OrcamentoRow } from '../lib/tipos'
+import type { ServicoRow, MovimentoRow, OrcamentoRow, Transacao, NotaFiscal } from '../lib/tipos'
 import { centsDeReais } from '../lib/dinheiro'
+import { diasDeAtraso, estaEmAberto } from './financeiro'
 
 export type Urgencia = 'normal' | 'atrasado'
-export type AcaoDecisao = 'lancar_nf' | 'cobrar_pagamento' | 'conferir_recebimento' | 'cobrar_decisao'
+export type AcaoDecisao = 'lancar_nf' | 'cobrar_pagamento' | 'conferir_recebimento'
+  | 'cobrar_decisao' | 'pagar_conta' | 'emitir_nf'
 
 export interface Decisao {
   id: string
@@ -20,6 +22,9 @@ export function decisoesDoDia(input: {
   servicos: ServicoRow[]
   movimentos: MovimentoRow[]
   orcamentos: OrcamentoRow[]
+  /** Núcleo financeiro novo. Opcional: as chamadas antigas seguem válidas. */
+  transacoes?: Transacao[]
+  notas?: NotaFiscal[]
   agora?: number
 }): Decisao[] {
   const agora = input.agora ?? Date.now()
@@ -68,7 +73,41 @@ export function decisoesDoDia(input: {
     }
   }
 
-  return decisoes
+  // Núcleo financeiro: o que venceu e continua em aberto vira fila de trabalho.
+  const hoje = new Date(agora).toISOString().slice(0, 10)
+  for (const t of input.transacoes ?? []) {
+    if (t.tipo === 'transferencia' || !estaEmAberto(t)) continue
+    const atraso = diasDeAtraso(t, hoje)
+    if (atraso <= 0) continue
+    const receber = t.tipo === 'entrada'
+    decisoes.push({
+      id: `tx:${t.id}`,
+      titulo: t.descricao,
+      detalhe: `${receber ? 'Recebimento' : 'Pagamento'} atrasado há ${atraso} ${atraso === 1 ? 'dia' : 'dias'}`,
+      clienteId: t.cliente_id,
+      valorCents: t.valor_cents - t.recebido_cents,
+      acao: receber ? 'cobrar_pagamento' : 'pagar_conta',
+      urgencia: 'atrasado',
+    })
+  }
+
+  // Nota parada em "pronta" é dinheiro que já podia estar faturado.
+  for (const nf of input.notas ?? []) {
+    if (nf.status !== 'pronta') continue
+    decisoes.push({
+      id: `nf-pronta:${nf.id}`,
+      titulo: nf.numero ? `NF ${nf.numero}` : 'Nota fiscal pronta',
+      detalhe: 'Pronta para emissão',
+      clienteId: nf.cliente_id,
+      valorCents: nf.valor_cents,
+      acao: 'emitir_nf',
+      urgencia: 'normal',
+    })
+  }
+
+  // Atrasado primeiro: a fila é de trabalho, não de histórico.
+  return decisoes.sort((a, b) =>
+    a.urgencia === b.urgencia ? 0 : a.urgencia === 'atrasado' ? -1 : 1)
 }
 
 export interface Prazo {

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -4 308 108" role="img" aria-label="ELOI">
+  <path d="M0,0 H66 V18 H18 V41 H58 V59 H18 V82 H66 V100 H0 Z" fill="#ffffff"></path>
+  <path d="M86,0 H104 V64 A18,18 0 0 0 122,82 H148 V100 H86 Z" fill="#ffffff"></path>
+  <circle cx="218" cy="50" r="43" fill="none" stroke="#ffffff" stroke-width="18" pathLength="270" stroke-dasharray="231.75 9 29.25 0"></circle>
+  <path d="M290,0 H308 V100 H290 Z" fill="#ffffff"></path>
+</svg>

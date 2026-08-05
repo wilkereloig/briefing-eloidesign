@@ -1,1 +1,0 @@
-import{n as e}from"./index-Bc8sR1Bx.js";var t=e();function n(){return(0,t.jsxs)(`div`,{className:`tela`,children:[(0,t.jsx)(`h1`,{children:`Projetos`}),(0,t.jsx)(`p`,{children:`Chega no próximo plano (Fase B — telas).`})]})}export{n as default};
