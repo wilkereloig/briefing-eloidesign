@@ -170,9 +170,32 @@ em vez de duplicá-la).
 | `/` e `/gestao/` estáticos | Console limpo, todos os assets 200, marca renomeada |
 | `periodo.js` após remoção | Nenhuma requisição — confirmado morto |
 
+## O `package.json` na raiz quebrou o deploy (e o conserto)
+
+O primeiro push desta auditoria **falhou nos dois projetos Vercel**. Causa: criar
+`package.json` na raiz fez a Vercel detectar projeto Node e tentar
+`npm install && npm run build`. A raiz não declara dependência nenhuma e o build
+mora em `app/`, então o comando quebrou.
+
+Conserto: `vercel.json` passou a declarar explicitamente o que sempre foi verdade
+neste repositório — `framework: null`, sem `installCommand`, sem `buildCommand`,
+`outputDirectory: "."`. Antes isso vinha por detecção automática; agora está
+escrito, e um arquivo novo na raiz não muda mais o comportamento do deploy.
+
+Verificado depois do conserto: status de deploy `success` nos dois projetos.
+
+## Verificado em produção
+
+| Verificação | Resultado |
+|---|---|
+| `/admin` | Título e assinatura "ELOI Studio"; painel monta com a sessão |
+| Nenhum "ELOI Design" no DOM | Confirmado em `/admin` e em `/` |
+| `/admin-app/clientes` | Redireciona para `/admin` (200 no destino) |
+| `manifest.webmanifest` | `name: "ELOI Studio"`, `scope: "/admin"` |
+| `/` (landing) | Título e `alt` do logo renomeados, assets 200 |
+| Console e rede | Limpos — o único 403 foi o desafio de bot da Vercel, disparado pela minha própria sondagem por `curl`, e some na requisição seguinte |
+
 ## Não verificado
 
 - **Login com a senha real** — não a tenho. O formulário e o tratamento de erro
   foram exercitados; a checagem da senha em si, não.
-- **Comportamento em produção** depois do deploy — a verificação foi local, com o
-  mesmo `dist/` que vai ser publicado.

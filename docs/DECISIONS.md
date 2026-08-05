@@ -118,6 +118,17 @@ Duas mudanças em `app/.oxlintrc.json`:
 
 A saída do `npm run lint` agora é vazia. Aviso novo é aviso de verdade.
 
+### D-15 · `vercel.json` declara o deploy estático explicitamente
+O `package.json` novo na raiz fez a Vercel detectar projeto Node e tentar
+`npm install && npm run build` — e falhar, porque a raiz não tem dependências e o
+build mora em `app/`. O deploy do primeiro commit desta auditoria quebrou nos dois
+projetos Vercel.
+
+`vercel.json` passou a declarar `framework: null`, `installCommand` e
+`buildCommand` neutros e `outputDirectory: "."`. O comportamento é o mesmo de
+sempre; a diferença é que agora está escrito, em vez de depender de detecção
+automática que muda quando alguém adiciona um arquivo na raiz.
+
 ---
 
 ## Anteriores (mantidas)
