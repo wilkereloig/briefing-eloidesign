@@ -1,4 +1,9 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "echo 'sem instalacao no deploy: o repo e estatico'",
+  "buildCommand": "echo 'sem build no deploy: app/dist ja vem commitado'",
+  "outputDirectory": ".",
   "redirects": [
     { "source": "/admin-app", "destination": "/admin", "permanent": true },
     { "source": "/admin-app/:path*", "destination": "/admin", "permanent": true }
