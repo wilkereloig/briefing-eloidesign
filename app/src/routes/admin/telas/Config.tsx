@@ -14,11 +14,21 @@ import { FolhaConta } from '../folhas'
 export default function Config() {
   const { contas, categorias, transacoes, recarregar } = useFinancas()
   const [folha, setFolha] = useState<
-    { tipo: 'conta'; c?: Conta } | { tipo: 'categoria' } | null>(null)
+    | { tipo: 'conta'; c?: Conta; contexto?: Contexto }
+    | { tipo: 'categoria'; contexto: Contexto }
+    | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const apos = async (msg: string) => { setAviso(msg); await recarregar() }
 
   const porContexto = (ctx: Contexto) => contas.filter((c) => c.contexto === ctx)
+
+  // Desativar em vez de excluir: conta com histórico não pode sumir sem levar
+  // junto os lançamentos que apontam pra ela (a FK é `on delete restrict`).
+  const alternarConta = async (c: Conta) => {
+    // nome/contexto vão junto porque a edge exige os dois em contas.upsert.
+    await financas.salvarConta({ id: c.id, nome: c.nome, contexto: c.contexto, ativa: !c.ativa })
+    await apos(c.ativa ? 'Conta desativada' : 'Conta reativada')
+  }
 
   return (
     <div className="tela pilha">
@@ -28,19 +38,19 @@ export default function Config() {
         {(['empresa', 'pessoal'] as Contexto[]).map((ctx) => (
           <Painel key={ctx}
             titulo={ctx === 'empresa' ? 'Contas da empresa' : 'Contas pessoais'}
-            acao={<Botao compacto onClick={() => setFolha({ tipo: 'conta' })}>
+            acao={<Botao compacto onClick={() => setFolha({ tipo: 'conta', contexto: ctx })}>
               <Icone nome="adicionar" tamanho={14} />Nova
             </Botao>}>
             {porContexto(ctx).length === 0 ? (
               <Vazio icone="caixa" titulo={`Nenhuma conta ${ctx === 'empresa' ? 'da empresa' : 'pessoal'}`}
                 instrucao="Cadastre contas, carteiras e cartões para o painel somar saldo."
-                acao={<Botao variante="primario" onClick={() => setFolha({ tipo: 'conta' })}>
+                acao={<Botao variante="primario" onClick={() => setFolha({ tipo: 'conta', contexto: ctx })}>
                   Cadastrar conta
                 </Botao>} />
             ) : (
               <ul className="lista">
                 {porContexto(ctx).map((c) => (
-                  <li key={c.id} className="lista-item">
+                  <li key={c.id} className="lista-item" data-cancelado={!c.ativa ? 'true' : undefined}>
                     <span className="marca-cor" aria-hidden style={{ background: c.cor || 'var(--roxo)' }} />
                     <span className="celula">
                       <span className="t-ui espremer">
@@ -66,6 +76,11 @@ export default function Config() {
                       onClick={() => setFolha({ tipo: 'conta', c })}>
                       <Icone nome="editar" tamanho={16} />
                     </Botao>
+                    <Botao variante="icone"
+                      aria-label={c.ativa ? `Desativar ${c.nome}` : `Reativar ${c.nome}`}
+                      onClick={() => void alternarConta(c)}>
+                      <Icone nome={c.ativa ? 'fechar' : 'iteracao'} tamanho={16} />
+                    </Botao>
                   </li>
                 ))}
               </ul>
@@ -74,7 +89,7 @@ export default function Config() {
         ))}
 
         <Painel titulo="Categorias"
-          acao={<Botao compacto onClick={() => setFolha({ tipo: 'categoria' })}>
+          acao={<Botao compacto onClick={() => setFolha({ tipo: 'categoria', contexto: 'empresa' })}>
             <Icone nome="adicionar" tamanho={14} />Nova
           </Botao>}>
           <p className="t-sec" style={{ marginBottom: 'var(--e-7)' }}>
@@ -120,22 +135,25 @@ export default function Config() {
       </Carga>
 
       {folha?.tipo === 'conta' && (
-        <FolhaConta inicial={folha.c} aoFechar={() => setFolha(null)} aoSalvar={apos} />
+        <FolhaConta inicial={folha.c} contextoInicial={folha.contexto}
+          aoFechar={() => setFolha(null)} aoSalvar={apos} />
       )}
       {folha?.tipo === 'categoria' && (
-        <FolhaCategoria aoFechar={() => setFolha(null)} aoSalvar={apos} />
+        <FolhaCategoria contextoInicial={folha.contexto}
+          aoFechar={() => setFolha(null)} aoSalvar={apos} />
       )}
       {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
     </div>
   )
 }
 
-function FolhaCategoria({ aoFechar, aoSalvar }: {
+function FolhaCategoria({ contextoInicial, aoFechar, aoSalvar }: {
+  contextoInicial?: Contexto
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
   const [nome, setNome] = useState('')
-  const [contexto, setContexto] = useState<Contexto>('empresa')
+  const [contexto, setContexto] = useState<Contexto>(contextoInicial ?? 'empresa')
   const [tipo, setTipo] = useState<TipoMov>('saida')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)

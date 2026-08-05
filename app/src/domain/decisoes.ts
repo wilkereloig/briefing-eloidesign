@@ -20,8 +20,9 @@ const DIA_MS = 24 * 60 * 60 * 1000
 
 export function decisoesDoDia(input: {
   servicos: ServicoRow[]
-  movimentos: MovimentoRow[]
   orcamentos: OrcamentoRow[]
+  /** Caixa/movimento do painel legado (/gestao). O `/admin` não usa mais. */
+  movimentos?: MovimentoRow[]
   /** Núcleo financeiro novo. Opcional: as chamadas antigas seguem válidas. */
   transacoes?: Transacao[]
   notas?: NotaFiscal[]
@@ -49,7 +50,7 @@ export function decisoesDoDia(input: {
     }
   }
 
-  for (const m of input.movimentos) {
+  for (const m of input.movimentos ?? []) {
     if (m.status !== 'previsto' || !m.data_movimento) continue
     if (new Date(m.data_movimento).getTime() < agora) {
       decisoes.push({

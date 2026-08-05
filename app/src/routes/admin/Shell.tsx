@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { useAdmin } from '../../auth/AdminAuth'
 import { CRIAR, NAV_FERRAMENTAS, NAV_PRIMARIA, type ChaveCriar } from './nav'
-import { Aviso, Botao, Folha, Icone, Marca } from '../../ui/componentes'
+import { Aviso, Botao, Esqueleto, Folha, Icone, Marca } from '../../ui/componentes'
 import { FinancasProvider, useFinancas } from '../../lib/financas-store'
 import { FolhaTransacao } from './FolhaTransacao'
 
@@ -42,8 +42,13 @@ function ShellInterno() {
         <span aria-hidden />
       </header>
 
+      {/* Suspense aqui e não no main.tsx: lá em cima o fallback trocaria o
+          Shell inteiro (trilho, barra, cabeçalho) por uma linha de texto a cada
+          navegação. Aqui só a área de conteúdo pisca. */}
       <div className="app-main">
-        <Outlet />
+        <Suspense fallback={<Esqueleto linhas={5} altura={64} />}>
+          <Outlet />
+        </Suspense>
       </div>
 
       {folha === 'menu' && (

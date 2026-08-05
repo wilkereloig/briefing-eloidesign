@@ -3,7 +3,9 @@ export const TOKEN_KEY = 'eloi_admin_token' // mesmo do painel legado — sessã
 
 // ALLOWLIST: este client só fala com estas functions. Tabelas do app
 // Financeiro (clients/services) não existem pra este código.
-type Fn = 'admin-auth' | 'eloi-gestao' | 'eloi-financeiro' | 'eloi-financas' | 'orcamentos'
+// `eloi-financeiro` saiu da lista: o caixa/movimento antigo é do painel estático
+// legado (/gestao). Este app usa só o núcleo eloi_* via eloi-financas.
+type Fn = 'admin-auth' | 'eloi-gestao' | 'eloi-financas' | 'orcamentos'
   | 'briefing-links' | 'get-briefings' | 'get-ecommerce-briefings'
 
 // Assinantes avisados quando um 401 derruba o token — o AdminAuthProvider
@@ -15,15 +17,40 @@ export function onSessaoExpirada(cb: Cb): () => void {
   return () => expiradaCbs.delete(cb)
 }
 
+/**
+ * "Manter conectado" desligado guarda o token em sessionStorage: fechou a aba,
+ * a sessão morre no navegador. Ler dos dois é obrigatório — senão desligar a
+ * opção derrubaria o login na primeira chamada.
+ */
+export function lerToken(): string {
+  return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY) || ''
+}
+function limparToken() {
+  sessionStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(TOKEN_KEY)
+}
+
+/** Erro de autenticação com o motivo separado da mensagem, para a tela decidir
+ *  o que mostrar sem interpretar texto. */
+export type MotivoAcesso = 'senha' | 'bloqueado' | 'servidor'
+export class ErroAcesso extends Error {
+  motivo: MotivoAcesso
+  constructor(message: string, motivo: MotivoAcesso) {
+    super(message)
+    this.name = 'ErroAcesso'
+    this.motivo = motivo
+  }
+}
+
 async function call<T = unknown>(fn: Fn, action: string, payload: Record<string, unknown> = {}): Promise<T> {
-  const token = localStorage.getItem(TOKEN_KEY) || ''
+  const token = lerToken()
   const res = await fetch(BASE + fn, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action, token, ...payload }),
   })
   if (res.status === 401) {
-    localStorage.removeItem(TOKEN_KEY)
+    limparToken()
     expiradaCbs.forEach((cb) => cb())
     throw new Error('sessão expirada')
   }
@@ -37,19 +64,29 @@ async function call<T = unknown>(fn: Fn, action: string, payload: Record<string,
 
 export const api = {
   call,
-  temSessao: () => !!localStorage.getItem(TOKEN_KEY),
-  async login(password: string) {
+  temSessao: () => !!lerToken(),
+  async login(password: string, manterConectado = true) {
     const res = await fetch(BASE + 'admin-auth', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'login', password }),
     })
     const d = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(res.status === 401 ? 'senha inválida' : (d?.error || 'erro do servidor'))
-    localStorage.setItem(TOKEN_KEY, d.token)
+    if (!res.ok) {
+      // 429 é bloqueio temporário por tentativas (admin-auth conta 5 e trava
+      // 15 min). Dizer "senha inválida" aí faria o Wilke tentar de novo à toa.
+      if (res.status === 429) {
+        throw new ErroAcesso('Muitas tentativas seguidas. Espere 15 minutos e tente de novo.', 'bloqueado')
+      }
+      if (res.status === 401) throw new ErroAcesso('Senha incorreta.', 'senha')
+      throw new ErroAcesso(d?.error || 'Não foi possível falar com o servidor.', 'servidor')
+    }
+    limparToken()
+    const onde = manterConectado ? localStorage : sessionStorage
+    onde.setItem(TOKEN_KEY, d.token)
   },
   logout() {
-    const t = localStorage.getItem(TOKEN_KEY)
-    localStorage.removeItem(TOKEN_KEY)
+    const t = lerToken()
+    limparToken()
     if (t) fetch(BASE + 'admin-auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -61,8 +98,8 @@ export const api = {
 // ── Wrappers por domínio — nomes de campo batem com app/src/lib/tipos.ts,
 // não com admin-app/src/lib/api.ts (que vaza os bugs de campo do domain.ts antigo).
 import type {
-  ClienteRow, ClienteDetalhe, ServicoRow, OrcamentoRow, CaixaRow, MovimentoRow,
-  MaterialRow, BriefingLinkRow, BriefingLegadoRow, FinanceiroStats,
+  ClienteRow, ClienteDetalhe, ServicoRow, OrcamentoRow, MovimentoRow,
+  MaterialRow, BriefingLinkRow, BriefingLegadoRow,
 } from './tipos'
 
 export const clientes = {
@@ -89,15 +126,6 @@ export const orcamentos = {
   list: () => call<{ orcamentos: OrcamentoRow[] }>('orcamentos', 'list').then((r) => r.orcamentos),
   update: (orcamento: Partial<OrcamentoRow> & { id: string }) =>
     call<{ orcamento: OrcamentoRow }>('orcamentos', 'update', { orcamento }).then((r) => r.orcamento),
-}
-
-export const financeiro = {
-  caixasList: () => call<{ caixas: CaixaRow[] }>('eloi-financeiro', 'caixas.list').then((r) => r.caixas),
-  movimentosList: (filtro?: Record<string, unknown>) =>
-    call<{ movimentos: MovimentoRow[] }>('eloi-financeiro', 'movimentos.list', filtro ? { filtro } : {}).then((r) => r.movimentos),
-  movimentoUpsert: (movimento: Partial<MovimentoRow> & { id?: string }) =>
-    call<{ movimento: MovimentoRow }>('eloi-financeiro', 'movimentos.upsert', { movimento }).then((r) => r.movimento),
-  stats: () => call<FinanceiroStats>('eloi-financeiro', 'financeiro.stats'),
 }
 
 export const briefingsApi = {
@@ -152,6 +180,10 @@ export const financas = {
       { transacao, parcelas }),
   remover: (alvo: { id?: string; grupo_id?: string }) =>
     call<{ ok: true }>('eloi-financas', 'transacoes.remover', alvo),
+  /** Estorno: preserva o lançamento no histórico e zera o efeito financeiro. */
+  cancelar: (id: string, reabrir = false) =>
+    call<{ transacao: Transacao }>('eloi-financas', 'transacoes.cancelar', { id, reabrir })
+      .then((r) => r.transacao),
 
   salvarConta: (conta: Partial<Conta>) =>
     call<{ conta: Conta }>('eloi-financas', 'contas.upsert', { conta }).then((r) => r.conta),
@@ -161,6 +193,11 @@ export const financas = {
   salvarRecorrencia: (recorrencia: Partial<Recorrencia>) =>
     call<{ recorrencia: Recorrencia }>('eloi-financas', 'recorrencias.upsert', { recorrencia })
       .then((r) => r.recorrencia),
+  /** Pausar suspende a geração; encerrar tira do bootstrap. Nada apaga o que
+   *  já foi gerado — parcela lançada é obrigação real. */
+  estadoRecorrencia: (id: string, estado: 'pausar' | 'retomar' | 'encerrar') =>
+    call<{ recorrencia: Recorrencia }>('eloi-financas', 'recorrencias.estado', { id, estado })
+      .then((r) => r.recorrencia),
   /** Materializa as cobranças devidas. Idempotente por vencimento. */
   gerarRecorrencias: () =>
     call<{ criadas: number; transacoes: Transacao[] }>('eloi-financas', 'recorrencias.gerar'),
@@ -169,6 +206,7 @@ export const financas = {
     call<{ notas: NotaFiscal[] }>('eloi-financas', 'nf.list', filtro ? { filtro } : {}).then((r) => r.notas),
   salvarNota: (nota: Partial<NotaFiscal>) =>
     call<{ nota: NotaFiscal }>('eloi-financas', 'nf.upsert', { nota }).then((r) => r.nota),
+  removerNota: (id: string) => call<{ ok: true }>('eloi-financas', 'nf.remover', { id }),
 
   salvarMeta: (meta: Partial<Meta>) =>
     call<{ meta: Meta }>('eloi-financas', 'metas.upsert', { meta }).then((r) => r.meta),

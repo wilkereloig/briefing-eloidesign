@@ -127,6 +127,10 @@ select.campo-caixa option{background:var(--chao);color:var(--texto)}
   padding:var(--e-5) var(--e-7);background:var(--chao);border:1px solid var(--linha);
   border-radius:var(--raio-card)}
 .marca-cor{flex:none;width:10px;height:26px;border-radius:0}
+/* cancelado/inativo continua legível e continua clicável: o estado aparece no
+   chip escrito, e a opacidade só reforça — cor nunca informa sozinha */
+.lista-item[data-cancelado='true']{opacity:.55}
+.lista-item[data-cancelado='true'] .dinheiro{text-decoration:line-through}
 
 /* ── Progresso ──────────────────────────────────────────────────────────── */
 .progresso{height:6px;background:var(--pagina);border-radius:0;overflow:hidden}

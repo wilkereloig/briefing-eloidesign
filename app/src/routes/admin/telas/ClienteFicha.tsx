@@ -1,18 +1,50 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { fmtBRL } from '../../../lib/dinheiro'
+import { financas } from '../../../lib/api'
+import { centsDeReais, fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas } from '../../../lib/financas-store'
 import { estaEmAberto, saldoAberto, valorLiquidado } from '../../../domain/financeiro'
 import { juntarProjetos } from '../../../domain/projeto'
-import { Chip, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
+import { Aviso, Botao, Chip, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, ChipMovimento, ChipNota, Dinheiro } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
+import type { Arquivo, OrcamentoStatus } from '../../../lib/tipos'
+import type { EstadoChip } from '../../../ui/tokens'
+import { FolhaCliente } from '../folhas'
+
+// Estado da proposta → par de cores do sistema. Mesmo mapa do funil de Projetos.
+const ESTADO_ORCAMENTO: Record<OrcamentoStatus, EstadoChip> = {
+  rascunho: 'rascunho', enviado: 'enviado', aprovado: 'aprovado', recusado: 'atrasado',
+}
 
 export default function ClienteFicha() {
   const { id } = useParams()
-  const { clientes, servicos, orcamentos, transacoes, notas } = useFinancas()
+  const { clientes, servicos, orcamentos, transacoes, notas, recarregar } = useFinancas()
+  const [editando, setEditando] = useState(false)
+  const [aviso, setAviso] = useState<string | null>(null)
+  const [arquivos, setArquivos] = useState<Arquivo[]>([])
 
   const cliente = clientes.find((c) => c.id === id)
+
+  // Arquivos não vêm no store financeiro (é acervo próprio, com filtro por
+  // dono): a ficha busca só os deste cliente em vez de carregar tudo.
+  useEffect(() => {
+    if (!id) return
+    let vivo = true
+    financas.arquivos({ cliente_id: id })
+      .then((a) => { if (vivo) setArquivos(a) })
+      .catch(() => { if (vivo) setArquivos([]) })
+    return () => { vivo = false }
+  }, [id])
+
+  async function abrirArquivo(a: Arquivo) {
+    try {
+      const url = await financas.urlArquivo(a.path)
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (e) {
+      setAviso((e as Error).message)
+    }
+  }
 
   const doCliente = useMemo(() => {
     const tx = transacoes.filter((t) => t.cliente_id === id)
@@ -20,6 +52,8 @@ export default function ClienteFicha() {
       transacoes: tx.sort((a, b) => (b.data_vencimento ?? '').localeCompare(a.data_vencimento ?? '')),
       servicos: servicos.filter((s) => s.cliente_id === id),
       notas: notas.filter((n) => n.cliente_id === id),
+      orcamentos: orcamentos.filter((o) => o.cliente_id === id)
+        .sort((a, b) => b.created_at.localeCompare(a.created_at)),
       projetos: juntarProjetos(orcamentos, servicos).filter((p) => p.clienteId === id),
       faturado: servicos.filter((s) => s.cliente_id === id).reduce((s, x) => s + x.valor_cents, 0),
       recebido: tx.filter((t) => t.tipo === 'entrada').reduce((s, t) => s + valorLiquidado(t), 0),
@@ -34,6 +68,11 @@ export default function ClienteFicha() {
         <Link to="/admin/clientes" className="btn btn-secundario">
           <Icone nome="voltar" tamanho={16} />Clientes
         </Link>
+        {cliente && (
+          <Botao variante="primario" onClick={() => setEditando(true)}>
+            <Icone nome="editar" tamanho={16} />Editar
+          </Botao>
+        )}
       </Cabecalho>
 
       <Carga linhas={4}>
@@ -136,9 +175,62 @@ export default function ClienteFicha() {
                   </ul>}
               </Painel>
             </div>
+
+            <div className="grade-dupla">
+              <Painel titulo="Propostas"
+                acao={<span className="t-legenda">{doCliente.orcamentos.length}</span>}>
+                {doCliente.orcamentos.length === 0
+                  ? <p className="t-sec">Nenhuma proposta registrada para este cliente.</p>
+                  : <ul className="lista">
+                    {doCliente.orcamentos.map((o) => (
+                      <li key={o.id} className="lista-item">
+                        <Icone nome="briefing" tamanho={18} />
+                        <span className="celula">
+                          <span className="t-ui espremer">{o.titulo}</span>
+                          <span className="t-legenda espremer">
+                            {o.numero ? `nº ${o.numero} · ` : ''}
+                            {dataCurta(o.created_at.slice(0, 10))}
+                          </span>
+                        </span>
+                        <Dinheiro cents={centsDeReais(o.valor_total)} className="t-valor" />
+                        <Chip estado={ESTADO_ORCAMENTO[o.status]}>{o.status}</Chip>
+                      </li>
+                    ))}
+                  </ul>}
+              </Painel>
+
+              <Painel titulo="Arquivos"
+                acao={<Link to="/admin/arquivos" className="t-legenda">Acervo</Link>}>
+                {arquivos.length === 0
+                  ? <p className="t-sec">Nenhum arquivo ligado a este cliente.</p>
+                  : <ul className="lista">
+                    {arquivos.map((a) => (
+                      <li key={a.id} className="lista-item">
+                        <Icone nome="documentos" tamanho={18} />
+                        <span className="celula">
+                          <span className="t-ui espremer">{a.titulo}</span>
+                          <span className="t-legenda espremer">
+                            {a.categoria} · {dataCurta(a.created_at.slice(0, 10))}
+                          </span>
+                        </span>
+                        <Botao variante="icone" aria-label={`Abrir ${a.titulo}`}
+                          onClick={() => void abrirArquivo(a)}>
+                          <Icone nome="baixar" tamanho={16} />
+                        </Botao>
+                      </li>
+                    ))}
+                  </ul>}
+              </Painel>
+            </div>
           </>
         )}
       </Carga>
+
+      {editando && cliente && (
+        <FolhaCliente inicial={cliente} aoFechar={() => setEditando(false)}
+          aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+      )}
+      {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
     </div>
   )
 }

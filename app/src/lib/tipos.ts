@@ -81,14 +81,6 @@ export interface MovimentoRow {
   observacoes: string | null
 }
 
-export interface CaixaRow {
-  id: string
-  nome: string
-  tipo: 'caixa' | 'conta_bancaria' | 'carteira' | 'cartao' | 'outro'
-  saldo_inicial_cents: number
-  saldo_cents: number
-}
-
 export type MaterialStatus = 'rascunho' | 'publicado' | 'arquivado'
 export type MaterialCategoria = 'arquivo' | 'apresentacao' | 'fonte' | 'nota_fiscal' | 'outro'
 
@@ -134,7 +126,11 @@ export interface BriefingLegadoRow {
 
 export type Contexto = 'pessoal' | 'empresa'
 export type TipoMov = 'entrada' | 'saida' | 'transferencia'
-export type StatusMov = 'previsto' | 'pendente' | 'parcial' | 'realizado' | 'vencido' | 'cancelada'
+// 'cancelado' (masculino) porque é o rótulo REAL do enum eloi_status_mov no
+// banco. Escrever 'cancelada' aqui fazia estaCancelada() nunca dar true: o
+// lançamento cancelado continuava somando em saldo e resultado, e o chip caía
+// no fallback "Previsto".
+export type StatusMov = 'previsto' | 'pendente' | 'parcial' | 'realizado' | 'vencido' | 'cancelado'
 export type TipoConta = 'corrente' | 'poupanca' | 'digital' | 'dinheiro' | 'cartao_credito'
   | 'investimento' | 'reserva' | 'outro'
 export type StatusNF = 'pendente' | 'pronta' | 'emitida' | 'enviada' | 'cancelada' | 'substituida'
@@ -262,17 +258,4 @@ export interface Arquivo {
   transacao_id: string | null
   nota_fiscal_id: string | null
   created_at: string
-}
-
-export interface FinanceiroStats {
-  faturado_cents: number
-  recebido_cents: number
-  a_receber_cents: number
-  despesas_cents: number
-  saldo_cents: number
-  entradas_previstas_cents: number
-  saidas_previstas_cents: number
-  em_execucao: number
-  concluido_sem_nf: number
-  pagamentos_pendentes: number
 }

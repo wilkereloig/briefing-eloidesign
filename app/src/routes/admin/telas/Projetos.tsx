@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { orcamentos as orcamentosApi } from '../../../lib/api'
 import { fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
-import { juntarProjetos, type Etapa } from '../../../domain/projeto'
-import { Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
+import { juntarProjetos, type Etapa, type Projeto } from '../../../domain/projeto'
+import { Aviso, Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, Dinheiro } from '../../../ui/painel'
 import type { EstadoChip } from '../../../ui/tokens'
+import type { ServicoRow } from '../../../lib/tipos'
+import { FolhaServico } from '../folhas'
 
 // Etapa é calculada de orçamento + serviço (domain/projeto.ts), não é coluna.
 const ETAPAS: { chave: Etapa; label: string; chip: EstadoChip }[] = [
@@ -18,10 +21,22 @@ const ETAPAS: { chave: Etapa; label: string; chip: EstadoChip }[] = [
 const ETAPA_INFO = new Map(ETAPAS.map((e) => [e.chave, e]))
 
 export default function Projetos() {
-  const { orcamentos, servicos } = useFinancas()
+  const { orcamentos, servicos, recarregar } = useFinancas()
   const nomes = useNomes()
   const [etapa, setEtapa] = useState<Etapa | 'todos'>('todos')
   const [busca, setBusca] = useState('')
+  const [folha, setFolha] = useState<{ s?: ServicoRow } | null>(null)
+  const [aviso, setAviso] = useState<string | null>(null)
+
+  // Aprovar a proposta é o que converte orçamento em projeto: o trigger
+  // trg_eloi_orcamento_aprovado cria o serviço vinculado no banco, então aqui
+  // basta mudar o status e recarregar.
+  const aprovar = async (p: Projeto) => {
+    if (!p.orcamento) return
+    await orcamentosApi.update({ id: p.orcamento.id, status: 'aprovado' })
+    setAviso('Proposta aprovada — projeto criado')
+    await recarregar()
+  }
 
   const projetos = useMemo(() => juntarProjetos(orcamentos, servicos), [orcamentos, servicos])
 
@@ -58,12 +73,17 @@ export default function Projetos() {
 
   return (
     <div className="tela pilha">
-      <Cabecalho secao="Operação" titulo="Projetos e serviços" />
+      <Cabecalho secao="Operação" titulo="Projetos e serviços">
+        <Botao variante="primario" onClick={() => setFolha({})}>
+          <Icone nome="adicionar" tamanho={16} />Novo serviço
+        </Botao>
+      </Cabecalho>
 
       <Carga linhas={5}>
         {projetos.length === 0 ? (
           <Vazio icone="projetos" titulo="Nenhum projeto ainda"
-            instrucao="Projetos aparecem aqui quando um orçamento é criado ou um serviço é registrado na gestão." />
+            instrucao="Registre um serviço aqui, ou aprove um orçamento para o projeto nascer da proposta."
+            acao={<Botao variante="primario" onClick={() => setFolha({})}>Criar serviço</Botao>} />
         ) : (
           <>
             <div className="grade-indicadores">
@@ -133,6 +153,15 @@ export default function Projetos() {
                         </span>
                         <Dinheiro cents={p.valorCents} className="t-valor" />
                         <Chip estado={info.chip}>{info.label}</Chip>
+                        {p.etapa === 'orcamento' && (
+                          <Botao compacto onClick={() => void aprovar(p)}>Aprovar</Botao>
+                        )}
+                        {p.servico && (
+                          <Botao variante="icone" aria-label={`Editar ${p.titulo}`}
+                            onClick={() => setFolha({ s: p.servico! })}>
+                            <Icone nome="editar" tamanho={16} />
+                          </Botao>
+                        )}
                         {p.clienteId && (
                           <Link to={`/admin/clientes/${p.clienteId}`} className="btn btn-icone"
                             aria-label={`Abrir ficha de ${g.nome}`}>
@@ -148,6 +177,12 @@ export default function Projetos() {
           </>
         )}
       </Carga>
+
+      {folha && (
+        <FolhaServico inicial={folha.s} aoFechar={() => setFolha(null)}
+          aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+      )}
+      {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
     </div>
   )
 }

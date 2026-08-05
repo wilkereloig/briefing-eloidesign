@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { clientes, servicos, financeiro, briefingsApi, TOKEN_KEY } from './api'
+import { clientes, servicos, financas, briefingsApi, TOKEN_KEY } from './api'
 
 const store: Record<string, string> = { [TOKEN_KEY]: 'tok' }
-vi.stubGlobal('localStorage', {
-  getItem: (k: string) => store[k] ?? null,
-  setItem: (k: string, v: string) => { store[k] = v },
-  removeItem: (k: string) => { delete store[k] },
+const falso = (m: Record<string, string>) => ({
+  getItem: (k: string) => m[k] ?? null,
+  setItem: (k: string, v: string) => { m[k] = v },
+  removeItem: (k: string) => { delete m[k] },
 })
+vi.stubGlobal('localStorage', falso(store))
+vi.stubGlobal('sessionStorage', falso({}))
 beforeEach(() => { vi.restoreAllMocks() })
 
 function mockFetch(body: unknown) {
@@ -31,12 +33,19 @@ describe('wrappers de dominio', () => {
     const body = JSON.parse((f.mock.calls[0][1] as RequestInit).body as string)
     expect(body).toMatchObject({ action: 'servicos.upsert', servico: { id: 's1', descricao: 'x' } })
   })
-  it('financeiro.movimentoUpsert chama eloi-financeiro/movimentos.upsert', async () => {
-    const f = mockFetch({ movimento: { id: 'm1' } })
-    await financeiro.movimentoUpsert({ descricao: 'y', valor_cents: 100 })
+  it('financas.cancelar manda id e reabrir para transacoes.cancelar', async () => {
+    const f = mockFetch({ transacao: { id: 't1', status: 'cancelado' } })
+    await financas.cancelar('t1')
     const [url, init] = f.mock.calls[0]
-    expect(url).toContain('eloi-financeiro')
-    expect(JSON.parse((init as RequestInit).body as string)).toMatchObject({ action: 'movimentos.upsert' })
+    expect(url).toContain('eloi-financas')
+    expect(JSON.parse((init as RequestInit).body as string))
+      .toMatchObject({ action: 'transacoes.cancelar', id: 't1', reabrir: false })
+  })
+  it('financas.estadoRecorrencia manda o estado pedido', async () => {
+    const f = mockFetch({ recorrencia: { id: 'r1' } })
+    await financas.estadoRecorrencia('r1', 'pausar')
+    expect(JSON.parse((f.mock.calls[0][1] as RequestInit).body as string))
+      .toMatchObject({ action: 'recorrencias.estado', id: 'r1', estado: 'pausar' })
   })
   it('briefingsApi.legadoVisual chama get-briefings com action list', async () => {
     const f = mockFetch({ briefings: [] })

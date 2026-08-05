@@ -24,7 +24,19 @@ describe('liquidação e saldo em aberto', () => {
   it('realizado sem recebido informado conta como liquidado integral', () => {
     const t = tx({ id: '1', tipo: 'entrada', valor_cents: 5000, status: 'realizado' })
     expect(valorLiquidado(t)).toBe(5000)
-    expect(saldoAberto(t)).toBe(5000 - 0) // combinado menos o que foi registrado
+    // e nada fica em aberto: liquidado + aberto nunca pode passar do combinado,
+    // senão o mesmo dinheiro aparece em "recebido" e em "a receber"
+    expect(saldoAberto(t)).toBe(0)
+  })
+
+  it('liquidado + aberto sempre fecha no valor combinado', () => {
+    for (const t of [
+      tx({ id: '1', tipo: 'entrada', valor_cents: 5000, status: 'realizado' }),
+      tx({ id: '2', tipo: 'entrada', valor_cents: 5000, recebido_cents: 2000, status: 'parcial' }),
+      tx({ id: '3', tipo: 'saida', valor_cents: 5000, status: 'pendente' }),
+    ]) {
+      expect(valorLiquidado(t) + saldoAberto(t)).toBe(t.valor_cents)
+    }
   })
 
   it('pagamento parcial separa liquidado de aberto', () => {
@@ -34,9 +46,47 @@ describe('liquidação e saldo em aberto', () => {
   })
 
   it('cancelada não liquida nem fica em aberto', () => {
-    const t = tx({ id: '1', tipo: 'entrada', valor_cents: 10000, recebido_cents: 4000, status: 'cancelada' })
+    const t = tx({ id: '1', tipo: 'entrada', valor_cents: 10000, recebido_cents: 4000, status: 'cancelado' })
     expect(valorLiquidado(t)).toBe(0)
     expect(saldoAberto(t)).toBe(0)
+  })
+})
+
+// O rótulo do enum eloi_status_mov é 'cancelado' (masculino). O tipo dizia
+// 'cancelada', então estaCancelada() nunca dava true e o estorno não estornava
+// nada: continuava somando em saldo e em resultado.
+describe('estorno (status cancelado)', () => {
+  const cc = conta({ id: 'cc', saldo_inicial_cents: 0 })
+
+  it('lançamento cancelado sai do saldo da conta', () => {
+    const ts = [
+      tx({ id: '1', tipo: 'entrada', conta_id: 'cc', valor_cents: 300_00 }),
+      tx({ id: '2', tipo: 'entrada', conta_id: 'cc', valor_cents: 100_00, status: 'cancelado' }),
+    ]
+    expect(saldoConta(cc, ts)).toBe(300_00)
+  })
+
+  it('lançamento cancelado sai da receita e do a receber', () => {
+    const ts = [
+      tx({ id: '1', tipo: 'entrada', valor_cents: 300_00, data_competencia: '2026-08-10' }),
+      tx({
+        id: '2', tipo: 'entrada', valor_cents: 900_00, recebido_cents: 500_00,
+        status: 'cancelado', data_competencia: '2026-08-11',
+      }),
+    ]
+    const r = resultado(ts, 'empresa', '2026-08')
+    expect(r.receita_cents).toBe(300_00)
+    expect(r.a_receber_cents).toBe(0)
+  })
+
+  it('transferência cancelada não move saldo de nenhum dos dois lados', () => {
+    const destino = conta({ id: 'poup', tipo: 'poupanca', saldo_inicial_cents: 0 })
+    const ts = [tx({
+      id: '1', tipo: 'transferencia', conta_id: 'cc', conta_destino_id: 'poup',
+      valor_cents: 200_00, status: 'cancelado',
+    })]
+    expect(saldoConta(cc, ts)).toBe(0)
+    expect(saldoConta(destino, ts)).toBe(0)
   })
 })
 

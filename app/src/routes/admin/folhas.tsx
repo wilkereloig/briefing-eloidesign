@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { financas } from '../../lib/api'
+import { clientes as clientesApi, financas, servicos as servicosApi } from '../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../lib/dinheiro'
 import { hojeISO, useFinancas } from '../../lib/financas-store'
 import { saldoAberto } from '../../domain/financeiro'
-import type { Conta, Contexto, Periodicidade, Recorrencia, TipoConta, TipoMov, Transacao } from '../../lib/tipos'
+import type {
+  ClienteRow, Conta, Contexto, Periodicidade, Recorrencia, ServicoRow, StatusExecucao,
+  TipoConta, TipoMov, Transacao,
+} from '../../lib/tipos'
 import { Botao, Campo, Folha, Icone, Pilula } from '../../ui/componentes'
 import { rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
 
@@ -14,14 +17,17 @@ import { rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
 const TIPOS_CONTA: TipoConta[] = ['corrente', 'digital', 'poupanca', 'dinheiro',
   'cartao_credito', 'investimento', 'reserva', 'outro']
 
-export function FolhaConta({ inicial, aoFechar, aoSalvar }: {
+export function FolhaConta({ inicial, contextoInicial, aoFechar, aoSalvar }: {
   inicial?: Conta
+  /** Contexto do painel que abriu a folha — "Nova" em Contas pessoais nascia
+   *  como empresa e o Wilke só descobria depois de salvar. */
+  contextoInicial?: Contexto
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
   const [nome, setNome] = useState(inicial?.nome ?? '')
   const [tipo, setTipo] = useState<TipoConta>(inicial?.tipo ?? 'corrente')
-  const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? 'empresa')
+  const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? contextoInicial ?? 'empresa')
   const [instituicao, setInstituicao] = useState(inicial?.instituicao ?? '')
   const [saldoInicial, setSaldoInicial] = useState(
     inicial ? fmtBRL(inicial.saldo_inicial_cents) : '')
@@ -294,6 +300,177 @@ export function FolhaRecorrencia({ inicial, aoFechar, aoSalvar }: {
           <input id="inicio-rec" type="date" className="campo-caixa" value={inicio}
             onChange={(e) => setInicio(e.target.value)} />
         </div>
+
+        {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
+      </div>
+    </Folha>
+  )
+}
+
+// ── cliente ──────────────────────────────────────────────────────────────────
+
+/** Cadastro do cliente. É o primeiro passo do fluxo comercial: sem ele não há
+ *  a quem ligar proposta, projeto, cobrança, nota nem arquivo. */
+export function FolhaCliente({ inicial, aoFechar, aoSalvar }: {
+  inicial?: Pick<ClienteRow, 'id' | 'nome' | 'contato' | 'cor' | 'marca_slug' | 'marca_publicada'>
+  aoFechar: () => void
+  aoSalvar: (msg: string) => void
+}) {
+  const [nome, setNome] = useState(inicial?.nome ?? '')
+  const [contato, setContato] = useState(inicial?.contato ?? '')
+  const [cor, setCor] = useState(inicial?.cor ?? '#7D2AE8')
+  const [erros, setErros] = useState<Record<string, string>>({})
+  const [salvando, setSalvando] = useState(false)
+
+  async function salvar() {
+    if (!nome.trim()) return setErros({ nome: 'Informe o nome do cliente' })
+    setErros({})
+    setSalvando(true)
+    try {
+      await clientesApi.upsert({
+        id: inicial?.id, nome: nome.trim(), contato: contato.trim() || null, cor,
+        marca_slug: inicial?.marca_slug ?? null,
+        marca_publicada: inicial?.marca_publicada ?? false,
+      })
+      aoSalvar(inicial ? 'Cliente atualizado' : 'Cliente cadastrado')
+      aoFechar()
+    } catch (err) {
+      setErros({ geral: (err as Error).message })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Folha titulo={inicial ? 'Editar cliente' : 'Novo cliente'} aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>Salvar</Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+        <Campo rotulo="Nome" value={nome} erro={erros.nome}
+          onChange={(e) => setNome(e.target.value)} placeholder="Solarium" />
+        <Campo rotulo="Contato" value={contato}
+          onChange={(e) => setContato(e.target.value)}
+          placeholder="E-mail, WhatsApp ou nome de quem responde" />
+        <div className="campo">
+          <label htmlFor="cor-cliente">Cor de identificação</label>
+          <input id="cor-cliente" type="color" className="campo-cor" value={cor}
+            onChange={(e) => setCor(e.target.value)} />
+          <span className="t-legenda">Aparece como barra na lista e nos agrupamentos.</span>
+        </div>
+        {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
+      </div>
+    </Folha>
+  )
+}
+
+// ── serviço / projeto ────────────────────────────────────────────────────────
+
+const STATUS_SERVICO: { chave: StatusExecucao; label: string }[] = [
+  { chave: 'aguardando_inicio', label: 'Aguardando início' },
+  { chave: 'em_execucao', label: 'Em execução' },
+  { chave: 'concluida', label: 'Concluída' },
+]
+
+/** Serviço é a unidade de trabalho entregue. A etapa do projeto é calculada
+ *  daqui + do orçamento de origem (domain/projeto.ts): não existe campo etapa. */
+export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
+  inicial?: ServicoRow
+  aoFechar: () => void
+  aoSalvar: (msg: string) => void
+}) {
+  const { clientes } = useFinancas()
+  const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? '')
+  const [descricao, setDescricao] = useState(inicial?.descricao ?? '')
+  const [subCliente, setSubCliente] = useState(inicial?.sub_cliente ?? '')
+  const [valor, setValor] = useState(inicial ? fmtBRL(inicial.valor_cents) : '')
+  const [status, setStatus] = useState<StatusExecucao>(inicial?.status_execucao ?? 'em_execucao')
+  const [pago, setPago] = useState(inicial?.pago ?? false)
+  const [competencia, setCompetencia] = useState(inicial?.data_competencia ?? '')
+  const [nfNumero, setNfNumero] = useState(inicial?.nf_numero ?? '')
+  const [erros, setErros] = useState<Record<string, string>>({})
+  const [salvando, setSalvando] = useState(false)
+
+  async function salvar() {
+    const e: Record<string, string> = {}
+    if (!clienteId) e.cliente = 'Escolha o cliente'
+    if (!descricao.trim()) e.descricao = 'Descreva o serviço'
+    setErros(e)
+    if (Object.keys(e).length) return
+
+    setSalvando(true)
+    try {
+      await servicosApi.upsert({
+        id: inicial?.id, cliente_id: clienteId, descricao: descricao.trim(),
+        sub_cliente: subCliente.trim() || null, valor_cents: centsDeBRL(valor),
+        status_execucao: status, pago,
+        data_pagamento: pago ? inicial?.data_pagamento ?? hojeISO() : null,
+        data_competencia: competencia || null,
+        nf_numero: nfNumero.trim() || null,
+      })
+      aoSalvar(inicial ? 'Serviço atualizado' : 'Serviço criado')
+      aoFechar()
+    } catch (err) {
+      setErros({ geral: (err as Error).message })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Folha titulo={inicial ? 'Editar serviço' : 'Novo serviço'} aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>Salvar</Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+        <div className="campo" data-erro={erros.cliente ? 'true' : undefined}>
+          <label htmlFor="srv-cliente">Cliente</label>
+          <select id="srv-cliente" className="campo-caixa" value={clienteId}
+            onChange={(e) => setClienteId(e.target.value)}>
+            <option value="">Selecione…</option>
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+          {erros.cliente && <span className="campo-erro" role="alert">{erros.cliente}</span>}
+        </div>
+
+        <Campo rotulo="Descrição" value={descricao} erro={erros.descricao}
+          onChange={(e) => setDescricao(e.target.value)} placeholder="Identidade visual completa" />
+
+        <Campo rotulo="Marca ou sub-cliente" value={subCliente}
+          onChange={(e) => setSubCliente(e.target.value)}
+          placeholder="Opcional — agrupa marcas dentro do mesmo cliente" />
+
+        <div className="grade-dois">
+          <Campo rotulo="Valor" value={valor} inputMode="decimal"
+            onChange={(e) => setValor(e.target.value)} placeholder="R$ 0,00" />
+          <div className="campo">
+            <label htmlFor="srv-status">Status</label>
+            <select id="srv-status" className="campo-caixa" value={status}
+              onChange={(e) => setStatus(e.target.value as StatusExecucao)}>
+              {STATUS_SERVICO.map((s) => <option key={s.chave} value={s.chave}>{s.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="grade-dois">
+          <div className="campo">
+            <label htmlFor="srv-comp">Competência</label>
+            <input id="srv-comp" type="date" className="campo-caixa" value={competencia}
+              onChange={(e) => setCompetencia(e.target.value)} />
+          </div>
+          <Campo rotulo="Número da NF" value={nfNumero}
+            onChange={(e) => setNfNumero(e.target.value)} placeholder="Opcional" />
+        </div>
+
+        <label className="linha" style={{ gap: 'var(--e-3)', cursor: 'pointer' }}>
+          <input type="checkbox" className="caixa-marcar" checked={pago}
+            onChange={(e) => setPago(e.target.checked)} />
+          <span className="t-ui">Serviço já pago</span>
+        </label>
 
         {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
       </div>

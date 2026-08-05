@@ -15,7 +15,7 @@ import { fmtBRL } from '../../../lib/dinheiro'
 
 export default function Hoje() {
   const est = useFinancas()
-  const { contas, transacoes, notas, servicos, mes, contexto } = est
+  const { contas, transacoes, notas, servicos, orcamentos, mes, contexto } = est
   const doMes = useTransacoesDoMes()
   const nomes = useNomes()
   const hoje = hojeISO()
@@ -30,9 +30,11 @@ export default function Hoje() {
     () => proximosVencimentos(transacoes, hoje, 30).filter((t) => !contexto || t.contexto === contexto),
     [transacoes, hoje, contexto])
 
+  // Orçamentos entram de verdade: passar [] aqui matava a decisão "proposta
+  // enviada há N dias sem resposta", que é a única do funil comercial.
   const decisoes = useMemo(() => decisoesDoDia({
-    servicos, movimentos: [], orcamentos: [], transacoes, notas,
-  }).slice(0, 8), [servicos, transacoes, notas])
+    servicos, orcamentos, transacoes, notas,
+  }).slice(0, 8), [servicos, orcamentos, transacoes, notas])
 
   const ultimas = useMemo(() => [...doMes]
     .filter((t) => valorLiquidado(t) > 0)

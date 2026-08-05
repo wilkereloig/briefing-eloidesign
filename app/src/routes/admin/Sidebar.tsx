@@ -41,8 +41,12 @@ export function Sidebar({ aoCriar }: { aoCriar: () => void }) {
         <span className="rotulo-longo">Criar</span>
       </button>
       <div className="trilho-rodape">
-        <Botao variante="terciario" compacto onClick={sair}>
-          <Icone nome="sair" tamanho={16} />Sair
+        {/* No trilho de 72 px a palavra não cabe (o botão media 80): o rótulo
+            usa a mesma regra dos itens de navegação e só volta a partir de
+            1024, quando o trilho abre para 236. */}
+        <Botao variante="terciario" compacto onClick={sair} aria-label="Sair">
+          <Icone nome="sair" tamanho={16} />
+          <span className="rotulo-longo">Sair</span>
         </Botao>
       </div>
     </aside>

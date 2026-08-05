@@ -21,7 +21,8 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
-  const { contas, categorias, clientes } = useFinancas()
+  const { contas, categorias, clientes, servicos } = useFinancas()
+  const editando = !!inicial?.id
   const [tipo, setTipo] = useState<TipoMov>(inicial?.tipo ?? 'saida')
   const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? 'empresa')
   const [descricao, setDescricao] = useState(inicial?.descricao ?? '')
@@ -30,6 +31,8 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
   const [contaDestinoId, setContaDestinoId] = useState(inicial?.conta_destino_id ?? '')
   const [categoriaId, setCategoriaId] = useState(inicial?.categoria_id ?? '')
   const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? '')
+  const [servicoId, setServicoId] = useState(inicial?.servico_id ?? '')
+  const [fornecedor, setFornecedor] = useState(inicial?.fornecedor ?? '')
   const [vencimento, setVencimento] = useState(inicial?.data_vencimento ?? hojeISO())
   const [parcelas, setParcelas] = useState(1)
   const [jaPago, setJaPago] = useState(false)
@@ -39,6 +42,9 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
 
   const cents = centsDeBRL(valor)
   const ehTransferencia = tipo === 'transferencia'
+  // Já liquidado por inteiro: "já paguei" não tem o que fazer, e mostrar a caixa
+  // marcável sugeriria que desmarcar estorna — estorno é outra ação.
+  const jaLiquidado = editando && (inicial?.recebido_cents ?? 0) >= (inicial?.valor_cents ?? 1)
 
   const contasDoContexto = useMemo(
     // Transferência é o único caso que enxerga as duas caixas: é assim que
@@ -49,6 +55,10 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
   const categoriasDoTipo = useMemo(
     () => categorias.filter((c) => c.contexto === contexto && c.tipo === tipo),
     [categorias, contexto, tipo])
+
+  const servicosDoCliente = useMemo(
+    () => (clienteId ? servicos.filter((s) => s.cliente_id === clienteId) : []),
+    [servicos, clienteId])
 
   function validar(): boolean {
     const e: Record<string, string> = {}
@@ -69,11 +79,16 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
     setSalvando(true)
     try {
       const base: Partial<Transacao> = {
+        // O `id` faltando aqui era o bug: "Editar lançamento" gravava uma linha
+        // nova a cada salvamento em vez de atualizar a existente.
+        ...(inicial?.id ? { id: inicial.id } : {}),
         tipo, contexto, descricao: descricao.trim(), valor_cents: cents,
         conta_id: contaId || null,
         conta_destino_id: ehTransferencia ? contaDestinoId : null,
         categoria_id: ehTransferencia ? null : categoriaId || null,
-        cliente_id: clienteId || null,
+        cliente_id: ehTransferencia ? null : clienteId || null,
+        servico_id: ehTransferencia ? null : servicoId || null,
+        fornecedor: tipo === 'saida' ? fornecedor.trim() || null : null,
         data_vencimento: vencimento || null,
         data_competencia: vencimento || null,
         observacoes: observacoes.trim() || null,
@@ -83,12 +98,16 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
         aoSalvar(`${parcelas} parcelas lançadas`)
       } else {
         // "já pago" preenche recebido: o status sai do valor, no servidor.
+        // Editando sem marcar nada, `recebido_cents` NÃO vai no payload — o
+        // servidor mantém o que já havia sido liquidado. Mandar 0 apagaria um
+        // pagamento parcial só porque alguém corrigiu a descrição.
         await financas.salvar({
           ...base,
-          recebido_cents: jaPago ? cents : 0,
-          data_liquidacao: jaPago ? hojeISO() : null,
+          ...(jaPago
+            ? { recebido_cents: cents, data_liquidacao: hojeISO() }
+            : editando ? {} : { recebido_cents: 0, data_liquidacao: null }),
         })
-        aoSalvar('Lançamento salvo')
+        aoSalvar(editando ? 'Lançamento atualizado' : 'Lançamento salvo')
       }
       aoFechar()
     } catch (err) {
@@ -174,13 +193,33 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
           </div>
         )}
 
-        {!ehTransferencia && tipo === 'entrada' && contexto === 'empresa' && (
+        {tipo === 'saida' && (
+          <Campo rotulo="Fornecedor" value={fornecedor}
+            onChange={(e) => setFornecedor(e.target.value)} placeholder="Opcional" />
+        )}
+
+        {!ehTransferencia && contexto === 'empresa' && (
           <div className="campo">
             <label htmlFor="cliente">Cliente</label>
             <select id="cliente" className="campo-caixa" value={clienteId}
-              onChange={(e) => setClienteId(e.target.value)}>
+              onChange={(e) => { setClienteId(e.target.value); setServicoId('') }}>
               <option value="">Sem cliente</option>
               {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+          </div>
+        )}
+
+        {/* Serviço só aparece com cliente escolhido: é o vínculo que liga o
+            dinheiro ao projeto e faz o resultado por projeto existir. */}
+        {!ehTransferencia && contexto === 'empresa' && !!servicosDoCliente.length && (
+          <div className="campo">
+            <label htmlFor="servico">Projeto ou serviço</label>
+            <select id="servico" className="campo-caixa" value={servicoId}
+              onChange={(e) => setServicoId(e.target.value)}>
+              <option value="">Sem vínculo</option>
+              {servicosDoCliente.map((s) => (
+                <option key={s.id} value={s.id}>{s.descricao}</option>
+              ))}
             </select>
           </div>
         )}
@@ -191,7 +230,9 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
             onChange={(e) => setVencimento(e.target.value)} />
         </div>
 
-        {!ehTransferencia && (
+        {/* Parcelar cria N linhas irmãs: só faz sentido em lançamento novo.
+            Reparcelar o que já existe é excluir o grupo e lançar de novo. */}
+        {!ehTransferencia && !editando && (
           <div className="campo">
             <label htmlFor="parcelas">Parcelas</label>
             <input id="parcelas" type="number" min={1} max={120} className="campo-caixa"
@@ -207,7 +248,7 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
           </div>
         )}
 
-        {parcelas === 1 && (
+        {parcelas === 1 && !jaLiquidado && (
           <label className="linha" style={{ gap: 'var(--e-3)', cursor: 'pointer' }}>
             <input type="checkbox" className="caixa-marcar" checked={jaPago}
               onChange={(e) => setJaPago(e.target.checked)} />

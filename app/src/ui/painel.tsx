@@ -82,7 +82,7 @@ const CHIP_MOV: Record<StatusMov, { chip: EstadoChip; label: string }> = {
   parcial: { chip: 'execucao', label: 'Parcial' },
   realizado: { chip: 'pago', label: 'Realizado' },
   vencido: { chip: 'atrasado', label: 'Vencido' },
-  cancelada: { chip: 'rascunho', label: 'Cancelada' },
+  cancelado: { chip: 'rascunho', label: 'Cancelado' },
 }
 
 export function ChipMovimento({ status }: { status: StatusMov }) {

@@ -18,12 +18,15 @@ import type { Transacao, Conta, Contexto, StatusMov } from '../lib/tipos'
 const EM_ABERTO: StatusMov[] = ['previsto', 'pendente', 'parcial', 'vencido']
 
 export const estaEmAberto = (t: Transacao) => EM_ABERTO.includes(t.status)
-export const estaCancelada = (t: Transacao) => t.status === 'cancelada'
+export const estaCancelada = (t: Transacao) => t.status === 'cancelado'
 
 /** Quanto ainda falta entrar/sair desta transação. */
 export function saldoAberto(t: Transacao): number {
   if (estaCancelada(t)) return 0
-  return Math.max(0, t.valor_cents - t.recebido_cents)
+  // O que já liquidou é o mesmo número que valorLiquidado() enxerga. Usar
+  // `recebido_cents` cru aqui contava o lançamento 'realizado' com recebido
+  // zerado DUAS vezes: inteiro em receita e inteiro em "a receber".
+  return Math.max(0, t.valor_cents - valorLiquidado(t))
 }
 
 /** Quanto já andou de dinheiro nesta transação. */

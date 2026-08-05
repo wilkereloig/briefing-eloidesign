@@ -8,6 +8,7 @@ import {
 } from '../../../ui/componentes'
 import { Cabecalho, Carga, ChipNota, Dinheiro } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
+import { FolhaExcluir } from '../folhas'
 
 const STATUS: StatusNF[] = ['pendente', 'pronta', 'emitida', 'enviada', 'cancelada', 'substituida']
 const ROTULO: Record<StatusNF, string> = {
@@ -19,7 +20,8 @@ export default function Notas() {
   const { notas, servicos, recarregar } = useFinancas()
   const nomes = useNomes()
   const [filtro, setFiltro] = useState<StatusNF | 'todas'>('todas')
-  const [folha, setFolha] = useState<{ nf?: NotaFiscal; servicoId?: string } | null>(null)
+  const [folha, setFolha] = useState<
+    { nf?: NotaFiscal; servicoId?: string } | { excluir: NotaFiscal } | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
 
   // Serviço concluído e sem nota é dinheiro faturado que a contabilidade não vê.
@@ -116,6 +118,10 @@ export default function Notas() {
                     onClick={() => setFolha({ nf: n })}>
                     <Icone nome="editar" tamanho={16} />
                   </Botao>
+                  <Botao variante="icone" aria-label={`Excluir nota ${n.numero ?? ''}`}
+                    onClick={() => setFolha({ excluir: n })}>
+                    <Icone nome="excluir" tamanho={16} />
+                  </Botao>
                 </li>
               ))}
             </ul>
@@ -123,10 +129,21 @@ export default function Notas() {
         </Painel>
       </Carga>
 
-      {folha && (
+      {folha && !('excluir' in folha) && (
         <FolhaNota inicial={folha.nf} servicoId={folha.servicoId}
           aoFechar={() => setFolha(null)}
           aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+      )}
+      {folha && 'excluir' in folha && (
+        <FolhaExcluir
+          titulo={`Excluir a nota ${folha.excluir.numero ? `nº ${folha.excluir.numero}` : 'sem número'}?`}
+          consequencia="O registro fiscal sai do painel. O lançamento financeiro ligado a ela continua."
+          aoFechar={() => setFolha(null)}
+          aoConfirmar={async () => {
+            await financas.removerNota(folha.excluir.id)
+            setAviso('Nota excluída')
+            await recarregar()
+          }} />
       )}
       {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
     </div>
@@ -139,10 +156,11 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
-  const { clientes, servicos } = useFinancas()
+  const { clientes, servicos, transacoes } = useFinancas()
   const servico = servicoId ? servicos.find((s) => s.id === servicoId) : null
 
   const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? servico?.cliente_id ?? '')
+  const [transacaoId, setTransacaoId] = useState(inicial?.transacao_id ?? '')
   const [numero, setNumero] = useState(inicial?.numero ?? '')
   const [status, setStatus] = useState<StatusNF>(inicial?.status ?? 'pendente')
   const [valor, setValor] = useState(
@@ -152,6 +170,10 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
     inicial?.competencia ?? servico?.data_competencia ?? '')
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
+
+  const recebimentos = useMemo(() => transacoes.filter((t) =>
+    t.tipo === 'entrada' && t.contexto === 'empresa' &&
+    (!clienteId || t.cliente_id === clienteId)), [transacoes, clienteId])
 
   async function salvar() {
     const e: Record<string, string> = {}
@@ -169,6 +191,7 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
         id: inicial?.id,
         cliente_id: clienteId || null,
         servico_id: inicial?.servico_id ?? servicoId ?? null,
+        transacao_id: transacaoId || null,
         numero: numero.trim() || null,
         status,
         valor_cents: centsDeBRL(valor),
@@ -228,6 +251,23 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
           <label htmlFor="nf-comp">Competência</label>
           <input id="nf-comp" type="date" className="campo-caixa" value={competencia}
             onChange={(e) => setCompetencia(e.target.value)} />
+        </div>
+
+        {/* Vínculo com a receita: é o que faz "nota emitida" e "dinheiro
+            recebido" pararem de ser duas verdades separadas. Só receitas do
+            cliente escolhido entram na lista. */}
+        <div className="campo">
+          <label htmlFor="nf-tx">Recebimento correspondente</label>
+          <select id="nf-tx" className="campo-caixa" value={transacaoId}
+            onChange={(e) => setTransacaoId(e.target.value)}>
+            <option value="">Sem vínculo</option>
+            {recebimentos.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.descricao} · {fmtBRL(t.valor_cents)}
+              </option>
+            ))}
+          </select>
+          {!clienteId && <span className="t-legenda">Escolha o cliente para listar os recebimentos.</span>}
         </div>
 
         {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}

@@ -4,12 +4,15 @@ import { fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas } from '../../../lib/financas-store'
 import { estaEmAberto, saldoAberto, valorLiquidado } from '../../../domain/financeiro'
 import { corCliente } from '../../../ui/tokens'
-import { Botao, Chip, Etiqueta, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
+import { Aviso, Botao, Chip, Etiqueta, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, Dinheiro } from '../../../ui/painel'
+import { FolhaCliente } from '../folhas'
 
 export default function Clientes() {
-  const { clientes, servicos, transacoes } = useFinancas()
+  const { clientes, servicos, transacoes, recarregar } = useFinancas()
   const [busca, setBusca] = useState('')
+  const [novo, setNovo] = useState(false)
+  const [aviso, setAviso] = useState<string | null>(null)
 
   // Faturado, recebido e a receber por cliente, numa passada só. Fazer isso
   // dentro do .map() do card seria O(clientes × transações).
@@ -45,12 +48,17 @@ export default function Clientes() {
 
   return (
     <div className="tela pilha">
-      <Cabecalho secao="Carteira" titulo="Clientes" />
+      <Cabecalho secao="Carteira" titulo="Clientes">
+        <Botao variante="primario" onClick={() => setNovo(true)}>
+          <Icone nome="adicionar" tamanho={16} />Novo cliente
+        </Botao>
+      </Cabecalho>
 
       <Carga linhas={4}>
         {clientes.length === 0 ? (
           <Vazio icone="cliente" titulo="Nenhum cliente cadastrado"
-            instrucao="Os clientes chegam pelo painel de briefings ou pelo cadastro da gestão." />
+            instrucao="Cadastre o primeiro cliente para começar a ligar propostas, projetos e cobranças a ele."
+            acao={<Botao variante="primario" onClick={() => setNovo(true)}>Cadastrar cliente</Botao>} />
         ) : (
           <>
             <div className="grade-indicadores">
@@ -129,6 +137,12 @@ export default function Clientes() {
           </>
         )}
       </Carga>
+
+      {novo && (
+        <FolhaCliente aoFechar={() => setNovo(false)}
+          aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+      )}
+      {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
     </div>
   )
 }

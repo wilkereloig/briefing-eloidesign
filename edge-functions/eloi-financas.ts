@@ -32,6 +32,12 @@ const EM_ABERTO = ["previsto", "pendente", "parcial", "vencido"];
 // Mesmo bucket privado que ja guarda as notas do painel legado.
 const ARQUIVOS_BUCKET = "eloi-notas";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Valor que entra em filtro PostgREST montado por string (`or`) precisa ser
+ *  validado aqui: virgula e ponto sao separadores da sintaxe do filtro. */
+const ehUuid = (v: unknown) => typeof v === "string" && UUID.test(v);
+const ehData = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+
 /** Espelha dividirParcelas() de app/src/domain/financeiro.ts — o resto da
  *  divisao vai inteiro na primeira parcela para nao sumir centavo. Se um dia
  *  mudar, mudar nos dois. */
@@ -110,7 +116,10 @@ Deno.serve(async (req: Request) => {
     const f = body?.filtro ?? {};
     let q = supabase.from("eloi_transacoes").select("*");
     if (f.contexto) q = q.eq("contexto", f.contexto);
-    if (f.conta_id) q = q.or(`conta_id.eq.${f.conta_id},conta_destino_id.eq.${f.conta_id}`);
+    if (f.conta_id) {
+      if (!ehUuid(f.conta_id)) return json({ error: "conta_id invalido" }, 400);
+      q = q.or(`conta_id.eq.${f.conta_id},conta_destino_id.eq.${f.conta_id}`);
+    }
     if (f.cliente_id) q = q.eq("cliente_id", f.cliente_id);
     if (f.categoria_id) q = q.eq("categoria_id", f.categoria_id);
     if (f.tipo) q = q.eq("tipo", f.tipo);
@@ -118,8 +127,22 @@ Deno.serve(async (req: Request) => {
     if (f.em_aberto) q = q.in("status", EM_ABERTO);
     // Janela por competencia. Sem janela o painel puxaria o historico inteiro —
     // o briefing pede explicitamente para nao carregar tudo de uma vez.
-    if (f.de) q = q.gte("data_competencia", f.de);
-    if (f.ate) q = q.lte("data_competencia", f.ate);
+    //
+    // A janela cai sobre data_competencia com FALLBACK para vencimento: um
+    // lancamento sem competencia explicita era excluido pelo gte/lte (NULL nunca
+    // satisfaz comparacao) e sumia do painel inteiro, mesmo tendo vencimento
+    // dentro do periodo. O front usa a mesma cascata em competenciaDe().
+    if (f.de || f.ate) {
+      const de = ehData(f.de) ? f.de : null;
+      const ate = ehData(f.ate) ? f.ate : null;
+      if ((f.de && !de) || (f.ate && !ate)) return json({ error: "janela invalida" }, 400);
+      const faixa = (col: string) =>
+        [de ? `${col}.gte.${de}` : null, ate ? `${col}.lte.${ate}` : null]
+          .filter(Boolean).join(",");
+      q = q.or(`and(data_competencia.not.is.null,${faixa("data_competencia")}),` +
+        `and(data_competencia.is.null,data_vencimento.not.is.null,${faixa("data_vencimento")}),` +
+        `and(data_competencia.is.null,data_vencimento.is.null)`);
+    }
     const limite = Math.min(Number(f.limite) || 500, 2000);
     const { data, error } = await q
       .order("data_competencia", { ascending: false, nullsFirst: false })
@@ -136,16 +159,58 @@ Deno.serve(async (req: Request) => {
     if (t.tipo === "transferencia" && (!t.conta_id || !t.conta_destino_id || t.conta_id === t.conta_destino_id)) {
       return json({ error: "transferencia exige conta de origem e destino diferentes" }, 400);
     }
-    const recebido = Number(t.recebido_cents) || 0;
+    if (t.tipo !== "transferencia" && !t.conta_id) {
+      return json({ error: "receita e despesa exigem conta" }, 400);
+    }
+
+    // EDICAO: o formulario nao reenvia o que ja foi liquidado. Sem ler a linha
+    // atual, `recebido_cents` voltaria a zero e um pagamento parcial registrado
+    // desapareceria ao corrigir a descricao do lancamento.
+    let anterior: Record<string, unknown> | null = null;
+    if (t.id) {
+      const { data: atual } = await supabase.from("eloi_transacoes")
+        .select("recebido_cents,status,data_liquidacao").eq("id", t.id).single();
+      anterior = atual ?? null;
+    }
+    const recebido = t.recebido_cents != null
+      ? Number(t.recebido_cents) || 0
+      : Number(anterior?.recebido_cents) || 0;
     if (recebido > Number(t.valor_cents)) return json({ error: "recebido nao pode passar do valor" }, 400);
 
     const linha = {
       ...t,
+      // transferencia nao tem categoria de resultado: ela e neutra por definicao
+      categoria_id: t.tipo === "transferencia" ? null : t.categoria_id ?? null,
+      conta_destino_id: t.tipo === "transferencia" ? t.conta_destino_id : null,
       recebido_cents: recebido,
+      // competencia cai no vencimento quando a tela nao informa: sem nenhuma das
+      // duas o lancamento nao teria mes ao qual pertencer no relatorio
+      data_competencia: t.data_competencia ?? t.data_vencimento ?? null,
       status: t.status || statusPorValor(Number(t.valor_cents), recebido, t.data_vencimento ?? null, hoje),
       updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase.from("eloi_transacoes").upsert(linha).select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ transacao: data });
+  }
+
+  // Estorno: cancelar preserva o historico (o lancamento continua na lista com
+  // o chip "Cancelado") e zera o efeito em saldo e resultado — o dominio ignora
+  // cancelado em saldoConta/resultado. Reabrir devolve o status derivado do
+  // quanto ja tinha entrado.
+  if (action === "transacoes.cancelar") {
+    const { id, reabrir } = body ?? {};
+    if (!id) return json({ error: "id obrigatorio" }, 400);
+    const { data: atual, error: e1 } = await supabase
+      .from("eloi_transacoes").select("*").eq("id", id).single();
+    if (e1 || !atual) return json({ error: e1?.message || "transacao nao encontrada" }, 404);
+
+    const status = reabrir
+      ? statusPorValor(Number(atual.valor_cents), Number(atual.recebido_cents), atual.data_vencimento, hoje)
+      : "cancelado";
+    const { data, error } = await supabase.from("eloi_transacoes")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", id).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ transacao: data });
   }
@@ -157,6 +222,9 @@ Deno.serve(async (req: Request) => {
     const { data: atual, error: e1 } = await supabase
       .from("eloi_transacoes").select("*").eq("id", id).single();
     if (e1 || !atual) return json({ error: e1?.message || "transacao nao encontrada" }, 404);
+    if (atual.status === "cancelado") {
+      return json({ error: "lancamento cancelado: reabra antes de liquidar" }, 400);
+    }
 
     const soma = Number(atual.recebido_cents) + (Number(valor_cents) || 0);
     if (soma > Number(atual.valor_cents)) {
@@ -181,13 +249,24 @@ Deno.serve(async (req: Request) => {
     if (n < 2) return json({ error: "use transacoes.upsert para parcela unica" }, 400);
     if (n > 120) return json({ error: "maximo de 120 parcelas" }, 400);
     if (!(Number(t.valor_cents) > 0)) return json({ error: "valor deve ser maior que zero" }, 400);
+    // Mesmas exigencias do upsert: parcelar nao e porta dos fundos pra gravar
+    // linha invalida em lote.
+    if (!t.descricao || !t.tipo || !t.contexto) return json({ error: "descricao, tipo e contexto sao obrigatorios" }, 400);
+    if (t.tipo === "transferencia") return json({ error: "transferencia nao e parcelada" }, 400);
+    if (!t.conta_id) return json({ error: "parcelamento exige conta" }, 400);
     const inicio = t.data_vencimento || hoje;
     const valores = dividirParcelas(Number(t.valor_cents), n);
     const grupo = crypto.randomUUID();
 
+    // `id` sai do molde por DESTRUCTURING, nao por `id: undefined`. Em insert
+    // de varias linhas o postgrest-js normaliza as chaves de todas as linhas e
+    // preenche o que falta com null — `id: undefined` virava `id: null` e o
+    // banco recusava com "null value in column id violates not-null".
+    // Parcelar estava quebrado por causa disso.
+    const { id: _descartado, ...molde } = t as Record<string, unknown>;
+
     const linhas = valores.map((v, i) => ({
-      ...t,
-      id: undefined,
+      ...molde,
       grupo_id: grupo,
       parcela_num: i + 1,
       parcela_de: n,
@@ -223,6 +302,26 @@ Deno.serve(async (req: Request) => {
     if (!(Number(r.valor_cents) > 0)) return json({ error: "valor deve ser maior que zero" }, 400);
     if (!r.proxima_cobranca) r.proxima_cobranca = r.inicio || hoje;
     const { data, error } = await supabase.from("eloi_recorrencias").upsert(r).select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ recorrencia: data });
+  }
+
+  // Pausar / retomar / encerrar. Nao apaga o que ja foi gerado: a recorrencia e
+  // molde, e as transacoes que ela criou sao obrigacoes reais que continuam
+  // valendo. Encerrar sai do bootstrap (ativa=false) sem perder o historico.
+  if (action === "recorrencias.estado") {
+    const { id, estado } = body ?? {};
+    if (!id) return json({ error: "id obrigatorio" }, 400);
+    if (!["pausar", "retomar", "encerrar"].includes(estado)) {
+      return json({ error: "estado deve ser pausar, retomar ou encerrar" }, 400);
+    }
+    const patch = estado === "pausar"
+      ? { pausada_em: new Date().toISOString() }
+      : estado === "retomar"
+      ? { pausada_em: null, ativa: true, encerrada_em: null }
+      : { encerrada_em: new Date().toISOString(), ativa: false };
+    const { data, error } = await supabase.from("eloi_recorrencias")
+      .update(patch).eq("id", id).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ recorrencia: data });
   }
@@ -283,6 +382,14 @@ Deno.serve(async (req: Request) => {
     const { data, error } = await supabase.from("eloi_notas_fiscais").upsert(nf).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ nota: data });
+  }
+
+  if (action === "nf.remover") {
+    const { id } = body ?? {};
+    if (!id) return json({ error: "id obrigatorio" }, 400);
+    const { error } = await supabase.from("eloi_notas_fiscais").delete().eq("id", id);
+    if (error) return json({ error: error.message }, 500);
+    return json({ ok: true });
   }
 
   // ── CONTAS, CATEGORIAS, METAS ──────────────────────────────────────────────

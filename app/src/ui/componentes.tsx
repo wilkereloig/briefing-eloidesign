@@ -2,7 +2,7 @@
 // tokens.css/tokens.ts. Regra do handoff: nenhum hex solto num .tsx.
 // Anatomia e limites de uso: eloi-handoff/COMPONENT_INVENTORY.md.
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { chip as chipCores, type EstadoChip } from './tokens'
 
 const SPRITE = import.meta.env.BASE_URL + 'eloi-icons.svg'
@@ -159,18 +159,43 @@ export function Esqueleto({ linhas = 3, altura = 18 }: { linhas?: number; altura
 }
 
 /** Folha no toque, modal centralizado no desktop — mesmo conteúdo. */
+const FOCAVEIS = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+
 export function Folha({ titulo, aoFechar, children, rodape }:
   { titulo: string; aoFechar: () => void; children: ReactNode; rodape?: ReactNode }) {
+  const caixa = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') aoFechar() }
-    document.addEventListener('keydown', esc)
+    // Quem abriu recebe o foco de volta ao fechar — senão o teclado volta pro
+    // topo do documento e a pessoa perde o lugar na lista.
+    const veioDe = document.activeElement as HTMLElement | null
+    const primeiro = caixa.current?.querySelector<HTMLElement>(FOCAVEIS)
+    primeiro?.focus()
+
+    const tecla = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { aoFechar(); return }
+      // Armadilha de foco: sem ela o Tab sai do diálogo e caminha pela tela de
+      // trás, que está inerte para o mouse mas não para o teclado.
+      if (e.key !== 'Tab' || !caixa.current) return
+      const alvos = [...caixa.current.querySelectorAll<HTMLElement>(FOCAVEIS)]
+      if (!alvos.length) return
+      const [ini, fim] = [alvos[0], alvos[alvos.length - 1]]
+      if (e.shiftKey && document.activeElement === ini) { e.preventDefault(); fim.focus() }
+      else if (!e.shiftKey && document.activeElement === fim) { e.preventDefault(); ini.focus() }
+    }
+    document.addEventListener('keydown', tecla)
     const antes = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    return () => { document.removeEventListener('keydown', esc); document.body.style.overflow = antes }
+    return () => {
+      document.removeEventListener('keydown', tecla)
+      document.body.style.overflow = antes
+      veioDe?.focus?.()
+    }
   }, [aoFechar])
+
   return (
     <div className="veu" onClick={aoFechar}>
-      <div className="folha" role="dialog" aria-modal="true" aria-label={titulo}
+      <div className="folha" ref={caixa} role="dialog" aria-modal="true" aria-label={titulo}
         onClick={(e) => e.stopPropagation()}>
         <div className="folha-alca" aria-hidden />
         <header className="linha" style={{ justifyContent: 'space-between' }}>
@@ -187,10 +212,15 @@ export function Folha({ titulo, aoFechar, children, rodape }:
 /** Toast. Sai sozinho em 2,6 s; sucesso em Lima, erro em Coral. */
 export function Aviso({ texto, tipo = 'ok', aoSumir }:
   { texto: string; tipo?: 'ok' | 'erro'; aoSumir: () => void }) {
+  // O callback chega como arrow nova a cada render do pai. Com ele na lista de
+  // dependências o timer reiniciava a cada re-render e o toast podia ficar
+  // preso na tela. A ref guarda o último callback sem re-armar o relógio.
+  const ref = useRef(aoSumir)
+  ref.current = aoSumir
   useEffect(() => {
-    const t = setTimeout(aoSumir, 2600)
+    const t = setTimeout(() => ref.current(), 2600)
     return () => clearTimeout(t)
-  }, [aoSumir])
+  }, [texto])
   return (
     <div className={`aviso${tipo === 'erro' ? ' aviso-erro' : ''}`} role="status">
       <Icone nome={tipo === 'ok' ? 'ok' : 'erro'} tamanho={16} />

@@ -43,7 +43,11 @@ _Avoid_: "Caixa" para o conceito novo. `eloi_caixas` é a tabela do painel legad
 Qualquer movimento de dinheiro. Tabela `eloi_transacoes` — receita, despesa, transferência, parcela e compra no cartão são todas linhas dela; o que muda é `tipo`/`contexto`/vínculo, não a estrutura.
 - `valor_cents` é o combinado; `recebido_cents` é o que efetivamente andou. **Pagamento parcial é normal, não exceção.**
 - `data_competencia` = a que mês o valor pertence · `data_vencimento` = quando é devido · `data_liquidacao` = quando o dinheiro andou. **Resultado usa competência; saldo usa liquidação.**
-- Status (`previsto`/`pendente`/`parcial`/`realizado`/`vencido`/`cancelada`) é **derivado do valor no servidor**, nunca escolhido pela tela.
+- Status (`previsto`/`pendente`/`parcial`/`realizado`/`vencido`/`cancelado`) é **derivado do valor no servidor**, nunca escolhido pela tela. O rótulo é `cancelado`, masculino — é o valor real do enum `eloi_status_mov`; escrever `cancelada` no TypeScript fazia o estorno não estornar.
+- **Liquidado + em aberto sempre fecha no combinado.** `realizado` sem `recebido_cents` informado significa liquidou tudo, então nada fica em aberto — senão o mesmo dinheiro aparece em "recebido" e em "a receber".
+
+**Estorno**:
+Cancelar (`transacoes.cancelar`) põe o status em `cancelado`: a linha continua no histórico e o efeito financeiro vai a zero — sai do saldo, do resultado, do a receber e do a pagar. Reabrir devolve o status derivado do que já tinha entrado. _Avoid_: excluir para "desfazer" — excluir apaga o rastro.
 
 **Transferência**:
 Movimento entre duas Contas: **uma linha só**, com `conta_id` (origem) e `conta_destino_id`. Move saldo e é **neutra no resultado — nunca conta como receita nem como despesa.** É a forma de lançar pró-labore, distribuição de lucro, aporte pessoal na empresa, reembolso e pagamento de fatura de cartão.

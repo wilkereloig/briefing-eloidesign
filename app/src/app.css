@@ -69,7 +69,8 @@ a:hover{color:var(--texto)}
 /* display:contents faz os links do <nav> virarem colunas da grade da barra */
 .trilho nav{display:contents}
 .trilho-marca,.trilho-rotulo,.trilho-rodape,.trilho-ferramentas,
-.trilho-item .rotulo-longo,.trilho-criar .rotulo-longo{display:none}
+.trilho-item .rotulo-longo,.trilho-criar .rotulo-longo,
+.trilho-rodape .rotulo-longo{display:none}
 /* fora da barra (sem data-barra) o destino vive no menu em folha do Shell */
 .trilho-item:not([data-barra]){display:none}
 .trilho-item[data-barra='1']{order:1}
@@ -116,24 +117,93 @@ a:hover{color:var(--texto)}
   width:40px;height:40px;border-radius:var(--raio-chip);color:var(--tinta)}
 
 /* ── cabeçalho ──────────────────────────────────────────────────────────── */
-.cabecalho{display:flex;align-items:center;gap:var(--e-5);min-height:54px;
-  margin-bottom:var(--e-8)}
-.cabecalho-titulo{min-width:0;flex:1}
+/* O cabeçalho quebra em vez de espremer: com filtros + seletor de mês na mesma
+   linha, "agosto de 2026" virava três linhas de uma palavra cada no tablet. */
+.cabecalho{display:flex;align-items:center;flex-wrap:wrap;gap:var(--e-5);
+  min-height:54px;margin-bottom:var(--e-8)}
+.cabecalho-titulo{min-width:min(100%,240px);flex:1}
 .cabecalho-titulo .etiqueta{color:var(--acento);margin-bottom:var(--e-3);display:block}
-.cabecalho-acoes{display:flex;align-items:center;gap:var(--e-3);flex:none}
+.cabecalho-acoes{display:flex;align-items:center;flex-wrap:wrap;gap:var(--e-3);flex:none}
 
-/* ── login ──────────────────────────────────────────────────────────────── */
-.login{max-width:min(430px,calc(100% - 40px));margin:11vh auto 0;background:var(--chao);
-  border:1px solid var(--linha);border-radius:var(--raio-painel);padding:var(--e-10) var(--e-9)}
-.login .marca{margin-bottom:var(--e-9)}
-.login h1{font-size:11px;font-weight:700;letter-spacing:.20em;text-transform:uppercase;
-  color:var(--texto-3);margin-bottom:var(--e-5)}
-.login input{width:100%;min-height:48px;background:var(--pagina);color:var(--texto);
-  border:1px solid var(--linha-campo);border-radius:var(--raio-controle);padding:13px 15px;font-size:14px}
-.login input::placeholder{color:var(--texto-off)}
-.login input:focus{border-color:var(--roxo-claro);outline:2px solid var(--lima);outline-offset:2px}
-.login button{width:100%;margin-top:var(--e-5)}
-.err{color:var(--coral);font-size:13px;font-weight:600;margin-top:var(--e-5);min-height:1.2em}
+/* ── acesso ─────────────────────────────────────────────────────────────── */
+/* Toque: uma coluna, identidade reduzida à assinatura, formulário perto do topo
+   porque o teclado virtual come a metade de baixo. Desktop (≥900): composição
+   dividida — identidade à esquerda, acesso à direita. */
+.acesso{display:grid;grid-template-columns:minmax(0,1fr);min-height:100dvh;
+  background:var(--pagina)}
+.acesso-identidade{display:none}
+.acesso-painel{display:flex;align-items:flex-start;justify-content:center;
+  padding:var(--e-11) var(--margem) var(--e-12)}
+.acesso-caixa{width:100%;max-width:400px}
+.acesso-marca-toque{margin-bottom:var(--e-11)}
+.acesso-marca-toque .marca{font-size:22px}
+.acesso-titulo{margin:var(--e-3) 0 var(--e-2)}
+.acesso-caixa form{margin-top:var(--e-9);display:flex;flex-direction:column;gap:var(--e-7)}
+
+/* campo de senha: o botão de mostrar/ocultar vive dentro da caixa e mantém
+   44 px de alvo, sem empurrar a largura do input */
+.acesso-senha{position:relative;display:flex}
+.acesso-senha .campo-caixa{padding-right:92px}
+.acesso-olho{position:absolute;right:4px;top:50%;translate:0 -50%;
+  display:flex;align-items:center;justify-content:center;
+  min-width:76px;height:var(--alvo-toque);padding:0 var(--e-5);
+  background:none;border:0;border-radius:var(--raio-controle);
+  font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--texto-3);cursor:pointer;transition:color var(--t-micro) var(--curva)}
+.acesso-olho:hover,.acesso-olho[aria-pressed='true']{color:var(--acento)}
+
+.acesso-manter{display:flex;align-items:center;gap:var(--e-3);cursor:pointer;
+  color:var(--texto-2)}
+.acesso-enviar{width:100%}
+
+.acesso-nota,.acesso-erro{display:flex;align-items:flex-start;gap:var(--e-3);
+  margin-top:var(--e-7);padding:var(--e-5) var(--e-6);border-radius:var(--raio-controle);
+  font-size:13px;line-height:1.45;font-weight:600}
+.acesso-nota{background:var(--chao-2);color:var(--texto-2)}
+.acesso-nota .eloi-icon{color:var(--azul);margin-top:1px}
+.acesso-erro{margin-top:0;background:rgba(253,68,0,.12);color:var(--coral)}
+.acesso-erro .eloi-icon{margin-top:1px}
+
+.acesso-link{margin-top:var(--e-9);padding:var(--e-3) 0;background:none;border:0;
+  font-size:13px;font-weight:600;color:var(--texto-3);cursor:pointer;
+  text-decoration:underline;text-underline-offset:3px;
+  transition:color var(--t-micro) var(--curva)}
+.acesso-link:hover{color:var(--acento)}
+.acesso-ajuda{display:flex;flex-direction:column;gap:var(--e-5);
+  margin-top:var(--e-5);padding:var(--e-7);
+  background:var(--chao);border:1px solid var(--linha);border-radius:var(--raio-card)}
+.acesso-cod{font-family:var(--fonte-titulo);font-weight:600;color:var(--texto)}
+
+@media (min-width:900px){
+  .acesso{grid-template-columns:1.05fr 1fr}
+  .acesso-identidade{position:relative;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:var(--e-12) var(--e-12) var(--e-11);
+    background:var(--chao);border-right:1px solid var(--linha)}
+  .acesso-identidade .marca{font-size:clamp(34px,3.4vw,46px)}
+  .acesso-identidade-corpo{position:relative;z-index:1;max-width:26ch}
+  .acesso-conceito{margin-top:var(--e-8);font-size:19px;line-height:1.45;
+    color:var(--texto-2)}
+  .acesso-rodape{position:relative;z-index:1}
+  /* grafismo: quatro blocos da paleta, canto reto, sem gradiente */
+  .acesso-grafismo{position:absolute;right:-40px;top:12%;z-index:0;
+    display:grid;grid-template-columns:repeat(2,84px);gap:var(--e-5);
+    transform:rotate(-8deg);opacity:.9}
+  .acesso-grafismo i{display:block;height:84px;border-radius:0}
+  .acesso-grafismo i:nth-child(1){background:var(--roxo)}
+  .acesso-grafismo i:nth-child(2){background:var(--lima);height:36px;align-self:end}
+  .acesso-grafismo i:nth-child(3){background:none;border:2px solid var(--lilas);height:36px}
+  .acesso-grafismo i:nth-child(4){background:var(--coral)}
+  .acesso-painel{align-items:center;padding:var(--e-12)}
+  .acesso-marca-toque{display:none}
+  .acesso-caixa{max-width:380px}
+}
+
+@media (min-width:1280px){
+  .acesso-grafismo{grid-template-columns:repeat(2,120px);right:-30px}
+  .acesso-grafismo i{height:120px}
+  .acesso-grafismo i:nth-child(2),.acesso-grafismo i:nth-child(3){height:52px}
+}
 
 .carregando{padding:var(--e-11);color:var(--texto-3)}
 .tela{min-width:0}
@@ -160,7 +230,9 @@ a:hover{color:var(--texto)}
     padding:var(--e-9) var(--e-6) var(--e-8);
     border-top:0;border-right:1px solid var(--linha)}
   .trilho nav{display:flex;flex-direction:column;gap:var(--e-1)}
-  .trilho-marca{display:block;margin:0 var(--e-3) var(--e-9)}
+  /* No trilho recolhido (72 px) a assinatura não cabe: ela vazava 78 px e
+     aparecia cortada. Só entra a partir de 1024, quando o trilho tem 236. */
+  .trilho-marca{display:none}
   .trilho-ferramentas{display:block;margin-top:var(--e-7)}
   .trilho-item:not([data-barra]){display:flex}
   .trilho-item[data-barra],.trilho-criar{order:0}
@@ -188,8 +260,10 @@ a:hover{color:var(--texto)}
   /* trilho completo: 236 px com rótulos, criação rápida e Sair */
   .app-shell{grid-template-columns:var(--trilho-largura) minmax(0,1fr)}
   :root{--margem:var(--e-10)}
+  .trilho-marca{display:block;margin:0 var(--e-3) var(--e-9)}
   .trilho-item{justify-content:flex-start;gap:11px}
-  .trilho-item .rotulo-longo,.trilho-criar .rotulo-longo{display:inline;min-width:0;
+  .trilho-item .rotulo-longo,.trilho-criar .rotulo-longo,
+  .trilho-rodape .rotulo-longo{display:inline;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .trilho-rotulo{display:block;padding:var(--e-6) var(--e-5) var(--e-2);
     color:var(--texto-4)}

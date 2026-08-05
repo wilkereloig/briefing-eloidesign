@@ -20,7 +20,6 @@ const ROTULO: Record<Arquivo['categoria'], string> = {
 }
 
 export default function Arquivos() {
-  const { clientes } = useFinancas()
   const nomes = useNomes()
   const [arquivos, setArquivos] = useState<Arquivo[] | null>(null)
   const [materiais, setMateriais] = useState<MaterialRow[]>([])
@@ -169,7 +168,7 @@ export default function Arquivos() {
       )}
 
       {folha === 'novo' && (
-        <FolhaUpload clientes={clientes} aoFechar={() => setFolha(null)}
+        <FolhaUpload aoFechar={() => setFolha(null)}
           aoSalvar={async (msg) => { setAviso(msg); await carregar() }} />
       )}
       {folha && folha !== 'novo' && (
@@ -187,18 +186,29 @@ export default function Arquivos() {
   )
 }
 
-function FolhaUpload({ clientes, aoFechar, aoSalvar }: {
-  clientes: ReturnType<typeof useFinancas>['clientes']
+function FolhaUpload({ aoFechar, aoSalvar }: {
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
+  const { clientes, servicos, transacoes, notas } = useFinancas()
   const entrada = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [titulo, setTitulo] = useState('')
   const [categoria, setCategoria] = useState<Arquivo['categoria']>('documento')
   const [clienteId, setClienteId] = useState('')
+  const [servicoId, setServicoId] = useState('')
+  const [transacaoId, setTransacaoId] = useState('')
+  const [notaId, setNotaId] = useState('')
   const [erros, setErros] = useState<Record<string, string>>({})
   const [enviando, setEnviando] = useState(false)
+
+  // Vínculos secundários seguem o cliente escolhido: anexar um comprovante à
+  // transação errada é pior do que não anexar.
+  const doCliente = useMemo(() => ({
+    servicos: clienteId ? servicos.filter((s) => s.cliente_id === clienteId) : [],
+    transacoes: clienteId ? transacoes.filter((t) => t.cliente_id === clienteId) : [],
+    notas: clienteId ? notas.filter((n) => n.cliente_id === clienteId) : [],
+  }), [clienteId, servicos, transacoes, notas])
 
   async function salvar() {
     const e: Record<string, string> = {}
@@ -216,6 +226,9 @@ function FolhaUpload({ clientes, aoFechar, aoSalvar }: {
       await financas.salvarArquivo({
         titulo: titulo.trim(), path, mime: file.type || null,
         tamanho_bytes: file.size, categoria, cliente_id: clienteId,
+        servico_id: servicoId || null,
+        transacao_id: transacaoId || null,
+        nota_fiscal_id: notaId || null,
       })
       aoSalvar('Arquivo enviado')
       aoFechar()
@@ -261,12 +274,53 @@ function FolhaUpload({ clientes, aoFechar, aoSalvar }: {
         <div className="campo" data-erro={erros.cliente ? 'true' : undefined}>
           <label htmlFor="arq-cli">Cliente</label>
           <select id="arq-cli" className="campo-caixa" value={clienteId}
-            onChange={(e) => setClienteId(e.target.value)}>
+            onChange={(e) => {
+              setClienteId(e.target.value); setServicoId(''); setTransacaoId(''); setNotaId('')
+            }}>
             <option value="">Selecione…</option>
             {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </select>
           {erros.cliente && <span className="campo-erro" role="alert">{erros.cliente}</span>}
         </div>
+
+        {!!doCliente.servicos.length && (
+          <div className="campo">
+            <label htmlFor="arq-srv">Projeto ou serviço</label>
+            <select id="arq-srv" className="campo-caixa" value={servicoId}
+              onChange={(e) => setServicoId(e.target.value)}>
+              <option value="">Sem vínculo</option>
+              {doCliente.servicos.map((s) => (
+                <option key={s.id} value={s.id}>{s.descricao}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {!!doCliente.transacoes.length && (
+          <div className="campo">
+            <label htmlFor="arq-tx">Lançamento financeiro</label>
+            <select id="arq-tx" className="campo-caixa" value={transacaoId}
+              onChange={(e) => setTransacaoId(e.target.value)}>
+              <option value="">Sem vínculo</option>
+              {doCliente.transacoes.map((t) => (
+                <option key={t.id} value={t.id}>{t.descricao}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {!!doCliente.notas.length && (
+          <div className="campo">
+            <label htmlFor="arq-nf">Nota fiscal</label>
+            <select id="arq-nf" className="campo-caixa" value={notaId}
+              onChange={(e) => setNotaId(e.target.value)}>
+              <option value="">Sem vínculo</option>
+              {doCliente.notas.map((n) => (
+                <option key={n.id} value={n.id}>{n.numero ? `NF ${n.numero}` : 'Sem número'}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
       </div>

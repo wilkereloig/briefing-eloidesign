@@ -28,6 +28,12 @@ export default function Relatorios() {
   const [folha, setFolha] = useState<Meta | 'nova' | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
 
+  const encerrarMeta = async (m: Meta) => {
+    await financas.desativarMeta(m.id)
+    setAviso('Meta encerrada')
+    await recarregar()
+  }
+
   // Doze meses terminando no mês em foco. A janela do store cobre exatamente
   // isso, então nenhuma coluna aparece truncada por falta de dado carregado.
   const meses = useMemo(
@@ -203,6 +209,12 @@ export default function Relatorios() {
                       </span>
                       <Botao variante="icone" aria-label={`Editar ${m.nome}`} onClick={() => setFolha(m)}>
                         <Icone nome="editar" tamanho={16} />
+                      </Botao>
+                      {/* Desativar, não apagar: o que foi planejado continua
+                          sendo registro do que foi planejado. */}
+                      <Botao variante="icone" aria-label={`Encerrar ${m.nome}`}
+                        onClick={() => void encerrarMeta(m)}>
+                        <Icone nome="excluir" tamanho={16} />
                       </Botao>
                     </li>
                   )
