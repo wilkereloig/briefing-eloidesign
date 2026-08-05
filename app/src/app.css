@@ -61,7 +61,10 @@ a:hover{color:var(--texto)}
 /* ── trilho / barra inferior ────────────────────────────────────────────── */
 .trilho{
   position:fixed;bottom:0;left:0;right:0;z-index:var(--z-trilho);
-  display:grid;grid-template-columns:repeat(5,1fr);align-items:center;
+  /* minmax(0,1fr) e não 1fr: `1fr` tem mínimo automático, então o rótulo mais
+     longo ("Visão geral") empurrava a coluna para 107 px e a barra inteira
+     estourava 537 px num celular de 375. */
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;
   height:calc(var(--barra-mobile) + env(safe-area-inset-bottom));
   padding-bottom:env(safe-area-inset-bottom);
   background:var(--chao);border-top:1px solid var(--linha);user-select:none;
@@ -81,10 +84,12 @@ a:hover{color:var(--texto)}
 
 .trilho-item{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
-  min-height:var(--alvo-toque);padding:6px 2px;position:relative;
+  min-width:0;min-height:var(--alvo-toque);padding:6px 2px;position:relative;
   font-size:10px;font-weight:700;line-height:1;color:var(--texto-3);
   text-decoration:none;transition:color var(--t-micro) var(--curva);
 }
+.trilho-item .rotulo-curto{max-width:100%;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
 .trilho-item .marca-ativa{display:none}
 .trilho-item.ativo{color:var(--acento)}
 .trilho-item:active{color:var(--texto)}
@@ -123,7 +128,11 @@ a:hover{color:var(--texto)}
   min-height:54px;margin-bottom:var(--e-8)}
 .cabecalho-titulo{min-width:min(100%,240px);flex:1}
 .cabecalho-titulo .etiqueta{color:var(--acento);margin-bottom:var(--e-3);display:block}
-.cabecalho-acoes{display:flex;align-items:center;flex-wrap:wrap;gap:var(--e-3);flex:none}
+/* `flex:none` fixava a largura no max-content (644 px com lente + seletor de mês
+   + botão): a linha nunca encolhia e o celular ganhava rolagem horizontal. */
+.cabecalho-acoes{display:flex;align-items:center;flex-wrap:wrap;gap:var(--e-3);
+  flex:0 1 auto;min-width:0}
+.seletor-mes-rotulo{min-width:0}
 
 /* ── acesso ─────────────────────────────────────────────────────────────── */
 /* Toque: uma coluna, identidade reduzida à assinatura, formulário perto do topo
@@ -152,8 +161,10 @@ a:hover{color:var(--texto)}
   color:var(--texto-3);cursor:pointer;transition:color var(--t-micro) var(--curva)}
 .acesso-olho:hover,.acesso-olho[aria-pressed='true']{color:var(--acento)}
 
+/* A caixa marcável tem 20 px por desenho; o alvo de toque é a linha inteira,
+   com os 44 px mínimos. */
 .acesso-manter{display:flex;align-items:center;gap:var(--e-3);cursor:pointer;
-  color:var(--texto-2)}
+  min-height:var(--alvo-toque);color:var(--texto-2)}
 .acesso-enviar{width:100%}
 
 .acesso-nota,.acesso-erro{display:flex;align-items:flex-start;gap:var(--e-3);
@@ -164,7 +175,8 @@ a:hover{color:var(--texto)}
 .acesso-erro{margin-top:0;background:rgba(253,68,0,.12);color:var(--coral)}
 .acesso-erro .eloi-icon{margin-top:1px}
 
-.acesso-link{margin-top:var(--e-9);padding:var(--e-3) 0;background:none;border:0;
+.acesso-link{display:inline-flex;align-items:center;margin-top:var(--e-8);
+  min-height:var(--alvo-toque);background:none;border:0;
   font-size:13px;font-weight:600;color:var(--texto-3);cursor:pointer;
   text-decoration:underline;text-underline-offset:3px;
   transition:color var(--t-micro) var(--curva)}

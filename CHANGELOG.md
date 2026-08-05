@@ -50,6 +50,13 @@ Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente 
   quando o trilho abre para 236.
 - **Cabeçalho de tela no tablet**: com filtros e seletor de mês na mesma linha,
   "agosto de 2026" virava três linhas de uma palavra. O cabeçalho passa a quebrar.
+- **Rolagem horizontal no celular** em Visão geral, Financeiro e Calendário. Duas
+  causas: a barra inferior usava `repeat(5,1fr)` (mínimo automático — o rótulo
+  "Visão geral" empurrava a coluna para 107 px e a barra ia a 537 num aparelho de
+  375) e `.cabecalho-acoes` era `flex:none`, travado no max-content de 644 px.
+  Verificado sem rolagem em 320, 375, 768 e 1440.
+- Alvos de toque abaixo de 44 px na tela de acesso ("Manter conectado" e
+  "Esqueci a senha").
 
 ### Adicionado (vínculos e fluxos que faltavam)
 

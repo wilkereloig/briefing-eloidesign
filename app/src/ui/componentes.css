@@ -190,8 +190,8 @@ select.campo-caixa option{background:var(--chao);color:var(--texto)}
   background:rgba(253,68,0,.14);color:var(--coral)}
 
 /* ── seletor de período ─────────────────────────────────────────────────── */
-.seletor-mes{display:flex;align-items:center;gap:var(--e-1);flex:none}
-.seletor-mes-rotulo{display:flex;align-items:center;gap:var(--e-2);
+.seletor-mes{display:flex;align-items:center;gap:var(--e-1);flex:0 1 auto;min-width:0}
+.seletor-mes-rotulo{display:flex;align-items:center;gap:var(--e-2);min-width:0;
   min-height:var(--alvo-toque);padding:0 var(--e-5);
   background:var(--chao-2);border-radius:var(--raio-controle);
   text-transform:capitalize;white-space:nowrap}
