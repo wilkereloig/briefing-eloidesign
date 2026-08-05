@@ -96,7 +96,7 @@ function TelaAcesso() {
         <div className="acesso-identidade-corpo">
           <Marca />
           <p className="acesso-conceito">
-            Gestão ELOI — clientes, projetos e dinheiro
+            Gestão — clientes, projetos e dinheiro
             <br />no mesmo lugar.
           </p>
         </div>

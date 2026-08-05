@@ -1,6 +1,10 @@
 /* ELOI Studio — tokens do sistema visual aprovado (KV Completo, 04/08/2026).
-   Fonte única de valores. Substitui app/src/ui/tokens.css.
-   Convenção de nomes mantida em português, como no arquivo atual do projeto. */
+
+   ESPELHO de app/src/ui/tokens.css, que é a fonte que roda em produção.
+   Esta cópia existe para quem consome o handoff fora do app (páginas estáticas,
+   outra ferramenta) e traz o @import das fontes, que o app carrega por <link>.
+   NÃO editar valores só aqui: app/src/ui/tokens.test.ts falha se os dois
+   arquivos divergirem — foi assim que 3 tokens de margem sumiram deste lado. */
 
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap');
 
@@ -85,6 +89,11 @@
   --z-veu: 40;
   --z-folha: 50;
   --z-aviso: 60;
+
+  /* margem de conteúdo — cresce por faixa (RESPONSIVE_GUIDELINES) */
+  --margem: var(--e-7);
+  --gap-grade: var(--e-5);
+  --padding-card: var(--e-7);
 }
 
 :focus-visible {

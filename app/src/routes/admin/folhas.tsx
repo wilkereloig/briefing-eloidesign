@@ -9,6 +9,7 @@ import type {
 } from '../../lib/tipos'
 import { Botao, Campo, Folha, Icone, Pilula } from '../../ui/componentes'
 import { rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
+import { corCliente } from '../../ui/tokens'
 
 // Folhas de cadastro e de ação. Todas seguem o mesmo par no rodapé
 // (Cancelar contorno / confirmar em destaque, proporção 1:2) e devolvem uma
@@ -34,7 +35,7 @@ export function FolhaConta({ inicial, contextoInicial, aoFechar, aoSalvar }: {
   const [limite, setLimite] = useState(inicial?.limite_cents ? fmtBRL(inicial.limite_cents) : '')
   const [fechamento, setFechamento] = useState(String(inicial?.dia_fechamento ?? ''))
   const [vencimento, setVencimento] = useState(String(inicial?.dia_vencimento ?? ''))
-  const [cor, setCor] = useState(inicial?.cor ?? '#7D2AE8')
+  const [cor, setCor] = useState(inicial?.cor ?? corCliente[0])
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
 
@@ -318,7 +319,7 @@ export function FolhaCliente({ inicial, aoFechar, aoSalvar }: {
 }) {
   const [nome, setNome] = useState(inicial?.nome ?? '')
   const [contato, setContato] = useState(inicial?.contato ?? '')
-  const [cor, setCor] = useState(inicial?.cor ?? '#7D2AE8')
+  const [cor, setCor] = useState(inicial?.cor ?? corCliente[0])
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
 

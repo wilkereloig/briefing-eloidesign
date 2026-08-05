@@ -1,0 +1,18 @@
+{
+  "name": "eloi-studio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Site e painel interno do ELOI Studio — páginas estáticas, painel /admin (React) e edge functions Supabase.",
+  "scripts": {
+    "dev": "npm --prefix app run dev",
+    "build": "npm --prefix app run build",
+    "preview": "npm --prefix app run preview",
+    "lint": "npm --prefix app run lint",
+    "typecheck": "npm --prefix app run typecheck",
+    "test": "npm --prefix app test",
+    "edges:check": "deno check edge-functions/*.ts",
+    "edges:test": "deno test edge-functions/_tests/",
+    "edges:deploy": "node scripts/deploy-edges.mjs",
+    "verify": "npm run lint && npm run typecheck && npm test && npm run build && npm run edges:check && npm run edges:test"
+  }
+}

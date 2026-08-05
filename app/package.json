@@ -1,13 +1,14 @@
 {
-  "name": "app",
+  "name": "eloi-studio",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint",
     "preview": "vite preview",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {

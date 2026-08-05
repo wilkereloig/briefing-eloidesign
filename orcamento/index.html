@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="ELOI">
   <meta name="robots" content="noindex, nofollow">
-  <title>Orçamento — ELOI Design Studio</title>
+  <title>Orçamento — ELOI Studio</title>
   <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
   <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
   <style>
@@ -78,7 +78,7 @@
 <script src="/assets/eloi-admin/orcamento.js"></script>
 <script>
 const FN = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/orcamentos';
-const LOGO = `<img class="logo" src="/assets/eloi-admin/wordmark.svg" alt="ELOI Design Studio">`;
+const LOGO = `<img class="logo" src="/assets/eloi-admin/wordmark.svg" alt="ELOI Studio">`;
 
 function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -121,7 +121,7 @@ function render(o){
         ${dt?`<div class="meta">Emitido em ${dt}</div>`:''}
         ${rodape}
       </div>
-      <div class="foot">ELOI Design Studio<br><a href="mailto:contato@eloidesign.com.br">contato@eloidesign.com.br</a> · eloidesign.com.br</div>
+      <div class="foot">ELOI Studio<br><a href="mailto:contato@eloidesign.com.br">contato@eloidesign.com.br</a> · eloidesign.com.br</div>
     </div>`;
 }
 

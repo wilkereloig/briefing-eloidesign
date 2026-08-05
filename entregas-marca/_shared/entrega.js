@@ -123,7 +123,7 @@
     <header class="hero">
       ${markSvg ? `<div class="watermark"><img src="./${esc(markSvg)}" alt=""></div>` : ""}
       <div class="hero-inner">
-        <div class="kicker"><span class="dot"></span>ELOI Design Studio · Entrega de marca</div>
+        <div class="kicker"><span class="dot"></span>ELOI Studio · Entrega de marca</div>
         ${heroSvg ? `<img class="logo-completa" src="./${esc(heroSvg)}" alt="${esc(m.marca)}">` : `<h1>${esc(m.marca)}</h1>`}
         <p class="lead">Todos os arquivos oficiais da sua marca, prontos para usar — em vetor e alta resolução, em cada versão e cor da identidade.</p>
         <div class="hero-meta">
@@ -230,7 +230,7 @@
 
     <footer>
       ${markSvg ? `<img class="fmark" src="./${esc(markSvg)}" alt="">` : ""}
-      <p>Marca desenvolvida por ELOI Design Studio.</p>
+      <p>Marca desenvolvida por ELOI Studio.</p>
     </footer>
 
     <div class="toast" id="toast"></div>

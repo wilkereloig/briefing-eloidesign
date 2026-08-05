@@ -44,7 +44,7 @@ Sistema visual da **ELOI Studio**, extraído do KV Completo aprovado em 04/08/20
 
 ## 3. Uso do nome
 
-Nome oficial: **ELOI Studio**. No painel e no produto, a assinatura usada é **ELOI Design**.
+Nome oficial: **ELOI Studio**. No painel e no produto, a assinatura usada é **ELOI Studio**.
 
 **Assinatura principal.** ELOI em Rosa papel `#FDD5D3`, complemento em Lilás `#EEB4E7` (Studio) ou Lima `#DFF806` (Design). Archivo `wdth 72`, peso 700, `line-height: 1.24`. Tracking: −.02em em ELOI, 0 no complemento. As duas palavras se tocam, sem espaço.
 

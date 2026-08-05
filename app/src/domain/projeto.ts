@@ -1,7 +1,7 @@
 import type { OrcamentoRow, OrcamentoStatus, ServicoRow } from '../lib/tipos'
 import { centsDeReais } from '../lib/dinheiro'
 
-// Etapa é CALCULADA, não uma coluna (ver CONTEXT.md "Etapa"). Ordem do
+// Etapa é CALCULADA, não uma coluna (ver docs/GLOSSARY.md "Etapa"). Ordem do
 // funil: orcamento -> aprovado -> execucao -> entregue -> pago.
 export type Etapa = 'orcamento' | 'aprovado' | 'execucao' | 'entregue' | 'pago'
 

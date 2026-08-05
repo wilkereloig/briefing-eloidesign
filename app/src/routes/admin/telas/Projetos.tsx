@@ -51,7 +51,7 @@ export default function Projetos() {
   }, [projetos, etapa, busca, nomes])
 
   // Agrupa por cliente. Sub-cliente aparece como etiqueta na linha: é
-  // agrupamento de marca, não cliente próprio (ver CONTEXT.md).
+  // agrupamento de marca, não cliente próprio (ver docs/GLOSSARY.md).
   const grupos = useMemo(() => {
     const mapa = new Map<string, typeof filtrados>()
     for (const p of filtrados) {

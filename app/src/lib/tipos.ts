@@ -1,6 +1,6 @@
-// Campos batem com o schema real (db/*.sql) — não com admin-app/src/types/domain.ts,
+// Campos batem com o schema real (database/migrations/*.sql) — não com admin-app/src/types/domain.ts,
 // que tem nomes que nunca existiram no banco (criado_em, status, data). Ver
-// CONTEXT.md e docs/superpowers/specs/2026-07-30-painel-interno-design.md.
+// docs/GLOSSARY.md e docs/historico/superpowers/specs/2026-07-30-painel-interno-design.md.
 
 export interface ClienteRow {
   id: string
@@ -120,7 +120,7 @@ export interface BriefingLegadoRow {
   raw: unknown
 }
 
-// ── núcleo financeiro (db/2026-08-04-gestao-eloi-financeiro.sql) ────────────
+// ── núcleo financeiro (database/migrations/2026-08-04-gestao-eloi-financeiro.sql) ────────────
 // Pessoal e empresa convivem nas MESMAS tabelas, separados por `contexto`. Duas
 // árvores de tabela dariam dois lugares para calcular saldo consolidado.
 

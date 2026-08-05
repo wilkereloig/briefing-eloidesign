@@ -14,7 +14,7 @@ export function centsDeBRL(s: string): number {
 }
 
 // orcamentos.valor_total é o ÚNICO campo monetário do sistema em reais, não
-// cents (ver CONTEXT.md). Mesma conta do trigger SQL trg_eloi_orcamento_aprovado
+// cents (ver docs/GLOSSARY.md). Mesma conta do trigger SQL trg_eloi_orcamento_aprovado
 // (round(valor_total * 100)) — manter os dois em sincronia se um dia mudar.
 export function centsDeReais(valorReais: number): number {
   return Math.round(valorReais * 100)

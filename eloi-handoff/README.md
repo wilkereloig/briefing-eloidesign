@@ -65,7 +65,7 @@ Não há `tailwind-theme.js`: o projeto não usa Tailwind.
 
 ## Dados e domínio
 
-O vocabulário do domínio está em `CONTEXT.md` na raiz do repositório e continua valendo: Cliente, Sub-cliente, Projeto (orçamento + serviço), Etapa, Decisão, Caixa, Movimento. Dinheiro é sempre inteiro em cents, com a exceção conhecida de `orcamentos.valor_total`. Nada disso muda com este handoff — a mudança é de superfície.
+O vocabulário do domínio está em `docs/GLOSSARY.md` e continua valendo: Cliente, Sub-cliente, Projeto (orçamento + serviço), Etapa, Decisão, Caixa, Movimento. Dinheiro é sempre inteiro em cents, com a exceção conhecida de `orcamentos.valor_total`. Nada disso muda com este handoff — a mudança é de superfície.
 
 ## Assets
 

@@ -7,7 +7,7 @@ import type { Contexto, TipoMov, Transacao } from '../../lib/tipos'
 import { Botao, Campo, CampoTexto, Folha, Pilula } from '../../ui/componentes'
 
 // Um formulário só para receita, despesa e transferência: os três guardam a
-// mesma linha (ver db/2026-08-04-gestao-eloi-financeiro.sql). Três formulários
+// mesma linha (ver database/migrations/2026-08-04-gestao-eloi-financeiro.sql). Três formulários
 // separados dariam três lugares para a validação divergir.
 
 const TIPOS: { chave: TipoMov; label: string }[] = [

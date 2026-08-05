@@ -1,4 +1,4 @@
-# Gestão ELOI — `/admin`
+# ELOI Studio — painel interno (`/admin`)
 
 Controle financeiro pessoal e do ELOI Studio, clientes e projetos, num produto só.
 React 19 · TypeScript · Vite · react-router 7 · CSS próprio. **Sem Tailwind, sem biblioteca de
@@ -76,7 +76,7 @@ carregados, cobertas por teste.
 4. Envolver o conteúdo em `<Carga>` — garante esqueleto e estado de erro sem esquecimento.
 5. Prever vazio, erro e carregando. Empty state orienta o próximo passo, não só informa.
 6. Fechar pelo `eloi-handoff/prompts/VISUAL_REVIEW_CHECKLIST.md`.
-7. Documentar a rota no `SITEMAP.md`.
+7. Documentar a rota no `docs/ROUTE_MAP.md`.
 
 ## Testes
 

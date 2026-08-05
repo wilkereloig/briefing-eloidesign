@@ -1,5 +1,6 @@
 /* ELOI Studio — tokens do sistema visual aprovado (KV Completo, 04/08/2026).
-   Fonte única de valores; espelha eloi-handoff/design-tokens/variables.css.
+   FONTE ÚNICA de valores. eloi-handoff/design-tokens/variables.css é espelho
+   deste arquivo (mantido em sincronia por app/src/ui/tokens.test.ts).
    As duas famílias entram por <link> no index.html, não por @import: @import
    encadeia o download depois do CSS, <link> com preconnect baixa em paralelo. */
 

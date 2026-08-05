@@ -17,9 +17,11 @@ export function Icone({ nome, tamanho = 18, rotulo }: { nome: string; tamanho?: 
   )
 }
 
-/** Assinatura ELOI + complemento. Nunca as duas palavras na mesma cor. */
-export function Marca({ complemento = 'Design' }: { complemento?: 'Design' | 'Studio' }) {
-  return <span className="marca"><b>ELOI</b><i>{complemento}</i></span>
+/** Assinatura ELOI Studio. Nunca as duas palavras na mesma cor.
+    Sem prop de complemento: o nome é um só, e um parâmetro configurável era
+    o caminho mais curto para a marca sair escrita de dois jeitos. */
+export function Marca() {
+  return <span className="marca"><b>ELOI</b><i>Studio</i></span>
 }
 
 type Variante = 'primario' | 'destaque' | 'secundario' | 'terciario' | 'destrutivo' | 'icone'

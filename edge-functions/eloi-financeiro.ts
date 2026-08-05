@@ -1,4 +1,16 @@
 // edge-functions/eloi-financeiro.ts
+//
+// ⚠️ LEGADO — sem consumidor no repositório desde 2026-08-05.
+// Servia a SPA `/admin-app/`, que foi removida; o painel atual usa
+// `eloi-financas` sobre `eloi_contas`/`eloi_transacoes`. As tabelas que esta
+// função acessa (`eloi_caixas`, `eloi_movimentos_financeiros`) estão vazias.
+//
+// Por que o arquivo continua aqui: a function segue **deployada no Supabase**
+// (v2, ACTIVE). Apagar o fonte deixaria em produção uma função sem código
+// versionado — o problema que `scripts/deploy-edges.mjs` existe para evitar.
+// Condição de remoção: retirar a function do Supabase, depois apagar o arquivo
+// e, num segundo passo, as duas tabelas. Ver docs/DECISIONS.md D-08.
+//
 // Fase 5 do painel unificado: caixas + movimentações financeiras.
 // Mesmo modelo de auth das outras funções admin (admin_sessions).
 // Valores sempre em cents. Deploy com verify_jwt: false (auth é a sessão de admin).

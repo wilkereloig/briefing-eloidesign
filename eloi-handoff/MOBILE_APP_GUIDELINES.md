@@ -1,4 +1,4 @@
-# Gestão ELOI — versão de toque
+# ELOI Studio — versão de toque
 
 Referência: `references/Gestao Eloi Mobile.dc.html`. Abra e navegue: a barra inferior, o menu, as folhas, a busca e os filtros funcionam.
 
@@ -13,7 +13,7 @@ Tela de referência: 390 × 844.
 ```
 ┌─────────────────────────────┐
 │ status do sistema        44 │
-│ menu · ELOI Design · ago 26 │ 54
+│ menu · ELOI Studio · ago 26 │ 54
 ├─────────────────────────────┤
 │                             │
 │ conteúdo — rolagem vertical │

@@ -1,4 +1,17 @@
+# dependências
+node_modules/
+
+# segredos — nunca commitar
+.env
+.env.local
+.env.*.local
+
+# saída de deploy / plataforma
 .vercel
+.deploy-edges/
+
+# ferramentas de sessão (locais, não fazem parte do projeto)
 .claude/
 .superpowers/
-.deploy-edges/
+.impeccable/
+.agents/

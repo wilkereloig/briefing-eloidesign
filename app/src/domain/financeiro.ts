@@ -1,9 +1,9 @@
-// Regras financeiras do Gestão ELOI — FONTE ÚNICA de todo cálculo de dinheiro.
+// Regras financeiras do ELOI Studio — FONTE ÚNICA de todo cálculo de dinheiro.
 // Nenhuma tela recalcula saldo, resultado ou pendência por conta própria: se um
 // número aparece na interface, ele saiu daqui. Duas telas com contas próprias é
 // como um sistema financeiro passa a mostrar dois valores para a mesma coisa.
 //
-// Invariantes (espelham as constraints de db/2026-08-04-gestao-eloi-financeiro.sql):
+// Invariantes (espelham as constraints de database/migrations/2026-08-04-gestao-eloi-financeiro.sql):
 //  · valor em cents inteiros, sempre;
 //  · TRANSFERÊNCIA não é receita nem despesa — só troca de bolso. Ela move saldo
 //    entre contas e é neutra no resultado. Contar transferência como receita é o

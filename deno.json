@@ -1,0 +1,5 @@
+{
+  "nodeModulesDir": "auto",
+  "lint": { "include": ["edge-functions/"] },
+  "fmt": { "include": ["edge-functions/"] }
+}

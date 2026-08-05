@@ -71,7 +71,7 @@ Anatomia e estados em `COMPONENT_INVENTORY.md`. Reutilize antes de criar.
 
 - `app/src/lib/` e `app/src/domain/` — lógica testada. Estilo não justifica mexer em assinatura de função.
 - Formatação de dinheiro (`dinheiro.ts`). Dinheiro é cents inteiros, exceto `orcamentos.valor_total`, que é numeric em reais.
-- Rotas, nomes de tela e vocabulário do domínio (`CONTEXT.md` da raiz): Cliente, Sub-cliente, Projeto, Etapa, Decisão, Caixa, Movimento, Convite.
+- Rotas, nomes de tela e vocabulário do domínio (`docs/GLOSSARY.md`): Cliente, Sub-cliente, Projeto, Etapa, Decisão, Caixa, Movimento, Convite.
 - Contratos das edge functions.
 - `admin-app/` e as páginas HTML estáticas da raiz — legado congelado (ver seção 6 do guia de implementação).
 

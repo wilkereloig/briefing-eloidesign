@@ -60,7 +60,7 @@ Regras de desenho (obrigatórias para qualquer ícone novo):
 
 ## Família E — painel de gestão (19 glifos, agosto 2026)
 
-Desenhados sobre as mesmas regras para cobrir o Gestão ELOI: finanças, estados de sistema, ações de registro e configuração.
+Desenhados sobre as mesmas regras para cobrir o painel do ELOI Studio: finanças, estados de sistema, ações de registro e configuração.
 
 | id | rótulo | pasta no handoff |
 | --- | --- | --- |

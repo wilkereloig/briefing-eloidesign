@@ -1,6 +1,61 @@
-# Changelog — Gestão ELOI
+# Changelog — ELOI Studio
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
+
+## 2026-08-05 — Auditoria, limpeza e renomeação para ELOI Studio
+
+### Renomeado
+
+- **O projeto passou a se chamar ELOI Studio** (técnico `eloi-studio`). Título das
+  páginas, `manifest.json`, PWA do painel, `package.json`, assinatura `<Marca />`,
+  `alt`/`aria-label` de logo, rodapés e documentação.
+- **Não** renomeados, de propósito: tabelas `eloi_*`, edge functions, buckets,
+  domínio, repositório GitHub e variáveis de ambiente — identificadores externos.
+- ⚠️ O wordmark **desenhado** ainda letra "ELOI Design Studio". São curvas de SVG;
+  re-letrar é trabalho de design.
+
+### Removido
+
+- **`/admin-app/`** — SPA React 18 substituída pelo painel atual. Nenhum consumidor
+  além dos próprios rewrites. `vercel.json` agora redireciona `/admin-app*` →
+  `/admin` com 301, então link antigo continua funcionando.
+- `assets/eloi-admin/periodo.js` — perdeu o único consumidor quando o hub estático
+  `/admin` saiu do repositório.
+- `assets/fonts/Juturu-VariableVF.woff` — sem `@font-face`, `<link>` ou qualquer
+  referência. As fontes em uso são Archivo e Manrope.
+
+### Corrigido
+
+- **`deno check` estava quebrado** e o CI roda esse comando: `jsr:@supabase/supabase-js@2`
+  passou a puxar uma dependência npm de tipos. Resolvido com `deno.json`, **sem
+  tocar em nenhuma edge function** — o repositório precisa continuar idêntico ao
+  que está deployado.
+- **Lint com 1091 avisos** que vinham do `dist/` commitado e escondiam qualquer
+  aviso real. `dist/` ignorado; e a regra de Fast Refresh desligada nos 3 arquivos
+  que sempre a disparam. A saída do lint agora é vazia.
+- **Hex solto em `.tsx`** (`'#7D2AE8'`, duas vezes em `folhas.tsx`), contra a regra
+  do próprio sistema visual. Passou a usar `corCliente[0]` dos tokens.
+- **`<Marca>` tinha um parâmetro `complemento` que nenhum chamador usava** — era o
+  caminho mais curto para a marca sair escrita de dois jeitos. Removido.
+- **Os dois arquivos de token se declaravam "fonte única"** e já tinham divergido:
+  `--margem`, `--gap-grade` e `--padding-card` existiam só no lado do app.
+  Sincronizados, cabeçalhos corrigidos, e um teste novo falha se divergirem de novo.
+- `ROUTE_MAP` descrevia o wordmark com `viewBox` e classe de cor errados.
+- `.gitignore` não ignorava `node_modules/` nem `.env`.
+
+### Reorganizado
+
+- `db/` → `database/migrations/` · `SITEMAP.md` → `docs/ROUTE_MAP.md` ·
+  `CONTEXT.md` → `docs/GLOSSARY.md`.
+- Planos, specs e diagnósticos já executados foram para `docs/historico/`.
+- `package.json` na raiz padroniza os comandos: `dev`, `build`, `lint`, `typecheck`,
+  `test`, `edges:check`, `edges:test`, `edges:deploy` e `verify`.
+
+### Documentação
+
+Criados `README.md`, `CLAUDE.md`, `.env.example` e os mapas em `docs/`:
+`PROJECT_MAP`, `ARCHITECTURE`, `FEATURE_MAP`, `DATA_MODEL`, `DESIGN_SYSTEM`,
+`FILE_INVENTORY`, `DECISIONS`, `DEVELOPMENT_GUIDE` e `CLEANUP_REPORT`.
 
 ## 2026-08-05 — Revisão geral, correções e refinamento
 
