@@ -102,8 +102,13 @@ adicionaria uma camada de erro. Mantenha.
 | Migração SQL | `AAAA-MM-DD-assunto.sql` | `2026-08-04-gestao-eloi-financeiro.sql` |
 | Teste | `<módulo>.test.ts`, ao lado do módulo | `financeiro.test.ts` |
 
-**Proibido:** `novo`, `final`, `v2`, `copia`, `temp`, `teste` em nome de arquivo
-versionado. Se precisa desses sufixos para distinguir, o antigo já devia ter saído.
+**Proibido:** `novo`, `final`, `v2`, `copia`, `temp`, `teste`, `backup`, `old` em
+nome de arquivo versionado. Se precisa desses sufixos para distinguir, o antigo já
+devia ter saído.
+
+Falso positivo conhecido: `assets/eloi-admin/rascunho.js` — "rascunho" aí é o
+conceito do domínio (autosave do briefing no aparelho do cliente), não sufixo de
+versão. Está vivo, usado por três formulários.
 
 ## O que está fora do controle deste repositório
 
