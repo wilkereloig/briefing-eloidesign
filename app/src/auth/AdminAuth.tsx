@@ -189,7 +189,8 @@ function TelaAcesso() {
                 que possa virar porta de entrada.
               </p>
               <p className="t-sec">
-                Depois de 5 tentativas erradas o acesso trava por 15 minutos.
+                Depois de 5 tentativas erradas o acesso trava por 15 minutos —
+                só para a rede de onde vieram. Acertar a senha limpa a contagem.
               </p>
             </div>
           )}
