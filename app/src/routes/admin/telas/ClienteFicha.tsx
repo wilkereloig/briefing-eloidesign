@@ -10,7 +10,7 @@ import { Cabecalho, Carga, ChipMovimento, ChipNota, Dinheiro } from '../../../ui
 import { dataCurta } from '../../../ui/formato'
 import type { Arquivo, OrcamentoStatus } from '../../../lib/tipos'
 import type { EstadoChip } from '../../../ui/tokens'
-import { FolhaCliente } from '../folhas'
+import { FolhaCliente, FolhaEntrega, FolhaSenhaPortal } from '../folhas'
 
 // Estado da proposta → par de cores do sistema. Mesmo mapa do funil de Projetos.
 const ESTADO_ORCAMENTO: Record<OrcamentoStatus, EstadoChip> = {
@@ -21,6 +21,8 @@ export default function ClienteFicha() {
   const { id } = useParams()
   const { clientes, servicos, orcamentos, transacoes, notas, recarregar } = useFinancas()
   const [editando, setEditando] = useState(false)
+  const [senhaPortal, setSenhaPortal] = useState(false)
+  const [entrega, setEntrega] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
   const [arquivos, setArquivos] = useState<Arquivo[]>([])
 
@@ -109,6 +111,37 @@ export default function ClienteFicha() {
                 <div><dt className="etiqueta-mini">Cliente desde</dt>
                   <dd className="t-corpo">{dataCurta(cliente.created_at.slice(0, 10))}</dd></div>
               </dl>
+            </Painel>
+
+            {/* Portal e entregas moram juntos de propósito: são as duas metades
+                da mesma pergunta — "o cliente consegue pegar o material dele?".
+                Senha sem material é porta para sala vazia; material sem senha é
+                sala trancada. */}
+            <Painel titulo="Área do cliente"
+              acao={<Botao compacto onClick={() => setEntrega(true)}>Enviar material</Botao>}>
+              <dl className="ficha">
+                <div><dt className="etiqueta-mini">Acesso ao portal</dt><dd>
+                  {cliente.portal_senha_gerada_em
+                    ? <span className="t-corpo">
+                      Senha ativa desde {dataCurta(cliente.portal_senha_gerada_em.slice(0, 10))}
+                    </span>
+                    : <span className="t-sec">Nenhuma senha gerada ainda</span>}
+                </dd></div>
+                <div><dt className="etiqueta-mini">Endereço</dt>
+                  <dd className="t-corpo">
+                    <a href="/portal/" target="_blank" rel="noreferrer">/portal/</a>
+                  </dd></div>
+              </dl>
+              <div className="linha" style={{ marginTop: 'var(--e-5)' }}>
+                <Botao variante="primario" onClick={() => setSenhaPortal(true)}>
+                  <Icone nome="usuario" tamanho={16} />
+                  {cliente.portal_senha_gerada_em ? 'Gerar nova senha' : 'Gerar senha de acesso'}
+                </Botao>
+              </div>
+              <p className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>
+                A senha aparece uma única vez. O portal mostra ao cliente só os
+                materiais publicados.
+              </p>
             </Painel>
 
             <Painel titulo="Projetos e serviços"
@@ -229,6 +262,18 @@ export default function ClienteFicha() {
       {editando && cliente && (
         <FolhaCliente inicial={cliente} aoFechar={() => setEditando(false)}
           aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+      )}
+
+      {senhaPortal && cliente && (
+        <FolhaSenhaPortal cliente={cliente}
+          aoFechar={() => setSenhaPortal(false)}
+          aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+      )}
+
+      {entrega && cliente && (
+        <FolhaEntrega clienteInicial={cliente.id}
+          aoFechar={() => setEntrega(false)}
+          aoSalvar={(msg) => setAviso(msg)} />
       )}
       {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
     </div>

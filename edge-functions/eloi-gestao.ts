@@ -298,6 +298,17 @@ Deno.serve(async (req: Request) => {
     return json({ entregas: resultado });
   }
 
+  // Leitura assinada do bucket de entregas — o equivalente admin do
+  // entregas.view_url do portal, sem a checagem de dono: aqui quem chegou já
+  // passou pelo requireAdmin do topo, e o admin vê tudo por definição.
+  if (action === "entregas.view_url") {
+    if (!body?.path) return json({ error: "path obrigatório" }, 400);
+    const { data, error } = await supabase.storage.from(ENTREGAS_BUCKET)
+      .createSignedUrl(String(body.path), 120);
+    if (error) return json({ error: error.message }, 500);
+    return json({ url: data.signedUrl });
+  }
+
   if (action === "entregas.delete") {
     if (!body?.path) return json({ error: "path obrigatório" }, 400);
     const { error } = await supabase.storage.from(ENTREGAS_BUCKET).remove([body.path]);
@@ -314,22 +325,48 @@ Deno.serve(async (req: Request) => {
     const STATUS = ["rascunho", "publicado", "arquivado"];
     if (m.categoria && !CATS.includes(m.categoria)) return json({ error: "categoria inválida" }, 400);
     if (m.status && !STATUS.includes(m.status)) return json({ error: "status inválido" }, 400);
-    const row: any = {
-      titulo: titulo || undefined,
-      descricao: m.descricao ?? null,
-      categoria: m.categoria || undefined,
-      versao: Number(m.versao) || undefined,
-      status: m.status || undefined,
-      servico_id: m.servico_id || null,
-    };
-    if (m.status === "publicado") row.published_at = new Date().toISOString();
+    // UPDATE é patch PARCIAL: só entra no row a chave que veio no corpo.
+    // A versão anterior montava o objeto inteiro e escrevia `descricao: null` e
+    // `servico_id: null` sempre — então o botão "Publicar" da lista, que manda
+    // só {id, status}, apagava a descrição que o cliente lê no portal e cortava
+    // o vínculo com o serviço. "Campo ausente" e "campo esvaziado" são coisas
+    // diferentes e precisam continuar sendo.
     if (m.id) {
-      const { data, error } = await supabase.from("eloi_materiais").update(row).eq("id", m.id).select().single();
+      const patch: Record<string, unknown> = {};
+      if (titulo) patch.titulo = titulo;
+      if ("descricao" in m) patch.descricao = m.descricao || null; // "" é ausência, não texto
+      if (m.categoria) patch.categoria = m.categoria;
+      if (m.versao != null && Number(m.versao)) patch.versao = Number(m.versao);
+      if ("servico_id" in m) patch.servico_id = m.servico_id || null;
+      // Trocar o arquivo de um material existente PRECISA gravar o path novo —
+      // sem isto o upload subia, a UI dizia "salvo" e o cliente continuava
+      // baixando o arquivo antigo, sem erro em lugar nenhum.
+      if (m.path) patch.path = m.path;
+      if (m.status) {
+        patch.status = m.status;
+        // Despublicar tem que limpar a data, senão a linha fica "Rascunho ·
+        // publicado em 07/08" — dois fatos que se contradizem.
+        patch.published_at = m.status === "publicado" ? new Date().toISOString() : null;
+      }
+      if (!Object.keys(patch).length) return json({ error: "nada para atualizar" }, 400);
+      const { data, error } = await supabase.from("eloi_materiais").update(patch).eq("id", m.id).select().single();
       if (error) return json({ error: error.message }, 500);
       return json({ material: data });
     }
+
+    const status = m.status || "rascunho";
     const { data, error } = await supabase.from("eloi_materiais")
-      .insert({ ...row, cliente_id: m.cliente_id, titulo, path: m.path, categoria: m.categoria || "arquivo", status: m.status || "rascunho" })
+      .insert({
+        cliente_id: m.cliente_id,
+        titulo,
+        path: m.path,
+        descricao: m.descricao || null,
+        servico_id: m.servico_id || null,
+        categoria: m.categoria || "arquivo",
+        versao: Number(m.versao) || 1,
+        status,
+        published_at: status === "publicado" ? new Date().toISOString() : null,
+      })
       .select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ material: data });

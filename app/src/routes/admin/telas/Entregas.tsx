@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { materiaisApi } from '../../../lib/api'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import type { MaterialRow, MaterialStatus } from '../../../lib/tipos'
-import { Chip, Esqueleto, Icone, Indicador, Painel, Pilula, Vazio, Botao } from '../../../ui/componentes'
+import { Chip, Esqueleto, Icone, Indicador, Painel, Pilula, Vazio, Botao, Aviso } from '../../../ui/componentes'
+import { FolhaEntrega, FolhaExcluir } from '../folhas'
 import { Cabecalho } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
 import type { EstadoChip } from '../../../ui/tokens'
@@ -23,6 +24,32 @@ export default function Entregas() {
   const [erro, setErro] = useState<string | null>(null)
   const [filtro, setFiltro] = useState<MaterialStatus | 'todos'>('todos')
   const [cliente, setCliente] = useState('')
+  // `folha` com objeto vazio = criar; com material = editar. Um estado só evita
+  // dois booleanos que podem ficar ligados ao mesmo tempo.
+  const [folha, setFolha] = useState<{ m?: MaterialRow } | null>(null)
+  const [excluir, setExcluir] = useState<MaterialRow | null>(null)
+  const [aviso, setAviso] = useState<string | null>(null)
+
+  // Publicar da própria lista: é a ação mais repetida do dia de entrega, e
+  // obrigar a abrir a folha para marcar uma caixa é atrito puro.
+  async function abrir(m: MaterialRow) {
+    try {
+      window.open(await materiaisApi.urlEntrega(m.path), '_blank', 'noopener,noreferrer')
+    } catch (e) {
+      setErro((e as Error).message)
+    }
+  }
+
+  async function alternarPublicacao(m: MaterialRow) {
+    const publicando = m.status !== 'publicado'
+    try {
+      await materiaisApi.upsert({ id: m.id, status: publicando ? 'publicado' : 'rascunho' })
+      setAviso(publicando ? 'Publicado — já aparece no portal' : 'Despublicado — saiu do portal')
+      await carregar()
+    } catch (e) {
+      setErro((e as Error).message)
+    }
+  }
 
   async function carregar() {
     setErro(null)
@@ -58,7 +85,12 @@ export default function Entregas() {
         <a className="btn btn-secundario" href="/marca/" target="_blank" rel="noreferrer">
           Gerar variações<Icone nome="link-externo" tamanho={14} />
         </a>
+        <Botao variante="primario" onClick={() => setFolha({})}>
+          <Icone nome="entrega" tamanho={16} />Nova entrega
+        </Botao>
       </Cabecalho>
+
+      {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
 
       {materiais === null ? <Esqueleto linhas={4} altura={64} /> : (
         <>
@@ -107,9 +139,11 @@ export default function Entregas() {
           {grupos.length === 0 ? (
             <Vazio icone="entrega" titulo="Nenhuma entrega neste filtro"
               instrucao="Materiais publicados aparecem no portal do cliente."
-              acao={<Botao onClick={() => { setFiltro('todos'); setCliente('') }}>
-                Limpar filtros
-              </Botao>} />
+              acao={materiais.length === 0
+                ? <Botao variante="primario" onClick={() => setFolha({})}>Enviar a primeira</Botao>
+                : <Botao onClick={() => { setFiltro('todos'); setCliente('') }}>
+                  Limpar filtros
+                </Botao>} />
           ) : grupos.map((g) => (
             <Painel key={g.id}
               titulo={<span className="linha">
@@ -133,6 +167,17 @@ export default function Entregas() {
                         </span>
                       </span>
                       <Chip estado={info.chip}>{info.label}</Chip>
+                      {m.status !== 'arquivado' && (
+                        <Botao compacto onClick={() => void alternarPublicacao(m)}>
+                          {m.status === 'publicado' ? 'Despublicar' : 'Publicar'}
+                        </Botao>
+                      )}
+                      <Botao compacto onClick={() => void abrir(m)}>Ver</Botao>
+                      <Botao compacto onClick={() => setFolha({ m })}>Editar</Botao>
+                      <Botao variante="icone" aria-label={`Excluir ${m.titulo}`}
+                        onClick={() => setExcluir(m)}>
+                        <Icone nome="excluir" tamanho={16} />
+                      </Botao>
                     </li>
                   )
                 })}
@@ -140,6 +185,25 @@ export default function Entregas() {
             </Painel>
           ))}
         </>
+      )}
+
+      {folha && (
+        <FolhaEntrega inicial={folha.m} clienteInicial={cliente || undefined}
+          aoFechar={() => setFolha(null)}
+          aoSalvar={(msg) => { setAviso(msg); void carregar() }} />
+      )}
+
+      {excluir && (
+        <FolhaExcluir titulo={`Excluir “${excluir.titulo}”?`}
+          consequencia={excluir.status === 'publicado'
+            ? 'O material some do portal do cliente imediatamente. O arquivo continua no armazenamento.'
+            : 'O registro sai da lista. O arquivo continua no armazenamento.'}
+          aoFechar={() => setExcluir(null)}
+          aoConfirmar={async () => {
+            await materiaisApi.remover(excluir.id)
+            setAviso('Entrega excluída')
+            await carregar()
+          }} />
       )}
     </div>
   )

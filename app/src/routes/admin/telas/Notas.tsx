@@ -107,6 +107,7 @@ export default function Notas() {
                       {n.cliente_id ? nomes.cliente.get(n.cliente_id)?.nome ?? '' : 'Sem cliente'}
                       {n.competencia ? ` · ${n.competencia.slice(0, 7)}` : ''}
                       {n.emitida_em ? ` · emitida em ${dataCurta(n.emitida_em)}` : ''}
+                      {n.arquivo_path ? ' · PDF anexado' : ''}
                     </span>
                   </span>
                   {n.imposto_cents > 0 && (
@@ -168,8 +169,12 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
   const [imposto, setImposto] = useState(inicial ? fmtBRL(inicial.imposto_cents) : '')
   const [competencia, setCompetencia] = useState(
     inicial?.competencia ?? servico?.data_competencia ?? '')
+  // O painel NÃO emite nota — guarda a que já foi emitida fora daqui. Por isso
+  // o PDF é anexo, não resultado: quem emitiu foi o sistema da prefeitura.
+  const [arquivo, setArquivo] = useState<File | null>(null)
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
+  const [enviando, setEnviando] = useState(false)
 
   const recebimentos = useMemo(() => transacoes.filter((t) =>
     t.tipo === 'entrada' && t.contexto === 'empresa' &&
@@ -187,8 +192,18 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
 
     setSalvando(true)
     try {
+      // O binário sobe antes do registro: se falhar, nada é gravado e o botão
+      // volta com o erro. Gravar primeiro deixaria uma nota apontando para um
+      // arquivo que não chegou.
+      let arquivoPath = inicial?.arquivo_path ?? null
+      if (arquivo) {
+        setEnviando(true)
+        arquivoPath = await financas.enviarArquivo(arquivo)
+        setEnviando(false)
+      }
       await financas.salvarNota({
         id: inicial?.id,
+        arquivo_path: arquivoPath,
         cliente_id: clienteId || null,
         servico_id: inicial?.servico_id ?? servicoId ?? null,
         transacao_id: transacaoId || null,
@@ -207,6 +222,16 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
       setErros({ geral: (err as Error).message })
     } finally {
       setSalvando(false)
+      setEnviando(false)
+    }
+  }
+
+  async function verAnexo() {
+    if (!inicial?.arquivo_path) return
+    try {
+      window.open(await financas.urlArquivo(inicial.arquivo_path), '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      setErros({ geral: (err as Error).message })
     }
   }
 
@@ -215,7 +240,7 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
       rodape={<>
         <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
-          style={{ flex: 2 }}>Salvar</Botao>
+          style={{ flex: 2 }}>{enviando ? 'Enviando PDF…' : 'Salvar'}</Botao>
       </>}>
       <div className="pilha" style={{ gap: 'var(--e-7)' }}>
         {servico && <p className="t-sec">Referente ao serviço “{servico.descricao}”.</p>}
@@ -251,6 +276,24 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
           <label htmlFor="nf-comp">Competência</label>
           <input id="nf-comp" type="date" className="campo-caixa" value={competencia}
             onChange={(e) => setCompetencia(e.target.value)} />
+        </div>
+
+        {/* Anexo do PDF que a prefeitura devolveu. Fica no bucket privado
+            eloi-notas; o cliente vê pelo portal, que assina o link na hora. */}
+        <div className="campo">
+          <label htmlFor="nf-arquivo">
+            {inicial?.arquivo_path ? 'Substituir PDF da nota' : 'PDF da nota'}
+          </label>
+          <input id="nf-arquivo" type="file" className="campo-caixa" accept=".pdf,application/pdf"
+            onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
+          {inicial?.arquivo_path && !arquivo && (
+            <span className="t-legenda">
+              Já existe um arquivo anexado.{' '}
+              <button type="button" className="acesso-link" onClick={() => void verAnexo()}>
+                Ver o atual
+              </button>
+            </span>
+          )}
         </div>
 
         {/* Vínculo com a receita: é o que faz "nota emitida" e "dinheiro

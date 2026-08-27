@@ -238,7 +238,41 @@ export const financas = {
   },
 }
 
+/** As três categorias que o Storage aceita como pasta de entrega — o path é
+ *  `<cliente>/entregas/<categoria>/<arquivo>` e a edge recusa qualquer outra.
+ *  `nota_fiscal` e `outro` existem em MaterialCategoria mas não são pastas. */
+export const CATEGORIAS_ENTREGA = ['arquivo', 'apresentacao', 'fonte'] as const
+export type CategoriaEntrega = (typeof CATEGORIAS_ENTREGA)[number]
+
 export const materiaisApi = {
   list: (filtro?: Record<string, unknown>) =>
     call<{ materiais: MaterialRow[] }>('eloi-gestao', 'materiais.list', filtro ? { filtro } : {}).then((r) => r.materiais),
+  upsert: (material: Partial<MaterialRow> & { id?: string }) =>
+    call<{ material: MaterialRow }>('eloi-gestao', 'materiais.upsert', { material }).then((r) => r.material),
+  remover: (id: string) => call<{ ok: true }>('eloi-gestao', 'materiais.delete', { id }),
+
+  /**
+   * Sobe o binário da entrega direto do navegador para o bucket `eloi-entregas`
+   * e devolve o `path` — o mesmo caminho que o portal do cliente vai assinar na
+   * hora do download. O arquivo não passa pela edge (limite de corpo) e a
+   * service_role não vaza. Registrar o material é o passo seguinte, separado:
+   * binário no Storage sem linha na tabela é invisível; linha sem binário é
+   * link quebrado. Nesta ordem, o pior caso é um órfão no bucket.
+   */
+  async enviarEntrega(file: File, cliente_id: string, categoria: CategoriaEntrega): Promise<string> {
+    const { path, signed_url } = await call<{ path: string; signed_url: string }>(
+      'eloi-gestao', 'entregas.upload_url', { cliente_id, categoria, filename: file.name })
+    const res = await fetch(signed_url, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file,
+    })
+    if (!res.ok) throw new Error(`falha no envio (${res.status})`)
+    return path
+  },
+
+  /** Link temporário de leitura no bucket de entregas (privado, 120 s).
+   *  NÃO é `nf.view_url`: aquela assina o bucket `eloi-notas`, que é outro. */
+  urlEntrega: (path: string) =>
+    call<{ url: string }>('eloi-gestao', 'entregas.view_url', { path }).then((r) => r.url),
 }

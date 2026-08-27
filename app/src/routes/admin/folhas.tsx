@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { clientes as clientesApi, financas, servicos as servicosApi } from '../../lib/api'
+import {
+  CATEGORIAS_ENTREGA, clientes as clientesApi, financas, materiaisApi,
+  servicos as servicosApi, type CategoriaEntrega,
+} from '../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../lib/dinheiro'
 import { hojeISO, useFinancas } from '../../lib/financas-store'
 import { saldoAberto } from '../../domain/financeiro'
 import type {
-  ClienteRow, Conta, Contexto, Periodicidade, Recorrencia, ServicoRow, StatusExecucao,
-  TipoConta, TipoMov, Transacao,
+  ClienteRow, Conta, Contexto, MaterialRow, Periodicidade, Recorrencia, ServicoRow,
+  StatusExecucao, TipoConta, TipoMov, Transacao,
 } from '../../lib/tipos'
 import { Botao, Campo, Folha, Icone, Pilula } from '../../ui/componentes'
 import { rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
@@ -474,6 +477,256 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
         </label>
 
         {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
+      </div>
+    </Folha>
+  )
+}
+
+// ── entrega de material ──────────────────────────────────────────────────────
+
+const ROTULO_CATEGORIA: Record<CategoriaEntrega, string> = {
+  arquivo: 'Arquivo',
+  apresentacao: 'Apresentação',
+  fonte: 'Fonte',
+}
+
+/**
+ * Publica um material na área do cliente. Duas escritas em ordem deliberada:
+ * primeiro o binário sobe para o bucket privado, depois a linha em
+ * `eloi_materiais` aponta para ele. Invertido, uma falha de rede deixaria um
+ * card no portal do cliente com botão de baixar que não baixa nada — o pior dos
+ * dois erros possíveis. Nesta ordem, o pior caso é um arquivo órfão no Storage.
+ *
+ * Rascunho é o padrão: o cliente só enxerga o que está `publicado`, e subir não
+ * é a mesma decisão que liberar.
+ */
+export function FolhaEntrega({ inicial, clienteInicial, aoFechar, aoSalvar }: {
+  inicial?: MaterialRow
+  clienteInicial?: string
+  aoFechar: () => void
+  aoSalvar: (msg: string) => void
+}) {
+  const { clientes } = useFinancas()
+  const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? clienteInicial ?? '')
+  const [arquivo, setArquivo] = useState<File | null>(null)
+  const [categoria, setCategoria] = useState<CategoriaEntrega>(
+    (CATEGORIAS_ENTREGA as readonly string[]).includes(inicial?.categoria ?? '')
+      ? inicial!.categoria as CategoriaEntrega : 'arquivo')
+  const [titulo, setTitulo] = useState(inicial?.titulo ?? '')
+  const [descricao, setDescricao] = useState(inicial?.descricao ?? '')
+  const [versao, setVersao] = useState(String(inicial?.versao ?? 1))
+  const [publicar, setPublicar] = useState(inicial?.status === 'publicado')
+  const [erros, setErros] = useState<Record<string, string>>({})
+  const [salvando, setSalvando] = useState(false)
+  const [etapa, setEtapa] = useState<'enviando' | 'registrando' | null>(null)
+
+  // Trocar o binário de um material já publicado mudaria o que o cliente baixa
+  // sem mudar o registro. Editar aqui é só metadado; arquivo novo é entrega nova.
+  const editando = !!inicial
+
+  function escolher(file: File | null) {
+    setArquivo(file)
+    if (file && !titulo.trim()) setTitulo(file.name.replace(/\.[^.]+$/, ''))
+  }
+
+  async function salvar() {
+    const e: Record<string, string> = {}
+    if (!clienteId) e.cliente = 'Escolha o cliente que vai receber'
+    if (!editando && !arquivo) e.arquivo = 'Escolha o arquivo da entrega'
+    if (!titulo.trim()) e.titulo = 'Dê um nome que o cliente entenda'
+    setErros(e)
+    if (Object.keys(e).length) return
+
+    setSalvando(true)
+    try {
+      let path = inicial?.path
+      if (arquivo) {
+        setEtapa('enviando')
+        path = await materiaisApi.enviarEntrega(arquivo, clienteId, categoria)
+      }
+      setEtapa('registrando')
+      await materiaisApi.upsert({
+        id: inicial?.id,
+        cliente_id: clienteId,
+        titulo: titulo.trim(),
+        descricao: descricao.trim() || null,
+        categoria,
+        versao: Number(versao) || 1,
+        status: publicar ? 'publicado' : 'rascunho',
+        path,
+      })
+      aoSalvar(publicar ? 'Entrega publicada — já aparece no portal' : 'Entrega salva como rascunho')
+      aoFechar()
+    } catch (err) {
+      setErros({ geral: (err as Error).message })
+    } finally {
+      setSalvando(false)
+      setEtapa(null)
+    }
+  }
+
+  return (
+    <Folha titulo={editando ? 'Editar entrega' : 'Nova entrega'} aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>
+          {etapa === 'enviando' ? 'Enviando arquivo…'
+            : etapa === 'registrando' ? 'Registrando…'
+              : publicar ? 'Publicar' : 'Salvar rascunho'}
+        </Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+        <div className="campo" data-erro={erros.cliente ? 'true' : undefined}>
+          <label htmlFor="ent-cliente">Cliente</label>
+          <select id="ent-cliente" className="campo-caixa" value={clienteId}
+            disabled={editando}
+            onChange={(e) => setClienteId(e.target.value)}>
+            <option value="">Selecione…</option>
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+          {erros.cliente && <span className="campo-erro" role="alert">{erros.cliente}</span>}
+          {editando && (
+            <span className="t-legenda">
+              O arquivo já está na pasta deste cliente — mover exige nova entrega.
+            </span>
+          )}
+        </div>
+
+        <div>
+          <span className="etiqueta" style={{ color: 'var(--texto-3)' }}>Categoria</span>
+          <div className="linha" style={{ marginTop: 'var(--e-3)' }}>
+            {CATEGORIAS_ENTREGA.map((c) => (
+              <Pilula key={c} ativa={categoria === c} onClick={() => setCategoria(c)}>
+                {ROTULO_CATEGORIA[c]}
+              </Pilula>
+            ))}
+          </div>
+        </div>
+
+        <div className="campo" data-erro={erros.arquivo ? 'true' : undefined}>
+          <label htmlFor="ent-arquivo">{editando ? 'Substituir arquivo' : 'Arquivo'}</label>
+          <input id="ent-arquivo" type="file" className="campo-caixa"
+            onChange={(e) => escolher(e.target.files?.[0] ?? null)} />
+          {erros.arquivo && <span className="campo-erro" role="alert">{erros.arquivo}</span>}
+          {editando && !arquivo && (
+            <span className="t-legenda">Deixe vazio para manter o arquivo atual.</span>
+          )}
+        </div>
+
+        <Campo rotulo="Título" value={titulo} erro={erros.titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          placeholder="Logo principal — versão final" />
+
+        <Campo rotulo="Descrição" value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          placeholder="Opcional — o cliente lê isto embaixo do título" />
+
+        <Campo rotulo="Versão" value={versao} inputMode="numeric"
+          onChange={(e) => setVersao(e.target.value)} placeholder="1" />
+
+        <label className="linha" style={{ gap: 'var(--e-3)', cursor: 'pointer' }}>
+          <input type="checkbox" className="caixa-marcar" checked={publicar}
+            onChange={(e) => setPublicar(e.target.checked)} />
+          <span className="t-ui">Publicar no portal do cliente agora</span>
+        </label>
+        <p className="t-legenda" style={{ marginTop: 'calc(var(--e-5) * -1)' }}>
+          {publicar
+            ? 'O cliente passa a ver e baixar este material assim que você salvar.'
+            : 'Fica guardado só para você até ser publicado.'}
+        </p>
+
+        {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
+      </div>
+    </Folha>
+  )
+}
+
+// ── senha do portal do cliente ───────────────────────────────────────────────
+
+/**
+ * Gera (ou regenera) a senha de acesso do cliente ao portal. A senha aparece
+ * UMA vez: o banco guarda só o hash PBKDF2, então não há tela onde consultá-la
+ * depois — regenerar é a única saída, e isso derruba a senha anterior.
+ */
+export function FolhaSenhaPortal({ cliente, aoFechar, aoSalvar }: {
+  cliente: { id: string; nome: string; portal_senha_gerada_em?: string | null }
+  aoFechar: () => void
+  aoSalvar: (msg: string) => void
+}) {
+  const [senha, setSenha] = useState('')
+  const [erro, setErro] = useState('')
+  const [indo, setIndo] = useState(false)
+  const [copiada, setCopiada] = useState(false)
+  const jaTinha = !!cliente.portal_senha_gerada_em
+
+  async function gerar() {
+    setIndo(true)
+    setErro('')
+    try {
+      setSenha(await clientesApi.gerarSenhaPortal(cliente.id))
+      aoSalvar('Senha gerada')
+    } catch (err) {
+      setErro((err as Error).message)
+    } finally {
+      setIndo(false)
+    }
+  }
+
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(senha)
+      setCopiada(true)
+      setTimeout(() => setCopiada(false), 2000)
+    } catch {
+      setErro('Não consegui copiar — selecione e copie na mão.')
+    }
+  }
+
+  return (
+    <Folha titulo="Acesso do cliente" aoFechar={aoFechar}
+      rodape={senha
+        ? <Botao variante="destaque" onClick={aoFechar} style={{ flex: 1 }}>Terminei de copiar</Botao>
+        : <>
+          <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+          <Botao variante="destaque" onClick={() => void gerar()} carregando={indo}
+            style={{ flex: 2 }}>{jaTinha ? 'Gerar nova senha' : 'Gerar senha'}</Botao>
+        </>}>
+      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+        <div>
+          <p className="t-card">{cliente.nome}</p>
+          <p className="t-sec">
+            {jaTinha
+              ? 'Já existe uma senha ativa. Gerar outra invalida a anterior na hora.'
+              : 'Ainda sem acesso ao portal.'}
+          </p>
+        </div>
+
+        {!senha && (
+          <p className="t-corpo">
+            O cliente entra em <span className="acesso-cod">/portal/</span> com esta
+            senha e vê os materiais publicados, os orçamentos e as notas dele.
+          </p>
+        )}
+
+        {senha && (
+          <>
+            <div className="campo">
+              <label htmlFor="senha-portal">Senha — anote agora</label>
+              <input id="senha-portal" className="campo-caixa" readOnly value={senha}
+                onFocus={(e) => e.currentTarget.select()} />
+            </div>
+            <Botao variante="secundario" onClick={() => void copiar()}>
+              {copiada ? 'Copiada' : 'Copiar senha'}<Icone nome="compartilhar" tamanho={14} />
+            </Botao>
+            <p className="t-legenda" role="status">
+              Esta é a única vez que ela aparece. O banco guarda só o hash — se
+              perder, o caminho é gerar outra.
+            </p>
+          </>
+        )}
+
+        {erro && <p className="campo-erro" role="alert">{erro}</p>}
       </div>
     </Folha>
   )
