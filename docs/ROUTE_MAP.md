@@ -8,7 +8,9 @@ Repositório único do **site completo** (GitHub: `wilkereloig/briefing-eloidesi
 
 | Rota | Arquivo | Descrição |
 |------|---------|-----------|
-| `/` | `index.html` | Página principal (landing) |
+| `/` | `index.html` | **Site do estúdio** — vitrine, projetos, processo e contato (2026-08-07) |
+| `/robots.txt` | `robots.txt` | Vitrine liberada; painéis, portal e entregas bloqueados |
+| `/sitemap.xml` | `sitemap.xml` | Só as três páginas de vitrine |
 | `/briefing/` | `briefing/index.html` | Formulário de briefing de identidade visual (cliente preenche) |
 | `/briefing-ecommerce/` | `briefing-ecommerce/index.html` | Formulário de briefing de e-commerce GENÉRICO — 5 etapas (contato, negócio, loja atual, integrações, visual/verba). Base reutilizável. Grava em `ecommerce_briefings` + email Formspree (`_subject` "[E-COMMERCE]"). |
 | `/briefing-solarium/` | `briefing-solarium/index.html` | Briefing DIRECIONADO p/ cliente Solarium Cosméticos — pré-preenchido com análise do site; foco em posicionamento B2B, decisão de plataforma e gaps de operação. Mesma tabela/painel (campos `ec_*`). |

@@ -7,6 +7,37 @@ Decisões com alternativa formalmente avaliada ficam em `adr/`.
 
 ---
 
+## 2026-08-07 — Throttle do login admin
+
+### D-16 · Contador de login por IP, não global
+`admin_login_seguranca` guardava um contador único e bloqueava o **login**, não o
+atacante. Com a function aberta à internet, isso é um botão público de negação de
+serviço: cinco senhas erradas de qualquer lugar e o dono não entra por 15 minutos.
+
+Trocado por `admin_login_ip_attempts`, com o mesmo desenho que o portal do cliente
+já usava: a tentativa é registrada **antes** da validação (não existe caminho de
+"senha certa" que escape da contagem) e o limite é por IP.
+
+**Por que o limite global continua existindo, mas em 300:** um contador global é a
+única defesa contra força bruta distribuída, então ele fica. Mas em 300 por janela
+de 15 minutos, não em 5 — um atacante precisaria de dezenas de IPs para chegar lá,
+e nesse cenário travar o login é o comportamento certo. Baixar esse número é
+reintroduzir o problema; há um teste em `_tests/throttle.test.ts` guardando isso.
+
+**Sucesso zera o histórico do IP.** Sem isso o throttle puniria o uso normal.
+
+### D-17 · CORS da `admin-auth` por allowlist, sem curinga de preview
+`*` autorizava qualquer página a usar o navegador de quem a visitasse para bater no
+login. A allowlist tem produção e o dev local, e nada mais.
+
+**Sem curinga `*.vercel.app`:** o domínio é compartilhado por todo mundo que publica
+na Vercel, então um padrão como `briefing-eloidesign.*\.vercel\.app` liberaria um
+projeto alheio com nome parecido. Precisar de um preview? A URL exata entra na lista.
+
+**CORS não é a defesa.** O throttle é. Isto só fecha o vetor "navegador de terceiro".
+
+---
+
 ## 2026-08-05 — Auditoria, limpeza e renomeação
 
 ### D-01 · Nome oficial: ELOI Studio

@@ -6,7 +6,7 @@ estar concluída: só conta como **Concluído** se o fluxo completa e o dado per
 Estados usados: `Concluído` · `Funcional com ajustes` · `Em desenvolvimento` ·
 `Planejado` · `Legado` · `Descontinuado`.
 
-Atualizado: 2026-08-05.
+Atualizado: 2026-08-07.
 
 ---
 
@@ -49,9 +49,10 @@ Atualizado: 2026-08-05.
 - **Objetivo:** carteira com faturado/a receber e a ficha consolidada do cliente.
 - **Estado:** Concluído
 - **Telas:** `telas/Clientes.tsx`, `telas/ClienteFicha.tsx`
-- **Endpoints:** `eloi-gestao` (`clientes.list/upsert/detail`)
+- **Endpoints:** `eloi-gestao` (`clientes.list/upsert/detail/gerar_senha_portal`)
 - **Tabelas:** `eloi_clientes`
 - **Permissão:** admin
+- **Fluxos:** cadastro · ficha consolidada · **gerar senha do portal** (2026-08-07) · **enviar material para o cliente** (2026-08-07)
 - **Pendência:** cliente-filho real (`parent_id`) segue adiado; hoje só existe `sub_cliente` como rótulo
 
 ### Notas fiscais
@@ -62,6 +63,8 @@ Atualizado: 2026-08-05.
 - **Tabelas:** `eloi_notas_fiscais`
 - **Permissão:** admin
 - **Regra:** nota `emitida`/`enviada` exige número — validado no servidor
+- **Anexo (2026-08-07):** o PDF da nota já emitida sobe pelo painel (`arquivos.upload_url` → `arquivo_path`). O painel **não emite** nota: guarda a que foi emitida fora dele.
+- **Pendência:** o portal do cliente ainda lê a NF de `eloi_servicos.nf_arquivo_url`, não de `eloi_notas_fiscais.arquivo_path` — anexar aqui não faz a nota aparecer para o cliente
 
 ### Relatórios
 - **Objetivo:** resultado de 12 meses, ranking, previsão e metas.
@@ -90,11 +93,21 @@ Atualizado: 2026-08-05.
 - **Estado:** Concluído · **Tela:** `telas/Config.tsx` · **Permissão:** admin
 - Conta se desativa, não se exclui: a FK de transação é `on delete restrict`.
 
-### Briefings e Entregas (dentro do painel)
-- **Objetivo:** leitura dos convites de briefing e das entregas de marca.
-- **Estado:** Funcional com ajustes — **só leitura**; gerar convite ainda é em `/painel-briefings`
-- **Telas:** `telas/Briefings.tsx`, `telas/Entregas.tsx`
-- **Endpoints:** `briefing-links`, `eloi-gestao` (`materiais.*`)
+### Entregas — área do cliente
+- **Objetivo:** publicar no portal o material que o cliente vai baixar.
+- **Estado:** Concluído (2026-08-07)
+- **Tela:** `telas/Entregas.tsx`, `folhas.tsx` (`FolhaEntrega`)
+- **Endpoints:** `eloi-gestao` — `materiais.list/upsert/delete`, `entregas.upload_url`, `entregas.view_url`
+- **Tabelas:** `eloi_materiais` + bucket privado `eloi-entregas`
+- **Permissão:** admin
+- **Fluxos:** enviar arquivo · publicar/despublicar da própria lista · editar metadados · excluir
+- **Regra:** o binário sobe **antes** do registro. Invertido, uma falha de rede deixaria card no portal do cliente com download quebrado; nesta ordem o pior caso é um órfão no Storage.
+
+### Briefings (dentro do painel)
+- **Objetivo:** leitura dos convites de briefing e vínculo com cliente.
+- **Estado:** Funcional com ajustes — **só leitura e vínculo**; gerar convite e **ler as respostas** ainda é em `/painel-briefings`
+- **Tela:** `telas/Briefings.tsx`
+- **Endpoints:** `briefing-links`, `get-briefings`, `get-ecommerce-briefings`
 
 ### Acesso
 - **Objetivo:** entrar no painel e tratar bem todo jeito de não conseguir.
@@ -133,6 +146,14 @@ Concluído. Protegida pelo gate do portal. É o link que vai por WhatsApp.
 
 ---
 
+### Site do estúdio — `/`
+- **Objetivo:** apresentar o estúdio, mostrar trabalho e levar ao briefing.
+- **Estado:** Funcional com ajustes (2026-08-07)
+- **Arquivo:** `index.html` (uma página, sem build; CSS próprio, não o do painel)
+- **Base:** comp aprovado `eloi-handoff/references/Site Eloi 2026.dc.html`
+- **SEO:** `description`, Open Graph, `canonical`, JSON-LD `ProfessionalService`, `robots.txt`, `sitemap.xml`
+- **Pendência:** fotos dos projetos (hoje é grafismo do KV); a copy dos cards de projeto veio do comp e **não foi conferida**; faltam os números de vitrine além dos 7 anos
+
 ## Ferramentas do estúdio
 
 ### Gerador de variações de logo — `/marca/`
@@ -146,9 +167,9 @@ que **não está vendorizado**. A geração de produção é feita pelo script N
 
 | Rota | Substituída por | Por que ainda existe |
 |---|---|---|
-| `/gestao/` | `/admin/projetos` + `/admin/clientes` | Gera a senha do portal, que o painel novo ainda não faz |
+| `/gestao/` | `/admin/clientes` | **Nada — substituído em 2026-08-07.** Senha do portal, envio de entrega e anexo de NF estão no painel novo. Pronto para sair. |
 | `/painel-orcamentos/` | `/admin/projetos` (parcial) | **Único lugar que cria e edita proposta** |
-| `/painel-briefings/` | `/admin/briefings` (leitura) | Único lugar que gera convite |
+| `/painel-briefings/` | `/admin/briefings` (leitura) | Gera convite **e** é o único lugar que mostra o que o cliente respondeu (`raw`) |
 | `/painel/`, `/painel-ecommerce/` | `/admin/briefings` | Leem os briefings antigos, sem token |
 | `/orcamento-inteligente/` | `/painel-orcamentos/` | Redirect; o link pode ter sido compartilhado |
 

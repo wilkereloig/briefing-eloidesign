@@ -2,6 +2,139 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-07 — O site institucional existe
+
+Até aqui a home era um card com um botão "Preencher Briefing" e nada mais: sem
+projetos, sem serviços, sem processo, sem contato além de um e-mail — e sem
+`description`, Open Graph, `robots.txt` ou `sitemap.xml` em página nenhuma. Quem
+buscava pelo estúdio não achava, e quem recebia o link via um retângulo cinza.
+
+### Adicionado
+
+- **`/` virou o site do estúdio**, implementando o comp aprovado
+  `eloi-handoff/references/Site Eloi 2026.dc.html`: topo com proposta, marcas
+  atendidas, serviços, processo em quatro etapas, projetos, contato e rodapé.
+  KV escuro, Archivo + Manrope, tokens do handoff — **sem carregar o CSS do
+  painel**, que era o que a home antiga fazia.
+- **`robots.txt`** — vitrine liberada; painéis, portal, entregas nominais e
+  briefings feitos sob medida bloqueados. Material de cliente não é resultado de busca.
+- **`sitemap.xml`** com as três páginas de vitrine.
+- **`assets/og-eloi.png`** (1200×630) montada com o wordmark vetorial da marca.
+- **`description` + Open Graph** em `/`, `/briefing/` e `/briefing-ecommerce/`;
+  **`noindex`** nas páginas internas.
+- **JSON-LD `ProfessionalService`** na home, com e-mail, telefone e ano de fundação.
+
+### Decisões de conteúdo
+
+- **Só um número na vitrine** ("7 anos de estúdio"). O comp trazia mais três
+  (40 peças/mês, 12 clientes ativos, 3 entregas/semana) que não foram confirmados —
+  número de vitrine é o tipo de coisa que cliente confere.
+- **Marcas atendidas: F2 Experience e Sweet & Coffee Week.** As outras do comp
+  saíram por falta de confirmação.
+- **Os espaços de imagem são grafismo do KV, não moldura vazia** — proposital até
+  as fotos dos projetos existirem.
+- ⚠️ **A copy dos dois cards de projeto veio do comp e não foi conferida** com o
+  escopo real de cada trabalho. Revisar antes de divulgar o link.
+
+### Acessibilidade
+
+- Alvos de toque ≥ 44 px (a marca do topo e o link de seção precisaram de ajuste),
+  skip link, foco visível, `prefers-reduced-motion`, hierarquia de headings sem
+  saltos. Único alvo abaixo de 44 px é o link "portal" dentro de uma frase —
+  exceção prevista para link em bloco de texto.
+
+## 2026-08-07 — A área do cliente passa a ser operável pelo painel novo
+
+Três ações que só existiam no painel estático `/gestao` agora estão no `/admin`.
+Até aqui, atender um cliente do começo ao fim exigia dois painéis.
+
+### Adicionado
+
+- **Gerar a senha do portal na ficha do cliente.** Painel "Área do cliente", com o
+  estado do acesso e o botão. A senha aparece uma vez, com botão de copiar — o
+  banco guarda só o hash PBKDF2, então não há onde consultá-la depois.
+- **Enviar material para o cliente pelo painel** (`Entregas` → "Nova entrega", ou
+  direto da ficha do cliente). Arquivo, categoria, título, versão e a decisão de
+  publicar. **Rascunho é o padrão:** subir não é a mesma decisão que liberar.
+- **Publicar e despublicar da própria lista de entregas**, sem abrir a folha — é a
+  ação mais repetida no dia de entrega.
+- **Anexar o PDF da nota fiscal** na folha de NF, com substituição e link para ver
+  o arquivo atual. O painel continua **não emitindo** nota: guarda a que já foi
+  emitida fora dele.
+- **`entregas.view_url` na edge `eloi-gestao`** — leitura assinada do bucket
+  `eloi-entregas` pelo lado admin, que não existia. (O portal já tinha a dele, com
+  checagem de dono.)
+
+### Corrigido no mesmo dia (revisão adversarial do que acabou de ser escrito)
+
+- **Publicar uma entrega apagava a descrição do material e o vínculo com o
+  serviço.** `materiais.upsert` montava o UPDATE com o objeto inteiro, então
+  campo ausente no corpo virava campo zerado no banco — e o botão "Publicar" da
+  lista manda só `{id, status}`. A descrição apagada é a que o cliente lê no
+  portal. O UPDATE agora é patch parcial: só entra a chave que veio.
+- **"Substituir arquivo" não substituía nada.** O binário novo subia, a tela
+  dizia "salvo", `path` não estava no UPDATE e o cliente seguia baixando o
+  arquivo antigo — sem erro em lugar nenhum, que é o pior tipo de falha.
+- **Despublicar não limpava `published_at`**, e a linha ficava "Rascunho ·
+  publicado em 07/08".
+- **Botão "Ver" na lista de entregas.** `entregas.view_url` tinha sido criada
+  sem nenhum consumidor: dava para publicar um arquivo para o cliente e não ter
+  como conferir o que foi publicado, a não ser entrando no portal dele.
+- **Descrição vazia grava `NULL`**, não string vazia.
+
+### Nota
+
+- `/gestao` deixou de ter função exclusiva e está pronto para sair. **`/painel-orcamentos`,
+  `/painel-briefings`, `/painel` e `/painel-ecommerce` continuam necessários**: criar
+  proposta, gerar convite de briefing e ler o que o cliente respondeu ainda não
+  existem no `/admin`.
+
+## 2026-08-07 — Login do painel deixa de ser derrubável de fora
+
+### Corrigido
+
+- **Qualquer pessoa na internet conseguia trancar o painel por 15 minutos.** O
+  throttle do login admin contava as falhas numa linha única (`admin_login_seguranca`)
+  e a 5ª bloqueava o login inteiro — não o autor das tentativas. Como a edge
+  `admin-auth` responde a qualquer requisição e o CORS era `*`, bastavam cinco
+  POSTs com senha errada, de qualquer lugar, para o dono ficar de fora. E de novo
+  a cada cinco POSTs.
+  Agora a contagem é **por IP** (`admin_login_ip_attempts`, mesmo desenho de
+  `portal_login_ip_attempts`): 5 tentativas por IP em 15 minutos. Um limite global
+  de 300 por janela ficou só como rede de segurança contra abuso distribuído —
+  folgado o bastante para nunca pegar uso normal.
+- **Login bem-sucedido zera as tentativas daquele IP.** Sem isso, um dia de
+  trabalho normal (outro navegador, sessão expirada, celular) empurraria o dono
+  para o próprio limite.
+- **Senha do admin comparada em tempo constante.** A comparação com `!==` saía no
+  primeiro byte diferente.
+
+### Mudado
+
+- **CORS da `admin-auth` deixou de ser `*`.** Só produção e o dev local
+  (`localhost:5207`) recebem `Access-Control-Allow-Origin`. Não protege contra
+  `curl` — nada em CORS protege — mas tira do ar o cenário de uma página qualquer
+  usar o navegador de terceiros para martelar o login. Sem curinga para preview da
+  Vercel de propósito: `.vercel.app` é espaço compartilhado.
+
+### Corrigido no mesmo dia (revisão adversarial)
+
+- **O throttle falhava aberto.** `count` nulo — tabela inexistente porque a
+  migration não foi aplicada, banco fora do ar, RLS alterada — era lido como
+  "zero tentativas" e o login passava. Ou seja: fazer o deploy da function sem
+  rodar o SQL deixaria o painel sem proteção alguma, funcionando normalmente,
+  sem sinal para ninguém. Agora responde **503** e não deixa tentar.
+- **O IP vinha do lado errado do `X-Forwarded-For`.** O primeiro elemento é o
+  que o cliente mandou — texto livre que um atacante rotaciona para nunca somar
+  cinco tentativas no mesmo "IP". Passou a usar o último, escrito pela borda.
+  (`portal-cliente.ts` tem o mesmo problema; fica para outro commit.)
+
+### Obsoleto
+
+- **`admin_login_seguranca`** não é mais lida nem escrita por nenhuma function.
+  Tabela mantida com `comment` explicando a condição de saída (drop depois de
+  2026-09).
+
 ## 2026-08-05 — Auditoria, limpeza e renomeação para ELOI Studio
 
 ### Renomeado

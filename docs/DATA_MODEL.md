@@ -127,7 +127,8 @@ para poderem ser adotadas por um cliente depois do fato.
 | Tabela | Para quê |
 |---|---|
 | `admin_sessions` | Sessão do admin, 12 h deslizante |
-| `admin_login_seguranca` | Contador de tentativas; 5 erros travam 15 min |
+| `admin_login_ip_attempts` | Throttle por IP no login admin; 5 por IP / 15 min |
+| `admin_login_seguranca` | **Obsoleta (2026-08-07)** — contador global, ninguém lê mais |
 | `portal_sessions` | Sessão do cliente no portal (`CASCADE` do cliente) |
 | `portal_login_ip_attempts` | Throttle por IP no portal |
 
