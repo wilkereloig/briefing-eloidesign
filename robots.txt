@@ -1,0 +1,36 @@
+# ELOI Studio — o site é a vitrine; o resto é ferramenta de trabalho.
+User-agent: *
+Allow: /$
+Allow: /briefing/
+Allow: /briefing-ecommerce/
+
+# Painéis internos, portal do cliente e entregas nominais não são vitrine:
+# indexar isso põe material de cliente no resultado de busca.
+Disallow: /admin
+Disallow: /admin/
+Disallow: /portal/
+Disallow: /gestao/
+Disallow: /painel/
+Disallow: /painel-briefings/
+Disallow: /painel-orcamentos/
+Disallow: /painel-ecommerce/
+Disallow: /orcamento/
+Disallow: /orcamento-inteligente/
+Disallow: /orcamento-precampanha/
+Disallow: /entregas-marca/
+Disallow: /marca/
+# Briefings feitos sob medida para um cliente — o link é dele, não do buscador.
+Disallow: /briefing-solarium/
+Disallow: /briefing-guia-viver-bem/
+
+# `vercel.json` publica o repositório inteiro (outputDirectory "."), então o
+# código-fonte, as migrações e a documentação também são servidos. Não são
+# vitrine e não têm por que estar num resultado de busca.
+Disallow: /docs/
+Disallow: /database/
+Disallow: /edge-functions/
+Disallow: /scripts/
+Disallow: /eloi-handoff/
+Disallow: /app/
+
+Sitemap: https://briefing-eloidesign.vercel.app/sitemap.xml

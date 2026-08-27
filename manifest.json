@@ -1,14 +1,14 @@
 {
   "name": "ELOI Studio",
   "short_name": "ELOI",
-  "description": "Briefings, orçamentos e entregas de marca da ELOI Studio.",
+  "description": "Estúdio de design: identidade visual, sites e campanhas. Briefings, orçamentos e entregas de marca.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#F7F4FB",
-  "theme_color": "#F7F4FB",
+  "background_color": "#08011A",
+  "theme_color": "#08011A",
   "icons": [
     {
       "src": "/assets/icons/icon-192.png",
@@ -24,8 +24,20 @@
     }
   ],
   "shortcuts": [
-    { "name": "Painel", "short_name": "Painel", "url": "/admin/" },
-    { "name": "Gestão", "short_name": "Gestão", "url": "/gestao/" },
-    { "name": "Briefings", "short_name": "Briefings", "url": "/painel-briefings/" }
+    {
+      "name": "Painel",
+      "short_name": "Painel",
+      "url": "/admin/"
+    },
+    {
+      "name": "Gestão",
+      "short_name": "Gestão",
+      "url": "/gestao/"
+    },
+    {
+      "name": "Briefings",
+      "short_name": "Briefings",
+      "url": "/painel-briefings/"
+    }
   ]
 }

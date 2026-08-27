@@ -1,257 +1,493 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <meta name="theme-color" content="#F7F4FB">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="ELOI">
-  <title>ELOI Studio — Briefing de Projeto</title>
-  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
-  <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ELOI Studio — identidade visual, sites e campanhas</title>
+<meta name="description" content="Estúdio de design em Natal/RN. Identidade visual, sites e campanhas para negócios que precisam ser lembrados — do briefing à entrega, com quem desenha.">
+<link rel="canonical" href="https://briefing-eloidesign.vercel.app/">
 
-    :root {
-      --c950: #10002B;
-      --c900: #240046;
-      --c800: #3C096C;
-      --c700: #5A189A;
-      --c600: #7B2CBF;
-      --c500: #9D4EDD;
-      --c300: #C77DFF;
-      --c100: #E0AAFF;
-      --white: #FFFFFF;
-      --font: 'carbona-variable', sans-serif;
-    }
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ELOI Studio">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="ELOI Studio — identidade visual, sites e campanhas">
+<meta property="og:description" content="Marcas que ficam de pé quando as luzes apagam. Do briefing à entrega, num processo só.">
+<meta property="og:url" content="https://briefing-eloidesign.vercel.app/">
+<meta property="og:image" content="https://briefing-eloidesign.vercel.app/assets/og-eloi.png">
+<meta name="twitter:card" content="summary_large_image">
 
-    body {
-      font-family: var(--font);
-      background:var(--bg);
-      color:var(--ink);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      line-height: 1.6;
-      position: relative;
-      overflow: hidden;
-    }
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#08011A">
+<meta name="apple-mobile-web-app-title" content="ELOI">
 
-    /* ── AURORA ── manchas de luz em movimento */
-    .aurora {
-      position: fixed;
-      inset: -20%;
-      z-index: 0;
-      pointer-events: none;
-      filter: blur(90px);
-    }
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      
-      opacity: 0.30;
-    }
-    .blob.b1 {
-      width: 38%; height: 45%;
-      left: 6%; top: 4%;
-      background: radial-gradient(circle at 30% 30%, #9D4EDD, transparent 70%);
-      animation: drift1 18s ease-in-out infinite;
-    }
-    .blob.b2 {
-      width: 42%; height: 50%;
-      right: 4%; top: -6%;
-      background: radial-gradient(circle at 70% 40%, #7B2CBF, transparent 70%);
-      animation: drift2 21s ease-in-out infinite;
-    }
-    .blob.b3 {
-      width: 34%; height: 42%;
-      left: 32%; bottom: 2%;
-      background: radial-gradient(circle at 50% 50%, #C77DFF, transparent 70%);
-      animation: drift3 15s ease-in-out infinite;
-    }
-    .blob.b4 {
-      width: 30%; height: 40%;
-      left: -4%; bottom: 0%;
-      background: radial-gradient(circle at 40% 60%, #5A189A, transparent 70%);
-      animation: drift1 24s ease-in-out infinite reverse;
-    }
-    @keyframes drift1 {
-      0%,100% { transform: translate(0,0) scale(1); }
-      33%     { transform: translate(28%, 16%) scale(1.25); }
-      66%     { transform: translate(-16%, 24%) scale(0.85); }
-    }
-    @keyframes drift2 {
-      0%,100% { transform: translate(0,0) scale(1); }
-      40%     { transform: translate(-24%, 20%) scale(1.2); }
-      75%     { transform: translate(14%, -10%) scale(0.9); }
-    }
-    @keyframes drift3 {
-      0%,100% { transform: translate(0,0) scale(1); }
-      50%     { transform: translate(20%, -22%) scale(1.3); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .blob { animation: none !important; }
-    }
-    @keyframes glowPulse {
-      0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
-      50%      { opacity: 1; transform: translateX(-50%) scale(1.1); }
-    }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap">
 
-    /* Um eixo a esquerda: logo, titulo, texto, botao e rodape na mesma linha
-       vertical. Raio pequeno e filete no lugar de espaco vago — a wordmark e
-       blocada e sem curva, o container acompanha em vez de contradizer. */
-    .card {
-      position: relative;
-      z-index: 1;
-      max-width: 520px;
-      width: 100%;
-      text-align: left;
-      background: var(--surface);
-      border:1px solid var(--line);
-      border-radius: var(--r-sm);
-      padding: 48px 44px;
-      box-shadow: var(--sh-3);
-    }
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "ELOI Studio",
+  "description": "Estúdio de design: identidade visual, sites e campanhas.",
+  "url": "https://briefing-eloidesign.vercel.app/",
+  "email": "contato@eloidesign.com.br",
+  "telephone": "+5584991150600",
+  "foundingDate": "2019",
+  "areaServed": "BR",
+  "founder": { "@type": "Person", "name": "Wilke Eloi" }
+}
+</script>
 
-    .logo {
-      display: block;
-      margin-bottom: 26px;
-      opacity: 0;
-      animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.1s forwards;
-    }
-    .logo img { height: clamp(72px, 13vw, 96px); width: auto; display: block; }
+<style>
+/* Tokens do KV aprovado (eloi-handoff/design-tokens/variables.css). Só o
+   subconjunto que esta página usa — o site não carrega o CSS do painel. */
+:root{
+  --pagina:#08011A; --chao:#0D0225; --chao-2:#170B33; --chao-3:#20114A;
+  --roxo:#7D2AE8; --roxo-hover:#6A1FD0; --lima:#DFF806; --coral:#FD4400;
+  --lilas:#EEB4E7; --azul:#5B7CFD; --tinta:#1B0647;
+  --texto:#FDD5D3; --texto-2:rgba(253,213,211,.75); --texto-3:rgba(253,213,211,.55);
+  --linha:rgba(253,213,211,.12); --linha-forte:rgba(253,213,211,.28);
+  --fonte-titulo:'Archivo',system-ui,sans-serif;
+  --fonte-corpo:'Manrope',system-ui,sans-serif;
+  --acento:var(--lima);
+  --largura:1240px;
+  --alvo:44px; /* alvo de toque mínimo — regra do sistema */
+}
 
-    .title {
-      font-size: clamp(1.5rem, 5vw, 2.125rem);
-      font-variation-settings: 'wght' 600;
-      letter-spacing: -0.02em;
-      line-height: 1.15;
-      margin-bottom: 14px;
-      padding-top: 24px;
-      border-top: 1px solid var(--line);
-      opacity: 0;
-      animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.25s forwards;
-    }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *{animation:none!important;transition:none!important}
+}
+body{
+  background:var(--pagina); color:var(--texto);
+  font-family:var(--fonte-corpo); font-size:16px; line-height:1.6;
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+img,svg{display:block;max-width:100%}
+a{color:var(--acento);text-decoration:none}
+:focus-visible{outline:3px solid var(--acento);outline-offset:3px;border-radius:4px}
 
-    /* Medida em ch: o limite e a linha legivel (~52 caracteres), nao um px
-       arbitrario — ele acompanha a fonte em vez de brigar com ela. */
-    .subtitle {
-      font-size: 1.0625rem;
-      font-variation-settings: 'wght' 400;
-      color:var(--ink-2);
-      max-width: 52ch;
-      margin: 0 0 32px;
-      opacity: 0;
-      animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.4s forwards;
-    }
+.faixa{max-width:var(--largura);margin:0 auto;padding-inline:40px}
+.pular{position:absolute;left:-9999px;top:0;z-index:100;background:var(--acento);
+  color:var(--tinta);padding:12px 20px;font-weight:700;border-radius:0 0 10px 0}
+.pular:focus{left:0}
 
-    /* Barra, nao pilula: largura total, rotulo a esquerda, seta empurrada pelo
-       space-between. Mesmo gesto do botao de login — as duas portas combinam. */
-    .cta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      background: var(--brand);
-      color: #fff;
-      text-decoration: none;
-      font-size: 1rem;
-      font-variation-settings: 'wght' 600;
-      letter-spacing: 0.01em;
-      padding: 17px 22px;
-      border-radius: var(--r-sm);
-      transition: background 0.2s, box-shadow 0.2s;
-      opacity: 0;
-      animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.55s forwards;
-    }
-    .cta:hover {
-      background: var(--brand-hover);
-      box-shadow: 0 6px 18px rgba(90,24,154,.22);
-    }
-    .cta svg { width: 18px; height: 18px; flex: 0 0 auto; transition: transform 0.2s; }
-    .cta:hover svg { transform: translateX(4px); }
+/* marca ─ nunca centralizada, sempre à esquerda (regra do sistema visual) */
+.marca{display:inline-flex;align-items:baseline;font-family:var(--fonte-titulo);
+  line-height:1.24;white-space:nowrap;font-size:21px}
+/* a marca do topo é link: precisa do alvo de 44px como qualquer outro */
+.topo .marca{min-height:var(--alvo);align-items:center;padding-right:8px}
+.marca b{font-variation-settings:'wdth' 72,'wght' 700;letter-spacing:-.02em;
+  color:var(--texto);font-weight:400}
+.marca i{font-variation-settings:'wdth' 72,'wght' 700;color:var(--acento);font-style:normal}
 
-    .meta {
-      margin-top: 32px;
-      padding-top: 20px;
-      border-top: 1px solid var(--line);
-      font-size: 0.8125rem;
-      color:var(--muted);
-      opacity: 0;
-      animation: fadeUp 0.8s cubic-bezier(0.2,0.8,0.2,1) 0.7s forwards;
-    }
-    .meta a { color:var(--muted); text-decoration: none; border-bottom: 1px solid var(--line-strong); transition: border-color 0.2s, color 0.2s; }
-    .meta a:hover { border-color:var(--brand); color:var(--brand); }
+/* navegação */
+.topo{position:sticky;top:0;z-index:20;background:rgba(8,1,26,.92);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--linha)}
+.topo .faixa{height:74px;display:flex;align-items:center;justify-content:space-between;gap:32px}
+.menu{display:flex;align-items:center;gap:8px}
+.menu a{font-size:14px;font-weight:600;color:var(--texto-2);
+  padding:10px 12px;min-height:var(--alvo);display:inline-flex;align-items:center;border-radius:8px}
+.menu a:hover{color:var(--texto);background:var(--chao-2)}
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:var(--alvo);padding:15px 26px;border-radius:10px;font-size:15px;
+  font-weight:600;font-family:var(--fonte-corpo);border:1px solid transparent;
+  transition:background .2s,border-color .2s,color .2s,opacity .2s;cursor:pointer}
+.btn-acento{background:var(--acento);color:var(--tinta);font-weight:700}
+.btn-acento:hover{opacity:.88;color:var(--tinta)}
+.btn-roxo{background:var(--roxo);color:#fff}
+.btn-roxo:hover{background:var(--roxo-hover);color:#fff}
+.btn-linha{border-color:var(--linha-forte);color:var(--texto)}
+.btn-linha:hover{border-color:var(--acento);color:var(--acento)}
+.btn-compacto{padding:11px 20px;font-size:14px}
 
-    /* No celular a tela E o card: moldura flutuante e gesto de desktop.
-       Borda, raio, sombra e goteira saem; safe-area entra. */
-    @media (max-width: 600px) {
-      body { padding: 0; align-items: stretch; }
-      .card {
-        max-width: none;
-        min-height: 100dvh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
-        padding: max(env(safe-area-inset-top), 28px) 24px max(env(safe-area-inset-bottom), 28px);
-      }
-      /* cadeado de admin e fixo no canto: reserva a faixa dele pro rodape
-         nao passar por baixo */
-      .meta { margin-top: auto; padding-top: 28px; padding-right: 46px; }
-      .admin-lock { bottom: max(env(safe-area-inset-bottom), 16px); }
-    }
-  </style>
+/* topo da página */
+.capa{display:grid;grid-template-columns:7fr 5fr;gap:56px;align-items:center;
+  padding-block:72px 88px}
+.capa-texto{display:flex;flex-direction:column;gap:26px;min-width:0}
+.etiqueta{font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--acento)}
+.etiqueta-fraca{color:var(--texto-3)}
+h1{font-family:var(--fonte-titulo);font-variation-settings:'wdth' 100,'wght' 700;
+  font-size:clamp(38px,6vw,66px);line-height:1.02;letter-spacing:-.03em;
+  font-weight:400;text-wrap:pretty}
+h2{font-family:var(--fonte-titulo);font-variation-settings:'wdth' 100,'wght' 600;
+  font-size:clamp(28px,4vw,44px);line-height:1.08;letter-spacing:-.02em;
+  font-weight:400;text-wrap:pretty}
+h3{font-family:var(--fonte-titulo);font-variation-settings:'wdth' 100,'wght' 600;
+  font-weight:400;letter-spacing:-.01em}
+.chamada{font-size:17px;line-height:1.6;max-width:44ch;color:var(--texto-2);text-wrap:pretty}
+.acoes{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:6px}
+
+/* grafismo do KV: barras de cor — o mesmo gesto da tela de acesso do painel */
+.barras{display:flex;gap:4px;padding-top:14px;max-width:420px}
+.barras span{height:6px}
+
+/* espaço de imagem: bloco do KV, não moldura vazia. Quando a foto chegar,
+   troque o .quadro inteiro por <img>. */
+.quadro{position:relative;border-radius:18px;overflow:hidden;background:var(--chao-2);
+  display:grid;place-items:center;isolation:isolate}
+.quadro::before{content:'';position:absolute;inset:0;z-index:-1;
+  background:
+    radial-gradient(circle at 22% 18%,rgba(125,42,232,.55),transparent 58%),
+    radial-gradient(circle at 82% 78%,rgba(91,124,253,.35),transparent 55%)}
+.quadro-capa{aspect-ratio:4/5}
+.quadro-projeto{aspect-ratio:4/3;border-radius:14px}
+.quadro-grafismo{display:flex;gap:6px;transform:rotate(-8deg)}
+.quadro-grafismo i{display:block;width:26px;border-radius:3px}
+.quadro-projeto .quadro-grafismo i{width:18px}
+
+/* faixa de clientes */
+.clientes{border-top:1px solid var(--linha);border-bottom:1px solid var(--linha)}
+.clientes .faixa{padding-block:26px;display:flex;align-items:center;
+  justify-content:space-between;gap:32px;flex-wrap:wrap}
+.clientes ul{display:flex;align-items:center;gap:36px;flex-wrap:wrap;list-style:none}
+.clientes li{font-family:var(--fonte-titulo);font-variation-settings:'wdth' 72,'wght' 700;
+  font-size:16px;letter-spacing:.04em;color:rgba(253,213,211,.62)}
+
+/* seções */
+section[id]{scroll-margin-top:90px}
+.secao{padding-top:96px;display:flex;flex-direction:column;gap:36px}
+.secao-topo{display:flex;align-items:flex-end;justify-content:space-between;
+  gap:40px;flex-wrap:wrap}
+.secao-topo-linha{border-bottom:1px solid var(--linha);padding-bottom:18px}
+
+/* serviços */
+.servicos{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.cartao{border-radius:16px;background:var(--chao-2);padding:32px;
+  display:flex;flex-direction:column;justify-content:space-between;gap:24px;
+  min-height:162px;transition:background .2s}
+.cartao:hover{background:var(--chao-3)}
+.cartao-destaque{grid-row:span 2;background:var(--roxo);padding:36px;min-height:340px}
+.cartao-destaque:hover{background:var(--roxo)}
+.cartao-destaque h3,.cartao-destaque p{color:#fff}
+.cartao-destaque p{color:rgba(255,255,255,.82)}
+.cartao-destaque .etiqueta{color:rgba(255,255,255,.72)}
+.cartao h3{font-size:22px}
+.cartao-destaque h3{font-size:30px;line-height:1.1}
+.cartao p{font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)}
+.cartao-destaque p{font-size:15px;line-height:1.6;max-width:36ch}
+.cartao-corpo{display:flex;flex-direction:column;gap:8px}
+.cartao-destaque .cartao-corpo{gap:12px}
+
+/* processo */
+.etapas{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.etapa{border-radius:14px;background:var(--chao-2);padding:28px;
+  display:flex;flex-direction:column;gap:18px}
+.etapa h3{font-size:20px}
+.etapa p{font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)}
+.etapa-final{background:var(--acento)}
+.etapa-final h3{color:var(--tinta)}
+.etapa-final p{color:rgba(27,6,71,.78)}
+.etapa-final .etiqueta{color:rgba(27,6,71,.62)}
+
+/* projetos */
+.projetos{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.projeto{display:flex;flex-direction:column;gap:16px}
+.projeto-corpo{display:flex;flex-direction:column;gap:8px}
+.projeto h3{font-size:22px}
+.projeto p{font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)}
+.tags{display:flex;align-items:center;gap:8px}
+.tag{padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;color:#fff}
+.ano{font-size:12px;color:var(--texto-3)}
+.link-secao{font-size:14px;font-weight:600;min-height:var(--alvo);
+  display:inline-flex;align-items:center;padding:0 10px;margin-right:-10px;border-radius:8px}
+.link-secao:hover{background:var(--chao-2)}
+
+/* número único */
+.numero{border-radius:18px;background:var(--tinta);padding:48px;
+  display:flex;align-items:baseline;gap:20px;flex-wrap:wrap}
+.numero b{font-family:var(--fonte-titulo);font-variation-settings:'wdth' 100,'wght' 700;
+  font-size:clamp(44px,7vw,52px);line-height:1;letter-spacing:-.03em;
+  color:var(--acento);font-weight:400}
+.numero span{font-size:16px;line-height:1.5;color:var(--texto-2);max-width:52ch;flex:1;min-width:260px}
+
+/* contato */
+.contato{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.contato-principal{border-radius:18px;background:var(--chao-2);padding:48px;
+  display:flex;flex-direction:column;gap:22px}
+.contato-principal h2{max-width:22ch;font-variation-settings:'wdth' 100,'wght' 700}
+.contato-lado{border-radius:18px;background:var(--chao);border:1px solid var(--linha);
+  padding:40px;display:flex;flex-direction:column;gap:26px}
+.canais{display:flex;flex-direction:column;gap:6px;list-style:none}
+.canais a,.canais span{display:flex;align-items:center;gap:14px;min-height:var(--alvo);
+  font-size:15px;font-weight:600;color:var(--texto);padding:6px 0;border-radius:8px}
+.canais a:hover{color:var(--acento)}
+.canais svg{width:24px;height:24px;flex:none}
+.nota-portal{margin-top:auto;font-size:13px;line-height:1.55;color:var(--texto-3)}
+.nota-portal a{font-weight:700}
+
+/* rodapé */
+footer{margin-top:96px;border-top:1px solid var(--linha)}
+footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
+  justify-content:space-between;gap:32px;flex-wrap:wrap}
+.rodape-marca{display:flex;flex-direction:column;gap:14px}
+.rodape-marca .marca{font-size:30px}
+.rodape-links{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rodape-links a{font-size:13px;font-weight:600;color:rgba(253,213,211,.6);
+  min-height:var(--alvo);display:inline-flex;align-items:center;padding:0 10px;border-radius:8px}
+.rodape-links a:hover{color:var(--texto)}
+.copy{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(253,213,211,.4);padding-left:10px}
+
+/* mobile */
+@media (max-width:900px){
+  .capa{grid-template-columns:1fr;gap:36px;padding-block:48px 64px}
+  .quadro-capa{aspect-ratio:16/10}
+  .servicos,.contato{grid-template-columns:1fr}
+  .cartao-destaque{grid-row:auto;min-height:260px}
+}
+@media (max-width:720px){
+  .faixa{padding-inline:20px}
+  .topo .faixa{height:66px;gap:12px}
+  /* No toque a navegação por âncora vira ruído: o polegar rola. Fica só a
+     ação — quem quer o resto encontra rolando, que é o gesto natural aqui. */
+  .menu a:not(.btn){display:none}
+  /* o rótulo longo espremia o botão contra a marca; no toque a palavra que
+     importa é a ação, e a página inteira repete o convite mais abaixo */
+  .menu .btn{padding:11px 16px}
+  .menu .btn .longo{display:none}
+  .secao{padding-top:64px}
+  .contato-principal,.contato-lado,.numero{padding:32px}
+  footer{margin-top:64px}
+}
+</style>
 </head>
 <body>
-  <div class="aurora">
-    <span class="blob b1"></span>
-    <span class="blob b2"></span>
-    <span class="blob b3"></span>
-    <span class="blob b4"></span>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+  <div class="faixa">
+    <a href="/" class="marca" aria-label="ELOI Studio — início"><b>ELOI</b><i>Studio</i></a>
+    <nav class="menu" aria-label="Principal">
+      <a href="#projetos">Projetos</a>
+      <a href="#servicos">Serviços</a>
+      <a href="#processo">Processo</a>
+      <a href="#contato">Contato</a>
+      <a href="/briefing/" class="btn btn-acento btn-compacto">Começar<span class="longo">&nbsp;projeto</span></a>
+    </nav>
   </div>
-  <div class="card">
-    <div class="logo">
-      <img src="/assets/eloi-admin/wordmark.svg" alt="ELOI Studio">
+</header>
+
+<main id="conteudo">
+
+  <section class="faixa capa">
+    <div class="capa-texto">
+      <span class="etiqueta">Estúdio de design · desde 2019</span>
+      <h1>Marcas que ficam de pé quando as luzes apagam.</h1>
+      <p class="chamada">Identidade, sites e campanhas para negócios que precisam ser
+        lembrados. Do briefing à entrega, num processo só.</p>
+      <div class="acoes">
+        <a href="/briefing/" class="btn btn-roxo">Começar um projeto</a>
+        <a href="#projetos" class="btn btn-linha">Ver projetos</a>
+      </div>
+      <div class="barras" aria-hidden="true">
+        <span style="flex:2.4;background:var(--roxo)"></span>
+        <span style="flex:1;background:var(--coral)"></span>
+        <span style="flex:1.5;background:var(--lima)"></span>
+        <span style="flex:1;background:var(--azul)"></span>
+        <span style="flex:.6;background:var(--lilas)"></span>
+      </div>
     </div>
+    <div class="quadro quadro-capa" role="img" aria-label="Grafismo da marca ELOI">
+      <span class="quadro-grafismo" aria-hidden="true">
+        <i style="height:120px;background:var(--lima)"></i>
+        <i style="height:180px;background:var(--coral)"></i>
+        <i style="height:90px;background:var(--lilas)"></i>
+        <i style="height:150px;background:var(--azul)"></i>
+      </span>
+    </div>
+  </section>
 
-    <h1 class="title">Vamos criar sua marca</h1>
-    <p class="subtitle">
-      Preencha nosso briefing de identidade visual. Leva poucos minutos e nos ajuda a entender o seu projeto a fundo.
-    </p>
+  <section class="clientes">
+    <div class="faixa">
+      <span class="etiqueta etiqueta-fraca">Marcas atendidas</span>
+      <ul>
+        <li>F2 EXPERIENCE</li>
+        <li>SWEET &amp; COFFEE WEEK</li>
+      </ul>
+    </div>
+  </section>
 
-    <a href="/briefing/" class="cta">
-      Preencher Briefing
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    </a>
+  <section id="servicos" class="faixa secao">
+    <div class="secao-topo">
+      <h2 style="max-width:20ch">Um estúdio, o projeto inteiro.</h2>
+      <p class="chamada" style="max-width:48ch;font-size:16px">Do primeiro briefing ao
+        arquivo final, sem terceirizar o que importa. Você fala com quem desenha.</p>
+    </div>
+    <div class="servicos">
+      <article class="cartao cartao-destaque">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="miter" style="width:34px;height:34px" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><rect x="3" y="3" width="7" height="7" fill="var(--lima)" stroke="none"/></svg>
+        <div class="cartao-corpo">
+          <span class="etiqueta">01</span>
+          <h3>Identidade visual</h3>
+          <p>Logo, paleta, tipografia e as regras que mantêm a marca de pé em qualquer aplicação.</p>
+        </div>
+      </article>
+      <article class="cartao">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:30px;height:30px" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><path d="M9 3v18"/><rect x="12" y="7" width="6" height="2.5" fill="var(--lima)" stroke="none"/><path d="M12 13h6M12 17h4"/></svg>
+        <div class="cartao-corpo">
+          <h3>Sites &amp; sistemas</h3>
+          <p>Do institucional ao painel interno, rápido e sob medida.</p>
+        </div>
+      </article>
+      <article class="cartao">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:30px;height:30px" aria-hidden="true"><path d="M3 21V3"/><path d="M3 4h14v7H3"/><rect x="3" y="14" width="9" height="5" fill="var(--lima)" stroke="none"/></svg>
+        <div class="cartao-corpo">
+          <h3>Campanhas</h3>
+          <p>Peças que convertem, prontas pra rodar.</p>
+        </div>
+      </article>
+    </div>
+  </section>
 
-    <p class="meta">
-      ELOI Studio · <a href="mailto:contato@eloidesign.com.br">contato@eloidesign.com.br</a>
-    </p>
+  <section id="processo" class="faixa secao">
+    <div class="secao-topo secao-topo-linha">
+      <h2 style="font-size:clamp(26px,3.4vw,38px)">Quatro etapas, nenhuma surpresa.</h2>
+      <span style="font-size:13px;line-height:1.5;color:var(--texto-3)">Prazo médio de um projeto de identidade: 4 semanas.</span>
+    </div>
+    <div class="etapas">
+      <article class="etapa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M8 17h6"/><rect x="8" y="11" width="4" height="3" fill="var(--lima)" stroke="none"/></svg>
+        <div class="cartao-corpo">
+          <span class="etiqueta">Etapa 01</span>
+          <h3>Briefing</h3>
+          <p>Formulário guiado e uma conversa. Sai daqui com escopo e prazo fechados.</p>
+        </div>
+      </article>
+      <article class="etapa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><rect x="3" y="3" width="7" height="7" fill="var(--lima)" stroke="none"/></svg>
+        <div class="cartao-corpo">
+          <span class="etiqueta">Etapa 02</span>
+          <h3>Estratégia</h3>
+          <p>Posicionamento, referências e a direção visual antes de qualquer desenho.</p>
+        </div>
+      </article>
+      <article class="etapa">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><path d="M3 21V12A9 9 0 0 1 12 3h9"/><circle cx="19.4" cy="19.4" r="2.6" fill="var(--lima)" stroke="none"/></svg>
+        <div class="cartao-corpo">
+          <span class="etiqueta">Etapa 03</span>
+          <h3>Execução</h3>
+          <p>Duas rodadas de ajuste, tudo revisado no navegador e no impresso.</p>
+        </div>
+      </article>
+      <article class="etapa etapa-final">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1B0647" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><path d="M3 13v8h18v-8"/><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/></svg>
+        <div class="cartao-corpo">
+          <span class="etiqueta">Etapa 04</span>
+          <h3>Entrega</h3>
+          <p>Arquivos abertos, manual de marca e uma área para baixar tudo quando quiser.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="projetos" class="faixa secao">
+    <div class="secao-topo secao-topo-linha">
+      <h2 style="font-size:clamp(26px,3.4vw,38px)">Projetos recentes</h2>
+      <a href="#contato" class="link-secao">Quero um assim</a>
+    </div>
+    <div class="projetos">
+      <article class="projeto">
+        <div class="quadro quadro-projeto" role="img" aria-label="F2 Experience — espaço para imagem do projeto">
+          <span class="quadro-grafismo" aria-hidden="true">
+            <i style="height:60px;background:var(--coral)"></i>
+            <i style="height:100px;background:var(--lima)"></i>
+            <i style="height:44px;background:var(--lilas)"></i>
+          </span>
+        </div>
+        <div class="projeto-corpo">
+          <div class="tags">
+            <span class="tag" style="background:var(--coral)">Campanha</span>
+            <span class="ano">2025</span>
+          </div>
+          <h3>F2 Experience</h3>
+          <p>Campanha de lançamento: chave visual, peças de mídia e material de ponto de venda.</p>
+        </div>
+      </article>
+      <article class="projeto">
+        <div class="quadro quadro-projeto" role="img" aria-label="Sweet &amp; Coffee Week — espaço para imagem do projeto">
+          <span class="quadro-grafismo" aria-hidden="true">
+            <i style="height:90px;background:var(--roxo)"></i>
+            <i style="height:56px;background:var(--lima)"></i>
+            <i style="height:110px;background:var(--azul)"></i>
+          </span>
+        </div>
+        <div class="projeto-corpo">
+          <div class="tags">
+            <span class="tag" style="background:var(--roxo)">Identidade</span>
+            <span class="ano">2025</span>
+          </div>
+          <h3>Sweet &amp; Coffee Week</h3>
+          <p>Identidade do evento e o pacote de peças para divulgação e ativação.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="faixa" style="padding-top:96px">
+    <div class="numero">
+      <b>7</b>
+      <span>anos de estúdio, sem intermediário. Você fala com quem desenha, do primeiro
+        e-mail ao arquivo final.</span>
+    </div>
+  </section>
+
+  <section id="contato" class="faixa" style="padding-top:96px">
+    <div class="contato">
+      <div class="contato-principal">
+        <span class="etiqueta">Começar</span>
+        <h2>Conte o que precisa. Respondo em um dia útil.</h2>
+        <p class="chamada">O briefing é um formulário guiado: dez minutos e eu já sei o
+          escopo, o prazo e o orçamento do seu projeto.</p>
+        <div class="acoes">
+          <a href="/briefing/" class="btn btn-acento">Preencher o briefing</a>
+          <a href="https://wa.me/5584991150600" class="btn btn-linha"
+            target="_blank" rel="noopener">Falar no WhatsApp</a>
+        </div>
+      </div>
+      <div class="contato-lado">
+        <span class="etiqueta etiqueta-fraca">Contato direto</span>
+        <ul class="canais">
+          <li><a href="mailto:contato@eloidesign.com.br">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lima)" stroke-width="2" stroke-linejoin="miter" aria-hidden="true"><rect x="3" y="5" width="18" height="14"/><path d="M3 5l9 7 9-7"/></svg>
+            contato@eloidesign.com.br</a></li>
+          <li><a href="https://wa.me/5584991150600" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lima)" stroke-width="2" stroke-linejoin="miter" aria-hidden="true"><rect x="6" y="2" width="12" height="20"/><path d="M6 6h12M6 18h12"/><circle cx="12" cy="20" r="1.4" fill="var(--lima)" stroke="none"/></svg>
+            (84) 99115-0600</a></li>
+          <li><span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--lima)" stroke-width="2" stroke-linejoin="miter" aria-hidden="true"><circle cx="12" cy="8" r="5"/><path d="M12 13v8"/><path d="M7 21h10"/><circle cx="12" cy="8" r="1.8" fill="var(--lima)" stroke="none"/></svg>
+            Atendimento remoto, Brasil</span></li>
+        </ul>
+        <p class="nota-portal">Já é cliente? O <a href="/portal/">portal</a> tem seus
+          arquivos, orçamentos e entregas.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="faixa">
+    <div class="rodape-marca">
+      <span class="marca"><b>ELOI</b><i>Studio</i></span>
+      <span style="font-size:13px;color:var(--texto-3)">Identidade, sites e campanhas · eloidesign.com.br</span>
+    </div>
+    <nav class="rodape-links" aria-label="Rodapé">
+      <a href="#projetos">Projetos</a>
+      <a href="#servicos">Serviços</a>
+      <a href="#contato">Contato</a>
+      <a href="/portal/">Portal do cliente</a>
+      <a href="/admin/" aria-label="Área administrativa do estúdio">Estúdio</a>
+      <span class="copy">© 2026</span>
+    </nav>
   </div>
-
-  <a href="/admin/" class="admin-lock" title="Área administrativa" aria-label="Área administrativa">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-  </a>
-  <style>
-    .admin-lock{position:fixed;bottom:16px;right:16px;z-index:5;width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:10px;color:var(--muted);opacity:.25;transition:opacity .2s,background .2s,color .2s;text-decoration:none}
-    .admin-lock:hover{opacity:.9;background:var(--brand-soft);color:var(--ink)}
-    .admin-lock svg{width:18px;height:18px}
-  </style>
-<script src="/assets/eloi-admin/pagenav.js"></script>
+</footer>
 </body>
 </html>
