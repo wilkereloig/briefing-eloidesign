@@ -5,7 +5,7 @@ import { fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import { juntarProjetos, type Etapa, type Projeto } from '../../../domain/projeto'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
-import { Cabecalho, Carga, Dinheiro } from '../../../ui/painel'
+import { Cabecalho, Carga, Dinheiro, SeletorMes } from '../../../ui/painel'
 import type { EstadoChip } from '../../../ui/tokens'
 import type { ServicoRow } from '../../../lib/tipos'
 import { FolhaServico } from '../folhas'
@@ -21,7 +21,7 @@ const ETAPAS: { chave: Etapa; label: string; chip: EstadoChip }[] = [
 const ETAPA_INFO = new Map(ETAPAS.map((e) => [e.chave, e]))
 
 export default function Projetos() {
-  const { orcamentos, servicos, recarregar } = useFinancas()
+  const { orcamentos, servicos, mes, recarregar } = useFinancas()
   const nomes = useNomes()
   const [etapa, setEtapa] = useState<Etapa | 'todos'>('todos')
   const [busca, setBusca] = useState('')
@@ -43,12 +43,15 @@ export default function Projetos() {
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase()
     return projetos.filter((p) => {
+      // Orçamento sem serviço vinculado (sem data_competencia) nunca some no
+      // filtro de mês — só existe data depois que o orçamento é aprovado.
+      if (p.servico?.data_competencia && p.servico.data_competencia.slice(0, 7) !== mes) return false
       if (etapa !== 'todos' && p.etapa !== etapa) return false
       if (!q) return true
       const cliente = p.clienteId ? nomes.cliente.get(p.clienteId)?.nome ?? '' : ''
       return p.titulo.toLowerCase().includes(q) || cliente.toLowerCase().includes(q)
     })
-  }, [projetos, etapa, busca, nomes])
+  }, [projetos, etapa, busca, nomes, mes])
 
   // Agrupa por cliente. Sub-cliente aparece como etiqueta na linha: é
   // agrupamento de marca, não cliente próprio (ver docs/GLOSSARY.md).
@@ -63,7 +66,9 @@ export default function Projetos() {
         id,
         nome: id === 'sem-cliente' ? 'Sem cliente' : nomes.cliente.get(id)?.nome ?? 'Cliente removido',
         cor: id === 'sem-cliente' ? 'var(--linha-forte)' : nomes.cliente.get(id)?.cor || 'var(--roxo)',
-        itens,
+        // Mais recente primeiro; orçamento ainda sem data_competencia fica no topo.
+        itens: [...itens].sort((a, b) =>
+          (b.servico?.data_competencia ?? '9999').localeCompare(a.servico?.data_competencia ?? '9999')),
         total: itens.reduce((s, p) => s + p.valorCents, 0),
       }))
       .sort((a, b) => b.total - a.total)
@@ -74,6 +79,7 @@ export default function Projetos() {
   return (
     <div className="tela pilha">
       <Cabecalho secao="Operação" titulo="Projetos e serviços">
+        <SeletorMes />
         <Botao variante="primario" onClick={() => setFolha({})}>
           <Icone nome="adicionar" tamanho={16} />Novo serviço
         </Botao>
