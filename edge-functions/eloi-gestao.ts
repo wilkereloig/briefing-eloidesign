@@ -217,9 +217,9 @@ Deno.serve(async (req: Request) => {
       data_pagamento: s.data_pagamento || null,
       data_competencia: s.data_competencia || null,
       nf_numero: s.nf_numero || null,
-      observacoes: s.observacoes || null,
     };
     if (typeof s.nf_arquivo_url === "string") row.nf_arquivo_url = s.nf_arquivo_url || null;
+    if (typeof s.observacoes === "string") row.observacoes = s.observacoes || null;
     if (s.id) {
       const { data, error } = await supabase.from("eloi_servicos").update(row).eq("id", s.id).select().single();
       if (error) return json({ error: error.message }, 500);

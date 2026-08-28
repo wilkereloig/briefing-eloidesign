@@ -10,7 +10,7 @@ import type {
   ClienteRow, Conta, Contexto, MaterialRow, Periodicidade, Recorrencia, ServicoRow,
   StatusExecucao, TipoConta, TipoMov, Transacao,
 } from '../../lib/tipos'
-import { Botao, Campo, Folha, Icone, Pilula } from '../../ui/componentes'
+import { Botao, Campo, CampoTexto, Folha, Icone, Pilula } from '../../ui/componentes'
 import { rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
 import { corCliente } from '../../ui/tokens'
 
@@ -394,6 +394,7 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
   const [pago, setPago] = useState(inicial?.pago ?? false)
   const [competencia, setCompetencia] = useState(inicial?.data_competencia ?? '')
   const [nfNumero, setNfNumero] = useState(inicial?.nf_numero ?? '')
+  const [observacoes, setObservacoes] = useState(inicial?.observacoes ?? '')
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
 
@@ -413,6 +414,7 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
         data_pagamento: pago ? inicial?.data_pagamento ?? hojeISO() : null,
         data_competencia: competencia || null,
         nf_numero: nfNumero.trim() || null,
+        observacoes: observacoes.trim(),
       })
       aoSalvar(inicial ? 'Serviço atualizado' : 'Serviço criado')
       aoFechar()
@@ -469,6 +471,9 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
           <Campo rotulo="Número da NF" value={nfNumero}
             onChange={(e) => setNfNumero(e.target.value)} placeholder="Opcional" />
         </div>
+
+        <CampoTexto rotulo="Observações" value={observacoes} rows={3}
+          onChange={(e) => setObservacoes(e.target.value)} placeholder="Opcional" />
 
         <label className="linha" style={{ gap: 'var(--e-3)', cursor: 'pointer' }}>
           <input type="checkbox" className="caixa-marcar" checked={pago}

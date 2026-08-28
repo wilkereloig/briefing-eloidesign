@@ -2,6 +2,21 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — Editar serviço não apaga mais as observações
+
+`eloi-gestao.ts` (`servicos.upsert`) gravava `observacoes: s.observacoes || null`
+sempre, inclusive no UPDATE — e `FolhaServico` não tinha esse campo, então
+nunca enviava. Abrir "Editar", não mudar nada e salvar zerava a coluna, nos
+59 serviços vindos do painel legado.
+
+### Corrigido
+
+- `servicos.upsert` só grava `observacoes` quando o corpo manda a chave
+  (mesmo padrão já usado por `nf_arquivo_url`) — campo ausente preserva o
+  valor atual.
+- `FolhaServico` ganha o campo (textarea, `CampoTexto`), então agora tem
+  como editar observações pelo painel novo.
+
 ## 2026-08-28 — Aprovar orçamento não falha mais em silêncio (e não zera dado)
 
 `Projetos.tsx` mandava `{id, status:'aprovado'}` pro `orcamentos.ts` update.
