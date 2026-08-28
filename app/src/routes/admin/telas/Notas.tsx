@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { financas } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import type { NotaFiscal, StatusNF } from '../../../lib/tipos'
 import {
-  Aviso, Botao, Campo, Folha, Icone, Indicador, Painel, Pilula, Vazio,
+  Aviso, Botao, Campo, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
-import { Cabecalho, Carga, ChipNota, Dinheiro } from '../../../ui/painel'
+import { Cabecalho, Carga, ChipNota, Dinheiro, SeletorMes } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
 import { FolhaExcluir } from '../folhas'
 
@@ -17,9 +17,10 @@ const ROTULO: Record<StatusNF, string> = {
 }
 
 export default function Notas() {
-  const { notas, servicos, recarregar } = useFinancas()
+  const { notas, servicos, clientes, mes, recarregar } = useFinancas()
   const nomes = useNomes()
   const [filtro, setFiltro] = useState<StatusNF | 'todas'>('todas')
+  const [clienteId, setClienteId] = useState('')
   const [folha, setFolha] = useState<
     { nf?: NotaFiscal; servicoId?: string } | { excluir: NotaFiscal } | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -29,9 +30,22 @@ export default function Notas() {
     s.status_execucao === 'concluida' && !s.nf_numero &&
     !notas.some((n) => n.servico_id === s.id && n.status !== 'cancelada')), [servicos, notas])
 
-  const lista = useMemo(() => notas
+  // Lista da tela é filtrada por mês/cliente no servidor: `notas` (acima) vem
+  // sem corte de data, com limit(500) — filtrar em memória esconderia notas
+  // antigas que já caíram fora do topo dos 500 antes de chegar no mês pedido.
+  const [notasFiltradas, setNotasFiltradas] = useState<NotaFiscal[] | null>(null)
+  const [erroFiltro, setErroFiltro] = useState<string | null>(null)
+  const carregarFiltro = useCallback(() => {
+    setErroFiltro(null)
+    return financas.notas({ mes, cliente_id: clienteId || undefined })
+      .then((r) => setNotasFiltradas(r))
+      .catch((e) => setErroFiltro((e as Error).message))
+  }, [mes, clienteId])
+  useEffect(() => { void carregarFiltro() }, [carregarFiltro])
+
+  const lista = useMemo(() => (notasFiltradas ?? [])
     .filter((n) => filtro === 'todas' || n.status === filtro)
-    .sort((a, b) => (b.competencia ?? '').localeCompare(a.competencia ?? '')), [notas, filtro])
+    .sort((a, b) => (b.competencia ?? '').localeCompare(a.competencia ?? '')), [notasFiltradas, filtro])
 
   const emitidas = notas.filter((n) => n.status === 'emitida' || n.status === 'enviada')
   const totalImposto = emitidas.reduce((s, n) => s + n.imposto_cents, 0)
@@ -80,19 +94,33 @@ export default function Notas() {
           </Painel>
         )}
 
+        <div className="linha" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--e-6)' }}>
+          <SeletorMes />
+          <div className="campo" style={{ minWidth: '12rem' }}>
+            <label htmlFor="filtro-cliente">Cliente</label>
+            <select id="filtro-cliente" className="campo-caixa" value={clienteId}
+              onChange={(e) => setClienteId(e.target.value)}>
+              <option value="">Todos os clientes</option>
+              {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+          </div>
+        </div>
+
         <div className="abas" role="tablist" aria-label="Status da nota">
           <Pilula ativa={filtro === 'todas'} role="tab" aria-selected={filtro === 'todas'}
-            onClick={() => setFiltro('todas')}>Todas · {notas.length}</Pilula>
+            onClick={() => setFiltro('todas')}>Todas · {(notasFiltradas ?? []).length}</Pilula>
           {STATUS.map((s) => (
             <Pilula key={s} ativa={filtro === s} role="tab" aria-selected={filtro === s}
               onClick={() => setFiltro(s)}>
-              {ROTULO[s]} · {notas.filter((n) => n.status === s).length}
+              {ROTULO[s]} · {(notasFiltradas ?? []).filter((n) => n.status === s).length}
             </Pilula>
           ))}
         </div>
 
+        {erroFiltro && <p className="campo-erro" role="alert">{erroFiltro}</p>}
+
         <Painel titulo={`${lista.length} ${lista.length === 1 ? 'nota' : 'notas'}`}>
-          {lista.length === 0 ? (
+          {notasFiltradas === null ? <Esqueleto linhas={3} altura={56} /> : lista.length === 0 ? (
             <Vazio icone="nota-fiscal" titulo="Nenhuma nota neste filtro"
               instrucao="Registre uma nota fiscal para acompanhar emissão, envio e imposto."
               acao={<Botao variante="primario" onClick={() => setFolha({})}>Nova nota</Botao>} />
@@ -133,7 +161,7 @@ export default function Notas() {
       {folha && !('excluir' in folha) && (
         <FolhaNota inicial={folha.nf} servicoId={folha.servicoId}
           aoFechar={() => setFolha(null)}
-          aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+          aoSalvar={async (msg) => { setAviso(msg); await recarregar(); await carregarFiltro() }} />
       )}
       {folha && 'excluir' in folha && (
         <FolhaExcluir
@@ -144,6 +172,7 @@ export default function Notas() {
             await financas.removerNota(folha.excluir.id)
             setAviso('Nota excluída')
             await recarregar()
+            await carregarFiltro()
           }} />
       )}
       {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}

@@ -37,6 +37,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  *  validado aqui: virgula e ponto sao separadores da sintaxe do filtro. */
 const ehUuid = (v: unknown) => typeof v === "string" && UUID.test(v);
 const ehData = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+const ehMes = (v: unknown) => typeof v === "string" && /^\d{4}-\d{2}$/.test(v);
 
 /** Espelha dividirParcelas() de app/src/domain/financeiro.ts — o resto da
  *  divisao vai inteiro na primeira parcela para nao sumir centavo. Se um dia
@@ -367,6 +368,15 @@ Deno.serve(async (req: Request) => {
     let q = supabase.from("eloi_notas_fiscais").select("*");
     if (f.status) q = q.eq("status", f.status);
     if (f.cliente_id) q = q.eq("cliente_id", f.cliente_id);
+    // f.mes = 'AAAA-MM'. Sem isso a query nunca teve corte de data — o limit(500)
+    // sozinho corta pelas mais recentes e esconde meses antigos do filtro.
+    if (f.mes) {
+      if (!ehMes(f.mes)) return json({ error: "mes invalido" }, 400);
+      const [a, m] = f.mes.split("-").map(Number);
+      const de = new Date(Date.UTC(a, m - 1, 1)).toISOString().slice(0, 10);
+      const ate = new Date(Date.UTC(a, m, 1)).toISOString().slice(0, 10);
+      q = q.gte("competencia", de).lt("competencia", ate);
+    }
     const { data, error } = await q.order("competencia", { ascending: false, nullsFirst: false }).limit(500);
     if (error) return json({ error: error.message }, 500);
     return json({ notas: data ?? [] });

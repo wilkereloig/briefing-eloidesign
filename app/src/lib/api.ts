@@ -202,7 +202,7 @@ export const financas = {
   gerarRecorrencias: () =>
     call<{ criadas: number; transacoes: Transacao[] }>('eloi-financas', 'recorrencias.gerar'),
 
-  notas: (filtro?: { status?: NotaFiscal['status']; cliente_id?: string }) =>
+  notas: (filtro?: { status?: NotaFiscal['status']; cliente_id?: string; mes?: string }) =>
     call<{ notas: NotaFiscal[] }>('eloi-financas', 'nf.list', filtro ? { filtro } : {}).then((r) => r.notas),
   salvarNota: (nota: Partial<NotaFiscal>) =>
     call<{ nota: NotaFiscal }>('eloi-financas', 'nf.upsert', { nota }).then((r) => r.nota),
