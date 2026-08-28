@@ -2,6 +2,30 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — Aprovar orçamento não falha mais em silêncio (e não zera dado)
+
+`Projetos.tsx` mandava `{id, status:'aprovado'}` pro `orcamentos.ts` update.
+`exigeCliente` lia `cliente_id` **do corpo enviado**, que não veio, e barrava
+com 400 — o único caminho orçamento→projeto do painel nunca funcionava, e a
+chamada não tinha `catch`, então nada aparecia na tela. Explica o dado real:
+nenhum dos 59 serviços tem `orcamento_id`.
+
+`update` também fazia substituição total (`?? null`, `?? []`, `?? 0`) usada
+como patch — corrigir só o `exigeCliente` teria trocado o bug silencioso por
+perda de dado de verdade: `{id, status}` sozinho já apagaria itens, valor e
+cliente do orçamento.
+
+### Corrigido
+
+- `orcamentos.ts` · `update` vira patch de verdade: busca o orçamento atual e
+  usa o valor existente pra todo campo ausente no corpo. `exigeCliente` passa
+  a validar o resultado já mesclado, não o corpo cru.
+- `Projetos.tsx` · `aprovar`, `aprovarSugestao` e `rejeitarSugestao` ganham
+  `try/catch` com toast de erro (`Aviso` já suportava `tipo:'erro'`, não
+  usado em lugar nenhum até agora).
+- **Precisa de deploy** (`npm run edges:deploy -- orcamentos`) pra valer em
+  produção — feito ao final, junto dos outros itens deste horizonte.
+
 ## 2026-08-28 — Digitar `1234.56` não vira mais R$ 123.456,00
 
 `centsDeBRL` (`app/src/lib/dinheiro.ts`) apagava tudo que não fosse dígito ou

@@ -26,31 +26,43 @@ export default function Projetos() {
   const [etapa, setEtapa] = useState<Etapa | 'todos'>('todos')
   const [busca, setBusca] = useState('')
   const [folha, setFolha] = useState<{ s?: ServicoRow } | null>(null)
-  const [aviso, setAviso] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
 
   // Aprovar a proposta é o que converte orçamento em projeto: o trigger
   // trg_eloi_orcamento_aprovado cria o serviço vinculado no banco, então aqui
   // basta mudar o status e recarregar.
   const aprovar = async (p: Projeto) => {
     if (!p.orcamento) return
-    await orcamentosApi.update({ id: p.orcamento.id, status: 'aprovado' })
-    setAviso('Proposta aprovada — projeto criado')
-    await recarregar()
+    try {
+      await orcamentosApi.update({ id: p.orcamento.id, status: 'aprovado' })
+      setAviso({ texto: 'Proposta aprovada — projeto criado' })
+      await recarregar()
+    } catch (e) {
+      setAviso({ texto: (e as Error).message, tipo: 'erro' })
+    }
   }
 
   // Sugestão de valor do cliente (portal-cliente.ts, servicos.sugerir_valor) fica
   // pendente até o dono aprovar aqui — só aprovar_valor_sugerido vira valor_cents oficial.
   const aprovarSugestao = async (p: Projeto) => {
     if (!p.servico) return
-    await servicosApi.aprovarValorSugerido(p.servico.id)
-    setAviso('Valor sugerido aprovado')
-    await recarregar()
+    try {
+      await servicosApi.aprovarValorSugerido(p.servico.id)
+      setAviso({ texto: 'Valor sugerido aprovado' })
+      await recarregar()
+    } catch (e) {
+      setAviso({ texto: (e as Error).message, tipo: 'erro' })
+    }
   }
   const rejeitarSugestao = async (p: Projeto) => {
     if (!p.servico) return
-    await servicosApi.rejeitarValorSugerido(p.servico.id)
-    setAviso('Sugestão rejeitada')
-    await recarregar()
+    try {
+      await servicosApi.rejeitarValorSugerido(p.servico.id)
+      setAviso({ texto: 'Sugestão rejeitada' })
+      await recarregar()
+    } catch (e) {
+      setAviso({ texto: (e as Error).message, tipo: 'erro' })
+    }
   }
 
   const projetos = useMemo(() => juntarProjetos(orcamentos, servicos), [orcamentos, servicos])
@@ -212,9 +224,9 @@ export default function Projetos() {
 
       {folha && (
         <FolhaServico inicial={folha.s} aoFechar={() => setFolha(null)}
-          aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+          aoSalvar={async (msg) => { setAviso({ texto: msg }); await recarregar() }} />
       )}
-      {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
+      {aviso && <Aviso texto={aviso.texto} tipo={aviso.tipo} aoSumir={() => setAviso(null)} />}
     </div>
   )
 }

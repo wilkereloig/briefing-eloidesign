@@ -80,19 +80,20 @@ Deno.serve(async (req: Request) => {
   // vivem no front, em assets/eloi-admin/orcamento.js — aqui só validamos as chaves.
   const COMPLEXIDADES = ["simples", "media", "alta"];
   const URGENCIAS = ["normal", "expressa"];
-  function lerAjustes(o: Record<string, unknown>): {
+  function lerAjustes(o: Record<string, unknown>, defaults: {
+    complexidade: string; urgencia: string; desconto_pct: number;
+  }): {
     erro: string | null;
     complexidade: string;
     urgencia: string;
     desconto_pct: number;
   } {
-    const complexidade = (o.complexidade ?? "simples") as string;
-    const urgencia = (o.urgencia ?? "normal") as string;
-    const base = {
-      complexidade,
-      urgencia,
-      desconto_pct: Math.min(100, Math.max(0, Number(o.desconto_pct) || 0)),
-    };
+    const complexidade = (o.complexidade ?? defaults.complexidade) as string;
+    const urgencia = (o.urgencia ?? defaults.urgencia) as string;
+    const desconto_pct = o.desconto_pct !== undefined
+      ? Math.min(100, Math.max(0, Number(o.desconto_pct) || 0))
+      : defaults.desconto_pct;
+    const base = { complexidade, urgencia, desconto_pct };
     if (!COMPLEXIDADES.includes(complexidade)) {
       return { ...base, erro: `complexidade inválida — use uma de: ${COMPLEXIDADES.join(", ")}` };
     }
@@ -114,7 +115,7 @@ Deno.serve(async (req: Request) => {
 
   if (action === "create") {
     const o = body?.orcamento || {};
-    const { erro, ...aj } = lerAjustes(o);
+    const { erro, ...aj } = lerAjustes(o, { complexidade: "simples", urgencia: "normal", desconto_pct: 0 });
     if (erro) return json({ error: erro }, 400);
     const errCli = exigeCliente(o);
     if (errCli) return json({ error: errCli }, 400);
@@ -136,34 +137,42 @@ Deno.serve(async (req: Request) => {
   if (action === "update") {
     const o = body?.orcamento || {};
     if (!o.id) return json({ error: "id obrigatório" }, 400);
-    const { erro, ...aj } = lerAjustes(o);
+    // update é PATCH, não substituição: campo ausente no corpo mantém o valor
+    // atual do banco. Um `{id, status:'aprovado'}` (é só isso que o botão
+    // "Aprovar" de Projetos manda) não pode zerar itens/valor/cliente/etc.
+    const { data: atual } = await supabase.from("orcamentos")
+      .select("cliente,cliente_id,titulo,status,itens,valor_total,observacoes,link,complexidade,urgencia,desconto_pct")
+      .eq("id", o.id).maybeSingle();
+    if (!atual) return json({ error: "orçamento não encontrado" }, 404);
+    const { erro, ...aj } = lerAjustes(o, atual);
     if (erro) return json({ error: erro }, 400);
-    const errCli = exigeCliente(o);
+    const patch = {
+      cliente: o.cliente !== undefined ? o.cliente : atual.cliente,
+      cliente_id: o.cliente_id !== undefined ? o.cliente_id : atual.cliente_id,
+      titulo: o.titulo !== undefined ? o.titulo : atual.titulo,
+      status: o.status !== undefined ? o.status : atual.status,
+      itens: o.itens !== undefined ? o.itens : atual.itens,
+      valor_total: o.valor_total !== undefined ? o.valor_total : atual.valor_total,
+      observacoes: o.observacoes !== undefined ? o.observacoes : atual.observacoes,
+      link: o.link !== undefined ? o.link : atual.link,
+      ...aj,
+    };
+    const errCli = exigeCliente(patch);
     if (errCli) return json({ error: errCli }, 400);
     // Estratégia documentada (Fase 4): orçamento APROVADO que já virou serviço fica
     // TRAVADO para título/valor/itens/cliente — evita orçamento e serviço divergirem
     // silenciosamente. Pra alterar, edite o serviço na Gestão (fonte da execução).
-    const { data: atual } = await supabase.from("orcamentos")
-      .select("status,titulo,valor_total,cliente_id").eq("id", o.id).maybeSingle();
-    if (atual?.status === "aprovado") {
+    if (atual.status === "aprovado") {
       const { data: svcExistente } = await supabase.from("eloi_servicos").select("id").eq("orcamento_id", o.id).maybeSingle();
-      const mudouCore = (o.titulo ?? null) !== (atual.titulo ?? null)
-        || Number(o.valor_total ?? 0) !== Number(atual.valor_total ?? 0)
-        || (o.cliente_id ?? null) !== (atual.cliente_id ?? null);
+      const mudouCore = (patch.titulo ?? null) !== (atual.titulo ?? null)
+        || Number(patch.valor_total ?? 0) !== Number(atual.valor_total ?? 0)
+        || (patch.cliente_id ?? null) !== (atual.cliente_id ?? null);
       if (svcExistente && mudouCore) {
         return json({ error: "orçamento aprovado já virou serviço — título, valor e cliente estão travados; ajuste o serviço na Gestão" }, 409);
       }
     }
     const { data, error } = await supabase.from("orcamentos").update({
-      cliente: o.cliente ?? null,
-      cliente_id: o.cliente_id ?? null,
-      titulo: o.titulo ?? null,
-      status: o.status ?? "rascunho",
-      itens: o.itens ?? [],
-      valor_total: o.valor_total ?? 0,
-      observacoes: o.observacoes ?? null,
-      link: o.link ?? null,
-      ...aj,
+      ...patch,
       updated_at: new Date().toISOString(),
     }).eq("id", o.id).select().single();
     if (error) return json({ error: error.message }, 500);
