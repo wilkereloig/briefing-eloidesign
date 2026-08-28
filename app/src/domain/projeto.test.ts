@@ -14,6 +14,7 @@ function srv(over: Partial<ServicoRow> = {}): ServicoRow {
     id: 's1', cliente_id: 'c1', orcamento_id: 'o1', sub_cliente: null, descricao: 'Site novo',
     valor_cents: 100000, status_execucao: 'aguardando_inicio', pago: false, data_pagamento: null,
     data_competencia: null, nf_numero: null, nf_arquivo_url: null, observacoes: null,
+    valor_sugerido_cents: null, valor_sugerido_em: null,
     created_at: '2026-01-01', ...over,
   }
 }

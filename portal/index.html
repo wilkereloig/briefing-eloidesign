@@ -68,6 +68,8 @@
 
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--c700);color:#fff;padding:12px 22px;border-radius:10px;font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
     .toast.show{opacity:1}
+
+    .sug-input{border:1px solid var(--line-field,var(--line));border-radius:8px;padding:8px 10px;font-family:var(--font);font-size:.86rem;width:120px;background:var(--surface);color:var(--ink)}
   </style>
 </head>
 <body>
@@ -107,6 +109,7 @@
     <button class="tab-btn" data-tab="nf">Notas Fiscais</button>
     <button class="tab-btn" data-tab="orc">Orçamentos</button>
     <button class="tab-btn" data-tab="briefing">Briefing</button>
+    <button class="tab-btn" data-tab="pendencias">Pendências</button>
   </div>
 
   <div class="tab-panel active" id="tab-marca"></div>
@@ -114,6 +117,7 @@
   <div class="tab-panel" id="tab-nf"></div>
   <div class="tab-panel" id="tab-orc"></div>
   <div class="tab-panel" id="tab-briefing"></div>
+  <div class="tab-panel" id="tab-pendencias"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -192,7 +196,7 @@ async function carregarDados(){
     ORCAMENTOS = oc.orcamentos || [];
     BRIEFINGS = br.briefings || [];
     document.getElementById('clienteNome').textContent = CLIENTE.nome || '';
-    renderNF(); renderOrc(); renderBriefing();
+    renderNF(); renderOrc(); renderBriefing(); renderPendencias();
     renderMarca(); renderArquivos();
   } catch (e) { /* 401 já trocou pra tela de login dentro de callPortal */ }
 }
@@ -311,6 +315,53 @@ function renderBriefing(){
       </div>
       <span class="badge ${b.status || 'pendente'}">${esc(BR_STATUS[b.status] || b.status || '—')}</span>
     </div>`).join('') + '</div>';
+}
+
+// ── PENDÊNCIAS (serviços não pagos; cliente pode sugerir valor pros zerados) ──
+// "1600,00" ou "1600.00" -> 160000 cents. Cliente leigo digita qualquer um dos dois
+// como separador decimal; o último "," ou "." encontrado é tratado como tal.
+function parseReaisParaCents(str){
+  const s = String(str||'').trim().replace(/[^\d.,]/g,'');
+  if (!s) return NaN;
+  const decPos = Math.max(s.lastIndexOf(','), s.lastIndexOf('.'));
+  const intPart = (decPos === -1 ? s : s.slice(0, decPos)).replace(/[.,]/g,'');
+  const decPart = decPos === -1 ? '00' : (s.slice(decPos+1) + '00').slice(0,2);
+  if (!intPart && !decPart) return NaN;
+  return Math.round(Number(intPart||0) * 100 + Number(decPart||0));
+}
+function renderPendencias(){
+  const el = document.getElementById('tab-pendencias');
+  const pendentes = SERVICOS.filter(s => !s.pago);
+  if (!pendentes.length) { el.innerHTML = '<div class="empty"><div class="ic">✅</div>Nenhuma pendência no momento.</div>'; return; }
+  el.innerHTML = '<div class="rows">' + pendentes.map(s => {
+    if (s.valor_cents > 0) {
+      return `
+      <div class="row">
+        <div class="grow"><div class="t">${esc(s.descricao)}</div><div class="meta">${brl(s.valor_cents/100)}</div></div>
+      </div>`;
+    }
+    const aviso = s.valor_sugerido_cents
+      ? `<div class="meta">Você sugeriu ${brl(s.valor_sugerido_cents/100)} — aguardando confirmação</div>`
+      : `<div class="meta">Sem valor definido</div>`;
+    return `
+      <div class="row">
+        <div class="grow"><div class="t">${esc(s.descricao)}</div>${aviso}</div>
+        <input type="text" inputmode="decimal" class="sug-input" id="sug-${s.id}" placeholder="Valor (R$)">
+        <button class="btn btn-sm" onclick="enviarSugestao('${s.id}')">${s.valor_sugerido_cents ? 'Reenviar valor' : 'Enviar valor'}</button>
+      </div>`;
+  }).join('') + '</div>';
+}
+async function enviarSugestao(servico_id){
+  const input = document.getElementById('sug-' + servico_id);
+  const valor_cents = parseReaisParaCents(input && input.value);
+  if (!Number.isFinite(valor_cents) || valor_cents <= 0) { toast('Digite um valor válido.'); return; }
+  try {
+    await callPortal('servicos.sugerir_valor', { servico_id, valor_cents });
+    const sv = await callPortal('servicos.list');
+    SERVICOS = sv.servicos || [];
+    renderPendencias();
+    toast('Valor enviado. Aguardando confirmação.');
+  } catch (e) { toast('Erro: ' + e.message); }
 }
 
 // ── TABS ──

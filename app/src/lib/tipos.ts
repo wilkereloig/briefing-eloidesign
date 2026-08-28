@@ -41,6 +41,8 @@ export interface ServicoRow {
   nf_arquivo_url: string | null
   observacoes: string | null
   created_at: string
+  valor_sugerido_cents: number | null
+  valor_sugerido_em: string | null
 }
 
 export type OrcamentoStatus = 'rascunho' | 'enviado' | 'aprovado' | 'recusado'

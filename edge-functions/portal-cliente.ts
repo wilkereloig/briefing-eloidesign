@@ -145,11 +145,33 @@ Deno.serve(async (req: Request) => {
 
   if (action === "servicos.list") {
     const { data, error } = await supabase.from("eloi_servicos")
-      .select("id,descricao,valor_cents,status_execucao,pago,data_pagamento,nf_numero,nf_arquivo_url,created_at")
+      .select("id,descricao,valor_cents,status_execucao,pago,data_pagamento,nf_numero,nf_arquivo_url,created_at,valor_sugerido_cents,valor_sugerido_em")
       .eq("cliente_id", clienteId).order("created_at", { ascending: false });
     if (error) return json({ error: error.message }, 500);
     const servicos = (data ?? []).map(({ nf_arquivo_url, ...rest }: any) => ({ ...rest, tem_nf: !!nf_arquivo_url }));
     return json({ servicos });
+  }
+
+  // Cliente sugere um valor pra um servico ainda sem preco definido. Nao vira
+  // valor_cents oficial aqui -- so o dono aprova isso, em eloi-gestao.ts
+  // (servicos.aprovar_valor_sugerido). Mesmo padrao de posse que nf.view_url:
+  // busca por id e confere s.cliente_id === clienteId antes de aceitar.
+  if (action === "servicos.sugerir_valor") {
+    if (!body?.servico_id) return json({ error: "servico_id obrigatório" }, 400);
+    const valorCents = body?.valor_cents;
+    if (!Number.isInteger(valorCents) || valorCents <= 0) {
+      return json({ error: "valor_cents inválido" }, 400);
+    }
+    const { data: s } = await supabase.from("eloi_servicos")
+      .select("id,cliente_id,pago").eq("id", body?.servico_id).maybeSingle();
+    if (!s || s.cliente_id !== clienteId) return json({ error: "não encontrado" }, 404);
+    if (s.pago) return json({ error: "serviço já pago" }, 400);
+
+    const { data, error } = await supabase.from("eloi_servicos")
+      .update({ valor_sugerido_cents: valorCents, valor_sugerido_em: new Date().toISOString() })
+      .eq("id", s.id).select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ servico: data });
   }
 
   if (action === "nf.view_url") {

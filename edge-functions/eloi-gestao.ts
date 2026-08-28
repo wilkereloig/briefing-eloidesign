@@ -230,6 +230,30 @@ Deno.serve(async (req: Request) => {
     return json({ servico: data });
   }
 
+  // Aprova a sugestão de valor que o cliente mandou pelo portal (servicos.sugerir_valor
+  // em portal-cliente.ts). Só aqui valor_sugerido_cents vira valor_cents oficial.
+  if (action === "servicos.aprovar_valor_sugerido") {
+    const servicoId = body?.servico_id;
+    if (!servicoId) return json({ error: "servico_id obrigatório" }, 400);
+    const { data: s } = await supabase.from("eloi_servicos").select("valor_sugerido_cents").eq("id", servicoId).maybeSingle();
+    if (!s || s.valor_sugerido_cents == null) return json({ error: "sem sugestão pendente" }, 400);
+    const { data, error } = await supabase.from("eloi_servicos")
+      .update({ valor_cents: s.valor_sugerido_cents, valor_sugerido_cents: null, valor_sugerido_em: null })
+      .eq("id", servicoId).select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ servico: data });
+  }
+
+  if (action === "servicos.rejeitar_valor_sugerido") {
+    const servicoId = body?.servico_id;
+    if (!servicoId) return json({ error: "servico_id obrigatório" }, 400);
+    const { data, error } = await supabase.from("eloi_servicos")
+      .update({ valor_sugerido_cents: null, valor_sugerido_em: null })
+      .eq("id", servicoId).select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ servico: data });
+  }
+
   if (action === "servicos.from_orcamento") {
     const orcamentoId = body?.orcamento_id;
     if (!orcamentoId) return json({ error: "orcamento_id obrigatório" }, 400);

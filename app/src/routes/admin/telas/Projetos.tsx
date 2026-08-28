@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { orcamentos as orcamentosApi } from '../../../lib/api'
+import { orcamentos as orcamentosApi, servicos as servicosApi } from '../../../lib/api'
 import { fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import { juntarProjetos, type Etapa, type Projeto } from '../../../domain/projeto'
@@ -35,6 +35,21 @@ export default function Projetos() {
     if (!p.orcamento) return
     await orcamentosApi.update({ id: p.orcamento.id, status: 'aprovado' })
     setAviso('Proposta aprovada — projeto criado')
+    await recarregar()
+  }
+
+  // Sugestão de valor do cliente (portal-cliente.ts, servicos.sugerir_valor) fica
+  // pendente até o dono aprovar aqui — só aprovar_valor_sugerido vira valor_cents oficial.
+  const aprovarSugestao = async (p: Projeto) => {
+    if (!p.servico) return
+    await servicosApi.aprovarValorSugerido(p.servico.id)
+    setAviso('Valor sugerido aprovado')
+    await recarregar()
+  }
+  const rejeitarSugestao = async (p: Projeto) => {
+    if (!p.servico) return
+    await servicosApi.rejeitarValorSugerido(p.servico.id)
+    setAviso('Sugestão rejeitada')
     await recarregar()
   }
 
@@ -151,6 +166,11 @@ export default function Projetos() {
                             {p.servico?.nf_numero ? `NF ${p.servico.nf_numero}` : semNota ? 'Sem nota fiscal' : ''}
                             {p.servico?.data_competencia ? ` · ${p.servico.data_competencia.slice(0, 7)}` : ''}
                           </span>
+                          {p.servico?.valor_sugerido_cents != null && (
+                            <span className="t-legenda espremer" style={{ color: 'var(--acento)' }}>
+                              Cliente sugeriu {fmtBRL(p.servico.valor_sugerido_cents)}
+                            </span>
+                          )}
                         </span>
                         {/* estado da NF por ícone além da cor (acessibilidade) */}
                         <span className="col-desktop" style={{ color: semNota ? 'var(--coral)' : 'var(--acento)' }}>
@@ -161,6 +181,12 @@ export default function Projetos() {
                         <Chip estado={info.chip}>{info.label}</Chip>
                         {p.etapa === 'orcamento' && (
                           <Botao compacto onClick={() => void aprovar(p)}>Aprovar</Botao>
+                        )}
+                        {p.servico?.valor_sugerido_cents != null && (
+                          <>
+                            <Botao compacto onClick={() => void aprovarSugestao(p)}>Aprovar valor</Botao>
+                            <Botao compacto variante="destrutivo" onClick={() => void rejeitarSugestao(p)}>Rejeitar</Botao>
+                          </>
                         )}
                         {p.servico && (
                           <Botao variante="icone" aria-label={`Editar ${p.titulo}`}

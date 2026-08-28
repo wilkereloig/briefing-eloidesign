@@ -120,6 +120,10 @@ export const servicos = {
     call<{ servicos: ServicoRow[] }>('eloi-gestao', 'servicos.list', filtro ? { filtro } : {}).then((r) => r.servicos),
   upsert: (servico: Partial<ServicoRow> & { id?: string }) =>
     call<{ servico: ServicoRow }>('eloi-gestao', 'servicos.upsert', { servico }).then((r) => r.servico),
+  aprovarValorSugerido: (servico_id: string) =>
+    call<{ servico: ServicoRow }>('eloi-gestao', 'servicos.aprovar_valor_sugerido', { servico_id }).then((r) => r.servico),
+  rejeitarValorSugerido: (servico_id: string) =>
+    call<{ servico: ServicoRow }>('eloi-gestao', 'servicos.rejeitar_valor_sugerido', { servico_id }).then((r) => r.servico),
 }
 
 export const orcamentos = {
