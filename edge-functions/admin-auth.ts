@@ -12,6 +12,7 @@ const FAXINA_MS = 24 * 3600 * 1000;
 // o login, que era exatamente o que o "*" anterior autorizava.
 const ORIGENS = [
   "https://briefing-eloidesign.vercel.app",
+  "https://www.eloidesign.com.br",
   "http://localhost:5207",
   "http://127.0.0.1:5207",
 ];
