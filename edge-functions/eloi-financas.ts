@@ -187,7 +187,10 @@ Deno.serve(async (req: Request) => {
       // competencia cai no vencimento quando a tela nao informa: sem nenhuma das
       // duas o lancamento nao teria mes ao qual pertencer no relatorio
       data_competencia: t.data_competencia ?? t.data_vencimento ?? null,
-      status: t.status || statusPorValor(Number(t.valor_cents), recebido, t.data_vencimento ?? null, hoje),
+      // Cancelado so volta por transacoes.cancelar (reabrir:true) — editar
+      // descricao/valor de um lancamento cancelado nao pode ressuscita-lo.
+      status: t.status
+        || (anterior?.status === "cancelado" ? "cancelado" : statusPorValor(Number(t.valor_cents), recebido, t.data_vencimento ?? null, hoje)),
       updated_at: new Date().toISOString(),
     };
     const { data, error } = await supabase.from("eloi_transacoes").upsert(linha).select().single();

@@ -2,6 +2,25 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — Editar lançamento cancelado não ressuscita mais ele
+
+`FolhaTransacao.tsx` nunca manda `status` no payload de edição (correto — quem
+deriva status é o servidor), mas `eloi-financas.ts` (`transacoes.upsert`) usava
+`t.status || statusPorValor(...)`, e sem `t.status` **sempre** recalculava do
+zero. Cancelar uma despesa de R$ 2.000 e depois só corrigir a descrição fazia
+ela voltar como "Vencido" e os R$ 2.000 reentrarem no resultado, sem aviso.
+
+### Corrigido
+
+- `transacoes.upsert` já buscava a linha anterior pra preservar
+  `recebido_cents`; passa a usar esse mesmo `anterior` pra preservar
+  `status = 'cancelado'` também, a menos que o request explicite outro
+  status. Reabrir continua sendo só via `transacoes.cancelar` (`reabrir:
+  true`), que já existia e não muda.
+- Sem teste de handler: mesma lacuna dos itens 0.4/0.8 — a camada de handler
+  das edges não tem harness de teste hoje (registrado como item próprio no
+  Horizonte 4 do ROTEIRO). `deno check` + os 16 testes de `_shared/` passam.
+
 ## 2026-08-28 — Editar serviço não apaga mais as observações
 
 `eloi-gestao.ts` (`servicos.upsert`) gravava `observacoes: s.observacoes || null`
