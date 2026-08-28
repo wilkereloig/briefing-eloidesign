@@ -2,6 +2,24 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — Portal não entrega mais rascunho
+
+`portal-cliente.ts` tinha a action `entregas.list`, que fazia `storage.list()`
+cru na pasta do cliente e devolvia **todo** arquivo que encontrasse — sem
+checar `status`. `materiais.list`, que filtra `status = 'publicado'`, existia
+e nunca era chamada. Resultado: "Publicar"/"Despublicar"/"Excluir" em
+`/admin/entregas` só escreviam em `eloi_materiais`, sem efeito nenhum no que
+o cliente conseguia baixar — rascunho já era baixável, despublicar não tirava
+nada.
+
+### Corrigido
+
+- `portal/index.html` (`renderArquivos`) passa a chamar `materiais.list`.
+- Action `entregas.list` **removida** de `portal-cliente.ts` — não só o front
+  parou de chamá-la: a rota em si saía do ar, porque continuar existindo era
+  furo de acesso direto à API. **Precisa de `npm run edges:deploy --
+  portal-cliente` pra valer em produção.**
+
 ## 2026-08-28 — Painel parava de abrir em 1º de setembro
 
 `app/src/lib/financas-store.tsx:89` colava `-31` no fim de todo mês pra montar

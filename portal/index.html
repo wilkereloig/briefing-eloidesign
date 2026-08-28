@@ -231,16 +231,13 @@ const CAT_LABEL_PORTAL = { arquivo: 'Arquivo do projeto', apresentacao: 'Apresen
 async function renderArquivos(){
   const el = document.getElementById('tab-arquivos');
   try {
-    const d = await callPortal('entregas.list');
-    const entregas = d.entregas || {};
-    const linhas = [];
-    Object.keys(entregas).forEach(cat => {
-      (entregas[cat] || []).forEach(f => linhas.push(`
-        <div class="row">
-          <div class="grow"><div class="t">${esc(f.nome)}</div><div class="meta">${esc(CAT_LABEL_PORTAL[cat] || cat)}</div></div>
-          <button class="btn btn-sm" onclick="baixarEntrega('${esc(f.path)}')">Baixar</button>
-        </div>`));
-    });
+    const d = await callPortal('materiais.list');
+    const materiais = d.materiais || [];
+    const linhas = materiais.map(m => `
+      <div class="row">
+        <div class="grow"><div class="t">${esc(m.titulo)}</div><div class="meta">${esc(CAT_LABEL_PORTAL[m.categoria] || m.categoria)}</div></div>
+        <button class="btn btn-sm" onclick="baixarEntrega('${esc(m.path)}')">Baixar</button>
+      </div>`);
     el.innerHTML = linhas.length ? '<div class="rows">' + linhas.join('') + '</div>' : '<div class="empty"><div class="ic">📁</div>Nenhum arquivo disponível ainda.</div>';
   } catch (e) {
     el.innerHTML = '<div class="empty"><div class="ic">📁</div>Nenhum arquivo disponível ainda.</div>';

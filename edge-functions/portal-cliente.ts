@@ -11,7 +11,6 @@ import { normalizarSenha } from "./_shared/senha.ts";
 
 const NF_BUCKET = "eloi-notas";
 const ENTREGAS_BUCKET = "eloi-entregas";
-const ENTREGA_CATEGORIAS = ["arquivo", "apresentacao", "fonte"];
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -215,16 +214,10 @@ Deno.serve(async (req: Request) => {
     return json({ manifest, urls });
   }
 
-  if (action === "entregas.list") {
-    const resultado: Record<string, any[]> = {};
-    for (const cat of ENTREGA_CATEGORIAS) {
-      const { data } = await supabase.storage.from(ENTREGAS_BUCKET)
-        .list(`${clienteId}/entregas/${cat}`, { limit: 200, sortBy: { column: "name", order: "asc" } });
-      resultado[cat] = (data ?? []).filter((f: any) => f.id).map((f: any) => ({ nome: f.name, path: `${clienteId}/entregas/${cat}/${f.name}` }));
-    }
-    return json({ entregas: resultado });
-  }
-
+  // entregas.list saiu daqui: listava o Storage cru (storage.list()), sem
+  // filtro de publicação — rascunho virava baixável. Quem lista pro cliente
+  // agora é sempre materiais.list, que filtra status = 'publicado'. Bug 0.2
+  // de docs/ROTEIRO-SISTEMA-2026-08-28.md.
   if (action === "entregas.view_url") {
     const p = body?.path;
     if (!p || typeof p !== "string" || !p.startsWith(`${clienteId}/`)) return json({ error: "acesso negado" }, 403);
