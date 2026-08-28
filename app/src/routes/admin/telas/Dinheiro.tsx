@@ -42,23 +42,28 @@ export default function DinheiroTela() {
     | { tipo: 'fatura'; c: Conta }
     | { tipo: 'recorrencia'; r?: Recorrencia }
     | null>(null)
-  const [aviso, setAviso] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
 
   const fechar = () => setFolha(null)
-  const apos = async (msg: string) => { setAviso(msg); await recarregar() }
+  const apos = async (msg: string) => { setAviso({ texto: msg }); await recarregar() }
+  const erro = (e: unknown) => setAviso({ texto: (e as Error).message, tipo: 'erro' })
 
   // Estorno em um passo: cancelar preserva a linha no histórico e zera o efeito
   // em saldo e resultado. Reabrir devolve o status derivado do que já entrou.
   const alternarCancelamento = async (t: Transacao) => {
     const cancelando = t.status !== 'cancelado'
-    await financas.cancelar(t.id, !cancelando)
-    await apos(cancelando ? 'Lançamento cancelado' : 'Lançamento reaberto')
+    try {
+      await financas.cancelar(t.id, !cancelando)
+      await apos(cancelando ? 'Lançamento cancelado' : 'Lançamento reaberto')
+    } catch (e) { erro(e) }
   }
 
   const mudarRecorrencia = async (r: Recorrencia, estado: 'pausar' | 'retomar' | 'encerrar') => {
-    await financas.estadoRecorrencia(r.id, estado)
-    await apos(estado === 'pausar' ? 'Recorrência pausada'
-      : estado === 'retomar' ? 'Recorrência retomada' : 'Recorrência encerrada')
+    try {
+      await financas.estadoRecorrencia(r.id, estado)
+      await apos(estado === 'pausar' ? 'Recorrência pausada'
+        : estado === 'retomar' ? 'Recorrência retomada' : 'Recorrência encerrada')
+    } catch (e) { erro(e) }
   }
 
   const filtrar = useMemo(() => (lista: Transacao[]) => {
@@ -270,7 +275,7 @@ export default function DinheiroTela() {
           }} />
       )}
 
-      {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
+      {aviso && <Aviso texto={aviso.texto} tipo={aviso.tipo} aoSumir={() => setAviso(null)} />}
     </div>
   )
 }

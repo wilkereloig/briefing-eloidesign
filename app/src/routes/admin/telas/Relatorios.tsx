@@ -26,12 +26,16 @@ export default function Relatorios() {
   const hoje = hojeISO()
   const [aba, setAba] = useState<Aba>('resultado')
   const [folha, setFolha] = useState<Meta | 'nova' | null>(null)
-  const [aviso, setAviso] = useState<string | null>(null)
+  const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
 
   const encerrarMeta = async (m: Meta) => {
-    await financas.desativarMeta(m.id)
-    setAviso('Meta encerrada')
-    await recarregar()
+    try {
+      await financas.desativarMeta(m.id)
+      setAviso({ texto: 'Meta encerrada' })
+      await recarregar()
+    } catch (e) {
+      setAviso({ texto: (e as Error).message, tipo: 'erro' })
+    }
   }
 
   // Doze meses terminando no mês em foco. A janela do store cobre exatamente
@@ -228,9 +232,9 @@ export default function Relatorios() {
       {folha && (
         <FolhaMeta inicial={folha === 'nova' ? undefined : folha}
           aoFechar={() => setFolha(null)}
-          aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+          aoSalvar={async (msg) => { setAviso({ texto: msg }); await recarregar() }} />
       )}
-      {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
+      {aviso && <Aviso texto={aviso.texto} tipo={aviso.tipo} aoSumir={() => setAviso(null)} />}
     </div>
   )
 }

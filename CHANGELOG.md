@@ -2,6 +2,28 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — Ações de um clique param de falhar em silêncio
+
+Cinco pontos chamavam a edge sem `try/catch`: cancelar/reabrir lançamento e
+pausar/encerrar recorrência (`Dinheiro.tsx`), ativar/desativar conta
+(`Config.tsx`), encerrar meta (`Relatorios.tsx`) e excluir — usado por
+`Entregas`, `Arquivos`, `Notas` e `Dinheiro` via `FolhaExcluir`. Sessão
+expirada ou rede caída: a promessa rejeita, a tela não muda, nenhuma
+mensagem — a pessoa clica de novo achando que não pegou.
+
+### Corrigido
+
+- `FolhaExcluir` (`folhas.tsx`) ganha `catch` + mensagem inline — conserta as
+  quatro telas que a usam de uma vez só, sem tocar em cada uma.
+- `Dinheiro.tsx`, `Config.tsx`, `Relatorios.tsx`: `try/catch` nos handlers
+  restantes, toast de erro (`Aviso` já tinha `tipo:'erro'`, sem uso — mesmo
+  padrão do item 0.4).
+- **Fora do escopo, deliberado:** o ROTEIRO sugere um utilitário
+  `executar(acao, aoErrar)` compartilhado pelos cinco pontos. Cada handler já
+  segue o padrão try/catch usado no resto do `admin/` (inclusive o que acabou
+  de entrar no item 0.4); um wrapper novo só pra encurtar três linhas em cinco
+  lugares diferentes é abstração sem necessidade.
+
 ## 2026-08-28 — Editar lançamento cancelado não ressuscita mais ele
 
 `FolhaTransacao.tsx` nunca manda `status` no payload de edição (correto — quem

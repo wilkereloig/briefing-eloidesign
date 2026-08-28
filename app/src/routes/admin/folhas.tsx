@@ -747,13 +747,17 @@ export function FolhaExcluir({ titulo, consequencia, aoFechar, aoConfirmar }: {
   aoConfirmar: () => Promise<void> | void
 }) {
   const [indo, setIndo] = useState(false)
+  const [erro, setErro] = useState('')
   return (
     <Folha titulo="Excluir" aoFechar={aoFechar}
       rodape={<>
         <Botao variante="secundario" onClick={aoFechar} style={{ flex: 2 }}>Manter</Botao>
         <Botao variante="destrutivo" carregando={indo} onClick={async () => {
           setIndo(true)
-          try { await aoConfirmar(); aoFechar() } finally { setIndo(false) }
+          setErro('')
+          try { await aoConfirmar(); aoFechar() }
+          catch (e) { setErro((e as Error).message) }
+          finally { setIndo(false) }
         }}>Excluir</Botao>
       </>}>
       <div className="linha" style={{ alignItems: 'flex-start', gap: 'var(--e-5)' }}>
@@ -761,6 +765,7 @@ export function FolhaExcluir({ titulo, consequencia, aoFechar, aoConfirmar }: {
         <div>
           <p className="t-h2">{titulo}</p>
           <p className="t-corpo">{consequencia}</p>
+          {erro && <p className="campo-erro" role="alert">{erro}</p>}
         </div>
       </div>
     </Folha>

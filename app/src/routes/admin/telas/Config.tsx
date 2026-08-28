@@ -17,17 +17,21 @@ export default function Config() {
     | { tipo: 'conta'; c?: Conta; contexto?: Contexto }
     | { tipo: 'categoria'; contexto: Contexto }
     | null>(null)
-  const [aviso, setAviso] = useState<string | null>(null)
-  const apos = async (msg: string) => { setAviso(msg); await recarregar() }
+  const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
+  const apos = async (msg: string) => { setAviso({ texto: msg }); await recarregar() }
 
   const porContexto = (ctx: Contexto) => contas.filter((c) => c.contexto === ctx)
 
   // Desativar em vez de excluir: conta com histórico não pode sumir sem levar
   // junto os lançamentos que apontam pra ela (a FK é `on delete restrict`).
   const alternarConta = async (c: Conta) => {
-    // nome/contexto vão junto porque a edge exige os dois em contas.upsert.
-    await financas.salvarConta({ id: c.id, nome: c.nome, contexto: c.contexto, ativa: !c.ativa })
-    await apos(c.ativa ? 'Conta desativada' : 'Conta reativada')
+    try {
+      // nome/contexto vão junto porque a edge exige os dois em contas.upsert.
+      await financas.salvarConta({ id: c.id, nome: c.nome, contexto: c.contexto, ativa: !c.ativa })
+      await apos(c.ativa ? 'Conta desativada' : 'Conta reativada')
+    } catch (e) {
+      setAviso({ texto: (e as Error).message, tipo: 'erro' })
+    }
   }
 
   return (
@@ -142,7 +146,7 @@ export default function Config() {
         <FolhaCategoria contextoInicial={folha.contexto}
           aoFechar={() => setFolha(null)} aoSalvar={apos} />
       )}
-      {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
+      {aviso && <Aviso texto={aviso.texto} tipo={aviso.tipo} aoSumir={() => setAviso(null)} />}
     </div>
   )
 }
