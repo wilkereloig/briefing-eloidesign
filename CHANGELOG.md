@@ -2,6 +2,27 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — Painel parava de abrir em 1º de setembro
+
+`app/src/lib/financas-store.tsx:89` colava `-31` no fim de todo mês pra montar
+o fim da janela de transações (`deslocarMes(mes, 12) + '-31'`). Em fevereiro,
+abril, junho, setembro e novembro isso gera uma data que não existe
+(`2027-09-31`). A edge só valida formato, não calendário
+(`eloi-financas.ts:39`), então o literal passava e o Postgres recusava a
+consulta — `transacoes.list` caía com 500, o store pegava no `catch` e
+**todas** as telas do `/admin` mostravam o painel de erro. Ia estourar em
+2026-09-01.
+
+### Corrigido
+
+- Novo `ultimoDiaDoMes()` em `financas-store.tsx` calcula o último dia real do
+  mês em vez de assumir 31. `de`/`ate` da janela de transações passam a usar
+  data sempre válida. Sem mudança de edge, sem deploy — o filtro continua
+  `lte` do lado do servidor.
+- Teste novo (`financas-store.test.ts`) cobre os cinco meses que quebravam e
+  varre os 12 meses do ano pra garantir que a janela de 12 meses à frente
+  nunca gera data inválida.
+
 ## 2026-08-28 — KV atualizado chega nas páginas estáticas
 
 `assets/eloi-admin/admin.css` ainda definia o sistema visual antigo (roxo

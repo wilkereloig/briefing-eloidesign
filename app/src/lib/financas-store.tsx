@@ -32,6 +32,12 @@ export function deslocarMes(mes: string, desloc: number): string {
   return d.toISOString().slice(0, 7)
 }
 
+/** Último dia real do mês `mes` ('AAAA-MM') — fev/abr/jun/set/nov não têm 31. */
+export function ultimoDiaDoMes(mes: string): string {
+  const [a, m] = mes.split('-').map(Number)
+  return new Date(Date.UTC(a, m, 0)).toISOString().slice(0, 10)
+}
+
 export const rotuloMes = (mes: string) =>
   new Date(Date.UTC(+mes.slice(0, 4), +mes.slice(5, 7) - 1, 1))
     .toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
@@ -86,7 +92,7 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
       await financas.gerarRecorrencias().catch(() => { /* não bloqueia a carga */ })
 
       const de = deslocarMes(mes, -11) + '-01'
-      const ate = deslocarMes(mes, 12) + '-31'
+      const ate = ultimoDiaDoMes(deslocarMes(mes, 12))
       const [ref, transacoes, notas, cli, svc, orc] = await Promise.all([
         financas.bootstrap(),
         financas.transacoes({ de, ate, limite: 2000 }),
