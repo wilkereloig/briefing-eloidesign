@@ -2,6 +2,40 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — KV atualizado chega nas páginas estáticas
+
+`assets/eloi-admin/admin.css` ainda definia o sistema visual antigo (roxo
+`#5A189A`, fundo claro, fonte carbona-variable, sombras decorativas) — 14
+páginas estáticas dependiam dele: portal do cliente, os 4 briefings, os 3
+orçamentos, `/marca` e os painéis legados `/gestao` e `/painel-*`. `/admin`
+(SPA React) e a home já estavam no KV atual; o resto do site não.
+
+### Alterado
+
+- **`assets/eloi-admin/admin.css` reescrito** com os tokens do KV aprovado
+  (mesma fonte de `app/src/ui/tokens.css`): fundo `--pagina`/`--chao`, roxo
+  `#7D2AE8`, lima, coral, azul, Archivo + Manrope, sem sombra decorativa
+  (elevação por tom), foco em Lima. Nomes de variável antigos (`--brand`,
+  `--bg`, `--ink`, `--good`/`--warn`/`--bad` etc.) viraram alias pros tokens
+  novos, pra não quebrar página que ainda não foi tocada.
+- **14 páginas migradas**: portal, briefing, briefing-ecommerce,
+  briefing-guia-viver-bem, briefing-solarium, orcamento,
+  orcamento-precampanha (+ versão cliente), marca, gestao, painel,
+  painel-briefings, painel-ecommerce, painel-orcamentos. Cor/tipografia/
+  espaço/sombra/raio revisados; `<script>` de cada página não foi tocado.
+- **`gestao` e `painel-orcamentos`** — únicas implementações reais de "gerar
+  senha do portal" e "criar/editar proposta" — passaram por revisão adversarial
+  dedicada confirmando que a função não foi afetada, só a aparência.
+
+### Fora do escopo (decisão consciente)
+
+- Easings de animação "bounce" pré-existentes, texto/copy dos formulários,
+  iconografia por-página — nada disso é cor/tipografia/espaço/sombra/raio.
+- `orcamento-precampanha/*` ainda usa os nomes de variável antigos (via alias)
+  em vez dos novos diretamente — visual correto, nome pendente de padronização.
+- Wordmark (`assets/eloi-admin/wordmark.svg`) continua letrando "ELOI Design
+  Studio" — débito de design já registrado, não é CSS.
+
 ## 2026-08-07 — O site institucional existe
 
 Até aqui a home era um card com um botão "Preencher Briefing" e nada mais: sem

@@ -6,33 +6,19 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <meta name="theme-color" content="#F7F4FB">
+  <meta name="theme-color" content="#08011A">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="ELOI">
   <meta name="robots" content="noindex, nofollow">
   <title>Proposta de Campanha — ELOI Studio</title>
-  <link rel="stylesheet" href="https://use.typekit.net/ngx4uek.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap">
   <link rel="stylesheet" href="/assets/eloi-admin/admin.css">
   <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --c950:#10002B;--c900:#240046;--c800:#3C096C;--c700:#5A189A;
-      --c600:#7B2CBF;--c500:#9D4EDD;--c300:#C77DFF;--c100:#E0AAFF;
-      --white:#fff;--font:'carbona-variable',sans-serif;
-    }
-    body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.65;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-
-    /* aurora */
-    .aurora{position:fixed;inset:-20%;z-index:0;pointer-events:none;filter:blur(90px);opacity:.28}
-    .blob{position:absolute;border-radius:50%;}
-    .blob.b1{width:40%;height:45%;left:4%;top:0;background:radial-gradient(circle,#9D4EDD,transparent 70%);animation:d1 20s ease-in-out infinite}
-    .blob.b2{width:44%;height:50%;right:3%;top:-8%;background:radial-gradient(circle,#7B2CBF,transparent 70%);animation:d2 24s ease-in-out infinite}
-    .blob.b3{width:36%;height:44%;left:33%;bottom:0;background:radial-gradient(circle,#C77DFF,transparent 70%);animation:d3 17s ease-in-out infinite}
-    @keyframes d1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(24%,16%) scale(1.2)}}
-    @keyframes d2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20%,18%) scale(1.15)}}
-    @keyframes d3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(18%,-20%) scale(1.25)}}
+    body{line-height:1.65;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 
     .doc{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 24px 80px}
 
@@ -41,43 +27,44 @@
     .logo-badge{display:flex;align-items:center;justify-content:flex-start;margin:0 0 40px}
     .logo-lockup{display:flex;align-items:flex-end;gap:9px}
     .logo-lockup .logo{height:88px;width:auto;margin:0;display:block}
-    .logo-tag{font-style:italic;font-size:.92rem;line-height:1.05;color:var(--ink);text-align:left;padding-bottom:8px;font-variation-settings:'wght' 400;letter-spacing:.01em}
-    .eyebrow{font-size:.8rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-variation-settings:'wght' 600;margin-bottom:18px}
-    .cover h1{font-size:clamp(1.8rem,5vw,2.75rem);font-variation-settings:'wght' 700;letter-spacing:-.02em;line-height:1.1;margin-bottom:16px}
+    .logo-tag{font-style:italic;font-size:.92rem;line-height:1.05;color:var(--ink);text-align:left;padding-bottom:8px;letter-spacing:.01em}
+    .eyebrow{font-size:.8rem;letter-spacing:.20em;text-transform:uppercase;color:var(--muted);font-variation-settings:'wght' 600;margin-bottom:18px}
+    .cover h1{font-family:var(--fonte-titulo);font-size:clamp(1.8rem,5vw,2.75rem);font-variation-settings:'wght' 700;letter-spacing:-.02em;line-height:1.1;margin-bottom:16px;text-align:center}
     .cover .sub{font-size:1.05rem;color:var(--ink-2);max-width:520px;margin:0 auto}
     .cover .para{margin-top:28px;font-size:.9rem;color:var(--muted)}
-    .editable{border-bottom:1px dashed rgba(199,125,255,.4);padding:0 4px}
+    .editable{border-bottom:1px dashed rgba(145,132,217,.4);padding:0 4px}
 
-    .section{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:34px 38px;margin-bottom:22px}
-    .section h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;color:var(--brand);font-variation-settings:'wght' 700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
-    .section h2 .n{width:26px;height:26px;border-radius:50%;background:var(--c700);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem}
+    /* .section usa .card-base (fundo/borda) do admin.css — aqui só raio/padding */
+    .section{border-radius:var(--raio-bloco);padding:34px 38px;margin-bottom:22px}
+    .section h2{font-family:var(--fonte-titulo);font-size:.78rem;text-transform:uppercase;letter-spacing:.20em;color:var(--brand);font-variation-settings:'wght' 700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+    .section h2 .n{width:26px;height:26px;border-radius:50%;background:var(--roxo);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem}
     .lead{font-size:1rem;color:var(--ink)}
     .lead strong{color:var(--ink-2)}
 
-    /* regras TSE */
+    /* regras TSE — par sucesso (Lima) / atenção (Coral) */
     .rules{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}
-    .rule{border-radius:12px;padding:16px 18px;font-size:.9rem}
-    .rule.ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3)}
-    .rule.no{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3)}
-    .rule h4{font-size:.82rem;font-variation-settings:'wght' 700;margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
-    .rule.ok h4{color:#86efac}.rule.no h4{color:var(--bad)}
+    .rule{border-radius:var(--raio-card);padding:16px 18px;font-size:.9rem}
+    .rule.ok{background:var(--good-soft);border:1px solid rgba(223,248,6,.35)}
+    .rule.no{background:var(--bad-soft);border:1px solid rgba(253,68,0,.35)}
+    .rule h4{font-size:.82rem;font-variation-settings:'wght' 700;margin-bottom:8px;text-transform:uppercase;letter-spacing:.1em}
+    .rule.ok h4{color:var(--lima)}.rule.no h4{color:var(--coral)}
     .rule ul{list-style:none;display:flex;flex-direction:column;gap:5px}
     .rule li{padding-left:18px;position:relative}
-    .rule.ok li::before{content:'✓';position:absolute;left:0;color:#86efac}
-    .rule.no li::before{content:'✕';position:absolute;left:0;color:var(--bad)}
+    .rule.ok li::before{content:'✓';position:absolute;left:0;color:var(--lima)}
+    .rule.no li::before{content:'✕';position:absolute;left:0;color:var(--coral)}
 
     /* timeline */
     .timeline{margin-top:22px;position:relative;padding-left:28px}
-    .timeline::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--c700),var(--c500))}
+    .timeline::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--linha-forte)}
     .tl{position:relative;padding-bottom:18px}
     .tl:last-child{padding-bottom:0}
-    .tl::before{content:'';position:absolute;left:-26px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--c500);border:2px solid var(--c950)}
-    .tl.key::before{background:#fff;box-shadow:0 0 0 3px var(--c600)}
-    .tl .date{font-size:.78rem;font-variation-settings:'wght' 700;color:var(--muted);letter-spacing:.03em}
+    .tl::before{content:'';position:absolute;left:-26px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--roxo-claro);border:2px solid var(--chao)}
+    .tl.key::before{background:var(--lima);border:3px solid var(--chao)}
+    .tl .date{font-family:var(--fonte-titulo);font-size:.78rem;font-variation-settings:'wght' 700;color:var(--muted);letter-spacing:.03em}
     .tl .ev{font-size:.92rem;color:var(--ink);margin-top:1px}
-    .tl .ev small{display:block;color:var(--muted);font-size:.8rem;opacity:.85}
+    .tl .ev small{display:block;color:var(--muted);font-size:.8rem}
 
-    .phase-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--brand);font-variation-settings:'wght' 700;margin:24px 0 8px}
+    .phase-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.20em;color:var(--brand);font-variation-settings:'wght' 700;margin:24px 0 8px}
 
     /* entregas */
     .deliv{list-style:none;display:flex;flex-direction:column;gap:12px}
@@ -88,30 +75,28 @@
     .invest{width:100%;border-collapse:collapse;margin-top:6px}
     .invest th,.invest td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--line);font-size:.92rem;vertical-align:top}
     .invest th{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-variation-settings:'wght' 600}
-    .invest .val{text-align:right;font-variation-settings:'wght' 700;white-space:nowrap;color:var(--ink-2)}
+    .invest .val{text-align:right;color:var(--ink-2);white-space:nowrap}
     .invest .item-name{font-variation-settings:'wght' 600}
     .invest .item-desc{font-size:.82rem;color:var(--muted);margin-top:3px}
     .invest tr.opt td{opacity:.92}
-    .opt-tag{display:inline-block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;background:var(--surface-3);color:var(--ink-2);padding:2px 8px;border-radius:99px;margin-left:8px;vertical-align:middle}
+    /* .opt-tag reusa .chip (fundo/raio/padding) — aqui só a variação caixa-alta */
+    .opt-tag{text-transform:uppercase;letter-spacing:.20em;margin-left:8px;vertical-align:middle}
 
-    .totals{margin-top:22px;border-top:2px solid var(--c700);padding-top:18px}
+    .totals{margin-top:22px;border-top:2px solid var(--roxo);padding-top:18px}
     .total-row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 12px;font-size:.95rem}
-    .total-row.main{font-size:1.15rem;font-variation-settings:'wght' 700}
-    .total-row.main .v{color:var(--muted)}
+    .total-row.main{font-size:1.15rem}
+    .total-row .v{color:var(--texto-2)}
+    .total-row.main .v{color:var(--lima)}
     .total-row .lbl{color:var(--ink-2)}
 
     .terms{display:flex;flex-direction:column;gap:10px;font-size:.92rem}
     .terms .t{display:flex;gap:10px}
     .terms .t b{color:var(--ink-2);min-width:130px;font-variation-settings:'wght' 600}
 
-    .note{background:rgba(157,78,221,.12);border:1px solid rgba(157,78,221,.35);border-radius:12px;padding:16px 20px;font-size:.9rem;color:var(--ink-2);margin-top:4px}
+    .note{background:var(--brand-soft);border:1px solid rgba(125,42,232,.35);border-radius:var(--raio-card);padding:16px 20px;font-size:.9rem;color:var(--ink-2);margin-top:4px}
     .note strong{color:var(--ink)}
 
-    .actions{text-align:center;margin:30px 0 10px}
-    .btn{display:inline-flex;align-items:center;gap:8px;background:var(--c700);color:#fff;border:none;border-radius:10px;font-family:var(--font);font-size:.95rem;font-variation-settings:'wght' 600;padding:14px 30px;cursor:pointer;transition:background .2s}
-    .btn:hover{background:var(--c600)}
-
-    .foot{text-align:center;color:var(--muted);font-size:.8rem;opacity:.6;padding-top:24px}
+    .foot{text-align:center;color:var(--texto-4);font-size:.8rem;padding-top:24px}
 
     @media(max-width:600px){.section{padding:24px 22px}.rules{grid-template-columns:1fr}.cover{padding:48px 16px 36px}}
 
@@ -119,22 +104,16 @@
       @page{margin:10mm}
       *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
       html,body{background:var(--bg)!important;color:var(--ink)!important}
-      /* glow estático lembrando a aurora (animação não imprime) */
-      body{background-image:
-        radial-gradient(58% 42% at 18% 5%,rgba(157,78,221,.32),transparent 60%),
-        radial-gradient(55% 42% at 88% 0%,rgba(123,44,191,.26),transparent 60%)!important}
-      .actions,.aurora{display:none!important}
+      .aurora{display:none!important}
       /* seção pode quebrar entre blocos; blocos pequenos ficam inteiros */
-      .section{background:var(--surface)!important;border:1px solid var(--line)!important;break-inside:auto}
+      .section{break-inside:auto}
       .section h2,.phase-label{break-after:avoid}
       .rule,.tl,.deliv li,.invest tr,.terms .t,.total-row,.totals,.note,.cover{break-inside:avoid}
-      .cover .logo{--logo-1:#240043!important;--logo-2:#3C0A6B!important}
-      .logo-tag{color:var(--ink)!important}
     }
   </style>
 </head>
 <body>
-<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span></div>
 
 <div class="doc">
 
@@ -149,7 +128,7 @@
   </header>
 
   <!-- CONTEXTO -->
-  <section class="section">
+  <section class="section card-base">
     <h2><span class="n">1</span> As Duas Fases da Eleição 2026</h2>
     <p class="lead">A produção visual segue o calendário do TSE e muda <strong>radicalmente</strong> de uma fase para a outra. Esta proposta cobre as duas: a construção da base na <strong>pré-campanha</strong> e a operação intensa da <strong>campanha oficial</strong>.</p>
 
@@ -208,7 +187,7 @@
   </section>
 
   <!-- ENTREGAS FASE 1 -->
-  <section class="section">
+  <section class="section card-base">
     <h2><span class="n">2</span> Fase 1 — Pré-Campanha (Branding &amp; Identidade)</h2>
     <p class="lead" style="margin-bottom:18px">Sistema visual completo que serve de base para toda a comunicação da campanha:</p>
     <ul class="deliv">
@@ -220,7 +199,7 @@
   </section>
 
   <!-- ENTREGAS FASE 2 -->
-  <section class="section">
+  <section class="section card-base">
     <h2><span class="n">3</span> Fase 2 — Campanha Oficial (Produção)</h2>
     <p class="lead" style="margin-bottom:18px">Disponibilidade dedicada de produção ao longo de toda a campanha oficial (16/08 a 04/10), sob demanda, em um pacote único fechado:</p>
     <ul class="deliv">
@@ -233,7 +212,7 @@
   </section>
 
   <!-- INVESTIMENTO -->
-  <section class="section">
+  <section class="section card-base">
     <h2><span class="n">4</span> Investimento</h2>
     <table class="invest">
       <thead>
@@ -243,31 +222,31 @@
         <tr>
           <td><div class="item-name">Fase 1 · Pré-Campanha</div><div class="item-desc">Marca, paleta, tipografia, manual e templates mestre de redes.</div></td>
           <td>À vista ou 2x (sinal + entrega)</td>
-          <td class="val">R$ 5.000,00</td>
+          <td class="val valor">R$ 5.000,00</td>
         </tr>
         <tr>
           <td><div class="item-name">Fase 2 · Campanha Oficial</div><div class="item-desc">Produção de redes e impressos sob demanda, com disponibilidade dedicada durante toda a campanha oficial (16/08 ao 1º turno).</div></td>
           <td>À vista ou parcelado</td>
-          <td class="val">R$ 10.000,00</td>
+          <td class="val valor">R$ 10.000,00</td>
         </tr>
         <tr class="opt">
-          <td><div class="item-name">Landing Page / Site <span class="opt-tag">Opcional</span></div><div class="item-desc">Site responsivo para apresentação de propostas, captação de voluntários e integração com plataforma de doações.</div></td>
+          <td><div class="item-name">Landing Page / Site <span class="chip opt-tag">Opcional</span></div><div class="item-desc">Site responsivo para apresentação de propostas, captação de voluntários e integração com plataforma de doações.</div></td>
           <td>Projeto fechado</td>
-          <td class="val">R$ 1.500,00</td>
+          <td class="val valor">R$ 1.500,00</td>
         </tr>
       </tbody>
     </table>
 
     <div class="totals">
-      <div class="total-row"><span class="lbl">Fase 1 — Pré-Campanha</span><span class="v">R$ 5.000,00</span></div>
-      <div class="total-row"><span class="lbl">Fase 2 — Campanha Oficial</span><span class="v">R$ 10.000,00</span></div>
-      <div class="total-row main"><span class="lbl">Total essencial (Fase 1 + Fase 2)</span><span class="v">R$ 15.000,00</span></div>
-      <div class="total-row"><span class="lbl">Com o site opcional</span><span class="v">R$ 16.500,00</span></div>
+      <div class="total-row"><span class="lbl">Fase 1 — Pré-Campanha</span><span class="v valor">R$ 5.000,00</span></div>
+      <div class="total-row"><span class="lbl">Fase 2 — Campanha Oficial</span><span class="v valor">R$ 10.000,00</span></div>
+      <div class="total-row main"><span class="lbl">Total essencial (Fase 1 + Fase 2)</span><span class="v valor">R$ 15.000,00</span></div>
+      <div class="total-row"><span class="lbl">Com o site opcional</span><span class="v valor">R$ 16.500,00</span></div>
     </div>
   </section>
 
   <!-- CONDIÇÕES -->
-  <section class="section">
+  <section class="section card-base">
     <h2><span class="n">5</span> Prazos & Condições</h2>
     <div class="terms">
       <div class="t"><b>Entrega Fase 1</b><span>Prazo de entrega <strong>a definir</strong> — idealmente antes do início da propaganda intrapartidária, para a marca já estar pronta na fase interna do partido.</span></div>
