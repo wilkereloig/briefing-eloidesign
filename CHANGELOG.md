@@ -2,6 +2,25 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — Digitar `1234.56` não vira mais R$ 123.456,00
+
+`centsDeBRL` (`app/src/lib/dinheiro.ts`) apagava tudo que não fosse dígito ou
+vírgula — o ponto sumia (`"1234.56"` virava `123456` → R$ 123.456,00) e o
+sinal de menos também (`"-500,00"` virava R$ 500,00, positivo — conta em
+cheque especial nascia errada). É a função usada por todo campo de dinheiro
+do painel.
+
+### Corrigido
+
+- `centsDeBRL` passa a tratar ponto como decimal quando não há vírgula, e
+  preserva o sinal de menos.
+- **Fora do escopo, deliberado:** o ROTEIRO também sugere ecoar o valor
+  formatado embaixo do campo enquanto se digita — mexe nos 6 pontos que usam
+  a função (`folhas.tsx`, `FolhaTransacao.tsx`, `Notas.tsx`, `Relatorios.tsx`,
+  `Dinheiro.tsx`), sem componente de input de dinheiro compartilhado hoje.
+  Fica pra quando esse componente existir, pra não duplicar o eco em seis
+  lugares.
+
 ## 2026-08-28 — Portal não entrega mais rascunho
 
 `portal-cliente.ts` tinha a action `entregas.list`, que fazia `storage.list()`

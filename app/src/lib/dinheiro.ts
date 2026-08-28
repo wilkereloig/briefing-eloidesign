@@ -6,11 +6,23 @@ export function fmtBRL(cents: number): string {
 }
 
 export function centsDeBRL(s: string): number {
-  const limpo = s.replace(/[^\d,]/g, '')
+  const negativo = /^\s*-/.test(s)
+  const limpo = s.replace(/[^\d,.]/g, '')
   if (!limpo) return 0
-  const [intParte, decParte = ''] = limpo.split(',')
-  const dec = (decParte + '00').slice(0, 2)
-  return parseInt(intParte.replace(/\D/g, '') || '0', 10) * 100 + parseInt(dec, 10)
+  let valor: number
+  if (limpo.includes(',')) {
+    // Vírgula presente: é o decimal (padrão BR); ponto antes dela é milhar.
+    const [intParte, decParte = ''] = limpo.replace(/\./g, '').split(',')
+    const dec = (decParte + '00').slice(0, 2)
+    valor = parseInt(intParte.replace(/\D/g, '') || '0', 10) * 100 + parseInt(dec, 10)
+  } else {
+    // Sem vírgula: ponto (se houver) é decimal — "1234.56" não é R$ 123.456,00.
+    const partes = limpo.split('.')
+    const decParte = partes.length > 1 ? partes.pop()! : ''
+    const dec = (decParte + '00').slice(0, 2)
+    valor = parseInt(partes.join('') || '0', 10) * 100 + parseInt(dec, 10)
+  }
+  return negativo ? -valor : valor
 }
 
 // orcamentos.valor_total é o ÚNICO campo monetário do sistema em reais, não

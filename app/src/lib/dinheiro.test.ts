@@ -12,6 +12,16 @@ describe('dinheiro', () => {
     expect(centsDeBRL('800')).toBe(80000)
     expect(centsDeBRL('')).toBe(0)
   })
+  it('trata ponto como decimal quando não há vírgula (bug 0.3)', () => {
+    expect(centsDeBRL('1234.56')).toBe(123456)
+    expect(centsDeBRL('1500.50')).toBe(150050)
+    expect(centsDeBRL('10.5')).toBe(1050)
+  })
+  it('preserva o sinal de menos (bug 0.3 — cheque especial nascia positivo)', () => {
+    expect(centsDeBRL('-500,00')).toBe(-50000)
+    expect(centsDeBRL('-1234.56')).toBe(-123456)
+    expect(centsDeBRL('-800')).toBe(-80000)
+  })
   it('converte orcamentos.valor_total (reais) pra cents, mesma conta do trigger SQL', () => {
     expect(centsDeReais(11650)).toBe(1165000)
     expect(centsDeReais(0)).toBe(0)
