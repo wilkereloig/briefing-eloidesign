@@ -39,6 +39,9 @@ Deno.serve(async (req: Request) => {
       .is("revogado_em", null) // D7: revogado -> mesmo caminho de token inexistente
       .single();
     if (error || !data) return json({ error: "não encontrado" }, 404);
+    // rascunho ainda não foi decidido pelo estúdio — mesmo caminho de token
+    // inexistente, pra não revelar que existe um orçamento em construção.
+    if (data.status === "rascunho") return json({ error: "não encontrado" }, 404);
     return json({ orcamento: data });
   }
 

@@ -183,10 +183,13 @@ Deno.serve(async (req: Request) => {
     return json({ url: data.signedUrl });
   }
 
+  // rascunho é preço/itens ainda em construção — a F2 (quem define valor) não
+  // pode ver antes do estúdio decidir enviar. Vazaria posição de negociação.
   if (action === "orcamentos.list") {
     const { data, error } = await supabase.from("orcamentos")
       .select("id,titulo,status,valor_total,share_token,created_at")
-      .eq("cliente_id", clienteId).order("created_at", { ascending: false });
+      .eq("cliente_id", clienteId).neq("status", "rascunho")
+      .order("created_at", { ascending: false });
     if (error) return json({ error: error.message }, 500);
     return json({ orcamentos: data });
   }

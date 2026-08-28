@@ -2,6 +2,23 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — Orçamento em rascunho para de vazar pro cliente
+
+`portal-cliente.ts` (`orcamentos.list`) não filtrava `status` — o portal
+desenhava "Ver proposta completa" pra toda linha, inclusive rascunho.
+`orcamentos.ts` (`public_get`, usado pelo link da proposta) também aceitava
+qualquer status. Preço provisório e itens ainda em construção chegavam ao
+cliente antes do estúdio decidir enviar — com a F2, que é quem define o
+valor de cada serviço, isso entrega posição de negociação.
+
+### Corrigido
+
+- `portal-cliente.ts` · `orcamentos.list` exclui `status = 'rascunho'`.
+- `orcamentos.ts` · `public_get` devolve "não encontrado" (mesmo caminho de
+  token revogado, D-7) quando o orçamento do token ainda é rascunho.
+
+Fecha o Horizonte 0 (docs/ROTEIRO-SISTEMA-2026-08-28.md) — 8 itens, 8 commits.
+
 ## 2026-08-28 — Ações de um clique param de falhar em silêncio
 
 Cinco pontos chamavam a edge sem `try/catch`: cancelar/reabrir lançamento e
