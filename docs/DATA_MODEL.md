@@ -93,6 +93,13 @@ Trabalho contratado. `cliente_id` é `RESTRICT` — cliente com serviço não so
 dentro de F2 EXPERIENCE). É rótulo visual, **não é cliente próprio** — não tem
 portal, senha nem orçamento.
 
+`valor_sugerido_cents` / `valor_sugerido_em` / `valor_sugerido_observacao`: o
+cliente propõe valor (e observação opcional) pelo portal, aba Pendências
+(`portal-cliente.ts`, `servicos.sugerir_valor`) — pra serviço sem valor **ou**
+pra corrigir um já definido. Nunca grava em `valor_cents` direto; só
+`servicos.aprovar_valor_sugerido` (admin) copia a sugestão pro valor oficial e
+limpa os três campos. `servicos.rejeitar_valor_sugerido` só limpa.
+
 ### `orcamentos`
 Proposta. `share_token` dá o link view-only do cliente.
 ⚠️ **`valor_total` é `numeric` em reais** — o único campo monetário fora da

@@ -57,7 +57,10 @@
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--roxo);color:var(--white);padding:12px 22px;border-radius:var(--raio-controle);font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
     .toast.show{opacity:1}
 
-    .sug-input{border:1px solid var(--line-field,var(--line));border-radius:var(--raio-chip);padding:8px 10px;font-family:var(--font);font-size:.86rem;width:120px;background:var(--surface);color:var(--ink)}
+    .pend-editor{display:flex;gap:8px;flex-wrap:wrap;width:100%;margin-top:2px}
+    .sug-input,.sug-obs{border:1px solid var(--line-field,var(--line));border-radius:var(--raio-chip);padding:8px 10px;font-family:var(--font);font-size:.86rem;background:var(--surface);color:var(--ink)}
+    .sug-input{width:120px}
+    .sug-obs{flex:1;min-width:160px}
   </style>
 </head>
 <body>
@@ -319,29 +322,32 @@ function renderPendencias(){
   const pendentes = SERVICOS.filter(s => !s.pago);
   if (!pendentes.length) { el.innerHTML = '<div class="empty"><div class="ic">✅</div>Nenhuma pendência no momento.</div>'; return; }
   el.innerHTML = '<div class="rows">' + pendentes.map(s => {
-    if (s.valor_cents > 0) {
-      return `
-      <div class="row">
-        <div class="grow"><div class="t">${esc(s.descricao)}</div><div class="meta">${brl(s.valor_cents/100)}</div></div>
-      </div>`;
-    }
-    const aviso = s.valor_sugerido_cents
-      ? `<div class="meta">Você sugeriu ${brl(s.valor_sugerido_cents/100)} — aguardando confirmação</div>`
-      : `<div class="meta">Sem valor definido</div>`;
+    // Editável mesmo com valor já definido: a F2 (quem define o valor de cada
+    // serviço) pode corrigir. Vai pra valor_sugerido — o dono confere e
+    // aprova de novo, nunca sobrescreve valor_cents direto pelo portal.
+    const valorBase = s.valor_sugerido_cents ?? s.valor_cents ?? 0;
+    const prefillValor = valorBase ? (valorBase / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+    const meta = s.valor_sugerido_cents
+      ? `Você sugeriu ${brl(s.valor_sugerido_cents / 100)} — aguardando confirmação`
+      : s.valor_cents > 0 ? `Valor atual: ${brl(s.valor_cents / 100)}` : 'Sem valor definido';
     return `
       <div class="row">
-        <div class="grow"><div class="t">${esc(s.descricao)}</div>${aviso}</div>
-        <input type="text" inputmode="decimal" class="sug-input" id="sug-${s.id}" placeholder="Valor (R$)">
-        <button class="btn btn-sm" onclick="enviarSugestao('${s.id}')">${s.valor_sugerido_cents ? 'Reenviar valor' : 'Enviar valor'}</button>
+        <div class="grow"><div class="t">${esc(s.descricao)}</div><div class="meta">${meta}</div></div>
+        <div class="pend-editor">
+          <input type="text" inputmode="decimal" class="sug-input" id="sug-${s.id}" placeholder="Valor (R$)" value="${esc(prefillValor)}">
+          <input type="text" class="sug-obs" id="obs-${s.id}" placeholder="Observação (opcional)" value="${esc(s.valor_sugerido_observacao || '')}">
+          <button class="btn btn-sm" onclick="enviarSugestao('${s.id}')">${s.valor_sugerido_cents ? 'Reenviar valor' : s.valor_cents > 0 ? 'Corrigir valor' : 'Enviar valor'}</button>
+        </div>
       </div>`;
   }).join('') + '</div>';
 }
 async function enviarSugestao(servico_id){
   const input = document.getElementById('sug-' + servico_id);
+  const obsInput = document.getElementById('obs-' + servico_id);
   const valor_cents = parseReaisParaCents(input && input.value);
   if (!Number.isFinite(valor_cents) || valor_cents <= 0) { toast('Digite um valor válido.'); return; }
   try {
-    await callPortal('servicos.sugerir_valor', { servico_id, valor_cents });
+    await callPortal('servicos.sugerir_valor', { servico_id, valor_cents, observacao: (obsInput && obsInput.value.trim()) || null });
     const sv = await callPortal('servicos.list');
     SERVICOS = sv.servicos || [];
     renderPendencias();

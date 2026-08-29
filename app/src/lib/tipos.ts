@@ -43,6 +43,7 @@ export interface ServicoRow {
   created_at: string
   valor_sugerido_cents: number | null
   valor_sugerido_em: string | null
+  valor_sugerido_observacao: string | null
 }
 
 export type OrcamentoStatus = 'rascunho' | 'enviado' | 'aprovado' | 'recusado'

@@ -2,6 +2,37 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-08-28 — Wordmark corrigido; portal deixa cliente corrigir valor com observação
+
+Wordmark (`assets/eloi-admin/wordmark.svg`) ainda desenhava "ELOI DESIGN
+STUDIO" em 3 linhas — débito registrado no `CLAUDE.md` desde 2026-08-05
+(nome renomeado, arte nunca foi re-letrada). Aba Pendências do portal também
+só deixava o cliente digitar valor pra serviço **sem** valor — um já
+definido (`valor_cents > 0`) aparecia travado, sem como a F2 corrigir nem
+deixar contexto.
+
+### Alterado
+
+- **Wordmark**: removida a linha "DESIGN" (6 paths vetoriais) e a linha
+  "STUDIO" subiu no lugar — cirurgia geométrica no SVG existente (deletar +
+  deslocar coordenadas), não redesenho de letra à mão. Resultado: "ELOI /
+  STUDIO" em 2 linhas, mesma arte original, `viewBox` ajustado. Fecha o
+  débito do `CLAUDE.md`.
+- **Portal · Pendências**: toda linha (com ou sem valor) ganha campo de
+  valor editável + campo de observação opcional. Corrigir um valor já
+  definido não sobrescreve `valor_cents` direto — vira `valor_sugerido_cents`
+  como qualquer sugestão, o dono confere e aprova (mesmo fluxo do commit
+  `d8f9499`, só habilitado em mais linhas).
+- **`eloi_servicos.valor_sugerido_observacao`** (nova coluna, migração
+  `2026-08-28-servico-valor-sugerido-observacao.sql`): observação do cliente
+  junto da sugestão. Coluna dedicada — não reaproveita `observacoes` (nota
+  interna do estúdio, item 0.5 do Horizonte 0), pra não colidir escrita do
+  cliente com anotação do dono. Limpa junto ao aprovar/rejeitar, igual
+  `valor_sugerido_em`. `Projetos.tsx` mostra a observação junto do valor
+  sugerido, antes do dono decidir.
+- **Precisa de migração + deploy** (`eloi-gestao`, `portal-cliente`) pra
+  valer em produção.
+
 ## 2026-08-28 — Orçamento em rascunho para de vazar pro cliente
 
 `portal-cliente.ts` (`orcamentos.list`) não filtrava `status` — o portal

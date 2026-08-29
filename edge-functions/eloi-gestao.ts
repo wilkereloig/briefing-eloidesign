@@ -238,7 +238,10 @@ Deno.serve(async (req: Request) => {
     const { data: s } = await supabase.from("eloi_servicos").select("valor_sugerido_cents").eq("id", servicoId).maybeSingle();
     if (!s || s.valor_sugerido_cents == null) return json({ error: "sem sugestão pendente" }, 400);
     const { data, error } = await supabase.from("eloi_servicos")
-      .update({ valor_cents: s.valor_sugerido_cents, valor_sugerido_cents: null, valor_sugerido_em: null })
+      .update({
+        valor_cents: s.valor_sugerido_cents,
+        valor_sugerido_cents: null, valor_sugerido_em: null, valor_sugerido_observacao: null,
+      })
       .eq("id", servicoId).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ servico: data });
@@ -248,7 +251,7 @@ Deno.serve(async (req: Request) => {
     const servicoId = body?.servico_id;
     if (!servicoId) return json({ error: "servico_id obrigatório" }, 400);
     const { data, error } = await supabase.from("eloi_servicos")
-      .update({ valor_sugerido_cents: null, valor_sugerido_em: null })
+      .update({ valor_sugerido_cents: null, valor_sugerido_em: null, valor_sugerido_observacao: null })
       .eq("id", servicoId).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ servico: data });

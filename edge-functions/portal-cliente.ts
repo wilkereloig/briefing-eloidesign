@@ -144,7 +144,7 @@ Deno.serve(async (req: Request) => {
 
   if (action === "servicos.list") {
     const { data, error } = await supabase.from("eloi_servicos")
-      .select("id,descricao,valor_cents,status_execucao,pago,data_pagamento,nf_numero,nf_arquivo_url,created_at,valor_sugerido_cents,valor_sugerido_em")
+      .select("id,descricao,valor_cents,status_execucao,pago,data_pagamento,nf_numero,nf_arquivo_url,created_at,valor_sugerido_cents,valor_sugerido_em,valor_sugerido_observacao")
       .eq("cliente_id", clienteId).order("created_at", { ascending: false });
     if (error) return json({ error: error.message }, 500);
     const servicos = (data ?? []).map(({ nf_arquivo_url, ...rest }: any) => ({ ...rest, tem_nf: !!nf_arquivo_url }));
@@ -166,8 +166,13 @@ Deno.serve(async (req: Request) => {
     if (!s || s.cliente_id !== clienteId) return json({ error: "não encontrado" }, 404);
     if (s.pago) return json({ error: "serviço já pago" }, 400);
 
+    const observacao = typeof body?.observacao === "string" ? body.observacao.trim() || null : null;
     const { data, error } = await supabase.from("eloi_servicos")
-      .update({ valor_sugerido_cents: valorCents, valor_sugerido_em: new Date().toISOString() })
+      .update({
+        valor_sugerido_cents: valorCents,
+        valor_sugerido_em: new Date().toISOString(),
+        valor_sugerido_observacao: observacao,
+      })
       .eq("id", s.id).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ servico: data });

@@ -181,6 +181,7 @@ export default function Projetos() {
                           {p.servico?.valor_sugerido_cents != null && (
                             <span className="t-legenda espremer" style={{ color: 'var(--acento)' }}>
                               Cliente sugeriu {fmtBRL(p.servico.valor_sugerido_cents)}
+                              {p.servico.valor_sugerido_observacao ? ` — "${p.servico.valor_sugerido_observacao}"` : ''}
                             </span>
                           )}
                         </span>
