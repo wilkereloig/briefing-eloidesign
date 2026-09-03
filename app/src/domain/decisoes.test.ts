@@ -84,6 +84,79 @@ describe('decisoesDoDia', () => {
   })
 })
 
+describe('decisoesDoDia — regras de atenção', () => {
+  it('valor sugerido pelo cliente vira decisão de aprovar', () => {
+    const ds = decisoesDoDia({
+      servicos: [srv({ status_execucao: 'em_execucao', valor_sugerido_cents: 90000 })],
+      movimentos: [], orcamentos: [], agora: AGORA,
+    })
+    expect(ds).toContainEqual(expect.objectContaining({ acao: 'aprovar_valor', valorCents: 90000 }))
+  })
+  it('a observação do cliente entra no detalhe — é o contexto da decisão', () => {
+    const ds = decisoesDoDia({
+      servicos: [srv({ valor_sugerido_cents: 1000, valor_sugerido_observacao: 'combinamos 10' })],
+      movimentos: [], orcamentos: [], agora: AGORA,
+    })
+    expect(ds.find((d) => d.acao === 'aprovar_valor')?.detalhe).toContain('combinamos 10')
+  })
+  it('a marca acompanha a decisão do serviço', () => {
+    const ds = decisoesDoDia({
+      servicos: [srv({ sub_cliente: 'Vibra', nf_numero: null, pago: true })],
+      movimentos: [], orcamentos: [], agora: AGORA,
+    })
+    expect(ds.find((d) => d.acao === 'lancar_nf')?.marca).toBe('Vibra')
+  })
+  it('serviço com nota vinculada não cobra nota, mesmo sem nf_numero', () => {
+    const ds = decisoesDoDia({
+      servicos: [srv({ nota_fiscal_id: 'n1', nf_numero: null, pago: true })],
+      movimentos: [], orcamentos: [], agora: AGORA,
+    })
+    expect(ds.some((d) => d.acao === 'lancar_nf')).toBe(false)
+  })
+
+  const brief = (over = {}) => ({
+    id: 'b1', token: 't', cliente: 'Solarium', cliente_id: null, tipo: 'briefing',
+    status: 'respondido' as const, created_at: '2026-07-01', revogado_em: null,
+    responded_at: new Date(AGORA - 4 * DIA).toISOString(),
+    nome: null, email: null, whatsapp: null, empresa: null, raw: {}, ...over,
+  })
+
+  it('briefing respondido e solto vira decisão de ler', () => {
+    const ds = decisoesDoDia({ servicos: [], orcamentos: [], briefings: [brief()], agora: AGORA })
+    expect(ds).toContainEqual(expect.objectContaining({ acao: 'ler_briefing', urgencia: 'atrasado' }))
+  })
+  it('briefing já vinculado a cliente não cobra nada', () => {
+    const ds = decisoesDoDia({
+      servicos: [], orcamentos: [], briefings: [brief({ cliente_id: 'c1' })], agora: AGORA,
+    })
+    expect(ds.some((d) => d.acao === 'ler_briefing')).toBe(false)
+  })
+  it('briefing revogado sai da fila', () => {
+    const ds = decisoesDoDia({
+      servicos: [], orcamentos: [], briefings: [brief({ revogado_em: '2026-07-10' })], agora: AGORA,
+    })
+    expect(ds.some((d) => d.acao === 'ler_briefing')).toBe(false)
+  })
+
+  it('nenhuma conta cadastrada vira uma linha só, urgente', () => {
+    const ds = decisoesDoDia({ servicos: [], orcamentos: [], contas: [], agora: AGORA })
+    const setup = ds.filter((d) => d.acao === 'configurar_conta')
+    expect(setup).toHaveLength(1)
+    expect(setup[0].urgencia).toBe('atrasado')
+  })
+  it('com conta cadastrada, nada de configuração aparece', () => {
+    const ds = decisoesDoDia({
+      servicos: [], orcamentos: [],
+      contas: [{ id: 'c' } as never], agora: AGORA,
+    })
+    expect(ds.some((d) => d.acao === 'configurar_conta')).toBe(false)
+  })
+  it('sem informar contas, a regra não opina', () => {
+    const ds = decisoesDoDia({ servicos: [], orcamentos: [], agora: AGORA })
+    expect(ds.some((d) => d.acao === 'configurar_conta')).toBe(false)
+  })
+})
+
 describe('prazos', () => {
   it('ordena por distancia, atrasados primeiro (dias negativo)', () => {
     const ps = prazos({

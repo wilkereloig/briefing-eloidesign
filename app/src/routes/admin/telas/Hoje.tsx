@@ -7,7 +7,7 @@ import {
   resultado, saldoDisponivel, saldoConta, faturaAberta, vencidas, proximosVencimentos,
   valorLiquidado,
 } from '../../../domain/financeiro'
-import { decisoesDoDia } from '../../../domain/decisoes'
+import { ACAO, decisoesDoDia } from '../../../domain/decisoes'
 import { Etiqueta, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, ChipMovimento, Dinheiro, SeletorLente, SeletorMes } from '../../../ui/painel'
 import { dataCurta, rotuloConta, variacao } from '../../../ui/formato'
@@ -15,7 +15,7 @@ import { fmtBRL } from '../../../lib/dinheiro'
 
 export default function Hoje() {
   const est = useFinancas()
-  const { contas, transacoes, notas, servicos, orcamentos, mes, contexto } = est
+  const { contas, transacoes, notas, servicos, orcamentos, briefings, mes, contexto } = est
   const doMes = useTransacoesDoMes()
   const nomes = useNomes()
   const hoje = hojeISO()
@@ -32,9 +32,11 @@ export default function Hoje() {
 
   // Orçamentos entram de verdade: passar [] aqui matava a decisão "proposta
   // enviada há N dias sem resposta", que é a única do funil comercial.
+  // `contas` entra para a regra "nenhuma conta cadastrada" saber a diferença
+  // entre "não há conta" e "ninguém informou" — as duas são [] sem isso.
   const decisoes = useMemo(() => decisoesDoDia({
-    servicos, orcamentos, transacoes, notas,
-  }).slice(0, 8), [servicos, orcamentos, transacoes, notas])
+    servicos, orcamentos, transacoes, notas, briefings, contas,
+  }).slice(0, 8), [servicos, orcamentos, transacoes, notas, briefings, contas])
 
   const ultimas = useMemo(() => [...doMes]
     .filter((t) => valorLiquidado(t) > 0)
@@ -101,14 +103,21 @@ export default function Hoje() {
                         background: d.urgencia === 'atrasado' ? 'var(--coral)' : 'var(--azul)',
                       }} />
                       <span className="celula">
+                        {/* Contexto antes do problema: "F2 · Vibra" responde
+                            "de quem é isso?" sem abrir nada. */}
+                        {(d.clienteId || d.marca) && (
+                          <span className="etiqueta-mini espremer">
+                            {[d.clienteId ? nomes.cliente.get(d.clienteId)?.nome : null, d.marca]
+                              .filter(Boolean).join(' · ')}
+                          </span>
+                        )}
                         <span className="t-ui espremer">{d.titulo}</span>
-                        <span className="t-legenda espremer">
-                          {d.detalhe}
-                          {d.clienteId && nomes.cliente.get(d.clienteId)
-                            ? ` · ${nomes.cliente.get(d.clienteId)!.nome}` : ''}
-                        </span>
+                        <span className="t-legenda espremer">{d.detalhe}</span>
                       </span>
                       {d.valorCents != null && <Dinheiro cents={d.valorCents} className="t-valor" />}
+                      <Link className="btn btn-secundario btn-compacto" to={ACAO[d.acao].destino}>
+                        {ACAO[d.acao].rotulo}
+                      </Link>
                     </li>
                   ))}
                 </ul>

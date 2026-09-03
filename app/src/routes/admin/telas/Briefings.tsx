@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { briefingsApi } from '../../../lib/api'
 import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
@@ -19,10 +19,10 @@ import { FolhaExcluir } from '../folhas'
 type Aba = 'convites' | 'legado'
 
 export default function Briefings() {
-  const { clientes } = useFinancas()
+  const { clientes, briefings: convites, recarregar } = useFinancas()
   const nomes = useNomes()
-  const [convites, setConvites] = useState<BriefingLinkRow[] | null>(null)
   const [legado, setLegado] = useState<(BriefingLegadoRow & { origem: 'visual' | 'ecommerce' })[]>([])
+  const [carregandoLegado, setCarregandoLegado] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
   const [aba, setAba] = useState<Aba>('convites')
   const [aviso, setAviso] = useState<string | null>(null)
@@ -35,30 +35,32 @@ export default function Briefings() {
   const [excluir, setExcluir] = useState<BriefingLinkRow | null>(null)
   const [ocupado, setOcupado] = useState<string | null>(null)
 
-  async function carregar() {
+  // Convites vêm do store (a fila de "Precisa de você" também os lê — duas
+  // buscas seriam duas verdades). O legado só existe aqui, então fica local.
+  const carregar = useCallback(async () => {
     setErro(null)
     try {
-      const [inv, vis, ec] = await Promise.all([
-        briefingsApi.convites(),
+      const [vis, ec] = await Promise.all([
         briefingsApi.legadoVisual().catch(() => [] as BriefingLegadoRow[]),
         briefingsApi.legadoEcommerce().catch(() => [] as BriefingLegadoRow[]),
       ])
-      setConvites(inv)
       setLegado([
         ...vis.map((b) => ({ ...b, origem: 'visual' as const })),
         ...ec.map((b) => ({ ...b, origem: 'ecommerce' as const })),
       ].sort((a, b) => b.created_at.localeCompare(a.created_at)))
     } catch (e) {
       setErro((e as Error).message)
-      setConvites([])
+    } finally {
+      setCarregandoLegado(false)
     }
-  }
-  useEffect(() => { void carregar() }, [])
+    await recarregar()
+  }, [recarregar])
+  useEffect(() => { void carregar() }, [carregar])
 
   const respondidos = useMemo(
-    () => (convites ?? []).filter((c) => c.status === 'respondido'), [convites])
+    () => convites.filter((c) => c.status === 'respondido'), [convites])
   const pendentes = useMemo(
-    () => (convites ?? []).filter((c) => c.status === 'pendente' && !c.revogado_em), [convites])
+    () => convites.filter((c) => c.status === 'pendente' && !c.revogado_em), [convites])
   const semCliente = useMemo(
     () => legado.filter((b) => !b.cliente_id), [legado])
 
@@ -106,7 +108,7 @@ export default function Briefings() {
         </Botao>
       </Cabecalho>
 
-      {convites === null ? <Esqueleto linhas={4} altura={64} /> : (
+      {carregandoLegado && convites.length === 0 ? <Esqueleto linhas={4} altura={64} /> : (
         <>
           <div className="grade-indicadores">
             <Indicador dominante rotulo="Respondidos" valor={String(respondidos.length)}

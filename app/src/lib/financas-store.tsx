@@ -12,12 +12,12 @@ import {
   createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode,
 } from 'react'
 import {
-  clientes as clientesApi, financas, orcamentos as orcamentosApi, servicos as servicosApi,
-  subClientes as subClientesApi,
+  briefingsApi, clientes as clientesApi, financas, orcamentos as orcamentosApi,
+  servicos as servicosApi, subClientes as subClientesApi,
 } from './api'
 import type {
-  Categoria, ClienteRow, Conta, Contexto, Meta, NotaFiscal, OrcamentoRow,
-  Recorrencia, ServicoRow, SubClienteRow, Transacao,
+  BriefingLinkRow, Categoria, ClienteRow, Conta, Contexto, Meta, NotaFiscal,
+  OrcamentoRow, Recorrencia, ServicoRow, SubClienteRow, Transacao,
 } from './tipos'
 
 /** Filtro de contexto da interface: 'tudo' soma pessoal + empresa. */
@@ -54,6 +54,9 @@ interface Estado {
   subClientes: SubClienteRow[]
   servicos: ServicoRow[]
   orcamentos: OrcamentoRow[]
+  /** Convites por token. Fonte única: a tela de Briefings e a fila de "Precisa
+   *  de você" leem daqui, não cada uma da sua busca. */
+  briefings: BriefingLinkRow[]
   carregando: boolean
   erro: string | null
   /** Mês em foco, 'AAAA-MM'. */
@@ -70,11 +73,13 @@ const Ctx = createContext<Estado>(null!)
 export const useFinancas = () => useContext(Ctx)
 
 type Dados = Pick<Estado, 'contas' | 'categorias' | 'recorrencias' | 'metas'
-  | 'transacoes' | 'notas' | 'clientes' | 'subClientes' | 'servicos' | 'orcamentos'>
+  | 'transacoes' | 'notas' | 'clientes' | 'subClientes' | 'servicos' | 'orcamentos'
+  | 'briefings'>
 
 const VAZIO: Dados = {
   contas: [], categorias: [], recorrencias: [], metas: [],
   transacoes: [], notas: [], clientes: [], subClientes: [], servicos: [], orcamentos: [],
+  briefings: [],
 }
 
 export function FinancasProvider({ children }: { children: ReactNode }) {
@@ -95,7 +100,7 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
 
       const de = deslocarMes(mes, -11) + '-01'
       const ate = ultimoDiaDoMes(deslocarMes(mes, 12))
-      const [ref, transacoes, notas, cli, sub, svc, orc] = await Promise.all([
+      const [ref, transacoes, notas, cli, sub, svc, orc, bri] = await Promise.all([
         financas.bootstrap(),
         financas.transacoes({ de, ate, limite: 2000 }),
         financas.notas(),
@@ -108,11 +113,13 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
         // Orçamentos alimentam o funil de projetos (domain/projeto.ts). Falha
         // aqui não derruba o painel financeiro inteiro.
         orcamentosApi.list().catch(() => [] as OrcamentoRow[]),
+        briefingsApi.convites().catch(() => [] as BriefingLinkRow[]),
       ])
       setDados({
         contas: ref.contas, categorias: ref.categorias,
         recorrencias: ref.recorrencias, metas: ref.metas,
         transacoes, notas, clientes: cli, subClientes: sub, servicos: svc, orcamentos: orc,
+        briefings: bri,
       })
     } catch (e) {
       setErro((e as Error).message)

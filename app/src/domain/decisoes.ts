@@ -1,16 +1,35 @@
-import type { ServicoRow, MovimentoRow, OrcamentoRow, Transacao, NotaFiscal } from '../lib/tipos'
+import type {
+  ServicoRow, MovimentoRow, OrcamentoRow, Transacao, NotaFiscal, BriefingLinkRow, Conta,
+} from '../lib/tipos'
 import { centsDeReais } from '../lib/dinheiro'
 import { diasDeAtraso, estaEmAberto } from './financeiro'
 
 export type Urgencia = 'normal' | 'atrasado'
 export type AcaoDecisao = 'lancar_nf' | 'cobrar_pagamento' | 'conferir_recebimento'
   | 'cobrar_decisao' | 'pagar_conta' | 'emitir_nf'
+  | 'aprovar_valor' | 'ler_briefing' | 'configurar_conta'
+
+/** O que o botão da fila diz e para onde leva. Uma fila que só descreve o
+ *  problema devolve o trabalho de descobrir onde resolvê-lo. */
+export const ACAO: Record<AcaoDecisao, { rotulo: string; destino: string }> = {
+  lancar_nf: { rotulo: 'Registrar nota', destino: '/admin/notas?novo=1' },
+  emitir_nf: { rotulo: 'Ver nota', destino: '/admin/notas' },
+  cobrar_pagamento: { rotulo: 'Ver cobrança', destino: '/admin/dinheiro' },
+  pagar_conta: { rotulo: 'Ver conta', destino: '/admin/dinheiro' },
+  conferir_recebimento: { rotulo: 'Conferir', destino: '/admin/dinheiro' },
+  cobrar_decisao: { rotulo: 'Ver proposta', destino: '/admin/orcamentos' },
+  aprovar_valor: { rotulo: 'Aprovar valor', destino: '/admin/projetos' },
+  ler_briefing: { rotulo: 'Ler resposta', destino: '/admin/briefings' },
+  configurar_conta: { rotulo: 'Cadastrar conta', destino: '/admin/config' },
+}
 
 export interface Decisao {
   id: string
   titulo: string
   detalhe: string
   clienteId: string | null
+  /** Marca atendida, quando houver — "F2 Experience · Vibra" diz mais que "F2". */
+  marca?: string | null
   valorCents: number | null
   acao: AcaoDecisao
   urgencia: Urgencia
@@ -26,6 +45,8 @@ export function decisoesDoDia(input: {
   /** Núcleo financeiro novo. Opcional: as chamadas antigas seguem válidas. */
   transacoes?: Transacao[]
   notas?: NotaFiscal[]
+  briefings?: BriefingLinkRow[]
+  contas?: Conta[]
   agora?: number
 }): Decisao[] {
   const agora = input.agora ?? Date.now()
@@ -33,10 +54,11 @@ export function decisoesDoDia(input: {
 
   for (const s of input.servicos) {
     if (s.status_execucao !== 'concluida') continue
-    if (!s.nf_numero) {
+    if (!s.nota_fiscal_id) {
       decisoes.push({
         id: `nf:${s.id}`, titulo: s.descricao, detalhe: 'Concluído sem nota fiscal',
-        clienteId: s.cliente_id, valorCents: s.valor_cents, acao: 'lancar_nf', urgencia: 'normal',
+        clienteId: s.cliente_id, marca: s.sub_cliente, valorCents: s.valor_cents,
+        acao: 'lancar_nf', urgencia: 'normal',
       })
     }
     if (!s.pago) {
@@ -44,10 +66,26 @@ export function decisoesDoDia(input: {
       decisoes.push({
         id: `pag:${s.id}`, titulo: s.descricao,
         detalhe: venceu ? 'Pagamento atrasado' : 'Aguardando pagamento',
-        clienteId: s.cliente_id, valorCents: s.valor_cents, acao: 'cobrar_pagamento',
-        urgencia: venceu ? 'atrasado' : 'normal',
+        clienteId: s.cliente_id, marca: s.sub_cliente, valorCents: s.valor_cents,
+        acao: 'cobrar_pagamento', urgencia: venceu ? 'atrasado' : 'normal',
       })
     }
+  }
+
+  // Valor sugerido pelo cliente trava o serviço: enquanto ninguém decide, o
+  // valor oficial continua o antigo (ou zero) e todo total sai errado.
+  for (const s of input.servicos) {
+    if (s.valor_sugerido_cents == null) continue
+    decisoes.push({
+      id: `sug:${s.id}`,
+      titulo: s.descricao,
+      detalhe: s.valor_sugerido_observacao
+        ? `Cliente sugeriu um valor: "${s.valor_sugerido_observacao}"`
+        : 'Cliente sugeriu um valor',
+      clienteId: s.cliente_id, marca: s.sub_cliente,
+      valorCents: s.valor_sugerido_cents,
+      acao: 'aprovar_valor', urgencia: 'normal',
+    })
   }
 
   for (const m of input.movimentos ?? []) {
@@ -103,6 +141,35 @@ export function decisoesDoDia(input: {
       valorCents: nf.valor_cents,
       acao: 'emitir_nf',
       urgencia: 'normal',
+    })
+  }
+
+  // Briefing respondido e ainda solto: ninguém abriu para transformar em
+  // proposta. "Sem cliente vinculado" é o proxy de "não foi revisado" — é o
+  // primeiro passo que alguém dá ao ler a resposta.
+  for (const b of input.briefings ?? []) {
+    if (b.status !== 'respondido' || b.revogado_em || b.cliente_id) continue
+    const dias = b.responded_at
+      ? Math.floor((agora - new Date(b.responded_at).getTime()) / DIA_MS) : 0
+    decisoes.push({
+      id: `bri:${b.id}`,
+      titulo: b.cliente || b.nome || 'Briefing respondido',
+      detalhe: dias > 0 ? `Respondido há ${dias} ${dias === 1 ? 'dia' : 'dias'}` : 'Respondido, não revisado',
+      clienteId: null, valorCents: null,
+      acao: 'ler_briefing', urgencia: dias >= 3 ? 'atrasado' : 'normal',
+    })
+  }
+
+  // Sem conta cadastrada, saldo, previsão e relatório mostram zero — e zero
+  // parece resultado, não configuração faltando. Uma linha só: repetir por
+  // conta ausente não faz sentido quando não existe nenhuma.
+  if (input.contas && input.contas.length === 0) {
+    decisoes.push({
+      id: 'setup:contas',
+      titulo: 'Nenhuma conta cadastrada',
+      detalhe: 'Sem conta, saldo e previsão mostram zero',
+      clienteId: null, valorCents: null,
+      acao: 'configurar_conta', urgencia: 'atrasado',
     })
   }
 
