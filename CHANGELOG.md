@@ -2,6 +2,33 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-03 — Briefing respondido não se sobrescreve; IP de throttle vem de um lugar só
+
+`briefing-submit` (público) aceitava um segundo POST no mesmo token e trocava
+`raw` sem perguntar — link vazado ou reenvio acidental apagava o que o
+cliente já tinha mandado. Também não tinha limite nenhum por IP. E
+`portal-cliente` ainda lia o **primeiro** elemento de `X-Forwarded-For` (o que
+o cliente escreve), mesmo furo já corrigido no `admin-auth` em 08-07.
+
+### Corrigido
+
+- **`briefing-submit`**: token com `status = 'respondido'` responde 409 e não
+  grava. Guarda de corrida no `update` (`.neq status respondido`). Reabrir
+  vira ação de admin (entra com a tela de briefings no `/admin`, FASE 3).
+- **`briefing-submit`**: throttle por IP, 10 envios / 15 min, falha fechada
+  igual ao admin (contador indisponível → 503, não "zero"). Tabela própria
+  `briefing_submit_ip_attempts` (migração `2026-09-03-briefing-submit-ip-throttle.sql`)
+  — não divide contador com o login do portal. Faxina de >24h no sucesso.
+- **`_shared/ip.ts`** (`ipDaRequisicao`): último elemento de `X-Forwarded-For`,
+  com teste. `admin-auth` e `portal-cliente` passam a chamar daqui — uma
+  implementação, não duas divergindo.
+- Formulários de briefing continuam mostrando "enviado" quando o Formspree
+  aceita mesmo que o banco responda 409 — o backup por e-mail chega ao dono,
+  então o dado não se perde. Mensagem específica de "já respondido" no
+  formulário fica pra quando a tela de briefings for refeita.
+- **Precisa de migração + deploy** (`briefing-submit`, `portal-cliente`,
+  `admin-auth`).
+
 ## 2026-09-03 — `release:check` e Configurações → Sistema: saber se produção é o repo
 
 Em 2026-08-28 o repositório ficou 9 commits à frente das edges em produção

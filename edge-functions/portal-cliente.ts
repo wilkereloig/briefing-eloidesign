@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { requireCliente } from "./_shared/auth.ts";
 import { normalizarSenha } from "./_shared/senha.ts";
+import { ipDaRequisicao } from "./_shared/ip.ts";
 
 // Portal do cliente (NF, orcamentos, briefings, marca, entregas) -- sessao propria
 // (portal_sessions), separada da sessao de admin (admin_sessions). Marca voltou a
@@ -66,7 +67,7 @@ Deno.serve(async (req: Request) => {
 
   // ── PUBLICO (sem sessao): login ──
   if (action === "login") {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const ip = ipDaRequisicao(req.headers);
     const since = new Date(Date.now() - 15 * 60_000).toISOString();
     const { count } = await supabase.from("portal_login_ip_attempts")
       .select("id", { count: "exact", head: true }).eq("ip", ip).gte("attempted_at", since);

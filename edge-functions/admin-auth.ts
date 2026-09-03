@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { requireAdmin } from "./_shared/auth.ts";
 import { avaliarTentativa, JANELA_MS } from "./_shared/throttle.ts";
+import { ipDaRequisicao } from "./_shared/ip.ts";
 
 const TABELA_TENTATIVAS = "admin_login_ip_attempts";
 const FAXINA_MS = 24 * 3600 * 1000;
@@ -65,14 +66,7 @@ Deno.serve(async (req: Request) => {
     const expected = Deno.env.get("ADMIN_PASSWORD");
     if (!expected) return json({ error: "ADMIN_PASSWORD não configurado no projeto" }, 500);
 
-    // ÚLTIMO elemento, não o primeiro. `X-Forwarded-For` é uma lista onde cada
-    // proxy ACRESCENTA ao fim: o começo é o que o cliente mandou — texto livre,
-    // que um atacante rotaciona para nunca acumular tentativas no mesmo "IP".
-    // O último elemento é o que a borda da Supabase escreveu e o cliente não
-    // alcança. (portal-cliente.ts ainda usa o primeiro; mesmo problema, outra
-    // função, outro commit.)
-    const cadeia = (req.headers.get("x-forwarded-for") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
-    const ip = cadeia.at(-1) || "unknown";
+    const ip = ipDaRequisicao(req.headers);
     const desde = new Date(Date.now() - JANELA_MS).toISOString();
 
     const [doIp, noTotal] = await Promise.all([
