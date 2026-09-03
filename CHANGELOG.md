@@ -2,6 +2,29 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-03 — `release:check` e Configurações → Sistema: saber se produção é o repo
+
+Em 2026-08-28 o repositório ficou 9 commits à frente das edges em produção
+sem nenhum sinal — a Vercel publicou o `/admin` novo falando com edge velha.
+Já tinha acontecido o inverso em 2026-07-27. Nada no fluxo detectava.
+
+### Adicionado
+
+- **`npm run release:check`** (`scripts/release-check.mjs`): roda `verify` e
+  falha se há alteração não commitada em arquivo que publica, se `app/dist`
+  não é o build de `app/src` (build é determinístico; compara por `git
+  status` após buildar), ou se alguma edge mudou desde o último deploy
+  registrado. Avisa sobre migrações novas, commits não enviados e arquivos
+  soltos.
+- **`edge-functions/DEPLOYS.json`**: commit + data do último deploy de cada
+  edge. `deploy-edges.mjs` passa a gravar ali a cada deploy (commite junto).
+  Estado inicial reconstruído cruzando `updated_at` do Supabase com o git log.
+- **Configurações → Sistema**: domínio ativo, hash da fonte do painel, última
+  migração no repositório e o registro de deploy das edges. Tudo injetado em
+  build via `define` do Vite — **sem** commit hash nem data de build, de
+  propósito: mudariam o `dist` a cada commit e o `release:check` falharia com
+  árvore limpa. Versão do painel = hash do conteúdo de `app/src`.
+
 ## 2026-08-28 — Wordmark corrigido; portal deixa cliente corrigir valor com observação
 
 Wordmark (`assets/eloi-admin/wordmark.svg`) ainda desenhava "ELOI DESIGN

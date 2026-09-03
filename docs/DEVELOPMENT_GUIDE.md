@@ -70,7 +70,9 @@ Padrão já validado duas vezes (Solarium, Guia Viver Bem):
 4. Se for chamada pelo painel, adicione o nome à lista `Fn` em `app/src/lib/api.ts`.
 5. `npm run edges:check && npm run edges:test`
 6. `npm run edges:deploy -- <nome>` (precisa de `SUPABASE_ACCESS_TOKEN`).
-   **Nunca pelo dashboard.**
+   **Nunca pelo dashboard.** O script grava commit e data em
+   `edge-functions/DEPLOYS.json` — **commite esse arquivo junto**; é ele que
+   deixa o `release:check` saber que uma edge mudou e não foi deployada.
 
 ## Alterar o banco
 
@@ -108,10 +110,23 @@ cd app && npm test
 cd app && npx vitest run src/domain/financeiro.test.ts   # um arquivo
 ```
 
+## Antes de publicar
+
+```bash
+npm run release:check
+```
+
+Roda o `verify` e **falha** se: há alteração não commitada em arquivo que
+publica; `app/dist` não é o build de `app/src` (o build é determinístico, a
+comparação é `git status` depois de buildar); alguma edge mudou desde o commit
+registrado em `edge-functions/DEPLOYS.json`. Avisa (sem falhar) sobre
+migrações novas, commits não enviados e arquivos soltos. O hash de fonte que
+ele imprime é o mesmo que aparece em `/admin/config` → Sistema: se bate, você
+está olhando a versão que acha que está.
+
 ## Checklist de revisão
 
-- [ ] `npm run verify` passa
-- [ ] `npm run build` rodado e `app/dist/` commitado
+- [ ] `npm run release:check` passa (inclui `verify`, build e `app/dist/` coerente)
 - [ ] Nenhum hex solto em `.tsx`
 - [ ] Nenhum cálculo de dinheiro fora de `domain/financeiro.ts`
 - [ ] Entrada validada no **servidor**, não só no formulário

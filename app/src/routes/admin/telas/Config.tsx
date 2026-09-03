@@ -136,6 +136,38 @@ export default function Config() {
             </div>
           </div>
         </Painel>
+
+        {/* "Estou olhando a versão certa?" — tudo aqui vem do repo em build
+            (vite.config.ts `define`), nada é consultado ao vivo. */}
+        <Painel titulo="Sistema">
+          <div className="ficha">
+            <div>
+              <dt className="etiqueta-mini">Domínio</dt>
+              <dd className="t-corpo">{window.location.hostname}</dd>
+            </div>
+            <div>
+              <dt className="etiqueta-mini">Painel</dt>
+              <dd className="t-corpo">fonte <code>{__VERSAO__.fonte}</code> — confira com <code>npm run release:check</code></dd>
+            </div>
+            <div>
+              <dt className="etiqueta-mini">Migração mais recente no repositório</dt>
+              <dd className="t-corpo">{__VERSAO__.migracao ?? '—'} · aplicação no banco não é verificada aqui</dd>
+            </div>
+            <div>
+              <dt className="etiqueta-mini">Edge functions · último deploy registrado</dt>
+              <dd className="t-corpo">
+                <ul className="lista">
+                  {Object.entries(__EDGES__).map(([fn, d]) => (
+                    <li key={fn} className="lista-item">
+                      <span className="celula"><span className="t-ui">{fn}</span></span>
+                      <span className="t-meta"><code>{d.commit}</code> · {d.em}</span>
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          </div>
+        </Painel>
       </Carga>
 
       {folha?.tipo === 'conta' && (

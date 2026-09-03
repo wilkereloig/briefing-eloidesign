@@ -1,0 +1,17 @@
+{
+  "nota": "Mantido por scripts/deploy-edges.mjs — commit = HEAD no momento do deploy. Lido por scripts/release-check.mjs (edge alterada e não deployada) e pelo painel em Configurações → Sistema. Não editar à mão. Estado inicial reconstruído em 2026-09-03 cruzando updated_at do Supabase com o git log.",
+  "ignorar": {
+    "eloi-financeiro": "legado sem consumidor; sai junto com /gestao"
+  },
+  "edges": {
+    "portal-cliente": { "commit": "d8f9499", "em": "2026-08-28" },
+    "eloi-gestao": { "commit": "d8f9499", "em": "2026-08-28" },
+    "admin-auth": { "commit": "4e67048", "em": "2026-08-28" },
+    "eloi-financas": { "commit": "63093cf", "em": "2026-08-28" },
+    "orcamentos": { "commit": "dc68be6", "em": "2026-07-28" },
+    "briefing-submit": { "commit": "dc68be6", "em": "2026-07-28" },
+    "briefing-links": { "commit": "1a8020a", "em": "2026-07-30" },
+    "get-briefings": { "commit": "1a8020a", "em": "2026-07-30" },
+    "get-ecommerce-briefings": { "commit": "1a8020a", "em": "2026-07-30" }
+  }
+}
