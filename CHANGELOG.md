@@ -2,6 +2,31 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-03 — Sessão ganha teto de 30 dias; sessões e tentativas mortas passam a ser apagadas
+
+Sessão de admin e de portal só deslizava: cada chamada empurrava
+`expires_at` 12 h pra frente, sem teto. Token usado toda semana nunca morria
+— vazou, valia pra sempre. E nada apagava linha de `admin_sessions`,
+`portal_sessions` nem `portal_login_ip_attempts` (40 linhas acumuladas sem
+nenhuma decidir mais nada).
+
+### Alterado
+
+- **`_shared/auth.ts`**: `sessaoValida` (inatividade 12 h **e** teto de 30
+  dias desde `created_at`) e `proximaExpiracao` (desliza, mas nunca além do
+  teto) — regra pura, com teste. `requireAdmin`/`requireCliente` usam as
+  duas; sessão inválida encontrada é apagada na hora. O `verifyAdminToken`
+  do `admin_preview` (portal-cliente) passa a aplicar a mesma regra — antes
+  ignorava qualquer teto.
+- **Faxina oportunista** (`faxinarSessoes`): no login bem-sucedido, cada
+  edge apaga da própria tabela o que expirou ou passou do teto;
+  portal-cliente também apaga `portal_login_ip_attempts` com mais de 24 h
+  (o admin já fazia a dele). Sem cron.
+- **Precisa de deploy** (`admin-auth`, `portal-cliente` e toda edge que
+  importa `_shared/auth.ts`: `eloi-gestao`, `eloi-financas`, `orcamentos`,
+  `briefing-links`, `get-briefings`, `get-ecommerce-briefings`). Sem
+  migração: `created_at` já existe nas duas tabelas.
+
 ## 2026-09-03 — Briefing respondido não se sobrescreve; IP de throttle vem de um lugar só
 
 `briefing-submit` (público) aceitava um segundo POST no mesmo token e trocava

@@ -56,7 +56,7 @@ Repositório único do **site completo** (GitHub: `wilkereloig/briefing-eloidesi
 - `assets/eloi-admin/periodo.js` foi **removido em 2026-08-05**: o hub `/admin` estático que o consumia saiu do repo, e nenhuma outra página o importava.
 
 ## Acesso
-- Área admin: token via edge `admin-auth`, tabela `admin_sessions` (12h, sliding). Secret `ADMIN_PASSWORD` no projeto Supabase. Depois de 5 tentativas erradas o login trava 15 min (`admin_login_seguranca`).
+- Área admin: token via edge `admin-auth`, tabela `admin_sessions` (12 h deslizante, teto absoluto de 30 dias desde `created_at`). Secret `ADMIN_PASSWORD` no projeto Supabase. Depois de 5 tentativas erradas do mesmo IP o login trava 15 min (`admin_login_ip_attempts`).
 - **Onde o token fica** depende de "Manter conectado": ligado → `localStorage` (`eloi_admin_token`, compartilhado com os painéis legados); desligado → `sessionStorage` (morre ao fechar a aba). `lerToken()` em `app/src/lib/api.ts` lê dos dois.
 - Tela de acesso (`app/src/auth/AdminAuth.tsx`): composição dividida no desktop (identidade + formulário), compacta no toque. Mostrar/ocultar senha, aviso de Caps Lock, trava de envio duplo, foco automático só no desktop, mensagem de sessão expirada, bloqueio por tentativas e bloco "Esqueci a senha" explicando a recuperação real (variável `ADMIN_PASSWORD` + redeploy da `admin-auth`; **não existe e-mail de recuperação**).
 - Área cliente (`/portal/`): senha própria por cliente (`portal_senha_hash`, PBKDF2), tabela `portal_sessions`.

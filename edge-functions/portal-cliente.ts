@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { requireCliente } from "./_shared/auth.ts";
+import { faxinarSessoes, requireCliente, sessaoValida } from "./_shared/auth.ts";
 import { normalizarSenha } from "./_shared/senha.ts";
 import { ipDaRequisicao } from "./_shared/ip.ts";
 
@@ -42,15 +42,14 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array) { // sem early-exit, temp
 // gerado 1x offline (PBKDF2-SHA256, 600k iter, segredo dummy) -- queimado no caminho "prefixo nao existe" p/ fechar timing leak
 const DUMMY_HASH = "pbkdf2$600000$hqnSvVbexTFv5tanHOZPxw==$YqpS6qfRKNQIXygHyXF2y9P2LlrikAW6J3dmH7Co0eg=";
 
-// ── sessao de ADMIN: usada so pelo admin_preview. Mesmo formato que orcamentos.ts,
-// mas SEM sliding-renewal (nao usa _shared/auth.ts:requireAdmin de proposito --
-// requireAdmin renova a expiracao a cada chamada, o que mudaria o comportamento
-// aqui; ver task-8-report.md). ──
+// ── sessao de ADMIN: usada so pelo admin_preview. SEM sliding-renewal (nao usa
+// _shared/auth.ts:requireAdmin de proposito -- requireAdmin renova a expiracao
+// a cada chamada, o que mudaria o comportamento aqui). A REGRA de validade
+// (inatividade + teto absoluto) e a mesma de la, via sessaoValida. ──
 async function verifyAdminToken(supabase: any, token: string | undefined): Promise<boolean> {
   if (!token) return false;
-  const { data } = await supabase.from("admin_sessions").select("expires_at").eq("token", token).maybeSingle();
-  if (!data || new Date(data.expires_at) < new Date()) return false;
-  return true;
+  const { data } = await supabase.from("admin_sessions").select("expires_at,created_at").eq("token", token).maybeSingle();
+  return !!data && sessaoValida(data);
 }
 
 Deno.serve(async (req: Request) => {
@@ -98,6 +97,12 @@ Deno.serve(async (req: Request) => {
     }
 
     await supabase.from("eloi_clientes").update({ portal_tentativas_falhas: 0, portal_bloqueado_ate: null }).eq("id", c.id);
+    // Faxina oportunista no sucesso (2026-09-03): sessões mortas e tentativas
+    // fora de qualquer janela. Antes nada apagava nenhuma das duas tabelas.
+    await Promise.all([
+      faxinarSessoes(supabase, "portal_sessions"),
+      supabase.from("portal_login_ip_attempts").delete().lt("attempted_at", new Date(Date.now() - 24 * 3600_000).toISOString()),
+    ]);
     const { data: sess, error } = await supabase.from("portal_sessions").insert({ cliente_id: c.id }).select("token").single();
     if (error) return json({ error: error.message }, 500);
     return json({ token: sess.token, cliente_nome: c.nome });

@@ -133,15 +133,19 @@ para poderem ser adotadas por um cliente depois do fato.
 
 | Tabela | Para quê |
 |---|---|
-| `admin_sessions` | Sessão do admin, 12 h deslizante |
+| `admin_sessions` | Sessão do admin, 12 h deslizante, teto absoluto 30 dias (`_shared/auth.ts`) |
 | `admin_login_ip_attempts` | Throttle por IP no login admin; 5 por IP / 15 min |
 | `admin_login_seguranca` | **Obsoleta (2026-08-07)** — contador global, ninguém lê mais |
-| `portal_sessions` | Sessão do cliente no portal (`CASCADE` do cliente) |
+| `portal_sessions` | Sessão do cliente no portal (`CASCADE` do cliente); mesma regra de validade da admin |
 | `portal_login_ip_attempts` | Throttle por IP no portal; 20 por IP / 15 min |
 | `briefing_submit_ip_attempts` | Throttle por IP no envio público de briefing; 10 por IP / 15 min (2026-09-03) |
 
 IP de throttle vem sempre de `edge-functions/_shared/ip.ts` — último elemento
 de `X-Forwarded-For`, o que a borda escreveu.
+
+Faxina é oportunista, sem cron: a cada login bem-sucedido a edge apaga
+sessões mortas da própria tabela e tentativas com mais de 24 h. Sessão
+inválida encontrada em qualquer chamada também é apagada na hora.
 
 **RLS está ligado em toda tabela e não há policy para `anon`.** Só a edge function,
 com `service_role`, lê e escreve. Ver [ARCHITECTURE.md](ARCHITECTURE.md).

@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { requireAdmin } from "./_shared/auth.ts";
+import { faxinarSessoes, requireAdmin } from "./_shared/auth.ts";
 import { avaliarTentativa, JANELA_MS } from "./_shared/throttle.ts";
 import { ipDaRequisicao } from "./_shared/ip.ts";
 
@@ -113,6 +113,8 @@ Deno.serve(async (req: Request) => {
     // momento em que dá para pagar uma escrita a mais sem ajudar o atacante.
     await supabase.from(TABELA_TENTATIVAS).delete()
       .lt("attempted_at", new Date(Date.now() - FAXINA_MS).toISOString());
+    // Mesma lógica pra sessões: expirada ou além do teto de 30 dias sai aqui.
+    await faxinarSessoes(supabase, "admin_sessions");
 
     const { data, error } = await supabase.from("admin_sessions").insert({}).select("token, expires_at").single();
     if (error) return json({ error: error.message }, 500);

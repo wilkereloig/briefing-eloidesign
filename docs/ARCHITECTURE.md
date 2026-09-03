@@ -46,9 +46,11 @@ Duas áreas, dois mecanismos, sem cruzamento:
 
 **Admin (o Wilke).** Senha única na variável `ADMIN_PASSWORD`, comparada dentro
 de `admin-auth`. Sucesso grava uma linha em `admin_sessions` e devolve um token
-opaco; validade de 12 h deslizante. O token vai para `localStorage` quando
-"Manter conectado" está ligado e para `sessionStorage` quando não está. Cinco
-tentativas erradas travam o login por 15 min (`admin_login_seguranca`).
+opaco; validade de 12 h deslizante com teto absoluto de 30 dias
+(`_shared/auth.ts`). O token vai para `localStorage` quando "Manter
+conectado" está ligado e para `sessionStorage` quando não está. Cinco
+tentativas erradas do mesmo IP travam o login por 15 min
+(`admin_login_ip_attempts`).
 Não existe recuperação por e-mail — trocar a senha é editar a variável e
 redeployar `admin-auth`.
 
