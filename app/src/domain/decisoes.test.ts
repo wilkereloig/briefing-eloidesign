@@ -25,7 +25,8 @@ function orc(over: Partial<OrcamentoRow> = {}): OrcamentoRow {
   return {
     id: 'o1', created_at: '2026-07-01', updated_at: '2026-07-01', cliente: null, cliente_id: 'c1',
     titulo: 'Site novo', status: 'enviado', itens: [], valor_total: 5000, observacoes: null,
-    link: null, share_token: null, numero: 1, revogado_em: null, ...over,
+    link: null, share_token: null, numero: 1, revogado_em: null,
+    complexidade: 'simples', urgencia: 'normal', desconto_pct: 0, ...over,
   }
 }
 

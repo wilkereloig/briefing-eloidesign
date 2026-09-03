@@ -80,6 +80,8 @@ export interface ContatoRow {
   updated_at: string
 }
 
+import type { Complexidade, Urgencia } from '../domain/orcamento'
+
 export type OrcamentoStatus = 'rascunho' | 'enviado' | 'aprovado' | 'recusado'
 
 export interface OrcamentoRow {
@@ -97,6 +99,12 @@ export interface OrcamentoRow {
   share_token: string | null
   numero: number | null
   revogado_em: string | null
+  /** Multiplicadores e desconto do cálculo — ver `domain/orcamento.ts`. */
+  complexidade: Complexidade
+  urgencia: Urgencia
+  desconto_pct: number
+  /** Injetado por `orcamentos.list`: id do serviço criado ao aprovar. Não é coluna. */
+  servico_id?: string | null
 }
 
 export type MovimentoStatus = 'previsto' | 'realizado' | 'cancelado'
