@@ -2,6 +2,33 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-03 — Excluir, cancelar ou arquivar: uma regra só
+
+Não havia critério. Transação tinha cancelar e excluir; serviço não tinha
+nada (removê-lo pedia SQL na mão); cliente com histórico não podia ser
+apagado **nem** tirado da carteira; marca não tinha como ser editada ou
+encerrada. A regra passa a ser: **excluir é para engano recente; o que tem
+histórico se arquiva, encerra ou cancela.**
+
+### Alterado
+
+- **Cliente**: botão Arquivar/Reativar na ficha (`arquivado_em`, migração
+  `2026-09-03-cliente-arquivado.sql`). Sai da carteira e o histórico fica
+  inteiro. A lista esconde arquivados, com "Ver arquivados · N" quando
+  existem. `clientes.delete` continua só para cliente sem serviço, agora
+  dizendo quantos serviços impedem e que o caminho é arquivar.
+- **Marca**: editar pela ficha, incluindo "marca encerrada" (some da escolha
+  em serviço novo; serviços existentes não mudam). Excluir só aparece para
+  marca sem serviço nenhum — o servidor recusa o resto com 409.
+- **Contato**: excluir na ficha. Contato não tem histórico financeiro
+  pendurado, então some de verdade.
+- **Serviço**: excluir na linha de Projetos, com o servidor recusando serviço
+  com nota fiscal ou já pago (commit anterior).
+
+### Ordem de publicação
+
+Migração antes de `npm run edges:deploy -- eloi-gestao`.
+
 ## 2026-09-03 — Contatos do cliente
 
 `eloi_clientes.contato` é um texto livre para "e-mail, WhatsApp ou nome de

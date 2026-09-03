@@ -11,6 +11,7 @@ import { FolhaCliente } from '../folhas'
 export default function Clientes() {
   const { clientes, servicos, transacoes, recarregar } = useFinancas()
   const [busca, setBusca] = useState('')
+  const [verArquivados, setVerArquivados] = useState(false)
   const [novo, setNovo] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
 
@@ -39,9 +40,12 @@ export default function Clientes() {
   const lista = useMemo(() => {
     const q = busca.trim().toLowerCase()
     return clientes
+      .filter((c) => verArquivados || !c.arquivado_em)
       .filter((c) => !q || c.nome.toLowerCase().includes(q))
       .sort((a, b) => (porCliente.get(b.id)?.faturado ?? 0) - (porCliente.get(a.id)?.faturado ?? 0))
-  }, [clientes, busca, porCliente])
+  }, [clientes, busca, verArquivados, porCliente])
+
+  const arquivados = clientes.filter((c) => c.arquivado_em).length
 
   const totalFaturado = [...porCliente.values()].reduce((s, d) => s + d.faturado, 0)
   const totalAReceber = [...porCliente.values()].reduce((s, d) => s + d.aReceber, 0)
@@ -49,6 +53,11 @@ export default function Clientes() {
   return (
     <div className="tela pilha">
       <Cabecalho secao="Carteira" titulo="Clientes">
+        {arquivados > 0 && (
+          <Botao onClick={() => setVerArquivados((v) => !v)}>
+            {verArquivados ? 'Esconder arquivados' : `Ver arquivados · ${arquivados}`}
+          </Botao>
+        )}
         <Botao variante="primario" onClick={() => setNovo(true)}>
           <Icone nome="adicionar" tamanho={16} />Novo cliente
         </Botao>

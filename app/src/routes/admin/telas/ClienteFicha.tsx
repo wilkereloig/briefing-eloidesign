@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { contatos as contatosApi, financas } from '../../../lib/api'
+import { clientes as clientesApi, contatos as contatosApi, financas, subClientes as subClientesApi } from '../../../lib/api'
 import { centsDeReais, fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas } from '../../../lib/financas-store'
 import { estaEmAberto, saldoAberto, valorLiquidado } from '../../../domain/financeiro'
@@ -8,9 +8,11 @@ import { juntarProjetos } from '../../../domain/projeto'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, ChipMovimento, ChipNota, Dinheiro } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
-import type { Arquivo, ContatoRow, OrcamentoStatus } from '../../../lib/tipos'
+import type { Arquivo, ContatoRow, OrcamentoStatus, SubClienteRow } from '../../../lib/tipos'
 import type { EstadoChip } from '../../../ui/tokens'
-import { FolhaCliente, FolhaContato, FolhaEntrega, FolhaSenhaPortal, FolhaSubCliente } from '../folhas'
+import {
+  FolhaCliente, FolhaContato, FolhaEntrega, FolhaExcluir, FolhaSenhaPortal, FolhaSubCliente,
+} from '../folhas'
 
 // Estado da proposta → par de cores do sistema. Mesmo mapa do funil de Projetos.
 const ESTADO_ORCAMENTO: Record<OrcamentoStatus, EstadoChip> = {
@@ -23,7 +25,10 @@ export default function ClienteFicha() {
   const [editando, setEditando] = useState(false)
   const [senhaPortal, setSenhaPortal] = useState(false)
   const [entrega, setEntrega] = useState(false)
-  const [novaMarca, setNovaMarca] = useState(false)
+  const [folhaMarca, setFolhaMarca] = useState<{ m?: SubClienteRow } | null>(null)
+  const [excluir, setExcluir] = useState<
+    { tipo: 'contato'; c: ContatoRow } | { tipo: 'marca'; m: SubClienteRow } | null>(null)
+  const [arquivando, setArquivando] = useState(false)
   const [folhaContato, setFolhaContato] = useState<{ c?: ContatoRow } | null>(null)
   const [listaContatos, setListaContatos] = useState<ContatoRow[] | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -118,6 +123,30 @@ export default function ClienteFicha() {
             <Icone nome="editar" tamanho={16} />Editar
           </Botao>
         )}
+        {/* Arquivar, não excluir: a FK de serviços é RESTRICT de propósito —
+            apagar o cliente levaria junto o rastro de nota e recebimento. */}
+        {cliente && (
+          <Botao carregando={arquivando} onClick={async () => {
+            setArquivando(true)
+            try {
+              await clientesApi.upsert({
+                id: cliente.id, nome: cliente.nome, cor: cliente.cor,
+                contato: cliente.contato, marca_slug: cliente.marca_slug,
+                marca_publicada: cliente.marca_publicada,
+                arquivado: !cliente.arquivado_em,
+              })
+              setAviso(cliente.arquivado_em ? 'Cliente reativado' : 'Cliente arquivado')
+              await recarregar()
+            } catch (e) {
+              setAviso((e as Error).message)
+            } finally {
+              setArquivando(false)
+            }
+          }}>
+            <Icone nome="caixa" tamanho={16} />
+            {cliente.arquivado_em ? 'Reativar' : 'Arquivar'}
+          </Botao>
+        )}
       </Cabecalho>
 
       <Carga linhas={4}>
@@ -153,6 +182,13 @@ export default function ClienteFicha() {
                 </dd></div>
                 <div><dt className="etiqueta-mini">Cliente desde</dt>
                   <dd className="t-corpo">{dataCurta(cliente.created_at.slice(0, 10))}</dd></div>
+                {cliente.arquivado_em && (
+                  <div><dt className="etiqueta-mini">Situação</dt><dd>
+                    <Chip estado="rascunho">
+                      Arquivado em {dataCurta(cliente.arquivado_em.slice(0, 10))}
+                    </Chip>
+                  </dd></div>
+                )}
               </dl>
             </Painel>
 
@@ -206,6 +242,10 @@ export default function ClienteFicha() {
                             onClick={() => setFolhaContato({ c })}>
                             <Icone nome="editar" tamanho={16} />
                           </Botao>
+                          <Botao variante="icone" aria-label={`Excluir ${c.nome}`}
+                            onClick={() => setExcluir({ tipo: 'contato', c })}>
+                            <Icone nome="excluir" tamanho={16} />
+                          </Botao>
                         </li>
                       )
                     })}
@@ -246,7 +286,7 @@ export default function ClienteFicha() {
             {/* Marcas antes dos projetos: é por elas que a F2 pergunta
                 ("como está a Vibra?"), e cada linha leva ao filtro pronto. */}
             <Painel titulo="Marcas atendidas"
-              acao={<Botao compacto onClick={() => setNovaMarca(true)}>
+              acao={<Botao compacto onClick={() => setFolhaMarca({})}>
                 <Icone nome="adicionar" tamanho={14} />Nova marca
               </Botao>}>
               {doCliente.marcas.length === 0
@@ -267,9 +307,30 @@ export default function ClienteFicha() {
                         </span>
                       </span>
                       <Dinheiro cents={m.total} className="t-valor" />
+                      {m.id !== 'direto' && (
+                        <Botao variante="icone" aria-label={`Editar ${m.nome}`}
+                          onClick={() => {
+                            const marca = subClientes.find((x) => x.id === m.id)
+                            if (marca) setFolhaMarca({ m: marca })
+                          }}>
+                          <Icone nome="editar" tamanho={16} />
+                        </Botao>
+                      )}
+                      {m.id !== 'direto' && m.itens === 0 && (
+                        <Botao variante="icone" aria-label={`Excluir ${m.nome}`}
+                          onClick={() => {
+                            const marca = subClientes.find((x) => x.id === m.id)
+                            if (marca) setExcluir({ tipo: 'marca', m: marca })
+                          }}>
+                          <Icone nome="excluir" tamanho={16} />
+                        </Botao>
+                      )}
                     </li>
                   ))}
                 </ul>}
+              <p className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>
+                Marca com serviço não se exclui — encerre pela edição. O histórico fica.
+              </p>
             </Painel>
 
             <Painel titulo="Projetos e serviços"
@@ -410,9 +471,30 @@ export default function ClienteFicha() {
           aoFechar={() => setFolhaContato(null)}
           aoSalvar={async (msg) => { setAviso(msg); await carregarContatos() }} />
       )}
-      {novaMarca && cliente && (
-        <FolhaSubCliente clienteId={cliente.id} aoFechar={() => setNovaMarca(false)}
-          aoSalvar={async () => { setAviso('Marca cadastrada'); await recarregar() }} />
+      {folhaMarca && cliente && (
+        <FolhaSubCliente clienteId={cliente.id} inicial={folhaMarca.m}
+          aoFechar={() => setFolhaMarca(null)}
+          aoSalvar={async () => { setAviso(folhaMarca.m ? 'Marca atualizada' : 'Marca cadastrada'); await recarregar() }} />
+      )}
+      {excluir?.tipo === 'contato' && (
+        <FolhaExcluir titulo={excluir.c.nome}
+          consequencia="O contato sai da agenda deste cliente. Nada mais é afetado."
+          aoFechar={() => setExcluir(null)}
+          aoConfirmar={async () => {
+            await contatosApi.remover(excluir.c.id)
+            setAviso('Contato excluído')
+            await carregarContatos()
+          }} />
+      )}
+      {excluir?.tipo === 'marca' && (
+        <FolhaExcluir titulo={excluir.m.nome}
+          consequencia="A marca sai da lista. Só é possível porque nenhum serviço aponta para ela — com serviço, o servidor recusa e o caminho é encerrar."
+          aoFechar={() => setExcluir(null)}
+          aoConfirmar={async () => {
+            await subClientesApi.remover(excluir.m.id)
+            setAviso('Marca excluída')
+            await recarregar()
+          }} />
       )}
       {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
     </div>

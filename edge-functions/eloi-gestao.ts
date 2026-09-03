@@ -83,13 +83,17 @@ Deno.serve(async (req: Request) => {
     const c = body?.cliente || {};
     const nome = String(c.nome || "").trim();
     if (!nome) return json({ error: "nome obrigatório" }, 400);
-    const row = {
+    const row: any = {
       nome,
       cor: c.cor || "#7B2CBF",
       contato: c.contato ?? null,
       marca_slug: c.marca_slug || null,
       marca_publicada: c.marca_publicada === true,
     };
+    // undefined = a folha nao mandou o campo, entao nao mexe no arquivamento.
+    if (c.arquivado !== undefined) {
+      row.arquivado_em = c.arquivado ? new Date().toISOString() : null;
+    }
     if (c.id) {
       const { data, error } = await supabase.from("eloi_clientes").update(row).eq("id", c.id).select().single();
       if (error) return json({ error: error.message }, 500);
@@ -140,7 +144,9 @@ Deno.serve(async (req: Request) => {
     if (!body?.id) return json({ error: "id obrigatório" }, 400);
     const { count } = await supabase.from("eloi_servicos")
       .select("id", { count: "exact", head: true }).eq("cliente_id", body.id);
-    if ((count ?? 0) > 0) return json({ error: "cliente tem serviços; mova ou exclua antes" }, 409);
+    // Com historico, o caminho e arquivar (clientes.upsert com arquivado:true):
+    // apagar levaria junto o rastro de servico, nota e recebimento.
+    if ((count ?? 0) > 0) return json({ error: `cliente tem ${count} serviço(s) — arquive em vez de excluir` }, 409);
     const { error } = await supabase.from("eloi_clientes").delete().eq("id", body.id);
     if (error) return json({ error: error.message }, 500);
     return json({ ok: true });
@@ -151,7 +157,7 @@ Deno.serve(async (req: Request) => {
     const id = body?.cliente_id;
     if (!id) return json({ error: "cliente_id obrigatório" }, 400);
     const { data: cliente, error: cErr } = await supabase.from("eloi_clientes")
-      .select("id,nome,cor,contato,created_at,marca_slug,marca_publicada,portal_ativo,portal_senha_prefix,portal_senha_gerada_em")
+      .select("id,nome,cor,contato,created_at,marca_slug,marca_publicada,arquivado_em,portal_ativo,portal_senha_prefix,portal_senha_gerada_em")
       .eq("id", id).maybeSingle(); // sem hash — hash nunca sai do banco
     if (cErr || !cliente) return json({ error: "cliente não encontrado" }, 404);
     const [orcs, servs, briefs, movs, mats] = await Promise.all([

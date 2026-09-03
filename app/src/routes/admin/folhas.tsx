@@ -480,13 +480,15 @@ export function FolhaContato({ clienteId, inicial, aoFechar, aoSalvar }: {
 
 /** Marca atendida por intermédio do cliente (D-18). Cadastro mínimo de
  *  propósito: quem contrata, paga e recebe nota continua sendo o cliente. */
-export function FolhaSubCliente({ clienteId, aoFechar, aoSalvar }: {
+export function FolhaSubCliente({ clienteId, inicial, aoFechar, aoSalvar }: {
   clienteId: string
+  inicial?: SubClienteRow
   aoFechar: () => void
-  aoSalvar: (criado: SubClienteRow) => void
+  aoSalvar: (salvo: SubClienteRow) => void
 }) {
-  const [nome, setNome] = useState('')
-  const [observacoes, setObservacoes] = useState('')
+  const [nome, setNome] = useState(inicial?.nome ?? '')
+  const [observacoes, setObservacoes] = useState(inicial?.observacoes ?? '')
+  const [ativo, setAtivo] = useState(inicial?.ativo ?? true)
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
 
@@ -495,10 +497,11 @@ export function FolhaSubCliente({ clienteId, aoFechar, aoSalvar }: {
     setErros({})
     setSalvando(true)
     try {
-      const criado = await subClientesApi.upsert({
-        cliente_id: clienteId, nome: nome.trim(), observacoes: observacoes.trim() || null,
+      const salvo = await subClientesApi.upsert({
+        id: inicial?.id, cliente_id: clienteId, nome: nome.trim(), ativo,
+        observacoes: observacoes.trim() || null,
       })
-      aoSalvar(criado)
+      aoSalvar(salvo)
       aoFechar()
     } catch (err) {
       setErros({ geral: (err as Error).message })
@@ -508,7 +511,7 @@ export function FolhaSubCliente({ clienteId, aoFechar, aoSalvar }: {
   }
 
   return (
-    <Folha titulo="Nova marca" aoFechar={aoFechar}
+    <Folha titulo={inicial ? 'Editar marca' : 'Nova marca'} aoFechar={aoFechar}
       rodape={<>
         <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
@@ -520,6 +523,18 @@ export function FolhaSubCliente({ clienteId, aoFechar, aoSalvar }: {
         <CampoTexto rotulo="Observações" value={observacoes} rows={2}
           onChange={(e) => setObservacoes(e.target.value)}
           placeholder="Opcional — contato, particularidade do fluxo" />
+        {inicial && (
+          <label className="linha" style={{ gap: 'var(--e-3)', minHeight: 44 }}>
+            <input type="checkbox" checked={!ativo}
+              onChange={(e) => setAtivo(!e.target.checked)} />
+            <span className="celula">
+              <span className="t-ui">Marca encerrada</span>
+              <span className="t-legenda">
+                Some da escolha em serviço novo. Os serviços que já são dela continuam iguais.
+              </span>
+            </span>
+          </label>
+        )}
         {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
       </div>
     </Folha>

@@ -15,6 +15,8 @@ export interface ClienteRow {
   portal_senha_gerada_em: string | null
   portal_tentativas_falhas: number
   portal_bloqueado_ate: string | null
+  /** Nulo = ativo. Arquivar tira da carteira sem apagar histórico. */
+  arquivado_em: string | null
   total_servicos: number
   total_cents: number
 }

@@ -7,6 +7,34 @@ Decisões com alternativa formalmente avaliada ficam em `adr/`.
 
 ---
 
+## 2026-09-03 — Ciclo de vida do registro
+
+### D-23 · Excluir é para engano recente; o resto arquiva, encerra ou cancela
+Não havia critério e cada tela resolvia por conta: transação tinha cancelar e
+excluir, serviço não tinha nada (removê-lo pedia SQL na mão), cliente com
+histórico não podia ser apagado nem escondido.
+
+A regra:
+
+| Registro | Sem histórico | Com histórico |
+|---|---|---|
+| Transação | excluir | cancelar/estornar |
+| Serviço | excluir | recusado: tem nota ou está pago |
+| Cliente | excluir (sem serviço) | **arquivar** (`arquivado_em`) |
+| Marca | excluir (sem serviço) | **encerrar** (`ativo = false`) |
+| Contato | excluir sempre | — não tem histórico pendurado |
+| Nota fiscal | excluir (desvincula os serviços antes) | — |
+
+**Quem decide é o servidor**, não a tela: cada `*.delete` confere e responde
+409 explicando o caminho. A tela esconde o botão quando sabe que vai falhar,
+mas a garantia não é a tela.
+
+**Arquivar não é apagar em silêncio.** O cliente arquivado some da carteira e
+volta com um clique; serviço, nota e recebimento dele continuam contando nos
+relatórios. Foi por isso que a FK de `eloi_servicos` é `RESTRICT`.
+
+---
+
 ## 2026-09-03 — Sub-cliente, nota fiscal e valor sugerido (decididas com o dono em 2026-08-28)
 
 ### D-18 · Sub-cliente é entidade real, filha do cliente

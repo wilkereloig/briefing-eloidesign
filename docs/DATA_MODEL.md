@@ -90,6 +90,9 @@ porque um arquivo que documenta algo apagado não documenta mais nada.
 ### `eloi_clientes` *(2 linhas)*
 Dono de projetos, do acesso ao portal e de sub-clientes.
 `portal_senha_hash` (PBKDF2), `marca_slug`, `marca_publicada`, `cor`.
+`arquivado_em` (2026-09-03): nulo = ativo. Arquivar tira da carteira sem
+apagar nada — é o caminho para cliente com histórico, já que a FK de
+`eloi_servicos` é `RESTRICT` (D-23).
 
 ### `eloi_sub_clientes` *(8 linhas após o backfill de 2026-09-03)*
 Marca/operação atendida por intermédio de um cliente (VIBRA/ASUS/MRV dentro

@@ -109,8 +109,9 @@ export const clientes = {
     briefings: unknown[]; movimentos: MovimentoRow[]; materiais: MaterialRow[]
     resumo: { faturado_cents: number; recebido_cents: number; a_receber_cents: number }
   }>('eloi-gestao', 'clientes.detail', { cliente_id }),
-  upsert: (cliente: Partial<ClienteRow> & { id?: string }) =>
+  upsert: (cliente: Partial<ClienteRow> & { id?: string; arquivado?: boolean }) =>
     call<{ cliente: ClienteRow }>('eloi-gestao', 'clientes.upsert', { cliente }).then((r) => r.cliente),
+  remover: (id: string) => call<{ ok: true }>('eloi-gestao', 'clientes.delete', { id }),
   gerarSenhaPortal: (cliente_id: string) =>
     call<{ senha: string }>('eloi-gestao', 'clientes.gerar_senha_portal', { cliente_id }).then((r) => r.senha),
 }
