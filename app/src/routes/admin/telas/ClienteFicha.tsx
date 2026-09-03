@@ -5,6 +5,7 @@ import { centsDeReais, fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas } from '../../../lib/financas-store'
 import { estaEmAberto, saldoAberto, valorLiquidado } from '../../../domain/financeiro'
 import { juntarProjetos } from '../../../domain/projeto'
+import { ROTULO_EVENTO, timeline } from '../../../domain/timeline'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, ChipMovimento, ChipNota, Dinheiro } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
@@ -21,7 +22,9 @@ const ESTADO_ORCAMENTO: Record<OrcamentoStatus, EstadoChip> = {
 
 export default function ClienteFicha() {
   const { id } = useParams()
-  const { clientes, servicos, subClientes, orcamentos, transacoes, notas, recarregar } = useFinancas()
+  const {
+    clientes, servicos, subClientes, orcamentos, transacoes, notas, briefings, recarregar,
+  } = useFinancas()
   const [editando, setEditando] = useState(false)
   const [senhaPortal, setSenhaPortal] = useState(false)
   const [entrega, setEntrega] = useState(false)
@@ -29,6 +32,8 @@ export default function ClienteFicha() {
   const [excluir, setExcluir] = useState<
     { tipo: 'contato'; c: ContatoRow } | { tipo: 'marca'; m: SubClienteRow } | null>(null)
   const [arquivando, setArquivando] = useState(false)
+  /** Vazio = o cliente inteiro. Filtra projetos e a linha do tempo. */
+  const [marcaFiltro, setMarcaFiltro] = useState('')
   const [folhaContato, setFolhaContato] = useState<{ c?: ContatoRow } | null>(null)
   const [listaContatos, setListaContatos] = useState<ContatoRow[] | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
@@ -112,6 +117,30 @@ export default function ClienteFicha() {
     }
   }, [id, transacoes, servicos, subClientes, notas, orcamentos])
 
+  // A linha do tempo respeita o filtro de marca: com Vibra escolhida, mostra o
+  // que é da Vibra. Briefing e proposta não têm marca, então ficam fora quando
+  // há filtro — dizer que um briefing é "da Vibra" seria invenção.
+  const eventos = useMemo(() => {
+    const meusServicos = doCliente.servicos.filter(
+      (sv) => !marcaFiltro || sv.sub_cliente_id === marcaFiltro)
+    return timeline({
+      servicos: meusServicos,
+      orcamentos: marcaFiltro ? [] : doCliente.orcamentos,
+      notas: marcaFiltro ? [] : doCliente.notas,
+      briefings: marcaFiltro ? [] : briefings.filter((b) => b.cliente_id === id),
+      materiais: [],
+    }).slice(0, 40)
+  }, [doCliente, briefings, id, marcaFiltro])
+
+  const projetosVisiveis = useMemo(
+    () => doCliente.projetos.filter(
+      (p) => !marcaFiltro || p.servico?.sub_cliente_id === marcaFiltro),
+    [doCliente.projetos, marcaFiltro])
+
+  /** Atrasado = entregue e não pago. É a pergunta que o dono faz primeiro. */
+  const atrasados = useMemo(
+    () => projetosVisiveis.filter((p) => p.etapa === 'entregue'), [projetosVisiveis])
+
   return (
     <div className="tela pilha">
       <Cabecalho secao="Cliente" titulo={cliente?.nome ?? 'Ficha do cliente'}>
@@ -164,9 +193,12 @@ export default function ClienteFicha() {
               <Indicador rotulo="A receber" valor={fmtBRL(doCliente.aReceber)}
                 cor={doCliente.aReceber > 0 ? 'coral' : undefined}
                 nota="Lançamentos em aberto" />
-              <Indicador rotulo="Notas emitidas"
-                valor={String(doCliente.notas.filter((n) => n.status === 'emitida' || n.status === 'enviada').length)}
-                nota={`${doCliente.notas.length} no total`} />
+              <Indicador rotulo="Entregue e não pago"
+                valor={String(atrasados.length)}
+                cor={atrasados.length ? 'coral' : undefined}
+                nota={atrasados.length
+                  ? fmtBRL(atrasados.reduce((acc, p) => acc + p.valorCents, 0))
+                  : 'Nada parado na cobrança'} />
             </div>
 
             <Painel titulo="Cadastro">
@@ -334,11 +366,22 @@ export default function ClienteFicha() {
             </Painel>
 
             <Painel titulo="Projetos e serviços"
-              acao={<span className="t-legenda">{doCliente.projetos.length}</span>}>
-              {doCliente.projetos.length === 0
-                ? <p className="t-sec">Nenhum projeto registrado para este cliente.</p>
+              acao={doCliente.marcas.length > 1
+                ? <select className="campo-caixa select-inline" value={marcaFiltro}
+                  aria-label="Filtrar por marca"
+                  onChange={(e) => setMarcaFiltro(e.target.value)}>
+                  <option value="">Todas as marcas</option>
+                  {doCliente.marcas.filter((m) => m.id !== 'direto').map((m) => (
+                    <option key={m.id} value={m.id}>{m.nome}</option>
+                  ))}
+                </select>
+                : <span className="t-legenda">{projetosVisiveis.length}</span>}>
+              {projetosVisiveis.length === 0
+                ? <p className="t-sec">
+                  {marcaFiltro ? 'Nenhum projeto desta marca.' : 'Nenhum projeto registrado para este cliente.'}
+                </p>
                 : <ul className="lista">
-                  {doCliente.projetos.map((p) => (
+                  {projetosVisiveis.map((p) => (
                     <li key={p.id} className="lista-item">
                       <span className="celula">
                         <span className="t-ui espremer">{p.titulo}</span>
@@ -446,6 +489,28 @@ export default function ClienteFicha() {
                   </ul>}
               </Painel>
             </div>
+
+            {/* Derivada das datas que já existem, não gravada: uma tabela de
+                eventos precisaria ser escrita em todo caminho que muda algo, e
+                o primeiro esquecido cria um histórico que mente. */}
+            <Painel titulo="Linha do tempo"
+              acao={<span className="t-legenda">{eventos.length} eventos</span>}>
+              {eventos.length === 0
+                ? <p className="t-sec">Nada registrado ainda para este cliente.</p>
+                : <ol className="lista linha-tempo">
+                  {eventos.map((e) => (
+                    <li key={e.id} className="lista-item">
+                      <span className="t-legenda linha-tempo-data">{dataCurta(e.data)}</span>
+                      <span className="celula">
+                        <span className="t-ui espremer">{e.titulo}</span>
+                        <span className="t-legenda espremer">
+                          {ROTULO_EVENTO[e.tipo]}{e.detalhe ? ` · ${e.detalhe}` : ''}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ol>}
+            </Painel>
           </>
         )}
       </Carga>

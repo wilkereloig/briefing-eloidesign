@@ -370,3 +370,8 @@ select.campo-caixa option{background:var(--chao);color:var(--texto)}
 
 .trilho-busca{width:100%;background:transparent;border:0;cursor:pointer;color:inherit}
 .trilho-busca kbd{margin-left:auto;opacity:.7}
+
+/* Linha do tempo da ficha: a data é a coluna que guia a leitura, então tem
+   largura fixa — sem isso cada linha começa num lugar. */
+.linha-tempo-data{min-width:5.5rem;flex-shrink:0;font-variant-numeric:tabular-nums}
+.linha-tempo .lista-item{align-items:baseline}
