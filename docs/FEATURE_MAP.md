@@ -70,11 +70,12 @@ Atualizado: 2026-08-07.
 - **Estado:** Concluído
 - **Tela:** `telas/Notas.tsx`
 - **Endpoints:** `eloi-financas` (`nf.*`)
-- **Tabelas:** `eloi_notas_fiscais`
+- **Tabelas:** `eloi_notas_fiscais` + `eloi_servicos.nota_fiscal_id` (1 nota : N serviços)
 - **Permissão:** admin
-- **Regra:** nota `emitida`/`enviada` exige número — validado no servidor
+- **Regra:** nota `emitida`/`enviada` exige número — validado no servidor; número é único por emissor
+- **Cobre (2026-09-03):** uma nota cobre vários serviços, escolhidos na folha · filtro de mês opcional · lista mostra os serviços de cada nota · "concluídos sem nota" lê `nota_fiscal_id`
 - **Anexo (2026-08-07):** o PDF da nota já emitida sobe pelo painel (`arquivos.upload_url` → `arquivo_path`). O painel **não emite** nota: guarda a que foi emitida fora dele.
-- **Pendência:** o portal do cliente ainda lê a NF de `eloi_servicos.nf_arquivo_url`, não de `eloi_notas_fiscais.arquivo_path` — anexar aqui não faz a nota aparecer para o cliente
+- **Portal (2026-09-03):** o cliente baixa o PDF pela nota vinculada ao serviço dele (`nota_fiscal_id` → `arquivo_path`). A coluna antiga `eloi_servicos.nf_arquivo_url` está nula em toda linha e não é mais lida.
 
 ### Relatórios
 - **Objetivo:** resultado de 12 meses, ranking, previsão e metas.

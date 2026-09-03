@@ -150,10 +150,21 @@ Deno.serve(async (req: Request) => {
 
   if (action === "servicos.list") {
     const { data, error } = await supabase.from("eloi_servicos")
-      .select("id,descricao,valor_cents,status_execucao,pago,data_pagamento,nf_numero,nf_arquivo_url,created_at,valor_sugerido_cents,valor_sugerido_em,valor_sugerido_observacao")
+      .select("id,descricao,valor_cents,status_execucao,pago,data_pagamento,nf_numero,nota_fiscal_id,sub_cliente,created_at,valor_sugerido_cents,valor_sugerido_em,valor_sugerido_observacao")
       .eq("cliente_id", clienteId).order("created_at", { ascending: false });
     if (error) return json({ error: error.message }, 500);
-    const servicos = (data ?? []).map(({ nf_arquivo_url, ...rest }: any) => ({ ...rest, tem_nf: !!nf_arquivo_url }));
+    // tem_nf = existe PDF pra baixar, e o PDF vive na NOTA (D-22), nao mais em
+    // eloi_servicos.nf_arquivo_url -- coluna que ficou nula em toda linha.
+    const notaIds = [...new Set((data ?? []).map((s: any) => s.nota_fiscal_id).filter(Boolean))];
+    const comPdf = new Set<string>();
+    if (notaIds.length) {
+      const { data: notas } = await supabase.from("eloi_notas_fiscais")
+        .select("id,arquivo_path").in("id", notaIds);
+      for (const n of notas ?? []) if (n.arquivo_path) comPdf.add(n.id);
+    }
+    const servicos = (data ?? []).map(({ nota_fiscal_id, ...rest }: any) => ({
+      ...rest, tem_nf: !!nota_fiscal_id && comPdf.has(nota_fiscal_id),
+    }));
     return json({ servicos });
   }
 
@@ -187,9 +198,15 @@ Deno.serve(async (req: Request) => {
   if (action === "nf.view_url") {
     if (!body?.servico_id) return json({ error: "servico_id obrigatório" }, 400);
     const { data: s } = await supabase.from("eloi_servicos")
-      .select("cliente_id,nf_arquivo_url").eq("id", body.servico_id).maybeSingle();
-    if (!s || s.cliente_id !== clienteId || !s.nf_arquivo_url) return json({ error: "não encontrado" }, 404);
-    const { data, error } = await supabase.storage.from(NF_BUCKET).createSignedUrl(s.nf_arquivo_url, 120);
+      .select("cliente_id,nota_fiscal_id").eq("id", body.servico_id).maybeSingle();
+    // Posse conferida no servico, nao na nota: pedir a nota pelo id dela
+    // deixaria o cliente adivinhar id alheio. Aqui ele so alcanca a nota que
+    // esta ligada a um servico dele.
+    if (!s || s.cliente_id !== clienteId || !s.nota_fiscal_id) return json({ error: "não encontrado" }, 404);
+    const { data: nota } = await supabase.from("eloi_notas_fiscais")
+      .select("arquivo_path").eq("id", s.nota_fiscal_id).maybeSingle();
+    if (!nota?.arquivo_path) return json({ error: "não encontrado" }, 404);
+    const { data, error } = await supabase.storage.from(NF_BUCKET).createSignedUrl(nota.arquivo_path, 120);
     if (error) return json({ error: error.message }, 500);
     return json({ url: data.signedUrl });
   }

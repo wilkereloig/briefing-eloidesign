@@ -338,3 +338,8 @@ select.campo-caixa option{background:var(--chao);color:var(--texto)}
 /* Valor editável direto na lista: some do fluxo de leitura, aparece ao focar. */
 .valor-linha{width:8.5rem;min-height:44px;text-align:right;
   font-family:var(--fonte-titulo);font-variant-numeric:tabular-nums}
+
+/* Lista de seleção múltipla dentro de folha (serviços cobertos por uma nota):
+   rolagem própria para não empurrar o rodapé da folha para fora da tela. */
+.lista-escolha{max-height:16rem;overflow-y:auto;border:1px solid var(--linha);
+  border-radius:var(--raio-2);padding:0 var(--e-3)}

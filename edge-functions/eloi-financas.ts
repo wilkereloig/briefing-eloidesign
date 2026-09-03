@@ -382,24 +382,72 @@ Deno.serve(async (req: Request) => {
     }
     const { data, error } = await q.order("competencia", { ascending: false, nullsFirst: false }).limit(500);
     if (error) return json({ error: error.message }, 500);
-    return json({ notas: data ?? [] });
+    // Serviços cobertos por cada nota (1 nota : N serviços, D-22). Uma consulta
+    // para todas as notas da página, não uma por nota.
+    const ids = (data ?? []).map((n: { id: string }) => n.id);
+    const porNota: Record<string, unknown[]> = {};
+    if (ids.length) {
+      const { data: svc } = await supabase.from("eloi_servicos")
+        .select("id,descricao,valor_cents,nota_fiscal_id,cliente_id,sub_cliente,data_competencia")
+        .in("nota_fiscal_id", ids);
+      for (const sv of svc ?? []) (porNota[sv.nota_fiscal_id] ??= []).push(sv);
+    }
+    return json({ notas: (data ?? []).map((n: { id: string }) => ({ ...n, servicos: porNota[n.id] ?? [] })) });
   }
 
   if (action === "nf.upsert") {
-    const nf = body?.nota ?? {};
+    // servico_ids NAO e coluna: sai do objeto antes do upsert, senao o Postgres
+    // recusa a linha inteira. O vinculo e gravado depois, em eloi_servicos.
+    const { servico_ids: servicoIds, servicos: _fora, ...nf } = body?.nota ?? {};
     if (!(Number(nf.valor_cents) >= 0)) return json({ error: "valor invalido" }, 400);
     // emitida sem numero e um registro que nao serve pra nada na contabilidade
     if (["emitida", "enviada"].includes(nf.status) && !nf.numero) {
       return json({ error: "nota emitida exige numero" }, 400);
     }
+    if (servicoIds !== undefined && !Array.isArray(servicoIds)) {
+      return json({ error: "servico_ids tem que ser lista" }, 400);
+    }
     const { data, error } = await supabase.from("eloi_notas_fiscais").upsert(nf).select().single();
-    if (error) return json({ error: error.message }, 500);
+    if (error) {
+      return /duplicate|unique/i.test(error.message)
+        ? json({ error: `já existe uma nota com o número ${nf.numero}` }, 409)
+        : json({ error: error.message }, 500);
+    }
+
+    if (Array.isArray(servicoIds)) {
+      // Todo serviço da nota tem que ser do mesmo cliente dela: nota de um
+      // cliente cobrindo serviço de outro é erro de digitação, não caso de uso.
+      if (servicoIds.length) {
+        const { data: svc } = await supabase.from("eloi_servicos")
+          .select("id,cliente_id").in("id", servicoIds);
+        const estranho = (svc ?? []).find((sv: { cliente_id: string }) => sv.cliente_id !== data.cliente_id);
+        if (estranho || (svc ?? []).length !== servicoIds.length) {
+          return json({ error: "algum serviço não existe ou é de outro cliente" }, 400);
+        }
+      }
+      // Desvincula quem saiu, vincula quem entrou. O trigger cuida do espelho
+      // nf_numero dos dois lados.
+      let solta = supabase.from("eloi_servicos").update({ nota_fiscal_id: null, nf_numero: null })
+        .eq("nota_fiscal_id", data.id);
+      if (servicoIds.length) solta = solta.not("id", "in", `(${servicoIds.join(",")})`);
+      const { error: erroSolta } = await solta;
+      if (erroSolta) return json({ error: erroSolta.message }, 500);
+      if (servicoIds.length) {
+        const { error: erroLiga } = await supabase.from("eloi_servicos")
+          .update({ nota_fiscal_id: data.id }).in("id", servicoIds);
+        if (erroLiga) return json({ error: erroLiga.message }, 500);
+      }
+    }
     return json({ nota: data });
   }
 
   if (action === "nf.remover") {
     const { id } = body ?? {};
     if (!id) return json({ error: "id obrigatorio" }, 400);
+    // A FK e SET NULL: o servico sobreviveria com nf_numero espelhando uma nota
+    // que nao existe mais. Limpa explicitamente antes de apagar.
+    await supabase.from("eloi_servicos")
+      .update({ nota_fiscal_id: null, nf_numero: null }).eq("nota_fiscal_id", id);
     const { error } = await supabase.from("eloi_notas_fiscais").delete().eq("id", id);
     if (error) return json({ error: error.message }, 500);
     return json({ ok: true });

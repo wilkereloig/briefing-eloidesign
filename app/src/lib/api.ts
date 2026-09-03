@@ -221,7 +221,9 @@ export const financas = {
 
   notas: (filtro?: { status?: NotaFiscal['status']; cliente_id?: string; mes?: string }) =>
     call<{ notas: NotaFiscal[] }>('eloi-financas', 'nf.list', filtro ? { filtro } : {}).then((r) => r.notas),
-  salvarNota: (nota: Partial<NotaFiscal>) =>
+  /** `servico_ids` define quais serviços a nota cobre (1 nota : N serviços).
+   *  Omitir não mexe no vínculo; lista vazia desvincula todos. */
+  salvarNota: (nota: Partial<NotaFiscal> & { servico_ids?: string[] }) =>
     call<{ nota: NotaFiscal }>('eloi-financas', 'nf.upsert', { nota }).then((r) => r.nota),
   removerNota: (id: string) => call<{ ok: true }>('eloi-financas', 'nf.remover', { id }),
 

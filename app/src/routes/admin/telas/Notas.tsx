@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { financas } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
-import type { NotaFiscal, StatusNF } from '../../../lib/tipos'
+import type { NotaFiscal, ServicoRow, StatusNF } from '../../../lib/tipos'
 import {
   Aviso, Botao, Campo, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
@@ -21,14 +21,18 @@ export default function Notas() {
   const nomes = useNomes()
   const [filtro, setFiltro] = useState<StatusNF | 'todas'>('todas')
   const [clienteId, setClienteId] = useState('')
+  // As 42 notas do backfill são de fevereiro a julho: cortar pelo mês do painel
+  // deixava a tela vazia. Desligado, a edge não recebe `mes` e devolve tudo.
+  const [filtrarPorMes, setFiltrarPorMes] = useState(false)
   const [folha, setFolha] = useState<
     { nf?: NotaFiscal; servicoId?: string } | { excluir: NotaFiscal } | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
 
   // Serviço concluído e sem nota é dinheiro faturado que a contabilidade não vê.
+  // A fonte é `nota_fiscal_id` (D-22) — `nf_numero` é espelho e o vínculo 1:1
+  // antigo (`nota.servico_id`) está sempre nulo desde a migração de 09-03.
   const semNota = useMemo(() => servicos.filter((s) =>
-    s.status_execucao === 'concluida' && !s.nf_numero &&
-    !notas.some((n) => n.servico_id === s.id && n.status !== 'cancelada')), [servicos, notas])
+    s.status_execucao === 'concluida' && !s.nota_fiscal_id), [servicos])
 
   // Lista da tela é filtrada por mês/cliente no servidor: `notas` (acima) vem
   // sem corte de data, com limit(500) — filtrar em memória esconderia notas
@@ -37,10 +41,10 @@ export default function Notas() {
   const [erroFiltro, setErroFiltro] = useState<string | null>(null)
   const carregarFiltro = useCallback(() => {
     setErroFiltro(null)
-    return financas.notas({ mes, cliente_id: clienteId || undefined })
+    return financas.notas({ mes: filtrarPorMes ? mes : undefined, cliente_id: clienteId || undefined })
       .then((r) => setNotasFiltradas(r))
       .catch((e) => setErroFiltro((e as Error).message))
-  }, [mes, clienteId])
+  }, [mes, clienteId, filtrarPorMes])
   useEffect(() => { void carregarFiltro() }, [carregarFiltro])
 
   const lista = useMemo(() => (notasFiltradas ?? [])
@@ -95,7 +99,12 @@ export default function Notas() {
         )}
 
         <div className="linha" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--e-6)' }}>
-          <SeletorMes />
+          <label className="linha t-legenda" style={{ gap: 'var(--e-2)', minHeight: 44 }}>
+            <input type="checkbox" checked={filtrarPorMes}
+              onChange={(e) => setFiltrarPorMes(e.target.checked)} />
+            Mostrar só o mês selecionado
+          </label>
+          {filtrarPorMes && <SeletorMes />}
           <div className="campo" style={{ minWidth: '12rem' }}>
             <label htmlFor="filtro-cliente">Cliente</label>
             <select id="filtro-cliente" className="campo-caixa" value={clienteId}
@@ -136,6 +145,13 @@ export default function Notas() {
                       {n.competencia ? ` · ${n.competencia.slice(0, 7)}` : ''}
                       {n.emitida_em ? ` · emitida em ${dataCurta(n.emitida_em)}` : ''}
                       {n.arquivo_path ? ' · PDF anexado' : ''}
+                    </span>
+                    <span className="t-legenda espremer">
+                      {n.servicos?.length
+                        ? n.servicos.length === 1
+                          ? n.servicos[0].descricao
+                          : `${n.servicos.length} serviços · ${n.servicos.map((s) => s.descricao).join(', ')}`
+                        : 'Nenhum serviço vinculado'}
                     </span>
                   </span>
                   {n.imposto_cents > 0 && (
@@ -198,6 +214,11 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
   const [imposto, setImposto] = useState(inicial ? fmtBRL(inicial.imposto_cents) : '')
   const [competencia, setCompetencia] = useState(
     inicial?.competencia ?? servico?.data_competencia ?? '')
+  // Serviços que esta nota cobre (D-22). Abrir a folha por "Emitir" já traz o
+  // serviço que originou a ação.
+  const [escolhidos, setEscolhidos] = useState<string[]>(
+    inicial?.servicos?.map((s) => s.id) ?? (servicoId ? [servicoId] : []))
+  const [soSemNota, setSoSemNota] = useState(true)
   // O painel NÃO emite nota — guarda a que já foi emitida fora daqui. Por isso
   // o PDF é anexo, não resultado: quem emitiu foi o sistema da prefeitura.
   const [arquivo, setArquivo] = useState<File | null>(null)
@@ -208,6 +229,19 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
   const recebimentos = useMemo(() => transacoes.filter((t) =>
     t.tipo === 'entrada' && t.contexto === 'empresa' &&
     (!clienteId || t.cliente_id === clienteId)), [transacoes, clienteId])
+
+  // Candidatos: serviços do cliente escolhido. "Só sem nota" evita a lista
+  // inteira de 59; o que já está nesta nota nunca some do filtro.
+  const candidatos = useMemo(() => servicos.filter((s: ServicoRow) =>
+    s.cliente_id === clienteId &&
+    (!soSemNota || !s.nota_fiscal_id || escolhidos.includes(s.id))),
+  [servicos, clienteId, soSemNota, escolhidos])
+  const somaEscolhidos = useMemo(() => servicos
+    .filter((s) => escolhidos.includes(s.id))
+    .reduce((acc, s) => acc + s.valor_cents, 0), [servicos, escolhidos])
+
+  const alternar = (id: string) => setEscolhidos((atual) =>
+    atual.includes(id) ? atual.filter((x) => x !== id) : [...atual, id])
 
   async function salvar() {
     const e: Record<string, string> = {}
@@ -234,7 +268,9 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
         id: inicial?.id,
         arquivo_path: arquivoPath,
         cliente_id: clienteId || null,
-        servico_id: inicial?.servico_id ?? servicoId ?? null,
+        // servico_id (1:1) fica no passado: quem liga nota a serviço agora é
+        // servico_ids, que aceita mais de um (D-22).
+        servico_ids: escolhidos,
         transacao_id: transacaoId || null,
         numero: numero.trim() || null,
         status,
@@ -322,6 +358,60 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
                 Ver o atual
               </button>
             </span>
+          )}
+        </div>
+
+        {/* Uma nota pode cobrir vários serviços — é como a NFS-e 42 nasceu,
+            com dois trabalhos na mesma nota. */}
+        <div className="campo">
+          <label className="etiqueta-mini" htmlFor="nf-servicos-busca">Serviços cobertos por esta nota</label>
+          {!clienteId ? (
+            <span className="t-legenda">Escolha o cliente para listar os serviços.</span>
+          ) : (
+            <>
+              <label className="linha t-legenda" style={{ gap: 'var(--e-2)', minHeight: 44 }}>
+                <input id="nf-servicos-busca" type="checkbox" checked={soSemNota}
+                  onChange={(e) => setSoSemNota(e.target.checked)} />
+                Mostrar só os que ainda não têm nota
+              </label>
+              {candidatos.length === 0 ? (
+                <span className="t-legenda">Nenhum serviço deste cliente nesse filtro.</span>
+              ) : (
+                <ul className="lista lista-escolha">
+                  {candidatos.map((s) => (
+                    <li key={s.id} className="lista-item">
+                      <label className="linha" style={{ gap: 'var(--e-3)', minHeight: 44, flex: 1 }}>
+                        <input type="checkbox" checked={escolhidos.includes(s.id)}
+                          onChange={() => alternar(s.id)} />
+                        <span className="celula">
+                          <span className="t-ui espremer">{s.descricao}</span>
+                          <span className="t-legenda espremer">
+                            {s.sub_cliente ? `${s.sub_cliente} · ` : ''}
+                            {s.data_competencia ? s.data_competencia.slice(0, 7) : 'sem competência'}
+                            {s.nota_fiscal_id && !escolhidos.includes(s.id) ? ' · já em outra nota' : ''}
+                          </span>
+                        </span>
+                        <span className="t-valor">{fmtBRL(s.valor_cents)}</span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {escolhidos.length > 0 && (
+                <span className="t-legenda">
+                  {escolhidos.length} selecionado{escolhidos.length === 1 ? '' : 's'} · soma {fmtBRL(somaEscolhidos)}
+                  {somaEscolhidos !== centsDeBRL(valor) && (
+                    <>
+                      {' '}
+                      <button type="button" className="acesso-link"
+                        onClick={() => setValor(fmtBRL(somaEscolhidos))}>
+                        usar como valor da nota
+                      </button>
+                    </>
+                  )}
+                </span>
+              )}
+            </>
           )}
         </div>
 

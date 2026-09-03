@@ -233,9 +233,20 @@ export interface Recorrencia {
   observacoes: string | null
 }
 
+/** Serviço coberto por uma nota, como `nf.list` devolve (subconjunto de ServicoRow). */
+export interface ServicoDaNota {
+  id: string
+  descricao: string
+  valor_cents: number
+  cliente_id: string
+  sub_cliente: string | null
+  data_competencia: string | null
+}
+
 export interface NotaFiscal {
   id: string
   cliente_id: string | null
+  /** LEGADO 1:1, sempre nulo. O vínculo real é `servicos` (1 nota : N serviços, D-22). */
   servico_id: string | null
   transacao_id: string | null
   numero: string | null
@@ -247,6 +258,8 @@ export interface NotaFiscal {
   enviada_em: string | null
   arquivo_path: string | null
   observacoes: string | null
+  /** Preenchido por `nf.list`. Vazio quando a nota ainda não cobre serviço nenhum. */
+  servicos?: ServicoDaNota[]
 }
 
 export interface Meta {

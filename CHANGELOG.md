@@ -2,6 +2,41 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-03 — Nota fiscal passa a ser a fonte única, cobrindo vários serviços
+
+Existiam duas verdades sobre nota: `eloi_servicos.nf_numero` (43 serviços, o
+que Projetos e a fila "Precisa de você" liam) e `eloi_notas_fiscais` (a tela
+Notas, vazia). Anexar um PDF numa não fazia o "Sem nota fiscal" sumir na
+outra. A migração de hoje uniu as duas; este commit faz as telas usarem a
+fonte única.
+
+### Alterado
+
+- **`nf.upsert`** aceita `servico_ids`: a nota grava quais serviços cobre.
+  `servico_ids` é retirado do objeto antes do upsert (não é coluna — passar
+  junto fazia o Postgres recusar a linha inteira). Serviço de outro cliente é
+  recusado. Desvincula quem saiu da lista e vincula quem entrou; o espelho
+  `nf_numero` é do trigger nos dois casos.
+- **`nf.upsert`** traduz a violação do índice único de número para "já existe
+  uma nota com o número N" (409), em vez de erro cru do Postgres.
+- **`nf.list`** devolve os serviços de cada nota — uma consulta para a página
+  inteira, não uma por nota.
+- **`nf.remover`** limpa `nota_fiscal_id`/`nf_numero` dos serviços antes de
+  apagar. A FK é `SET NULL`: sem isso o serviço ficava espelhando o número de
+  uma nota que não existe mais.
+- **Tela Notas**: "Serviços concluídos sem nota" passa a olhar
+  `nota_fiscal_id`, não o espelho nem o vínculo 1:1 antigo. Filtro de mês
+  vira opcional (desligado) — as 42 notas do backfill são de fevereiro a
+  julho e a tela abria vazia. Cada linha mostra os serviços cobertos.
+- **Folha da nota**: seleção múltipla de serviços do cliente, com "só os que
+  ainda não têm nota" ligado por padrão, soma dos escolhidos e atalho para
+  usar a soma como valor da nota.
+- **`NotaFiscal.servico_id`** marcado como legado no tipo: sempre nulo.
+
+### Ordem de publicação
+
+`npm run edges:deploy -- eloi-financas` antes do push.
+
 ## 2026-09-03 — Projetos passa a mostrar o trabalho inteiro; marca vira escolha, não texto
 
 A tela Projetos cortava a lista pelo mês do painel. Como 43 dos 59 serviços
