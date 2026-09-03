@@ -72,6 +72,18 @@ export function calcular(o: EntradaCalculo = {}): Calculo {
   return { base, ajustes, total: r2(afterD) }
 }
 
+/**
+ * `orcamentos.itens` é `jsonb`: o banco aceita qualquer forma ali. Só passa o
+ * que tem cara de item — um valor não numérico viraria NaN no total, e NaN em
+ * proposta é número errado na frente do cliente.
+ */
+export function lerItens(bruto: unknown): ItemOrcamento[] {
+  if (!Array.isArray(bruto)) return []
+  return bruto
+    .filter((i): i is { nome?: unknown; valor?: unknown } => !!i && typeof i === 'object')
+    .map((i) => ({ nome: String(i.nome ?? ''), valor: Number(i.valor) || 0 }))
+}
+
 /** Dias que uma proposta enviada vale antes de contar como vencida. É o que a
  *  página do cliente já promete em texto ("válida por 15 dias"). */
 export const VALIDADE_DIAS = 15

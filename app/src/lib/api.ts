@@ -148,10 +148,31 @@ export const contatos = {
   remover: (id: string) => call<{ ok: true }>('eloi-gestao', 'contatos.delete', { id }),
 }
 
+/** Item reutilizável do calculador de proposta (`catalogo_servicos`). */
+export interface CatalogoItem {
+  id: string
+  nome: string
+  categoria: string | null
+  preco_base: number
+  unidade: string
+  ativo: boolean
+  ordem: number
+}
+
 export const orcamentos = {
   list: () => call<{ orcamentos: OrcamentoRow[] }>('orcamentos', 'list').then((r) => r.orcamentos),
+  criar: (orcamento: Partial<OrcamentoRow>) =>
+    call<{ orcamento: OrcamentoRow }>('orcamentos', 'create', { orcamento }).then((r) => r.orcamento),
   update: (orcamento: Partial<OrcamentoRow> & { id: string }) =>
     call<{ orcamento: OrcamentoRow }>('orcamentos', 'update', { orcamento }).then((r) => r.orcamento),
+  remover: (id: string) => call<{ ok: true }>('orcamentos', 'delete', { id }),
+  catalogo: () => call<{ servicos: CatalogoItem[] }>('orcamentos', 'catalog_list').then((r) => r.servicos),
+  salvarCatalogo: (servico: Partial<CatalogoItem>) =>
+    call<{ servico: CatalogoItem }>('orcamentos', 'catalog_save', { servico }).then((r) => r.servico),
+  removerCatalogo: (id: string) => call<{ ok: true }>('orcamentos', 'catalog_delete', { id }),
+  /** Cria o serviço de um orçamento aprovado. Idempotente: devolve o que já existe. */
+  gerarServico: (orcamento_id: string) =>
+    call<{ servico: ServicoRow; ja_existia: boolean }>('eloi-gestao', 'servicos.from_orcamento', { orcamento_id }),
 }
 
 export const briefingsApi = {

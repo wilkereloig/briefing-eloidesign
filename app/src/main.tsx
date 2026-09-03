@@ -12,6 +12,7 @@ import './app.css'
 const Shell = lazy(() => import('./routes/admin/Shell'))
 const Hoje = lazy(() => import('./routes/admin/telas/Hoje'))
 const Projetos = lazy(() => import('./routes/admin/telas/Projetos'))
+const Orcamentos = lazy(() => import('./routes/admin/telas/Orcamentos'))
 const Clientes = lazy(() => import('./routes/admin/telas/Clientes'))
 const ClienteFicha = lazy(() => import('./routes/admin/telas/ClienteFicha'))
 const Dinheiro = lazy(() => import('./routes/admin/telas/Dinheiro'))
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Hoje /> },
       { path: 'projetos', element: <Projetos /> },
+      { path: 'orcamentos', element: <Orcamentos /> },
       { path: 'clientes', element: <Clientes /> },
       { path: 'clientes/:id', element: <ClienteFicha /> },
       { path: 'dinheiro', element: <Dinheiro /> },

@@ -1,15 +1,20 @@
 import { useState } from 'react'
 import {
   CATEGORIAS_ENTREGA, clientes as clientesApi, contatos as contatosApi, financas,
-  materiaisApi, servicos as servicosApi, subClientes as subClientesApi, type CategoriaEntrega,
+  materiaisApi, orcamentos as orcamentosApi, servicos as servicosApi,
+  subClientes as subClientesApi, type CatalogoItem, type CategoriaEntrega,
 } from '../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../lib/dinheiro'
 import { hojeISO, useFinancas } from '../../lib/financas-store'
 import { saldoAberto } from '../../domain/financeiro'
 import type {
-  ClienteRow, Conta, ContatoRow, Contexto, MaterialRow, Periodicidade, Recorrencia,
-  ServicoRow, StatusExecucao, SubClienteRow, TipoConta, TipoMov, Transacao,
+  ClienteRow, Conta, ContatoRow, Contexto, MaterialRow, OrcamentoRow, Periodicidade,
+  Recorrencia, ServicoRow, StatusExecucao, SubClienteRow, TipoConta, TipoMov, Transacao,
 } from '../../lib/tipos'
+import {
+  calcular, COMPLEXIDADES, lerItens, URGENCIAS,
+  type Complexidade, type ItemOrcamento, type Urgencia,
+} from '../../domain/orcamento'
 import { Botao, Campo, CampoTexto, Folha, Icone, Pilula } from '../../ui/componentes'
 import { rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
 import { corCliente } from '../../ui/tokens'
@@ -934,6 +939,268 @@ export function FolhaSenhaPortal({ cliente, aoFechar, aoSalvar }: {
 // ── confirmação de exclusão ──────────────────────────────────────────────────
 
 /** Destrutivo nunca é o botão de maior peso visual (COMPONENT_INVENTORY). */
+
+// ── orçamento ────────────────────────────────────────────────────────────────
+
+/** Editor da proposta. O cálculo não mora aqui: vem de `domain/orcamento.ts`,
+ *  que é o mesmo que a página do cliente usa. A tela só mostra o resultado. */
+export function FolhaOrcamento({ inicial, duplicar, catalogo, aoFechar, aoSalvar }: {
+  inicial?: OrcamentoRow
+  /** Abre com o conteúdo de `inicial`, mas salva como proposta nova. */
+  duplicar?: boolean
+  /** `null` = a busca do catálogo falhou; `[]` = catálogo vazio. */
+  catalogo: CatalogoItem[] | null
+  aoFechar: () => void
+  aoSalvar: (msg: string) => void
+}) {
+  const { clientes } = useFinancas()
+  const editando = !!inicial && !duplicar
+
+  const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? '')
+  const [clienteTexto, setClienteTexto] = useState(inicial?.cliente ?? '')
+  const [titulo, setTitulo] = useState(
+    duplicar ? `${inicial?.titulo ?? ''} (cópia)`.trim() : inicial?.titulo ?? '')
+  const [itens, setItens] = useState<ItemOrcamento[]>(lerItens(inicial?.itens))
+  const [complexidade, setComplexidade] = useState<Complexidade>(inicial?.complexidade ?? 'simples')
+  const [urgencia, setUrgencia] = useState<Urgencia>(inicial?.urgencia ?? 'normal')
+  const [desconto, setDesconto] = useState(String(inicial?.desconto_pct ?? 0))
+  const [observacoes, setObservacoes] = useState(inicial?.observacoes ?? '')
+  const [verCatalogo, setVerCatalogo] = useState(false)
+  const [erros, setErros] = useState<Record<string, string>>({})
+  const [salvando, setSalvando] = useState(false)
+
+  // Recalcula a cada tecla: o total é o número que decide a conversa com o
+  // cliente, e vê-lo mudar enquanto se ajusta o desconto é o ponto da tela.
+  const conta = calcular({ itens, complexidade, urgencia, desconto_pct: Number(desconto) || 0 })
+  const emReais = (v: number) => fmtBRL(Math.round(v * 100))
+
+  const mudarItem = (i: number, campo: 'nome' | 'valor', valor: string) =>
+    setItens((atual) => atual.map((it, j) => j === i
+      ? { ...it, [campo]: campo === 'valor' ? Number(valor.replace(',', '.')) || 0 : valor }
+      : it))
+
+  async function salvar() {
+    const e: Record<string, string> = {}
+    if (!titulo.trim()) e.titulo = 'Dê um título à proposta'
+    if (!itens.length) e.itens = 'Adicione ao menos um item'
+    if (!clienteId && !clienteTexto.trim()) e.cliente = 'Escolha um cliente ou escreva o nome'
+    setErros(e)
+    if (Object.keys(e).length) return
+
+    setSalvando(true)
+    try {
+      const corpo = {
+        cliente: clienteId ? clientes.find((c) => c.id === clienteId)?.nome ?? null : clienteTexto.trim() || null,
+        cliente_id: clienteId || null,
+        titulo: titulo.trim(),
+        itens,
+        // valor_total é REAIS (exceção herdada), e é o total já ajustado —
+        // é o número que a página do cliente exibe sem recalcular.
+        valor_total: conta.total,
+        observacoes: observacoes.trim() || null,
+        complexidade,
+        urgencia,
+        desconto_pct: Math.min(100, Math.max(0, Number(desconto) || 0)),
+      }
+      if (editando) await orcamentosApi.update({ id: inicial!.id, ...corpo })
+      // Cópia nasce rascunho: mandar como enviada sem revisar é o tipo de
+      // acidente que chega ao cliente.
+      else await orcamentosApi.criar({ ...corpo, status: 'rascunho' })
+      aoSalvar(editando ? 'Proposta atualizada' : 'Proposta criada')
+      aoFechar()
+    } catch (err) {
+      setErros({ geral: (err as Error).message })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Folha titulo={editando ? 'Editar proposta' : duplicar ? 'Duplicar proposta' : 'Nova proposta'}
+      aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>Salvar · {emReais(conta.total)}</Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+        {editando && inicial!.status === 'aprovado' && (
+          <p className="t-sec">
+            Proposta aprovada com projeto criado tem título, valor e cliente
+            travados no servidor — ajuste pelo serviço, em Projetos.
+          </p>
+        )}
+
+        <div className="campo" data-erro={erros.cliente ? 'true' : undefined}>
+          <label htmlFor="orc-cli">Cliente</label>
+          <select id="orc-cli" className="campo-caixa" value={clienteId}
+            onChange={(e) => setClienteId(e.target.value)}>
+            <option value="">Não cadastrado…</option>
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+          {!clienteId && (
+            <input className="campo-caixa" style={{ marginTop: 'var(--e-3)' }}
+              value={clienteTexto} onChange={(e) => setClienteTexto(e.target.value)}
+              placeholder="Nome de quem vai receber" aria-label="Nome do cliente não cadastrado" />
+          )}
+          <span className="t-legenda">
+            Enviar ou aprovar exige cliente cadastrado — é o que liga a proposta ao projeto e à cobrança.
+          </span>
+          {erros.cliente && <span className="campo-erro" role="alert">{erros.cliente}</span>}
+        </div>
+
+        <Campo rotulo="Título" value={titulo} erro={erros.titulo}
+          onChange={(e) => setTitulo(e.target.value)} placeholder="Identidade visual completa" />
+
+        <div className="campo" data-erro={erros.itens ? 'true' : undefined}>
+          <span className="etiqueta-mini">Itens</span>
+          {itens.length === 0 && <p className="t-sec">Nenhum item ainda.</p>}
+          <ul className="lista">
+            {itens.map((it, i) => (
+              <li key={i} className="lista-item">
+                <input className="campo-caixa" style={{ flex: 1 }} value={it.nome}
+                  aria-label={`Nome do item ${i + 1}`} placeholder="Descrição"
+                  onChange={(e) => mudarItem(i, 'nome', e.target.value)} />
+                <input className="campo-caixa valor-linha" inputMode="decimal"
+                  aria-label={`Valor do item ${i + 1}`} value={String(it.valor)}
+                  onChange={(e) => mudarItem(i, 'valor', e.target.value)} />
+                <Botao variante="icone" aria-label={`Remover item ${i + 1}`}
+                  onClick={() => setItens((a) => a.filter((_, j) => j !== i))}>
+                  <Icone nome="excluir" tamanho={16} />
+                </Botao>
+              </li>
+            ))}
+          </ul>
+          <div className="linha" style={{ marginTop: 'var(--e-3)', flexWrap: 'wrap' }}>
+            <Botao compacto onClick={() => setItens((a) => [...a, { nome: '', valor: 0 }])}>
+              <Icone nome="adicionar" tamanho={14} />Item
+            </Botao>
+            <Botao compacto disabled={catalogo === null} onClick={() => setVerCatalogo(true)}
+              title={catalogo === null ? 'Catálogo indisponível — adicione os itens à mão' : undefined}>
+              Do catálogo
+            </Botao>
+          </div>
+          {erros.itens && <span className="campo-erro" role="alert">{erros.itens}</span>}
+        </div>
+
+        <div className="grade-dois">
+          <div className="campo">
+            <label htmlFor="orc-cplx">Complexidade</label>
+            <select id="orc-cplx" className="campo-caixa" value={complexidade}
+              onChange={(e) => setComplexidade(e.target.value as Complexidade)}>
+              {COMPLEXIDADES.map((c) => (
+                <option key={c.key} value={c.key}>{c.label}{c.m !== 1 ? ` ×${c.m}` : ''}</option>
+              ))}
+            </select>
+          </div>
+          <div className="campo">
+            <label htmlFor="orc-urg">Urgência</label>
+            <select id="orc-urg" className="campo-caixa" value={urgencia}
+              onChange={(e) => setUrgencia(e.target.value as Urgencia)}>
+              {URGENCIAS.map((u) => (
+                <option key={u.key} value={u.key}>{u.label}{u.m !== 1 ? ` ×${u.m}` : ''}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <Campo rotulo="Desconto (%)" value={desconto} inputMode="decimal"
+          onChange={(e) => setDesconto(e.target.value)} placeholder="0" />
+
+        {/* Espelho do que o cliente vai ver. Os ajustes são exibição: nunca
+            entram em `itens`, senão o próximo cálculo os multiplicaria de novo. */}
+        <div className="campo">
+          <span className="etiqueta-mini">Como o cliente vê</span>
+          <ul className="lista">
+            <li className="lista-item">
+              <span className="celula"><span className="t-ui">Subtotal</span></span>
+              <span className="t-valor">{emReais(conta.base)}</span>
+            </li>
+            {conta.ajustes.map((a) => (
+              <li key={a.nome} className="lista-item">
+                <span className="celula"><span className="t-legenda">{a.nome}</span></span>
+                <span className="t-valor">{emReais(a.valor)}</span>
+              </li>
+            ))}
+            <li className="lista-item">
+              <span className="celula"><span className="t-ui">Total</span></span>
+              <span className="t-valor">{emReais(conta.total)}</span>
+            </li>
+          </ul>
+        </div>
+
+        <CampoTexto rotulo="Observações" value={observacoes} rows={3}
+          onChange={(e) => setObservacoes(e.target.value)}
+          placeholder="Prazo, forma de pagamento, o que está fora do escopo" />
+
+        {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
+      </div>
+
+      {verCatalogo && catalogo && (
+        <FolhaCatalogo itens={catalogo} aoFechar={() => setVerCatalogo(false)}
+          aoEscolher={(escolhidos) => setItens((a) => [...a, ...escolhidos])} />
+      )}
+    </Folha>
+  )
+}
+
+/** Escolha de itens do catálogo, com quantidade. Só leitura: manter o catálogo
+ *  é outra tela (Configurações), e misturar as duas coisas aqui faria escolher
+ *  um item e editar o preço-base dele parecerem a mesma ação. */
+function FolhaCatalogo({ itens, aoFechar, aoEscolher }: {
+  itens: CatalogoItem[]
+  aoFechar: () => void
+  aoEscolher: (escolhidos: ItemOrcamento[]) => void
+}) {
+  const [qtd, setQtd] = useState<Record<string, number>>({})
+  const ativos = itens.filter((i) => i.ativo)
+  const escolhidos = ativos
+    .filter((i) => (qtd[i.id] ?? 0) > 0)
+    .map((i) => {
+      const q = qtd[i.id]
+      return {
+        nome: q > 1 ? `${i.nome} × ${q}` : i.nome,
+        valor: Math.round(Number(i.preco_base) * q * 100) / 100,
+      }
+    })
+
+  return (
+    <Folha titulo="Catálogo" aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" style={{ flex: 2 }} disabled={escolhidos.length === 0}
+          onClick={() => { aoEscolher(escolhidos); aoFechar() }}>
+          Adicionar {escolhidos.length || ''}
+        </Botao>
+      </>}>
+      {ativos.length === 0 ? (
+        <p className="t-sec">
+          Nenhum item ativo no catálogo. Cadastre itens reutilizáveis em
+          Configurações para montar proposta mais rápido.
+        </p>
+      ) : (
+        <ul className="lista">
+          {ativos.map((i) => (
+            <li key={i.id} className="lista-item">
+              <span className="celula">
+                <span className="t-ui espremer">{i.nome}</span>
+                <span className="t-legenda espremer">
+                  {[i.categoria, `por ${i.unidade}`].filter(Boolean).join(' · ')}
+                </span>
+              </span>
+              <span className="t-valor">{fmtBRL(Math.round(Number(i.preco_base) * 100))}</span>
+              <input className="campo-caixa" type="number" min={0} max={99} inputMode="numeric"
+                style={{ width: '4.5rem', minHeight: 44 }} aria-label={`Quantidade de ${i.nome}`}
+                value={qtd[i.id] ?? 0}
+                onChange={(e) => setQtd((q) => ({ ...q, [i.id]: Math.max(0, Number(e.target.value) || 0) }))} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </Folha>
+  )
+}
+
 export function FolhaExcluir({ titulo, consequencia, aoFechar, aoConfirmar }: {
   titulo: string
   consequencia: string

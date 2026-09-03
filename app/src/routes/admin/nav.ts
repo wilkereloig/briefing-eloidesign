@@ -14,14 +14,15 @@ export const NAV_PRIMARIA: ItemNav[] = [
   { path: '/admin/dinheiro', label: 'Dinheiro', icone: 'dinheiro', barra: true },
   { path: '/admin/projetos', label: 'Projetos', icone: 'projetos', barra: true },
   { path: '/admin/clientes', label: 'Clientes', icone: 'cliente', barra: true },
+  { path: '/admin/orcamentos', label: 'Orçamentos', icone: 'documentos' },
   { path: '/admin/notas', label: 'Notas fiscais', icone: 'nota-fiscal' },
   { path: '/admin/relatorios', label: 'Relatórios', icone: 'grafico' },
-  { path: '/admin/calendario', label: 'Calendário', icone: 'calendario' },
 ]
 
 export const NAV_FERRAMENTAS: ItemNav[] = [
   { path: '/admin/briefings', label: 'Briefings', icone: 'briefing' },
   { path: '/admin/entregas', label: 'Entregas', icone: 'entrega' },
+  { path: '/admin/calendario', label: 'Calendário', icone: 'calendario' },
   { path: '/admin/arquivos', label: 'Arquivos', icone: 'documentos' },
   { path: '/admin/config', label: 'Configurações', icone: 'configuracoes' },
 ]
