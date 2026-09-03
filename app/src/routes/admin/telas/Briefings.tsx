@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { briefingsApi } from '../../../lib/api'
+import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import type { BriefingLegadoRow, BriefingLinkRow } from '../../../lib/tipos'
 import {
@@ -26,6 +27,7 @@ export default function Briefings() {
   const [aba, setAba] = useState<Aba>('convites')
   const [aviso, setAviso] = useState<string | null>(null)
   const [novo, setNovo] = useState(false)
+  useAbrirNovo(() => setNovo(true))
   /** Convite ou resposta antiga: a folha desenha as duas com os mesmos mapas. */
   const [vendo, setVendo] = useState<
     { tipo: string; cliente: string | null; nome: string | null; email: string | null

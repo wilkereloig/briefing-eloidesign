@@ -84,6 +84,21 @@ export function lerItens(bruto: unknown): ItemOrcamento[] {
     .map((i) => ({ nome: String(i.nome ?? ''), valor: Number(i.valor) || 0 }))
 }
 
+/**
+ * O endereço que o cliente abre.
+ *
+ * `link` manual tem precedência sobre o `share_token`: quando preenchido, é
+ * ele que o cliente recebe — e a página de aprovar/recusar fica fora do
+ * caminho, porque aquele link aponta para outro lugar. Comportamento herdado
+ * do painel estático; mudar isso trocaria o destino de link já enviado.
+ */
+export function linkPublico(
+  o: { link?: string | null; share_token?: string | null }, origem: string,
+): string {
+  if (o.link) return /^https?:/i.test(o.link) ? o.link : origem + (o.link.startsWith('/') ? o.link : `/${o.link}`)
+  return o.share_token ? `${origem}/orcamento/?t=${o.share_token}` : ''
+}
+
 /** Dias que uma proposta enviada vale antes de contar como vencida. É o que a
  *  página do cliente já promete em texto ("válida por 15 dias"). */
 export const VALIDADE_DIAS = 15

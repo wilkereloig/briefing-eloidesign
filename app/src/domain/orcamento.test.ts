@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcular, estaExpirado, VALIDADE_DIAS } from './orcamento'
+import { calcular, estaExpirado, linkPublico, VALIDADE_DIAS } from './orcamento'
 
 // Os oito primeiros casos são os mesmos de `assets/eloi-admin/orcamento.test.js`,
 // de propósito: enquanto os dois arquivos existirem, um cálculo que divergir
@@ -73,5 +73,23 @@ describe('estaExpirado', () => {
   })
   it('data inválida não expira — na dúvida, a proposta continua valendo', () => {
     expect(estaExpirado({ status: 'enviado', updated_at: 'sem data' }, AGORA)).toBe(false)
+  })
+})
+
+describe('linkPublico', () => {
+  const O = 'https://eloi.com.br'
+  it('sem link manual, monta o endereço do token', () => {
+    expect(linkPublico({ share_token: 'abc' }, O)).toBe(`${O}/orcamento/?t=abc`)
+  })
+  it('link manual absoluto passa inteiro', () => {
+    expect(linkPublico({ link: 'https://outro.com/p', share_token: 'abc' }, O)).toBe('https://outro.com/p')
+  })
+  it('link manual relativo ganha a origem, com ou sem barra', () => {
+    expect(linkPublico({ link: '/proposta' }, O)).toBe(`${O}/proposta`)
+    expect(linkPublico({ link: 'proposta' }, O)).toBe(`${O}/proposta`)
+  })
+  it('sem link e sem token, devolve vazio em vez de endereço quebrado', () => {
+    expect(linkPublico({}, O)).toBe('')
+    expect(linkPublico({ share_token: null }, O)).toBe('')
   })
 })

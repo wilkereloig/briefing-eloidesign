@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { orcamentos as orcamentosApi, servicos as servicosApi } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
+import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import { juntarProjetos, type Etapa, type Projeto } from '../../../domain/projeto'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
@@ -42,6 +43,7 @@ export default function Projetos() {
   const [filtrarPorMes, setFiltrarPorMes] = useState(false)
   const [busca, setBusca] = useState('')
   const [folha, setFolha] = useState<{ s?: ServicoRow } | null>(null)
+  useAbrirNovo(() => setFolha({}))
   const [excluir, setExcluir] = useState<Projeto | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
   /** Rascunho da edição de valor em linha: id → texto digitado. */

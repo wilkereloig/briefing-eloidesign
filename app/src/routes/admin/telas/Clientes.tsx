@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fmtBRL } from '../../../lib/dinheiro'
+import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { useFinancas } from '../../../lib/financas-store'
 import { estaEmAberto, saldoAberto, valorLiquidado } from '../../../domain/financeiro'
 import { corCliente } from '../../../ui/tokens'
@@ -13,6 +14,7 @@ export default function Clientes() {
   const [busca, setBusca] = useState('')
   const [verArquivados, setVerArquivados] = useState(false)
   const [novo, setNovo] = useState(false)
+  useAbrirNovo(() => setNovo(true))
   const [aviso, setAviso] = useState<string | null>(null)
 
   // Faturado, recebido e a receber por cliente, numa passada só. Fazer isso

@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { orcamentos as orcamentosApi, type CatalogoItem } from '../../../lib/api'
 import { fmtBRL } from '../../../lib/dinheiro'
+import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { useFinancas } from '../../../lib/financas-store'
-import { estaExpirado, VALIDADE_DIAS } from '../../../domain/orcamento'
+import { estaExpirado, linkPublico, VALIDADE_DIAS } from '../../../domain/orcamento'
 import {
   Aviso, Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
@@ -20,20 +21,13 @@ const ROTULO: Record<OrcamentoStatus, string> = {
   rascunho: 'Rascunho', enviado: 'Enviado', aprovado: 'Aprovado', recusado: 'Recusado',
 }
 
-/** O link que o cliente abre. `link` manual tem precedência: quando preenchido,
- *  é ele que o cliente recebe, e a página de aprovar/recusar fica fora do
- *  caminho — o painel antigo já se comportava assim. */
-export function linkPublico(o: Pick<OrcamentoRow, 'link' | 'share_token'>, origem: string): string {
-  if (o.link) return /^https?:/i.test(o.link) ? o.link : origem + (o.link.startsWith('/') ? o.link : `/${o.link}`)
-  return o.share_token ? `${origem}/orcamento/?t=${o.share_token}` : ''
-}
-
 export default function Orcamentos() {
   const { orcamentos, clientes, recarregar } = useFinancas()
   const [filtro, setFiltro] = useState<OrcamentoStatus | 'todos' | 'expirado'>('todos')
   const [clienteFiltro, setClienteFiltro] = useState('')
   const [busca, setBusca] = useState('')
   const [folha, setFolha] = useState<{ o?: OrcamentoRow; duplicar?: boolean } | null>(null)
+  useAbrirNovo(() => setFolha({}))
   const [excluir, setExcluir] = useState<OrcamentoRow | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
   const [ocupado, setOcupado] = useState<string | null>(null)

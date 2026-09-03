@@ -18,12 +18,21 @@ function Item({ item, ordem }: { item: ItemNav; ordem?: number }) {
   )
 }
 
-export function Sidebar({ aoCriar }: { aoCriar: () => void }) {
+export function Sidebar({ aoCriar, aoBuscar }: { aoCriar: () => void; aoBuscar: () => void }) {
   const { sair } = useAdmin()
   const naBarra = NAV_PRIMARIA.filter((i) => i.barra)
   return (
     <aside className="trilho">
       <div className="trilho-marca"><Marca /></div>
+      {/* Antes da navegação de propósito: procurar costuma ser mais rápido que
+          escolher o módulo e filtrar lá dentro. */}
+      <button type="button" className="trilho-item trilho-busca" onClick={aoBuscar}>
+        <Icone nome="pesquisa" tamanho={18} />
+        <span className="rotulo-longo">Buscar</span>
+        <kbd className="rotulo-longo t-legenda">Ctrl K</kbd>
+        <span className="rotulo-curto" aria-hidden>Buscar</span>
+      </button>
+
       <nav aria-label="Seções">
         {NAV_PRIMARIA.map((item) => (
           <Item key={item.path} item={item}

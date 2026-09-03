@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { financas } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
+import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import type { NotaFiscal, ServicoRow, StatusNF } from '../../../lib/tipos'
 import {
@@ -26,6 +27,7 @@ export default function Notas() {
   const [filtrarPorMes, setFiltrarPorMes] = useState(false)
   const [folha, setFolha] = useState<
     { nf?: NotaFiscal; servicoId?: string } | { excluir: NotaFiscal } | null>(null)
+  useAbrirNovo(() => setFolha({}))
   const [aviso, setAviso] = useState<string | null>(null)
 
   // Serviço concluído e sem nota é dinheiro faturado que a contabilidade não vê.

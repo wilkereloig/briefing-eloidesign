@@ -343,3 +343,30 @@ select.campo-caixa option{background:var(--chao);color:var(--texto)}
    rolagem própria para não empurrar o rodapé da folha para fora da tela. */
 .lista-escolha{max-height:16rem;overflow-y:auto;border:1px solid var(--linha);
   border-radius:var(--raio-2);padding:0 var(--e-3)}
+
+/* ── busca global ──────────────────────────────────────────────────────────
+   Alinhada ao topo (não centralizada): a lista cresce para baixo e o campo
+   não pula de lugar conforme o número de resultados muda. */
+.busca-fundo{position:fixed;inset:0;z-index:60;background:rgba(9,3,25,.72);
+  display:flex;justify-content:center;align-items:flex-start;padding:var(--e-9) var(--e-5)}
+@media (max-width:767px){ .busca-fundo{padding:var(--e-5) 0 0} }
+
+.busca-caixa{width:min(42rem,100%);max-height:min(32rem,80vh);display:flex;flex-direction:column;
+  background:var(--superficie-2);border:1px solid var(--linha);border-radius:var(--raio-folha);
+  overflow:hidden}
+.busca-campo{display:flex;align-items:center;gap:var(--e-3);padding:var(--e-5);
+  border-bottom:1px solid var(--linha)}
+.busca-campo .campo-caixa{flex:1;border:0;background:transparent;min-height:44px}
+.busca-campo kbd{border:1px solid var(--linha);border-radius:var(--raio-chip);padding:2px 6px}
+
+.busca-resultados{overflow-y:auto;padding-bottom:var(--e-4)}
+.busca-grupo{display:block;padding:var(--e-5) var(--e-5) var(--e-2)}
+.busca-item{display:flex;align-items:center;gap:var(--e-4);width:100%;min-height:44px;
+  padding:var(--e-3) var(--e-5);background:transparent;border:0;text-align:left;
+  color:inherit;cursor:pointer}
+/* Estado por tom, não por sombra — e a barra à esquerda dá forma além da cor. */
+.busca-item.ativo{background:var(--superficie-3);box-shadow:inset 3px 0 0 var(--acento)}
+.busca-item:focus-visible{outline:2px solid var(--acento);outline-offset:-2px}
+
+.trilho-busca{width:100%;background:transparent;border:0;cursor:pointer;color:inherit}
+.trilho-busca kbd{margin-left:auto;opacity:.7}
