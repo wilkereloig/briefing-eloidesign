@@ -152,6 +152,13 @@ export interface BriefingLinkRow {
   status: 'pendente' | 'respondido'
   created_at: string
   revogado_em: string | null
+  responded_at: string | null
+  nome: string | null
+  email: string | null
+  whatsapp: string | null
+  empresa: string | null
+  /** Resposta crua do formulário. Forma varia por tipo — ver `lib/briefing-mapas.ts`. */
+  raw: unknown
 }
 
 export interface BriefingLegadoRow {

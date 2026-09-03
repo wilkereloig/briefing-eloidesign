@@ -1,5 +1,7 @@
-// TODO (painel interno, Fase B): quando /gestao/, /painel-briefings/,
-// /painel-orcamentos/, /painel/ e /painel-ecommerce/ saírem do ar, PRIMARY
+// 2026-09-03: Briefings e Orçamentos apontam para /admin — os painéis
+// estáticos correspondentes viraram redirect no vercel.json.
+// TODO (painel interno, Fase B): quando /gestao/, /painel/ e
+// /painel-ecommerce/ saírem do ar, PRIMARY
 // abaixo fica com 4 links mortos — /marca/ é a única página que ainda usa
 // este nav. Trocar por um link único "← Painel" pra /admin nessa hora.
 
@@ -18,8 +20,8 @@
   var PRIMARY = [
     ['/admin/',                'Painel',              'M3 12l9-8 9 8M5 10v10h14V10'],
     ['/gestao/',               'Gestão',              'M4 19V9m6 10V5m6 14v-7'],
-    ['/painel-briefings/',     'Briefings',           'M8 4h8v3H8zM6 7h12v13H6z'],
-    ['/painel-orcamentos/',    'Orçamentos',          'M7 4h10v16H7zM10 8h4M10 12h4M10 16h3'],
+    ['/admin/briefings',       'Briefings',           'M8 4h8v3H8zM6 7h12v13H6z'],
+    ['/admin/orcamentos',      'Orçamentos',          'M7 4h10v16H7zM10 8h4M10 12h4M10 16h3'],
     // Era 'Portal do Cliente', mas leva pra aba clientes da Gestao -- nao pro portal
     // (/portal/, que e do cliente e pede senha dele). Preview do portal fica na
     // propria lista de clientes, onde existe um cliente pra previsualizar.
@@ -36,7 +38,7 @@
   // So no trilho: no celular sao links para destinos que ja sao abas.
   var QUICK = [
     ['+ Serviço',  '/gestao/'],
-    ['+ Orçamento','/painel-orcamentos/'],
+    ['+ Orçamento','/admin/orcamentos'],
     ['+ Cliente',  '/gestao/#clientes']
   ];
 

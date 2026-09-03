@@ -179,12 +179,19 @@ export const briefingsApi = {
   convites: () => call<{ invites: BriefingLinkRow[] }>('briefing-links', 'list').then((r) => r.invites),
   legadoVisual: () => call<{ briefings: BriefingLegadoRow[] }>('get-briefings', 'list').then((r) => r.briefings),
   legadoEcommerce: () => call<{ briefings: BriefingLegadoRow[] }>('get-ecommerce-briefings', 'list').then((r) => r.briefings),
+  criarConvite: (dados: { cliente: string; tipo: string; cliente_id?: string | null }) =>
+    call<{ invite: BriefingLinkRow }>('briefing-links', 'create', dados).then((r) => r.invite),
+  vincularConvite: (id: string, cliente_id: string) =>
+    call<{ invite: BriefingLinkRow }>('briefing-links', 'vincular_cliente', { id, cliente_id }).then((r) => r.invite),
+  reabrirConvite: (id: string) =>
+    call<{ invite: BriefingLinkRow }>('briefing-links', 'reabrir', { id }).then((r) => r.invite),
+  revogarConvite: (id: string, revogar = true) =>
+    call<{ invite: BriefingLinkRow }>('briefing-links', 'revogar', { id, revogar }).then((r) => r.invite),
+  removerConvite: (id: string) => call<{ ok: true }>('briefing-links', 'delete', { id }),
   vincularLegadoVisual: (id: string, cliente_id: string) =>
     call('get-briefings', 'vincular_cliente', { id, cliente_id }),
   vincularLegadoEcommerce: (id: string, cliente_id: string) =>
     call('get-ecommerce-briefings', 'vincular_cliente', { id, cliente_id }),
-  vincularConvite: (id: string, cliente_id: string) =>
-    call('briefing-links', 'vincular_cliente', { id, cliente_id }),
 }
 
 // ── núcleo financeiro (edge eloi-financas) ──────────────────────────────────

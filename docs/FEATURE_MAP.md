@@ -43,8 +43,30 @@ Atualizado: 2026-08-07.
 - **Tabelas:** `eloi_servicos` + `eloi_sub_clientes` + `orcamentos` (Projeto é a leitura combinada)
 - **Permissão:** admin
 - **Cobre:** filtro por cliente, marca e etapa (`<select>`) · pendências sem valor / sem nota / entregue e não pago (pílula) · filtro de mês **opcional**, desligado por padrão · agrupamento cliente → marca · valor editável na linha (serviço não pago) · excluir serviço
-- **Pendência:** **criar e editar a proposta ainda é em `/painel-orcamentos`** — aqui só dá para aprovar. Etapas de projeto com pagamento por etapa não existem.
+- **Pendência:** etapas de projeto com pagamento por etapa não existem. (Criar e editar proposta saiu do `/painel-orcamentos` em 2026-09-03 — hoje é `/admin/orcamentos`.)
 - **Testes:** `domain/projeto.test.ts`
+
+### Orçamentos
+- **Objetivo:** montar, enviar e acompanhar a proposta sem sair do painel.
+- **Estado:** Concluído
+- **Telas:** `telas/Orcamentos.tsx`, `folhas.tsx` (`FolhaOrcamento`, `FolhaCatalogo`)
+- **Endpoints:** `orcamentos` (`list/create/update/delete/catalog_*`), `eloi-gestao` (`servicos.from_orcamento`)
+- **Tabelas:** `orcamentos`, `catalogo_servicos`
+- **Permissão:** admin (a página do cliente, `/orcamento/?t=`, é pública por token)
+- **Cobre:** criar · editar · duplicar · excluir · marcar enviada · aprovar · recusar · copiar link · criar projeto · catálogo com quantidade · complexidade, urgência e desconto
+- **Cálculo:** `domain/orcamento.ts` — o mesmo que a página do cliente usa. Ajuste é exibição, nunca entra em `itens`.
+- **Vencida:** derivada de `updated_at` (`estaExpirado`), não é status gravado.
+
+### Briefings
+- **Objetivo:** convidar, receber e ler o briefing sem painel externo.
+- **Estado:** Concluído
+- **Telas:** `telas/Briefings.tsx` (`FolhaConvite`, `FolhaResposta`)
+- **Endpoints:** `briefing-links` (`list/create/vincular_cliente/reabrir/revogar/delete`), `get-briefings`, `get-ecommerce-briefings`
+- **Tabelas:** `briefing_links`, `briefings`, `ecommerce_briefings`
+- **Permissão:** admin (o formulário, `/briefing*/?t=`, é público por token)
+- **Cobre:** gerar convite (copiar, WhatsApp, abrir) · ver resposta traduzida · reabrir · revogar/reativar · excluir · vincular resposta a cliente
+- **Dicionários:** `lib/briefing-mapas.ts`, portados do painel estático
+- **Limite conhecido:** tipo sem dicionário (Guia Viver Bem) cai num bloco genérico com as chaves cruas — antes não era exibível em lugar nenhum.
 
 ### Contatos
 - **Objetivo:** saber quem procurar em cada cliente sem sair do painel.

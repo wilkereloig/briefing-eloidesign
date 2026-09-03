@@ -2,6 +2,78 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-03 — Briefings completos no /admin; dois painéis estáticos aposentados
+
+`/admin/briefings` só listava e vinculava: gerar convite e ler a resposta
+ainda eram no `/painel-briefings`. Junto com orçamentos, era o último
+bloqueador para desligar o painel antigo.
+
+### Adicionado
+
+- **Novo convite** na própria tela: nome, tipo de briefing, cliente
+  cadastrado (opcional — muita conversa começa antes de existir cliente).
+  Gera o link e mostra copiar, WhatsApp e abrir.
+- **Ver resposta**: a resposta inteira, traduzida pelos dicionários portados
+  para `lib/briefing-mapas.ts` (46 rótulos e 53 opções de e-commerce, 21
+  rótulos e 19 opções de identidade, seções na mesma ordem). "Copiar tudo"
+  gera o texto corrido para colar em conversa.
+- **Resposta antiga** (tabelas legadas, sem token) usa a mesma folha — antes
+  só o `/painel/` e o `/painel-ecommerce/` sabiam desenhar aquilo.
+- **Reabrir** convite respondido: única forma de aceitar novo envio, já que
+  `briefing-submit` recusa sobrescrita com 409. Limpa a resposta anterior.
+- **Revogar / reativar** link: mata o token sem apagar a resposta.
+  `revogado_em` já era respeitado pelo backend e pelo formulário — não havia
+  como produzir o estado a não ser por SQL na mão.
+- **Excluir** convite, com a consequência escrita (respondido leva a resposta
+  junto; para só matar o link, revogar).
+- `briefing-links`: actions `reabrir` e `revogar`.
+
+### Nota sobre o briefing "Guia Viver Bem"
+
+Aquele formulário grava a pergunta inteira em português como chave, e por
+isso **nenhum painel conseguia exibir a resposta** — tudo virava travessão.
+Tipo sem dicionário agora cai num bloco genérico com as chaves do próprio
+JSON: feio, mas legível.
+
+### Legado desligado
+
+`vercel.json` redireciona permanentemente para o `/admin`:
+`/painel-orcamentos`, `/orcamento-inteligente` e `/painel-briefings`.
+`assets/eloi-admin/nav.js` aponta direto para as telas novas.
+
+**`/painel/` e `/painel-ecommerce/` continuam no ar de propósito.** A camada
+analítica deles não foi portada: 36 cores nomeadas, as 10 regras de
+`pendencias()`, o `gerarBrief()` e as 10 regras de `recomendar()`. Redirecionar
+agora perderia isso sem substituto. Decidir portar ou descartar é assunto
+próprio.
+
+## 2026-09-03 — Propostas dentro do /admin
+
+Criar e editar proposta só existia em `/painel-orcamentos`, estático, fora do
+painel — o bloqueador registrado desde 2026-08-05.
+
+### Adicionado
+
+- **`/admin/orcamentos`**: lista com indicadores (aguardando, aprovadas,
+  vencidas, rascunhos), filtro por situação e cliente, busca.
+- Criar, editar, **duplicar** (a cópia nasce rascunho), excluir. Marcar
+  enviada, aprovar, recusar, copiar o link do cliente, criar o projeto quando
+  o trigger não criou.
+- Editor com itens em linha, catálogo com quantidade, complexidade, urgência e
+  desconto — total recalculado a cada tecla por `domain/orcamento.ts`, com
+  espelho de "como o cliente vê". O catálogo distingue "falhou ao carregar"
+  (botão desabilitado, com explicação) de "vazio", como o painel antigo já
+  fazia.
+- **Vencida** é derivada de `updated_at`; "Renovar validade" regrava o status,
+  o que empurra a data.
+- `api.ts`: `criar`, `remover`, `catalogo`, `salvarCatalogo`,
+  `removerCatalogo`, `gerarServico`.
+
+### Alterado
+
+- Nav: Orçamentos entra na primária; Calendário desce para ferramentas — o
+  inventário limita a primária a 7 destinos.
+
 ## 2026-09-03 — Excluir, cancelar ou arquivar: uma regra só
 
 Não havia critério. Transação tinha cancelar e excluir; serviço não tinha

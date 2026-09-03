@@ -6,7 +6,13 @@
   "outputDirectory": ".",
   "redirects": [
     { "source": "/admin-app", "destination": "/admin", "permanent": true },
-    { "source": "/admin-app/:path*", "destination": "/admin", "permanent": true }
+    { "source": "/admin-app/:path*", "destination": "/admin", "permanent": true },
+    { "source": "/painel-orcamentos", "destination": "/admin/orcamentos", "permanent": true },
+    { "source": "/painel-orcamentos/:path*", "destination": "/admin/orcamentos", "permanent": true },
+    { "source": "/orcamento-inteligente", "destination": "/admin/orcamentos", "permanent": true },
+    { "source": "/orcamento-inteligente/:path*", "destination": "/admin/orcamentos", "permanent": true },
+    { "source": "/painel-briefings", "destination": "/admin/briefings", "permanent": true },
+    { "source": "/painel-briefings/:path*", "destination": "/admin/briefings", "permanent": true }
   ],
   "rewrites": [
     { "source": "/admin", "destination": "/app/dist/index.html" },
