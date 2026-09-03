@@ -13,10 +13,11 @@ import {
 } from 'react'
 import {
   clientes as clientesApi, financas, orcamentos as orcamentosApi, servicos as servicosApi,
+  subClientes as subClientesApi,
 } from './api'
 import type {
   Categoria, ClienteRow, Conta, Contexto, Meta, NotaFiscal, OrcamentoRow,
-  Recorrencia, ServicoRow, Transacao,
+  Recorrencia, ServicoRow, SubClienteRow, Transacao,
 } from './tipos'
 
 /** Filtro de contexto da interface: 'tudo' soma pessoal + empresa. */
@@ -50,6 +51,7 @@ interface Estado {
   transacoes: Transacao[]
   notas: NotaFiscal[]
   clientes: ClienteRow[]
+  subClientes: SubClienteRow[]
   servicos: ServicoRow[]
   orcamentos: OrcamentoRow[]
   carregando: boolean
@@ -68,11 +70,11 @@ const Ctx = createContext<Estado>(null!)
 export const useFinancas = () => useContext(Ctx)
 
 type Dados = Pick<Estado, 'contas' | 'categorias' | 'recorrencias' | 'metas'
-  | 'transacoes' | 'notas' | 'clientes' | 'servicos' | 'orcamentos'>
+  | 'transacoes' | 'notas' | 'clientes' | 'subClientes' | 'servicos' | 'orcamentos'>
 
 const VAZIO: Dados = {
   contas: [], categorias: [], recorrencias: [], metas: [],
-  transacoes: [], notas: [], clientes: [], servicos: [], orcamentos: [],
+  transacoes: [], notas: [], clientes: [], subClientes: [], servicos: [], orcamentos: [],
 }
 
 export function FinancasProvider({ children }: { children: ReactNode }) {
@@ -93,11 +95,15 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
 
       const de = deslocarMes(mes, -11) + '-01'
       const ate = ultimoDiaDoMes(deslocarMes(mes, 12))
-      const [ref, transacoes, notas, cli, svc, orc] = await Promise.all([
+      const [ref, transacoes, notas, cli, sub, svc, orc] = await Promise.all([
         financas.bootstrap(),
         financas.transacoes({ de, ate, limite: 2000 }),
         financas.notas(),
         clientesApi.list(),
+        // Marcas são rótulo, não dinheiro: se a edge ainda não conhece a action
+        // (repo publicado antes do deploy), o painel abre sem elas em vez de
+        // não abrir. Mesmo motivo do catch de orçamentos abaixo.
+        subClientesApi.list().catch(() => [] as SubClienteRow[]),
         servicosApi.list(),
         // Orçamentos alimentam o funil de projetos (domain/projeto.ts). Falha
         // aqui não derruba o painel financeiro inteiro.
@@ -106,7 +112,7 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
       setDados({
         contas: ref.contas, categorias: ref.categorias,
         recorrencias: ref.recorrencias, metas: ref.metas,
-        transacoes, notas, clientes: cli, servicos: svc, orcamentos: orc,
+        transacoes, notas, clientes: cli, subClientes: sub, servicos: svc, orcamentos: orc,
       })
     } catch (e) {
       setErro((e as Error).message)
@@ -144,10 +150,11 @@ export function useTransacoesDoMes() {
 
 /** Índice id→nome para não repetir `.find()` em toda linha de tabela. */
 export function useNomes() {
-  const { contas, categorias, clientes } = useFinancas()
+  const { contas, categorias, clientes, subClientes } = useFinancas()
   return useMemo(() => ({
     conta: new Map(contas.map((c) => [c.id, c])),
     categoria: new Map(categorias.map((c) => [c.id, c])),
     cliente: new Map(clientes.map((c) => [c.id, c])),
-  }), [contas, categorias, clientes])
+    subCliente: new Map(subClientes.map((s) => [s.id, s])),
+  }), [contas, categorias, clientes, subClientes])
 }

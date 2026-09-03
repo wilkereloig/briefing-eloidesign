@@ -209,15 +209,23 @@ Deno.serve(async (req: Request) => {
     if (valorCents < 0) return json({ error: "valor_cents não pode ser negativo" }, 400);
     const row: any = {
       cliente_id: s.cliente_id,
-      sub_cliente: (s.sub_cliente || "").trim() || null,
+      // sub_cliente e nf_numero NAO entram aqui: sao espelhos mantidos por
+      // trg_eloi_servico_espelhos (migracao 2026-09-03). Escrever dos dois
+      // lados e como ter dois donos do mesmo campo -- diverge na primeira
+      // divergencia. O dono e sub_cliente_id / nota_fiscal_id.
       descricao,
       valor_cents: valorCents,
       status_execucao: s.status_execucao || "em_execucao",
       pago: s.pago === true,
       data_pagamento: s.data_pagamento || null,
       data_competencia: s.data_competencia || null,
-      nf_numero: s.nf_numero || null,
     };
+    // null e escolha explicita ("trabalho direto"); undefined e "nao mexe".
+    if (s.sub_cliente_id !== undefined) row.sub_cliente_id = s.sub_cliente_id || null;
+    if (s.nota_fiscal_id !== undefined) row.nota_fiscal_id = s.nota_fiscal_id || null;
+    // Valor gravado a mao encerra a sugestao pendente do portal: sem isso o
+    // servico fica marcado como "cliente sugeriu" para sempre.
+    if (valorCents > 0) { row.valor_sugerido_cents = null; row.valor_sugerido_em = null; row.valor_sugerido_observacao = null; }
     if (typeof s.nf_arquivo_url === "string") row.nf_arquivo_url = s.nf_arquivo_url || null;
     if (typeof s.observacoes === "string") row.observacoes = s.observacoes || null;
     if (s.id) {
@@ -281,9 +289,89 @@ Deno.serve(async (req: Request) => {
 
   if (action === "servicos.delete") {
     if (!body?.id) return json({ error: "id obrigatório" }, 400);
+    // Excluir e para engano recente. Servico com nota emitida ou pagamento
+    // registrado tem historico fiscal/financeiro: apagar some com a prova.
+    const { data: s } = await supabase.from("eloi_servicos")
+      .select("nota_fiscal_id,nf_numero,pago").eq("id", body.id).maybeSingle();
+    if (!s) return json({ error: "serviço não encontrado" }, 404);
+    if (s.nota_fiscal_id || s.nf_numero) {
+      return json({ error: "serviço tem nota fiscal; desvincule a nota antes de excluir" }, 409);
+    }
+    if (s.pago) return json({ error: "serviço já foi pago; não pode ser excluído" }, 409);
     const { error } = await supabase.from("eloi_servicos").delete().eq("id", body.id);
     if (error) return json({ error: error.message }, 500);
     return json({ ok: true });
+  }
+
+  // ── SUB-CLIENTES ── marca atendida por intermedio de um cliente (D-18).
+  if (action === "subclientes.list") {
+    let q = supabase.from("eloi_sub_clientes").select("*").order("nome");
+    if (body?.cliente_id) q = q.eq("cliente_id", body.cliente_id);
+    const { data, error } = await q;
+    if (error) return json({ error: error.message }, 500);
+    return json({ subclientes: data ?? [] });
+  }
+
+  if (action === "subclientes.upsert") {
+    const sc = body?.subcliente || {};
+    const nome = String(sc.nome || "").trim();
+    if (!sc.cliente_id) return json({ error: "cliente_id obrigatório" }, 400);
+    if (!nome) return json({ error: "nome obrigatório" }, 400);
+    const row = {
+      cliente_id: sc.cliente_id,
+      nome,
+      ativo: sc.ativo !== false,
+      observacoes: typeof sc.observacoes === "string" ? sc.observacoes.trim() || null : null,
+      updated_at: new Date().toISOString(),
+    };
+    const q = sc.id
+      ? supabase.from("eloi_sub_clientes").update(row).eq("id", sc.id)
+      : supabase.from("eloi_sub_clientes").insert(row);
+    const { data, error } = await q.select().single();
+    // Indice unico (cliente_id, lower(nome)): erro do banco vira mensagem util.
+    if (error) {
+      return /duplicate|unique/i.test(error.message)
+        ? json({ error: "esse cliente já tem uma marca com esse nome" }, 409)
+        : json({ error: error.message }, 500);
+    }
+    return json({ subcliente: data });
+  }
+
+  if (action === "subclientes.delete") {
+    if (!body?.id) return json({ error: "id obrigatório" }, 400);
+    const { count } = await supabase.from("eloi_servicos")
+      .select("id", { count: "exact", head: true }).eq("sub_cliente_id", body.id);
+    // Mesma regra de clientes.delete: com historico, desative em vez de apagar.
+    if ((count ?? 0) > 0) return json({ error: `marca tem ${count} serviço(s); desative em vez de excluir` }, 409);
+    const { error } = await supabase.from("eloi_sub_clientes").delete().eq("id", body.id);
+    if (error) return json({ error: error.message }, 500);
+    return json({ ok: true });
+  }
+
+  // Preenche valor de varios servicos numa passada (edicao em linha em Projetos).
+  if (action === "servicos.valores_lote") {
+    const itens = Array.isArray(body?.valores) ? body.valores : [];
+    if (!itens.length) return json({ error: "nenhum valor enviado" }, 400);
+    if (itens.length > 100) return json({ error: "no máximo 100 por vez" }, 400);
+    for (const it of itens) {
+      if (!it?.id) return json({ error: "cada item precisa de id" }, 400);
+      if (!Number.isInteger(it.valor_cents) || it.valor_cents < 0) {
+        return json({ error: "valor_cents tem que ser inteiro não negativo (centavos)" }, 400);
+      }
+    }
+    const atualizados: unknown[] = [];
+    for (const it of itens) {
+      const { data, error } = await supabase.from("eloi_servicos")
+        .update({
+          valor_cents: it.valor_cents,
+          valor_sugerido_cents: null, valor_sugerido_em: null, valor_sugerido_observacao: null,
+        })
+        .eq("id", it.id).eq("pago", false) // pago nao muda de valor por edicao em lista
+        .select().maybeSingle();
+      if (error) return json({ error: error.message }, 500);
+      if (data) atualizados.push(data);
+    }
+    return json({ servicos: atualizados, ignorados: itens.length - atualizados.length });
   }
 
   // ── NOTA FISCAL (Storage) ──

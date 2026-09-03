@@ -10,7 +10,7 @@ import { Cabecalho, Carga, ChipMovimento, ChipNota, Dinheiro } from '../../../ui
 import { dataCurta } from '../../../ui/formato'
 import type { Arquivo, OrcamentoStatus } from '../../../lib/tipos'
 import type { EstadoChip } from '../../../ui/tokens'
-import { FolhaCliente, FolhaEntrega, FolhaSenhaPortal } from '../folhas'
+import { FolhaCliente, FolhaEntrega, FolhaSenhaPortal, FolhaSubCliente } from '../folhas'
 
 // Estado da proposta → par de cores do sistema. Mesmo mapa do funil de Projetos.
 const ESTADO_ORCAMENTO: Record<OrcamentoStatus, EstadoChip> = {
@@ -19,10 +19,11 @@ const ESTADO_ORCAMENTO: Record<OrcamentoStatus, EstadoChip> = {
 
 export default function ClienteFicha() {
   const { id } = useParams()
-  const { clientes, servicos, orcamentos, transacoes, notas, recarregar } = useFinancas()
+  const { clientes, servicos, subClientes, orcamentos, transacoes, notas, recarregar } = useFinancas()
   const [editando, setEditando] = useState(false)
   const [senhaPortal, setSenhaPortal] = useState(false)
   const [entrega, setEntrega] = useState(false)
+  const [novaMarca, setNovaMarca] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
   const [arquivos, setArquivos] = useState<Arquivo[]>([])
 
@@ -57,12 +58,35 @@ export default function ClienteFicha() {
       orcamentos: orcamentos.filter((o) => o.cliente_id === id)
         .sort((a, b) => b.created_at.localeCompare(a.created_at)),
       projetos: juntarProjetos(orcamentos, servicos).filter((p) => p.clienteId === id),
+      // Uma linha por marca do cliente, mais "Trabalho direto" quando existe
+      // serviço sem marca. Serviço é a fonte: total, quantidade e pendências.
+      marcas: (() => {
+        const meus = servicos.filter((sv) => sv.cliente_id === id)
+        const linhas = subClientes.filter((m) => m.cliente_id === id).map((m) => {
+          const itens = meus.filter((sv) => sv.sub_cliente_id === m.id)
+          return {
+            id: m.id, nome: m.nome, ativo: m.ativo, itens: itens.length,
+            total: itens.reduce((acc, sv) => acc + sv.valor_cents, 0),
+            semValor: itens.filter((sv) => sv.valor_cents === 0).length,
+            semNota: itens.filter((sv) => !sv.nf_numero).length,
+          }
+        })
+        const direto = meus.filter((sv) => !sv.sub_cliente_id)
+        return direto.length
+          ? [...linhas, {
+            id: 'direto', nome: 'Trabalho direto', ativo: true, itens: direto.length,
+            total: direto.reduce((acc, sv) => acc + sv.valor_cents, 0),
+            semValor: direto.filter((sv) => sv.valor_cents === 0).length,
+            semNota: direto.filter((sv) => !sv.nf_numero).length,
+          }]
+          : linhas
+      })(),
       faturado: servicos.filter((s) => s.cliente_id === id).reduce((s, x) => s + x.valor_cents, 0),
       recebido: tx.filter((t) => t.tipo === 'entrada').reduce((s, t) => s + valorLiquidado(t), 0),
       aReceber: tx.filter((t) => t.tipo === 'entrada' && estaEmAberto(t))
         .reduce((s, t) => s + saldoAberto(t), 0),
     }
-  }, [id, transacoes, servicos, notas, orcamentos])
+  }, [id, transacoes, servicos, subClientes, notas, orcamentos])
 
   return (
     <div className="tela pilha">
@@ -144,6 +168,35 @@ export default function ClienteFicha() {
               </p>
             </Painel>
 
+            {/* Marcas antes dos projetos: é por elas que a F2 pergunta
+                ("como está a Vibra?"), e cada linha leva ao filtro pronto. */}
+            <Painel titulo="Marcas atendidas"
+              acao={<Botao compacto onClick={() => setNovaMarca(true)}>
+                <Icone nome="adicionar" tamanho={14} />Nova marca
+              </Botao>}>
+              {doCliente.marcas.length === 0
+                ? <p className="t-sec">
+                  Nenhuma marca cadastrada. Use marcas quando este cliente
+                  intermedia o trabalho de outras (F2 → Vibra, ASUS).
+                </p>
+                : <ul className="lista">
+                  {doCliente.marcas.map((m) => (
+                    <li key={m.id} className="lista-item" data-cancelado={!m.ativo ? 'true' : undefined}>
+                      <span className="celula">
+                        <span className="t-ui espremer">{m.nome}</span>
+                        <span className="t-legenda espremer">
+                          {m.itens} serviço{m.itens === 1 ? '' : 's'}
+                          {m.semValor ? ` · ${m.semValor} sem valor` : ''}
+                          {m.semNota ? ` · ${m.semNota} sem nota` : ''}
+                          {m.ativo ? '' : ' · inativa'}
+                        </span>
+                      </span>
+                      <Dinheiro cents={m.total} className="t-valor" />
+                    </li>
+                  ))}
+                </ul>}
+            </Painel>
+
             <Painel titulo="Projetos e serviços"
               acao={<span className="t-legenda">{doCliente.projetos.length}</span>}>
               {doCliente.projetos.length === 0
@@ -154,7 +207,9 @@ export default function ClienteFicha() {
                       <span className="celula">
                         <span className="t-ui espremer">{p.titulo}</span>
                         <span className="t-legenda espremer">
-                          {p.servico?.sub_cliente ? <span className="sub-cliente">{p.servico.sub_cliente}</span> : null}
+                          {p.servico?.sub_cliente_id
+                            ? <span className="sub-cliente">{p.servico.sub_cliente}</span>
+                            : null}
                           {p.servico?.nf_numero ? `NF ${p.servico.nf_numero}` : 'Sem nota fiscal'}
                         </span>
                       </span>
@@ -274,6 +329,10 @@ export default function ClienteFicha() {
         <FolhaEntrega clienteInicial={cliente.id}
           aoFechar={() => setEntrega(false)}
           aoSalvar={(msg) => setAviso(msg)} />
+      )}
+      {novaMarca && cliente && (
+        <FolhaSubCliente clienteId={cliente.id} aoFechar={() => setNovaMarca(false)}
+          aoSalvar={async () => { setAviso('Marca cadastrada'); await recarregar() }} />
       )}
       {aviso && <Aviso texto={aviso} aoSumir={() => setAviso(null)} />}
     </div>

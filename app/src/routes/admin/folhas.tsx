@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import {
   CATEGORIAS_ENTREGA, clientes as clientesApi, financas, materiaisApi,
-  servicos as servicosApi, type CategoriaEntrega,
+  servicos as servicosApi, subClientes as subClientesApi, type CategoriaEntrega,
 } from '../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../lib/dinheiro'
 import { hojeISO, useFinancas } from '../../lib/financas-store'
 import { saldoAberto } from '../../domain/financeiro'
 import type {
   ClienteRow, Conta, Contexto, MaterialRow, Periodicidade, Recorrencia, ServicoRow,
-  StatusExecucao, TipoConta, TipoMov, Transacao,
+  StatusExecucao, SubClienteRow, TipoConta, TipoMov, Transacao,
 } from '../../lib/tipos'
 import { Botao, Campo, CampoTexto, Folha, Icone, Pilula } from '../../ui/componentes'
 import { rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
@@ -378,6 +378,54 @@ const STATUS_SERVICO: { chave: StatusExecucao; label: string }[] = [
   { chave: 'concluida', label: 'Concluída' },
 ]
 
+/** Marca atendida por intermédio do cliente (D-18). Cadastro mínimo de
+ *  propósito: quem contrata, paga e recebe nota continua sendo o cliente. */
+export function FolhaSubCliente({ clienteId, aoFechar, aoSalvar }: {
+  clienteId: string
+  aoFechar: () => void
+  aoSalvar: (criado: SubClienteRow) => void
+}) {
+  const [nome, setNome] = useState('')
+  const [observacoes, setObservacoes] = useState('')
+  const [erros, setErros] = useState<Record<string, string>>({})
+  const [salvando, setSalvando] = useState(false)
+
+  async function salvar() {
+    if (!nome.trim()) return setErros({ nome: 'Informe o nome da marca' })
+    setErros({})
+    setSalvando(true)
+    try {
+      const criado = await subClientesApi.upsert({
+        cliente_id: clienteId, nome: nome.trim(), observacoes: observacoes.trim() || null,
+      })
+      aoSalvar(criado)
+      aoFechar()
+    } catch (err) {
+      setErros({ geral: (err as Error).message })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Folha titulo="Nova marca" aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>Salvar</Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+        <Campo rotulo="Nome da marca" value={nome} erro={erros.nome}
+          onChange={(e) => setNome(e.target.value)} placeholder="Vibra" />
+        <CampoTexto rotulo="Observações" value={observacoes} rows={2}
+          onChange={(e) => setObservacoes(e.target.value)}
+          placeholder="Opcional — contato, particularidade do fluxo" />
+        {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
+      </div>
+    </Folha>
+  )
+}
+
 /** Serviço é a unidade de trabalho entregue. A etapa do projeto é calculada
  *  daqui + do orçamento de origem (domain/projeto.ts): não existe campo etapa. */
 export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
@@ -385,18 +433,22 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
-  const { clientes } = useFinancas()
+  const { clientes, subClientes, recarregar } = useFinancas()
   const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? '')
   const [descricao, setDescricao] = useState(inicial?.descricao ?? '')
-  const [subCliente, setSubCliente] = useState(inicial?.sub_cliente ?? '')
+  const [subClienteId, setSubClienteId] = useState(inicial?.sub_cliente_id ?? '')
+  const [novaMarca, setNovaMarca] = useState(false)
   const [valor, setValor] = useState(inicial ? fmtBRL(inicial.valor_cents) : '')
   const [status, setStatus] = useState<StatusExecucao>(inicial?.status_execucao ?? 'em_execucao')
   const [pago, setPago] = useState(inicial?.pago ?? false)
   const [competencia, setCompetencia] = useState(inicial?.data_competencia ?? '')
-  const [nfNumero, setNfNumero] = useState(inicial?.nf_numero ?? '')
   const [observacoes, setObservacoes] = useState(inicial?.observacoes ?? '')
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
+
+  // Marcas do cliente escolhido. Marca de outro cliente é rejeitada pelo
+  // trigger no banco, então trocar de cliente limpa a escolha aqui.
+  const marcas = subClientes.filter((m) => m.cliente_id === clienteId && (m.ativo || m.id === subClienteId))
 
   async function salvar() {
     const e: Record<string, string> = {}
@@ -409,11 +461,10 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
     try {
       await servicosApi.upsert({
         id: inicial?.id, cliente_id: clienteId, descricao: descricao.trim(),
-        sub_cliente: subCliente.trim() || null, valor_cents: centsDeBRL(valor),
+        sub_cliente_id: subClienteId || null, valor_cents: centsDeBRL(valor),
         status_execucao: status, pago,
         data_pagamento: pago ? inicial?.data_pagamento ?? hojeISO() : null,
         data_competencia: competencia || null,
-        nf_numero: nfNumero.trim() || null,
         observacoes: observacoes.trim(),
       })
       aoSalvar(inicial ? 'Serviço atualizado' : 'Serviço criado')
@@ -436,7 +487,7 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
         <div className="campo" data-erro={erros.cliente ? 'true' : undefined}>
           <label htmlFor="srv-cliente">Cliente</label>
           <select id="srv-cliente" className="campo-caixa" value={clienteId}
-            onChange={(e) => setClienteId(e.target.value)}>
+            onChange={(e) => { setClienteId(e.target.value); setSubClienteId('') }}>
             <option value="">Selecione…</option>
             {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </select>
@@ -446,9 +497,24 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
         <Campo rotulo="Descrição" value={descricao} erro={erros.descricao}
           onChange={(e) => setDescricao(e.target.value)} placeholder="Identidade visual completa" />
 
-        <Campo rotulo="Marca ou sub-cliente" value={subCliente}
-          onChange={(e) => setSubCliente(e.target.value)}
-          placeholder="Opcional — agrupa marcas dentro do mesmo cliente" />
+        <div className="campo">
+          <label htmlFor="srv-marca">Marca atendida</label>
+          <select id="srv-marca" className="campo-caixa" value={subClienteId}
+            disabled={!clienteId}
+            onChange={(e) => {
+              if (e.target.value === '+') { setNovaMarca(true); return }
+              setSubClienteId(e.target.value)
+            }}>
+            <option value="">Trabalho direto para o cliente</option>
+            {marcas.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+            {clienteId && <option value="+">+ Nova marca…</option>}
+          </select>
+          <span className="t-legenda">
+            {clienteId
+              ? 'A marca que o cliente atende (Vibra, ASUS). Sem marca = trabalho direto.'
+              : 'Escolha o cliente primeiro.'}
+          </span>
+        </div>
 
         <div className="grade-dois">
           <Campo rotulo="Valor" value={valor} inputMode="decimal"
@@ -468,9 +534,22 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
             <input id="srv-comp" type="date" className="campo-caixa" value={competencia}
               onChange={(e) => setCompetencia(e.target.value)} />
           </div>
-          <Campo rotulo="Número da NF" value={nfNumero}
-            onChange={(e) => setNfNumero(e.target.value)} placeholder="Opcional" />
+          <div className="campo">
+            <span className="etiqueta-mini">Nota fiscal</span>
+            {/* O número não se digita aqui desde 2026-09-03: quem define é a
+                nota (eloi_notas_fiscais) e nf_numero é espelho por trigger. */}
+            <p className="t-legenda">
+              {inicial?.nf_numero
+                ? `NF ${inicial.nf_numero} — vinculada na tela Notas fiscais.`
+                : 'Vincule este serviço a uma nota na tela Notas fiscais.'}
+            </p>
+          </div>
         </div>
+
+        {novaMarca && (
+          <FolhaSubCliente clienteId={clienteId} aoFechar={() => setNovaMarca(false)}
+            aoSalvar={async (m) => { setSubClienteId(m.id); await recarregar() }} />
+        )}
 
         <CampoTexto rotulo="Observações" value={observacoes} rows={3}
           onChange={(e) => setObservacoes(e.target.value)} placeholder="Opcional" />

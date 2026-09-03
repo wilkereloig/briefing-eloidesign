@@ -36,14 +36,24 @@ Atualizado: 2026-08-07.
 - **Testes:** `domain/financeiro.test.ts` (incluindo estorno e a invariante liquidado+aberto=combinado)
 
 ### Projetos
-- **Objetivo:** funil do orçamento à cobrança, agrupado por cliente.
+- **Objetivo:** funil do orçamento à cobrança, agrupado por cliente e marca.
 - **Estado:** Funcional com ajustes
 - **Tela:** `telas/Projetos.tsx`
-- **Endpoints:** `eloi-gestao` (`servicos.*`), `orcamentos`
-- **Tabelas:** `eloi_servicos` + `orcamentos` (Projeto é a leitura combinada)
+- **Endpoints:** `eloi-gestao` (`servicos.*`, `subclientes.*`), `orcamentos`
+- **Tabelas:** `eloi_servicos` + `eloi_sub_clientes` + `orcamentos` (Projeto é a leitura combinada)
 - **Permissão:** admin
+- **Cobre:** filtro por cliente, marca e etapa (`<select>`) · pendências sem valor / sem nota / entregue e não pago (pílula) · filtro de mês **opcional**, desligado por padrão · agrupamento cliente → marca · valor editável na linha (serviço não pago) · excluir serviço
 - **Pendência:** **criar e editar a proposta ainda é em `/painel-orcamentos`** — aqui só dá para aprovar. Etapas de projeto com pagamento por etapa não existem.
 - **Testes:** `domain/projeto.test.ts`
+
+### Marcas (sub-clientes)
+- **Objetivo:** separar o trabalho que o cliente intermedia (F2 → Vibra, ASUS) sem inventar cliente novo.
+- **Estado:** Concluído
+- **Telas:** `folhas.tsx` (`FolhaSubCliente`), painel "Marcas atendidas" em `telas/ClienteFicha.tsx`, filtro e agrupamento em `telas/Projetos.tsx`
+- **Endpoints:** `eloi-gestao` (`subclientes.list/upsert/delete`)
+- **Tabelas:** `eloi_sub_clientes`, `eloi_servicos.sub_cliente_id`
+- **Permissão:** admin
+- **Regras:** marca pertence a um cliente e o banco recusa vínculo cruzado (trigger) · excluir marca com serviço é 409, o caminho é desativar · `eloi_servicos.sub_cliente` é espelho por trigger, ninguém escreve nele (D-18)
 
 ### Clientes e ficha
 - **Objetivo:** carteira com faturado/a receber e a ficha consolidada do cliente.

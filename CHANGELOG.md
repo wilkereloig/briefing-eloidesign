@@ -2,6 +2,54 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-03 — Projetos passa a mostrar o trabalho inteiro; marca vira escolha, não texto
+
+A tela Projetos cortava a lista pelo mês do painel. Como 43 dos 59 serviços
+têm competência de fevereiro a julho, ela mostrava só o mês corrente — era a
+causa principal da sensação de que o sistema estava desorganizado. E marca
+("Vibra", "ASUS") era texto livre digitado a cada serviço.
+
+### Alterado
+
+- **Projetos**: o mês deixa de cortar por padrão. Caixa "Mostrar só o mês
+  selecionado", desligada, com o seletor de mês ao lado. O `mes` do store
+  não muda — Dinheiro, Notas, Calendário e Relatórios continuam lendo ele.
+- **Projetos**: cliente, marca e etapa viram `<select>` (eram 6 pílulas de
+  etapa; o inventário manda virar menu acima de 4). Sobram três pílulas de
+  pendência: sem valor, sem nota, entregue e não pago. Contador de
+  "N de M projetos" abaixo dos filtros.
+- **Projetos**: agrupamento em dois níveis, cliente → marca, com total e
+  contagem por marca. Cabeçalho de marca só aparece quando há mais de uma.
+- **Projetos**: valor editável na própria linha para serviço não pago —
+  sair do campo grava. É como os 11 serviços sem valor saem do caminho sem
+  abrir folha um por um. Excluir serviço direto na linha, com `FolhaExcluir`.
+- **Folha do serviço**: "Marca ou sub-cliente" (texto livre) vira `<select>`
+  das marcas do cliente, com "+ Nova marca" abrindo `FolhaSubCliente`. Trocar
+  de cliente limpa a marca — marca de outro cliente é recusada pelo banco.
+- **Folha do serviço**: campo "Número da NF" sai. Quem define o número é a
+  nota fiscal (D-22); o campo do serviço é espelho por trigger. A folha mostra
+  a NF vinculada e aponta para a tela Notas fiscais.
+- **Ficha do cliente**: painel "Marcas atendidas" com total, quantidade e
+  pendências por marca, e botão de cadastrar.
+
+### Adicionado
+
+- `eloi-gestao`: `subclientes.list/upsert/delete` (delete recusa marca com
+  serviço — desative), `servicos.valores_lote` (até 100 por vez, ignora
+  serviço pago no servidor).
+- `servicos.upsert` aceita `sub_cliente_id`/`nota_fiscal_id` e **para** de
+  gravar `sub_cliente` e `nf_numero`: espelho tem um dono só, o trigger.
+  Gravar valor à mão limpa a sugestão pendente do portal — sem isso o serviço
+  ficava marcado como "cliente sugeriu" para sempre.
+- `servicos.delete` recusa serviço com nota fiscal (409) ou já pago (409).
+  Excluir é para engano recente; o resto tem histórico.
+
+### Ordem de publicação
+
+`npm run edges:deploy -- eloi-gestao` **antes** do push. Se o painel subir
+primeiro, a lista de marcas volta vazia (tem `catch`) mas nenhuma marca pode
+ser escolhida ou criada.
+
 ## 2026-09-03 — Sub-cliente vira entidade; nota fiscal vira fonte única (migração)
 
 Só banco, nenhuma tela muda — o painel atual continua funcionando igual

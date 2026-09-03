@@ -325,3 +325,16 @@ select.campo-caixa option{background:var(--chao);color:var(--texto)}
 .linha{display:flex;align-items:center;gap:var(--e-3);flex-wrap:wrap}
 .espremer{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .so-leitor{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* Projetos: sub-grupo por marca dentro do painel do cliente (D-18). */
+.grupo-marca + .grupo-marca{margin-top:var(--e-5)}
+.grupo-marca-cabeca{display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--e-3);padding:var(--e-2) 0 var(--e-2) var(--e-3);
+  border-left:2px solid var(--linha-forte)}
+
+/* Filtros em linha; empilham no toque para não espremer o alvo de 44px. */
+.grade-filtros{display:grid;gap:var(--e-4);grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+
+/* Valor editável direto na lista: some do fluxo de leitura, aparece ao focar. */
+.valor-linha{width:8.5rem;min-height:44px;text-align:right;
+  font-family:var(--fonte-titulo);font-variant-numeric:tabular-nums}

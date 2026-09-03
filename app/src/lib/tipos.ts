@@ -26,11 +26,26 @@ export type ClienteDetalhe = Omit<ClienteRow, 'total_servicos' | 'total_cents' |
 
 export type StatusExecucao = 'aguardando_inicio' | 'em_execucao' | 'concluida'
 
+/** Marca atendida por intermédio de um cliente (F2 → Vibra). Não é cliente
+ *  próprio: sem portal, sem senha, sem orçamento (D-18). */
+export interface SubClienteRow {
+  id: string
+  cliente_id: string
+  nome: string
+  ativo: boolean
+  observacoes: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface ServicoRow {
   id: string
   cliente_id: string
   orcamento_id: string | null
+  sub_cliente_id: string | null
+  /** Espelho de sub_cliente_id, mantido por trigger. Só leitura — quem grava é o banco. */
   sub_cliente: string | null
+  nota_fiscal_id: string | null
   descricao: string
   valor_cents: number
   status_execucao: StatusExecucao

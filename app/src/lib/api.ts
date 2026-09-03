@@ -98,7 +98,7 @@ export const api = {
 // ── Wrappers por domínio — nomes de campo batem com app/src/lib/tipos.ts,
 // não com admin-app/src/lib/api.ts (que vaza os bugs de campo do domain.ts antigo).
 import type {
-  ClienteRow, ClienteDetalhe, ServicoRow, OrcamentoRow, MovimentoRow,
+  ClienteRow, ClienteDetalhe, ServicoRow, SubClienteRow, OrcamentoRow, MovimentoRow,
   MaterialRow, BriefingLinkRow, BriefingLegadoRow,
 } from './tipos'
 
@@ -124,6 +124,19 @@ export const servicos = {
     call<{ servico: ServicoRow }>('eloi-gestao', 'servicos.aprovar_valor_sugerido', { servico_id }).then((r) => r.servico),
   rejeitarValorSugerido: (servico_id: string) =>
     call<{ servico: ServicoRow }>('eloi-gestao', 'servicos.rejeitar_valor_sugerido', { servico_id }).then((r) => r.servico),
+  remover: (id: string) => call<{ ok: true }>('eloi-gestao', 'servicos.delete', { id }),
+  /** Grava vários valores numa chamada (edição em linha). Serviço pago é ignorado no servidor. */
+  salvarValores: (valores: { id: string; valor_cents: number }[]) =>
+    call<{ servicos: ServicoRow[]; ignorados: number }>('eloi-gestao', 'servicos.valores_lote', { valores }),
+}
+
+export const subClientes = {
+  list: (cliente_id?: string) =>
+    call<{ subclientes: SubClienteRow[] }>('eloi-gestao', 'subclientes.list', cliente_id ? { cliente_id } : {})
+      .then((r) => r.subclientes),
+  upsert: (subcliente: Partial<SubClienteRow> & { cliente_id: string; nome: string }) =>
+    call<{ subcliente: SubClienteRow }>('eloi-gestao', 'subclientes.upsert', { subcliente }).then((r) => r.subcliente),
+  remover: (id: string) => call<{ ok: true }>('eloi-gestao', 'subclientes.delete', { id }),
 }
 
 export const orcamentos = {

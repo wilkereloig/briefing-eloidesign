@@ -11,7 +11,7 @@ function orc(over: Partial<OrcamentoRow> = {}): OrcamentoRow {
 }
 function srv(over: Partial<ServicoRow> = {}): ServicoRow {
   return {
-    id: 's1', cliente_id: 'c1', orcamento_id: 'o1', sub_cliente: null, descricao: 'Site novo',
+    id: 's1', cliente_id: 'c1', orcamento_id: 'o1', sub_cliente_id: null, sub_cliente: null, nota_fiscal_id: null, descricao: 'Site novo',
     valor_cents: 100000, status_execucao: 'aguardando_inicio', pago: false, data_pagamento: null,
     data_competencia: null, nf_numero: null, nf_arquivo_url: null, observacoes: null,
     valor_sugerido_cents: null, valor_sugerido_em: null, valor_sugerido_observacao: null,
