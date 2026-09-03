@@ -66,9 +66,14 @@ o estorno não estornar).
 Molde que gera transações. Materializado ao abrir o painel, **idempotente por
 vencimento**. Pausar ou encerrar não apaga o que já foi gerado.
 
-### `eloi_notas_fiscais`
-Ligada a Cliente, Serviço e Transação (todas `SET NULL`). Status
-`emitida`/`enviada` **exige número**, validado no servidor.
+### `eloi_notas_fiscais` *(42 linhas após o backfill de 2026-09-03)*
+**Fonte única da nota fiscal** (D-22). Ligada a Cliente e Transação
+(`SET NULL`). Serviços apontam pra ela por `eloi_servicos.nota_fiscal_id` —
+1 nota : N serviços. `servico_id` aqui é legado 1:1, sempre nulo; sai quando
+nenhuma edge ler. `numero` é único por emissor (índice parcial); mudar o
+número propaga pro espelho `nf_numero` dos serviços
+(`trg_eloi_nota_propaga_numero`). Status `emitida`/`enviada` **exige
+número**, validado no servidor.
 
 ### `eloi_metas`
 Meta e orçamento de gasto na mesma tabela, discriminados por `especie`.
@@ -86,12 +91,24 @@ porque um arquivo que documenta algo apagado não documenta mais nada.
 Dono de projetos, do acesso ao portal e de sub-clientes.
 `portal_senha_hash` (PBKDF2), `marca_slug`, `marca_publicada`, `cor`.
 
-### `eloi_servicos` *(50 linhas)*
+### `eloi_sub_clientes` *(8 linhas após o backfill de 2026-09-03)*
+Marca/operação atendida por intermédio de um cliente (VIBRA/ASUS/MRV dentro
+de F2 EXPERIENCE). `cliente_id` `RESTRICT`; único por `(cliente_id,
+lower(nome))`. **Não é cliente próprio** — não tem portal, senha nem
+orçamento; o contratante continua sendo o cliente (D-18, D-20). Trabalho
+direto pro cliente = serviço sem `sub_cliente_id`.
+
+### `eloi_servicos` *(59 linhas)*
 Trabalho contratado. `cliente_id` é `RESTRICT` — cliente com serviço não some.
 `orcamento_id` liga à proposta, **no máximo 1:1**, garantido por índice único parcial.
-`sub_cliente` é texto livre: agrupa marcas dentro de um cliente (VIBRA/ASUS/MRV
-dentro de F2 EXPERIENCE). É rótulo visual, **não é cliente próprio** — não tem
-portal, senha nem orçamento.
+`sub_cliente_id` → `eloi_sub_clientes` (`RESTRICT`). A coluna texto
+`sub_cliente` é **espelho** mantido por `trg_eloi_servico_espelhos` (texto
+legado sem id tenta se adotar pelo nome; id que não pertence ao `cliente_id`
+é rejeitado). Sai junto com `/gestao`.
+`nota_fiscal_id` → `eloi_notas_fiscais` (`SET NULL`), **1 nota : N serviços**
+(D-22). `nf_numero` é espelho de `numero` pelo mesmo trigger; sem nota
+vinculada aceita texto legado até `FolhaServico` perder o campo.
+`nf_arquivo_url` está sempre nulo — PDF vive em `eloi_notas_fiscais.arquivo_path`.
 
 `valor_sugerido_cents` / `valor_sugerido_em` / `valor_sugerido_observacao`: o
 cliente propõe valor (e observação opcional) pelo portal, aba Pendências
@@ -181,8 +198,11 @@ Vínculos reais, como estão no banco hoje:
 
 ```
 Cliente (eloi_clientes)
+├── Sub-clientes ....... eloi_sub_clientes.cliente_id      RESTRICT
 ├── Orçamentos ......... orcamentos.cliente_id
 ├── Serviços ........... eloi_servicos.cliente_id          RESTRICT
+│     ├── Sub-cliente .. eloi_servicos.sub_cliente_id      RESTRICT (mesmo cliente, checado por trigger)
+│     └── Nota fiscal .. eloi_servicos.nota_fiscal_id      SET NULL (1 nota : N serviços)
 ├── Transações ......... eloi_transacoes.cliente_id        SET NULL
 ├── Notas fiscais ...... eloi_notas_fiscais.cliente_id     SET NULL
 ├── Arquivos ........... eloi_arquivos.cliente_id          CASCADE
@@ -211,7 +231,7 @@ Transação (eloi_transacoes)
 ```
 
 **Vínculos que não existem** (e a decisão sobre cada um):
-- Cliente → cliente-filho (`parent_id`): adiado. Hoje só `sub_cliente` como rótulo.
+- Cliente → cliente-filho (`parent_id`): descartado. Sub-cliente é entidade própria (`eloi_sub_clientes`), não um cliente com pai — não tem portal nem orçamento (D-18).
 - Projeto → etapas com pagamento por etapa: precisaria de tabela nova. Não planejado.
 - `grupo_id` sem FK: proposital — parcelas se referenciam entre si, não a um pai.
 

@@ -2,6 +2,29 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-03 — Sub-cliente vira entidade; nota fiscal vira fonte única (migração)
+
+Só banco, nenhuma tela muda — o painel atual continua funcionando igual
+depois de aplicar. Detalhe e motivo em `docs/DECISIONS.md` D-18 a D-22.
+
+### Adicionado
+
+- **`eloi_sub_clientes`** + `eloi_servicos.sub_cliente_id`. Backfill cria uma
+  linha por texto distinto de `sub_cliente` (8 na F2); "F2 EXPERIENCE" dentro
+  da F2 é trabalho direto → sem vínculo, texto limpo.
+- **`eloi_servicos.nota_fiscal_id`** (1 nota : N serviços). Backfill cria 42
+  notas `emitida` em `eloi_notas_fiscais` a partir dos 43 `nf_numero` (valor =
+  soma dos serviços, competência = a menor) e vincula cada serviço.
+- **Triggers de espelho**: `sub_cliente` e `nf_numero` continuam preenchidos
+  (por trigger, não pela edge) porque `/gestao`, `domain/decisoes.ts`,
+  `dashboard.stats` e o portal ainda leem. Id de sub-cliente de outro cliente
+  é rejeitado no banco. Mudar `numero` da nota propaga pros serviços.
+- Índice único parcial em `eloi_notas_fiscais.numero`.
+- A migração confere a si mesma e aborta a transação se sobrar serviço com
+  texto sem id ou `nf_numero` sem nota.
+- Migração: `2026-09-03-sub-clientes-e-nota-1n.sql`. **Aplicar antes** de
+  qualquer código da FASE 2 (subclientes na UI, nota cobrindo N serviços).
+
 ## 2026-09-03 — Sessão ganha teto de 30 dias; sessões e tentativas mortas passam a ser apagadas
 
 Sessão de admin e de portal só deslizava: cada chamada empurrava

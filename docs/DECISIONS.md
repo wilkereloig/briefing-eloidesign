@@ -7,6 +7,49 @@ Decisões com alternativa formalmente avaliada ficam em `adr/`.
 
 ---
 
+## 2026-09-03 — Sub-cliente, nota fiscal e valor sugerido (decididas com o dono em 2026-08-28)
+
+### D-18 · Sub-cliente é entidade real, filha do cliente
+`eloi_servicos.sub_cliente` era texto livre — 9 valores, por sorte sem variação
+de grafia. Texto não filtra, não agrupa com segurança e não pode ter dono. Agora
+`eloi_sub_clientes (cliente_id, nome)` com índice único por `lower(nome)`;
+`eloi_servicos.sub_cliente_id` é o vínculo. O texto **continua como espelho**
+mantido por trigger enquanto `gestao/index.html` o lê; sai junto com `/gestao`.
+
+**Trabalho direto não é sub-cliente.** "F2 EXPERIENCE" dentro da F2 vira
+`sub_cliente_id = null`, não uma linha "F2 (direto)" como o PLANO-OPERACAO
+propunha — o cliente é o contratante, o sub-cliente é quem ele atende. Uma linha
+com o nome do próprio cliente seria a mesma coisa com dois nomes.
+
+### D-19 · Valor informado pela F2 é sugestão que o dono aprova
+Já implementado em `d8f9499` (`valor_sugerido_cents`/`_em`) e estendido em
+`a5200ee` (`valor_sugerido_observacao`, qualquer linha editável). Nunca grava
+em `valor_cents` direto.
+
+### D-20 · Portal: só a F2, com divisão por sub-cliente dentro
+Sub-cliente não tem senha nem sessão. Acesso é do cliente contratante.
+
+### D-21 · Núcleo financeiro fora do escopo desta campanha
+`eloi_contas`/`eloi_transacoes`/etc. seguem intactos e vazios até o dono
+cadastrar contas. Nada aqui os toca.
+
+### D-22 · Nota fiscal: fonte única é `eloi_notas_fiscais`, vínculo 1 nota : N serviços por FK no serviço
+Existiam dois mecanismos sem sincronia: `eloi_servicos.nf_numero` (43 serviços,
+o que toda tela lia) e `eloi_notas_fiscais` (0 linhas). Agora a nota é a fonte;
+o serviço aponta pra ela em `eloi_servicos.nota_fiscal_id`; `nf_numero` vira
+espelho por trigger (`domain/decisoes.ts`, `dashboard.stats`, `/gestao` e o
+portal continuam lendo sem mudar).
+
+**FK no serviço, não tabela de junção.** Dado real: 42 notas, 43 serviços, uma
+nota cobre 2 serviços, **nenhum serviço se divide em duas notas**. FK cobre o
+caso com uma coluna e zero join novo. Se um dia um serviço rachar em duas notas,
+migrar FK → junção é trivial; o contrário é pagar complexidade adiantado.
+
+**Número de NFS-e é único por emissor**, não por cliente: índice único parcial
+em `eloi_notas_fiscais.numero`.
+
+---
+
 ## 2026-08-07 — Throttle do login admin
 
 ### D-16 · Contador de login por IP, não global
