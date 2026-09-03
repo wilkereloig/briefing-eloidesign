@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { financas } from '../../../lib/api'
+import { contatos as contatosApi, financas } from '../../../lib/api'
 import { centsDeReais, fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas } from '../../../lib/financas-store'
 import { estaEmAberto, saldoAberto, valorLiquidado } from '../../../domain/financeiro'
@@ -8,9 +8,9 @@ import { juntarProjetos } from '../../../domain/projeto'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, ChipMovimento, ChipNota, Dinheiro } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
-import type { Arquivo, OrcamentoStatus } from '../../../lib/tipos'
+import type { Arquivo, ContatoRow, OrcamentoStatus } from '../../../lib/tipos'
 import type { EstadoChip } from '../../../ui/tokens'
-import { FolhaCliente, FolhaEntrega, FolhaSenhaPortal, FolhaSubCliente } from '../folhas'
+import { FolhaCliente, FolhaContato, FolhaEntrega, FolhaSenhaPortal, FolhaSubCliente } from '../folhas'
 
 // Estado da proposta → par de cores do sistema. Mesmo mapa do funil de Projetos.
 const ESTADO_ORCAMENTO: Record<OrcamentoStatus, EstadoChip> = {
@@ -24,6 +24,8 @@ export default function ClienteFicha() {
   const [senhaPortal, setSenhaPortal] = useState(false)
   const [entrega, setEntrega] = useState(false)
   const [novaMarca, setNovaMarca] = useState(false)
+  const [folhaContato, setFolhaContato] = useState<{ c?: ContatoRow } | null>(null)
+  const [listaContatos, setListaContatos] = useState<ContatoRow[] | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [arquivos, setArquivos] = useState<Arquivo[]>([])
 
@@ -39,6 +41,23 @@ export default function ClienteFicha() {
       .catch(() => { if (vivo) setArquivos([]) })
     return () => { vivo = false }
   }, [id])
+
+  // Contatos não entram no store financeiro pelo mesmo motivo dos arquivos:
+  // são deste cliente, e nenhuma outra tela precisa deles.
+  const carregarContatos = useCallback(() => {
+    if (!id) return Promise.resolve()
+    return contatosApi.list(id).then(setListaContatos).catch(() => setListaContatos([]))
+  }, [id])
+  useEffect(() => { void carregarContatos() }, [carregarContatos])
+
+  async function copiar(texto: string, oque: string) {
+    try {
+      await navigator.clipboard.writeText(texto)
+      setAviso(`${oque} copiado`)
+    } catch {
+      setAviso('Não consegui copiar — o navegador bloqueou')
+    }
+  }
 
   async function abrirArquivo(a: Arquivo) {
     try {
@@ -135,6 +154,62 @@ export default function ClienteFicha() {
                 <div><dt className="etiqueta-mini">Cliente desde</dt>
                   <dd className="t-corpo">{dataCurta(cliente.created_at.slice(0, 10))}</dd></div>
               </dl>
+            </Painel>
+
+            {/* Agenda, não CRM: o que resolve é ligar para a pessoa certa
+                sem procurar em outro lugar. */}
+            <Painel titulo="Contatos"
+              acao={<Botao compacto onClick={() => setFolhaContato({})}>
+                <Icone nome="adicionar" tamanho={14} />Novo contato
+              </Botao>}>
+              {listaContatos === null ? <p className="t-sec">Carregando…</p>
+                : listaContatos.length === 0
+                  ? <p className="t-sec">
+                    Nenhum contato cadastrado. Guarde aqui quem responde por este
+                    cliente — nome, função, e-mail e WhatsApp.
+                  </p>
+                  : <ul className="lista">
+                    {listaContatos.map((c) => {
+                      const marca = c.sub_cliente_id ? subClientes.find((m) => m.id === c.sub_cliente_id) : null
+                      const zap = (c.whatsapp ?? '').replace(/\D/g, '')
+                      return (
+                        <li key={c.id} className="lista-item" data-cancelado={!c.ativo ? 'true' : undefined}>
+                          <span className="celula">
+                            <span className="t-ui espremer">
+                              {c.nome}
+                              {c.principal && <span className="etiqueta-mini"> · principal</span>}
+                            </span>
+                            <span className="t-legenda espremer">
+                              {[c.funcao, marca?.nome, c.email, c.telefone].filter(Boolean).join(' · ') || 'Sem detalhes'}
+                            </span>
+                          </span>
+                          {c.email && (
+                            <Botao variante="icone" aria-label={`Copiar e-mail de ${c.nome}`}
+                              onClick={() => void copiar(c.email!, 'E-mail')}>
+                              <Icone nome="comunicacao" tamanho={16} />
+                            </Botao>
+                          )}
+                          {c.telefone && (
+                            <Botao variante="icone" aria-label={`Copiar telefone de ${c.nome}`}
+                              onClick={() => void copiar(c.telefone!, 'Telefone')}>
+                              <Icone nome="contato" tamanho={16} />
+                            </Botao>
+                          )}
+                          {zap && (
+                            <a className="btn btn-icone" aria-label={`Abrir WhatsApp de ${c.nome}`}
+                              href={`https://wa.me/${zap.length <= 11 ? '55' : ''}${zap}`}
+                              target="_blank" rel="noreferrer">
+                              <Icone nome="atendimento" tamanho={16} />
+                            </a>
+                          )}
+                          <Botao variante="icone" aria-label={`Editar ${c.nome}`}
+                            onClick={() => setFolhaContato({ c })}>
+                            <Icone nome="editar" tamanho={16} />
+                          </Botao>
+                        </li>
+                      )
+                    })}
+                  </ul>}
             </Painel>
 
             {/* Portal e entregas moram juntos de propósito: são as duas metades
@@ -329,6 +404,11 @@ export default function ClienteFicha() {
         <FolhaEntrega clienteInicial={cliente.id}
           aoFechar={() => setEntrega(false)}
           aoSalvar={(msg) => setAviso(msg)} />
+      )}
+      {folhaContato && cliente && (
+        <FolhaContato clienteId={cliente.id} inicial={folhaContato.c}
+          aoFechar={() => setFolhaContato(null)}
+          aoSalvar={async (msg) => { setAviso(msg); await carregarContatos() }} />
       )}
       {novaMarca && cliente && (
         <FolhaSubCliente clienteId={cliente.id} aoFechar={() => setNovaMarca(false)}

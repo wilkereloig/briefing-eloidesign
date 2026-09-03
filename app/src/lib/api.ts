@@ -98,7 +98,7 @@ export const api = {
 // ── Wrappers por domínio — nomes de campo batem com app/src/lib/tipos.ts,
 // não com admin-app/src/lib/api.ts (que vaza os bugs de campo do domain.ts antigo).
 import type {
-  ClienteRow, ClienteDetalhe, ServicoRow, SubClienteRow, OrcamentoRow, MovimentoRow,
+  ClienteRow, ClienteDetalhe, ContatoRow, ServicoRow, SubClienteRow, OrcamentoRow, MovimentoRow,
   MaterialRow, BriefingLinkRow, BriefingLegadoRow,
 } from './tipos'
 
@@ -137,6 +137,14 @@ export const subClientes = {
   upsert: (subcliente: Partial<SubClienteRow> & { cliente_id: string; nome: string }) =>
     call<{ subcliente: SubClienteRow }>('eloi-gestao', 'subclientes.upsert', { subcliente }).then((r) => r.subcliente),
   remover: (id: string) => call<{ ok: true }>('eloi-gestao', 'subclientes.delete', { id }),
+}
+
+export const contatos = {
+  list: (cliente_id: string) =>
+    call<{ contatos: ContatoRow[] }>('eloi-gestao', 'contatos.list', { cliente_id }).then((r) => r.contatos),
+  upsert: (contato: Partial<ContatoRow> & { cliente_id: string; nome: string }) =>
+    call<{ contato: ContatoRow }>('eloi-gestao', 'contatos.upsert', { contato }).then((r) => r.contato),
+  remover: (id: string) => call<{ ok: true }>('eloi-gestao', 'contatos.delete', { id }),
 }
 
 export const orcamentos = {

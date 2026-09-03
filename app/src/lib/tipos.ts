@@ -61,6 +61,23 @@ export interface ServicoRow {
   valor_sugerido_observacao: string | null
 }
 
+/** Pessoa de contato do cliente (e opcionalmente de uma marca). Agenda, não CRM. */
+export interface ContatoRow {
+  id: string
+  cliente_id: string
+  sub_cliente_id: string | null
+  nome: string
+  funcao: string | null
+  email: string | null
+  telefone: string | null
+  whatsapp: string | null
+  observacoes: string | null
+  principal: boolean
+  ativo: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type OrcamentoStatus = 'rascunho' | 'enviado' | 'aprovado' | 'recusado'
 
 export interface OrcamentoRow {

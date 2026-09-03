@@ -348,6 +348,67 @@ Deno.serve(async (req: Request) => {
     return json({ ok: true });
   }
 
+  // ── CONTATOS ── agenda do cliente. Nao e CRM: sem funil, sem historico.
+  if (action === "contatos.list") {
+    let q = supabase.from("eloi_contatos").select("*")
+      .order("principal", { ascending: false }).order("nome");
+    if (body?.cliente_id) q = q.eq("cliente_id", body.cliente_id);
+    const { data, error } = await q;
+    if (error) return json({ error: error.message }, 500);
+    return json({ contatos: data ?? [] });
+  }
+
+  if (action === "contatos.upsert") {
+    const c = body?.contato || {};
+    const nome = String(c.nome || "").trim();
+    if (!c.cliente_id) return json({ error: "cliente_id obrigatório" }, 400);
+    if (!nome) return json({ error: "nome obrigatório" }, 400);
+    const limpar = (v: unknown) => typeof v === "string" ? v.trim() || null : null;
+    const row = {
+      cliente_id: c.cliente_id,
+      sub_cliente_id: c.sub_cliente_id || null,
+      nome,
+      funcao: limpar(c.funcao),
+      email: limpar(c.email),
+      telefone: limpar(c.telefone),
+      whatsapp: limpar(c.whatsapp),
+      observacoes: limpar(c.observacoes),
+      principal: c.principal === true,
+      ativo: c.ativo !== false,
+      updated_at: new Date().toISOString(),
+    };
+    // Marca de outro cliente na agenda de um cliente e erro de digitacao.
+    if (row.sub_cliente_id) {
+      const { data: m } = await supabase.from("eloi_sub_clientes")
+        .select("cliente_id").eq("id", row.sub_cliente_id).maybeSingle();
+      if (!m || m.cliente_id !== row.cliente_id) {
+        return json({ error: "marca não pertence a este cliente" }, 400);
+      }
+    }
+    // So um principal por cliente (indice unico parcial). Rebaixa o anterior
+    // aqui em vez de deixar o banco recusar: promover contato e a intencao.
+    if (row.principal) {
+      let q = supabase.from("eloi_contatos").update({ principal: false })
+        .eq("cliente_id", row.cliente_id).eq("principal", true);
+      if (c.id) q = q.neq("id", c.id);
+      await q;
+    }
+    const acao = c.id
+      ? supabase.from("eloi_contatos").update(row).eq("id", c.id)
+      : supabase.from("eloi_contatos").insert(row);
+    const { data, error } = await acao.select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ contato: data });
+  }
+
+  if (action === "contatos.delete") {
+    if (!body?.id) return json({ error: "id obrigatório" }, 400);
+    // Contato nao tem historico financeiro pendurado: pode sair de verdade.
+    const { error } = await supabase.from("eloi_contatos").delete().eq("id", body.id);
+    if (error) return json({ error: error.message }, 500);
+    return json({ ok: true });
+  }
+
   // Preenche valor de varios servicos numa passada (edicao em linha em Projetos).
   if (action === "servicos.valores_lote") {
     const itens = Array.isArray(body?.valores) ? body.valores : [];

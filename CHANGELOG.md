@@ -2,6 +2,32 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-03 — Contatos do cliente
+
+`eloi_clientes.contato` é um texto livre para "e-mail, WhatsApp ou nome de
+quem responde" — um campo para três coisas, e um só por cliente. A F2 tem
+uma pessoa por marca.
+
+### Adicionado
+
+- **`eloi_contatos`** (migração `2026-09-03-contatos.sql`): nome, função,
+  e-mail, telefone, WhatsApp, observação, marca opcional, principal, ativo.
+  Índice único parcial garante **um principal por cliente**; `contatos.upsert`
+  rebaixa o anterior em vez de deixar o banco recusar. Marca de outro cliente
+  é recusada. Excluir apaga de verdade — contato não tem histórico financeiro.
+- **Ficha do cliente**: painel "Contatos" com copiar e-mail, copiar telefone e
+  abrir WhatsApp (prefixo 55 quando o número vem sem código do país).
+- `eloi-gestao`: `contatos.list/upsert/delete`.
+
+Deliberadamente pequeno: é agenda, não CRM. Sem funil, sem histórico de
+interação, sem dono do relacionamento — quem opera é uma pessoa só.
+`eloi_clientes.contato` **não sai** agora: `/gestao` e a folha do cliente
+ainda leem. Sai junto com `/gestao`.
+
+### Ordem de publicação
+
+Migração antes de `npm run edges:deploy -- eloi-gestao`.
+
 ## 2026-09-03 — Nota fiscal passa a ser a fonte única, cobrindo vários serviços
 
 Existiam duas verdades sobre nota: `eloi_servicos.nf_numero` (43 serviços, o

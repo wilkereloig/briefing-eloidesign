@@ -98,6 +98,14 @@ lower(nome))`. **Não é cliente próprio** — não tem portal, senha nem
 orçamento; o contratante continua sendo o cliente (D-18, D-20). Trabalho
 direto pro cliente = serviço sem `sub_cliente_id`.
 
+### `eloi_contatos` *(vazia — criada em 2026-09-03)*
+Pessoas de contato do cliente, e opcionalmente de uma marca
+(`sub_cliente_id`, `SET NULL`). `cliente_id` é `CASCADE`: agenda de cliente
+apagado não serve pra nada. **Um principal por cliente**, garantido por índice
+único parcial (`where principal`); a edge rebaixa o anterior antes de gravar.
+Agenda, não CRM — sem funil, sem histórico de interação.
+O campo legado `eloi_clientes.contato` continua existindo até `/gestao` sair.
+
 ### `eloi_servicos` *(59 linhas)*
 Trabalho contratado. `cliente_id` é `RESTRICT` — cliente com serviço não some.
 `orcamento_id` liga à proposta, **no máximo 1:1**, garantido por índice único parcial.
@@ -199,6 +207,7 @@ Vínculos reais, como estão no banco hoje:
 ```
 Cliente (eloi_clientes)
 ├── Sub-clientes ....... eloi_sub_clientes.cliente_id      RESTRICT
+├── Contatos ........... eloi_contatos.cliente_id          CASCADE
 ├── Orçamentos ......... orcamentos.cliente_id
 ├── Serviços ........... eloi_servicos.cliente_id          RESTRICT
 │     ├── Sub-cliente .. eloi_servicos.sub_cliente_id      RESTRICT (mesmo cliente, checado por trigger)

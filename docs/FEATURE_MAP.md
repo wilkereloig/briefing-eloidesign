@@ -46,6 +46,16 @@ Atualizado: 2026-08-07.
 - **Pendência:** **criar e editar a proposta ainda é em `/painel-orcamentos`** — aqui só dá para aprovar. Etapas de projeto com pagamento por etapa não existem.
 - **Testes:** `domain/projeto.test.ts`
 
+### Contatos
+- **Objetivo:** saber quem procurar em cada cliente sem sair do painel.
+- **Estado:** Concluído
+- **Telas:** painel "Contatos" em `telas/ClienteFicha.tsx`, `folhas.tsx` (`FolhaContato`)
+- **Endpoints:** `eloi-gestao` (`contatos.list/upsert/delete`)
+- **Tabelas:** `eloi_contatos`
+- **Permissão:** admin
+- **Cobre:** nome, função, e-mail, telefone, WhatsApp, marca opcional, principal, observação · copiar e-mail · copiar telefone · abrir WhatsApp
+- **Limite deliberado:** é agenda, não CRM. Sem funil, sem histórico de interação.
+
 ### Marcas (sub-clientes)
 - **Objetivo:** separar o trabalho que o cliente intermedia (F2 → Vibra, ASUS) sem inventar cliente novo.
 - **Estado:** Concluído

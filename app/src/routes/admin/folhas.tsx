@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import {
-  CATEGORIAS_ENTREGA, clientes as clientesApi, financas, materiaisApi,
-  servicos as servicosApi, subClientes as subClientesApi, type CategoriaEntrega,
+  CATEGORIAS_ENTREGA, clientes as clientesApi, contatos as contatosApi, financas,
+  materiaisApi, servicos as servicosApi, subClientes as subClientesApi, type CategoriaEntrega,
 } from '../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../lib/dinheiro'
 import { hojeISO, useFinancas } from '../../lib/financas-store'
 import { saldoAberto } from '../../domain/financeiro'
 import type {
-  ClienteRow, Conta, Contexto, MaterialRow, Periodicidade, Recorrencia, ServicoRow,
-  StatusExecucao, SubClienteRow, TipoConta, TipoMov, Transacao,
+  ClienteRow, Conta, ContatoRow, Contexto, MaterialRow, Periodicidade, Recorrencia,
+  ServicoRow, StatusExecucao, SubClienteRow, TipoConta, TipoMov, Transacao,
 } from '../../lib/tipos'
 import { Botao, Campo, CampoTexto, Folha, Icone, Pilula } from '../../ui/componentes'
 import { rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
@@ -377,6 +377,106 @@ const STATUS_SERVICO: { chave: StatusExecucao; label: string }[] = [
   { chave: 'em_execucao', label: 'Em execução' },
   { chave: 'concluida', label: 'Concluída' },
 ]
+
+/** Pessoa de contato. Agenda, não CRM: só o suficiente para ligar, escrever
+ *  ou mandar mensagem sem procurar em outro lugar. */
+export function FolhaContato({ clienteId, inicial, aoFechar, aoSalvar }: {
+  clienteId: string
+  inicial?: ContatoRow
+  aoFechar: () => void
+  aoSalvar: (msg: string) => void
+}) {
+  const { subClientes } = useFinancas()
+  const [nome, setNome] = useState(inicial?.nome ?? '')
+  const [funcao, setFuncao] = useState(inicial?.funcao ?? '')
+  const [email, setEmail] = useState(inicial?.email ?? '')
+  const [telefone, setTelefone] = useState(inicial?.telefone ?? '')
+  const [whatsapp, setWhatsapp] = useState(inicial?.whatsapp ?? '')
+  const [subClienteId, setSubClienteId] = useState(inicial?.sub_cliente_id ?? '')
+  const [principal, setPrincipal] = useState(inicial?.principal ?? false)
+  const [observacoes, setObservacoes] = useState(inicial?.observacoes ?? '')
+  const [erros, setErros] = useState<Record<string, string>>({})
+  const [salvando, setSalvando] = useState(false)
+
+  const marcas = subClientes.filter((m) => m.cliente_id === clienteId)
+
+  async function salvar() {
+    const e: Record<string, string> = {}
+    if (!nome.trim()) e.nome = 'Informe o nome'
+    if (!email.trim() && !telefone.trim() && !whatsapp.trim()) {
+      e.geral = 'Informe pelo menos uma forma de contato'
+    }
+    setErros(e)
+    if (Object.keys(e).length) return
+    setSalvando(true)
+    try {
+      await contatosApi.upsert({
+        id: inicial?.id, cliente_id: clienteId, nome: nome.trim(),
+        funcao: funcao.trim() || null, email: email.trim() || null,
+        telefone: telefone.trim() || null, whatsapp: whatsapp.trim() || null,
+        sub_cliente_id: subClienteId || null, principal,
+        observacoes: observacoes.trim() || null,
+      })
+      aoSalvar(inicial ? 'Contato atualizado' : 'Contato cadastrado')
+      aoFechar()
+    } catch (err) {
+      setErros({ geral: (err as Error).message })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Folha titulo={inicial ? 'Editar contato' : 'Novo contato'} aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>Salvar</Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+        <Campo rotulo="Nome" value={nome} erro={erros.nome}
+          onChange={(e) => setNome(e.target.value)} placeholder="Ana Prado" />
+        <Campo rotulo="Função" value={funcao}
+          onChange={(e) => setFuncao(e.target.value)} placeholder="Atendimento, produção, financeiro" />
+        <Campo rotulo="E-mail" type="email" value={email}
+          onChange={(e) => setEmail(e.target.value)} placeholder="ana@empresa.com.br" />
+        <div className="grade-dois">
+          <Campo rotulo="Telefone" type="tel" value={telefone}
+            onChange={(e) => setTelefone(e.target.value)} placeholder="(84) 99999-0000" />
+          <Campo rotulo="WhatsApp" type="tel" value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)} placeholder="(84) 99999-0000" />
+        </div>
+
+        {marcas.length > 0 && (
+          <div className="campo">
+            <label htmlFor="ct-marca">Marca</label>
+            <select id="ct-marca" className="campo-caixa" value={subClienteId}
+              onChange={(e) => setSubClienteId(e.target.value)}>
+              <option value="">Contato do cliente inteiro</option>
+              {marcas.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+            </select>
+            <span className="t-legenda">Use quando a pessoa responde só por uma marca.</span>
+          </div>
+        )}
+
+        <label className="linha" style={{ gap: 'var(--e-3)', minHeight: 44 }}>
+          <input type="checkbox" checked={principal}
+            onChange={(e) => setPrincipal(e.target.checked)} />
+          <span className="celula">
+            <span className="t-ui">Contato principal</span>
+            <span className="t-legenda">Quem procurar primeiro. Só um por cliente — marcar aqui tira o anterior.</span>
+          </span>
+        </label>
+
+        <CampoTexto rotulo="Observações" value={observacoes} rows={2}
+          onChange={(e) => setObservacoes(e.target.value)}
+          placeholder="Opcional — horário, preferência de canal" />
+
+        {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
+      </div>
+    </Folha>
+  )
+}
 
 /** Marca atendida por intermédio do cliente (D-18). Cadastro mínimo de
  *  propósito: quem contrata, paga e recebe nota continua sendo o cliente. */
