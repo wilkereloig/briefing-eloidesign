@@ -54,12 +54,15 @@ a:hover{color:var(--cor-texto-primario)}
 
 /* ── shell ──────────────────────────────────────────────────────────────── */
 /* Mobile primeiro (RESPONSIVE_GUIDELINES): base é uma coluna com barra
-   inferior; o trilho lateral só existe a partir de 768. */
-/* linhas explícitas: sem isso a grade estica o cabeçalho de toque para metade
-   da altura da tela, porque linhas automáticas dividem a sobra igualmente */
+   inferior; o trilho lateral só existe a partir de 768. Áreas nomeadas porque
+   são 3 itens de grade (trilho + barra do topo + conteúdo) desde a fase 5,
+   quando a barra do topo passou a existir em toda largura — 2 colunas x 2
+   linhas sem área dá 4 células pra 3 itens e o conteúdo cai pra célula errada. */
 .app-shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr;
+  grid-template-areas:"topo" "main";
   min-height:100dvh;background:var(--cor-fundo-primario)}
-.app-main{min-width:0;width:100%;max-width:var(--conteudo-max);
+.barra-topo{grid-area:topo}
+.app-main{grid-area:main;min-width:0;width:100%;max-width:var(--conteudo-max);
   padding:18px var(--margem) calc(var(--barra-mobile) + env(safe-area-inset-bottom) + 44px)}
 
 /* ── trilho / barra inferior ────────────────────────────────────────────── */
@@ -264,10 +267,13 @@ a:hover{color:var(--cor-texto-primario)}
   .t-valor{font-size:17px}
   .t-corpo{font-size:var(--tipo-corpo-tamanho)}
 
-  /* trilho recolhido: 72 px, só ícone */
-  .app-shell{grid-template-columns:72px minmax(0,1fr)}
+  /* trilho recolhido: 72 px, só ícone. Vira item de grade real (sticky, não
+     mais fixed) e ganha a própria área, alta o bastante pra cobrir as duas
+     linhas (barra do topo + conteúdo) — sem isso ele empurra o conteúdo. */
+  .app-shell{grid-template-columns:72px minmax(0,1fr);
+    grid-template-rows:auto 1fr;grid-template-areas:"lado topo" "lado main"}
   .app-main{padding:var(--espaco-05) var(--margem) var(--espaco-09)}
-  .trilho{position:sticky;top:0;bottom:auto;height:100dvh;
+  .trilho{grid-area:lado;position:sticky;top:0;bottom:auto;height:100dvh;
     display:flex;flex-direction:column;gap:var(--espaco-01);
     padding:var(--espaco-05) var(--espaco-04) var(--espaco-05);
     border-top:0;border-right:1px solid var(--cor-borda-padrao)}

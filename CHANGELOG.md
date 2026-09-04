@@ -2,6 +2,21 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Fix: conteúdo sumindo em todas as telas (grid do shell)
+
+Achado na conferência visual pós-fase-6, logado, em 1440/1024/768/375.
+
+Da fase 5 em diante a barra do topo passou a ficar visível em toda
+largura (antes só existia no toque). `.app-shell` continuou com grid de
+2 colunas x 2 linhas sem áreas nomeadas — 4 células pra 3 itens (trilho,
+barra do topo, conteúdo). O navegador preenche células por ordem: trilho
+na 1ª, barra do topo na 2ª, conteúdo sobrava pra 3ª célula — embaixo do
+trilho, com a largura dele (72px). Todo texto e card ficavam ali,
+espremidos numa coluna de 72px, invisíveis na tela.
+
+Corrigido com `grid-template-areas` nomeadas (`lado`/`topo`/`main`) nos
+três breakpoints do shell. Testado mobile/tablet/desktop depois do fix.
+
 ## 2026-09-04 — Migração para a spec ELOI Design System, fase 6: ícones e acessibilidade fina
 
 Última fase. Com ela, as seis do plano estão no código.
