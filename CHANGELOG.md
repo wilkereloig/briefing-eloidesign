@@ -2,6 +2,38 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Conferência de saldo e importação de extrato CSV
+
+Não havia como saber se o saldo do painel batia com o do banco, nem como
+trazer um mês de extrato sem digitar linha a linha.
+
+### Adicionado
+
+- **Origem da transação** (`eloi_transacoes.origem`: manual · recorrencia ·
+  parcelamento · importacao · ajuste) com backfill do que já se deduzia por
+  `recorrencia_id`/`grupo_id`. Movimentações mostram "importado" e "ajuste
+  de conferência" na linha.
+- **Conferir saldo** no card da conta: data do extrato, saldo informado,
+  saldo do painel naquela data (`saldoContaEm`), diferença explicada. Grava
+  em `eloi_conferencias` (histórico, não correção). Opcional: criar
+  lançamento de ajuste, sempre identificado (`origem=ajuste`). Nunca se
+  altera lançamento para bater saldo.
+- **Importar extrato** (CSV): escolher arquivo → colunas detectadas
+  (data/descrição/valor, ajustáveis) → prévia linha a linha com situação
+  (Nova · Já importada · Talvez já lançada · Inválida) → conta e contexto →
+  importar só o marcado. `domain/importacao.ts`: `lerCsv`, `lerValor`
+  (1.234,56 / 1234.56 / (12,00) / 12,00 D), `lerData`, `detectarColunas`,
+  `classificar`. Chave `data|valor|descrição` única por conta
+  (`importacao_chave`) torna reimportar idempotente também no banco.
+  Extrato de cartão entra pendente (vai para a fatura); de conta, realizado.
+- `eloi-financas`: `transacoes.importar` (≤500 linhas, revalida e pula
+  chave repetida), `conferencias.registrar`; `bootstrap` devolve as últimas
+  conferências.
+
+### Fora de propósito
+
+XLSX: exigiria biblioteca nova. Todo banco exporta CSV.
+
 ## 2026-09-04 — Onboarding financeiro; ciclo de fatura; recorrências legíveis
 
 Instalação com zero contas mostrava um dashboard de zeros — e zero parece

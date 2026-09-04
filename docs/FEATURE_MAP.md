@@ -28,14 +28,15 @@ Atualizado: 2026-08-07.
 - **Objetivo:** lançar, liquidar, parcelar, estornar e acompanhar todo movimento.
 - **Estado:** Concluído
 - **Telas:** `telas/Dinheiro.tsx` (5 abas), `FolhaTransacao.tsx`, `folhas.tsx`
-- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover`, `contas.*`, `recorrencias.*`
-- **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`
+- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar`, `conferencias.registrar`, `contas.*`, `recorrencias.*`
+- **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_conferencias`
 - **Permissão:** admin
 - **Fluxos:** receita · despesa · transferência · parcelamento · pagamento parcial (com conta e observação) · reagendar · estorno · pagar fatura de cartão · recorrência (pausar/retomar/encerrar)
 - **Fila de cobrança:** A receber / A pagar agrupadas por faixa de prazo (`agruparPorPrazo`) com recortes Vencidos · Sem NF · Recorrentes · Parciais
 - **Cartão:** fatura aberta, limite disponível, ciclo (`cicloFatura`), parcelado em aberto (`parceladoAberto`)
 - **Onboarding:** `routes/admin/Onboarding.tsx` (Hoje e Dinheiro) enquanto faltar conta ou lançamento — `domain/onboarding.ts`
-- **Pendência:** conciliação de saldo; importação CSV/XLSX
+- **Conferência e importação:** `routes/admin/FolhasExtrato.tsx` — `FolhaConferencia` (sistema × extrato, ajuste identificado) e `FolhaImportar` (CSV, `domain/importacao.ts`)
+- **Pendência:** importação XLSX (exige biblioteca; CSV cobre)
 - **Testes:** `domain/financeiro.test.ts` (incluindo estorno e a invariante liquidado+aberto=combinado)
 
 ### Projetos

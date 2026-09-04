@@ -198,7 +198,7 @@ export const briefingsApi = {
 // Parcelar e liquidar NÃO têm equivalente local de propósito: são as duas
 // operações que o servidor precisa arbitrar (ver edge-functions/eloi-financas.ts).
 import type {
-  Conta, Categoria, Transacao, Recorrencia, NotaFiscal, Meta, Arquivo, Contexto,
+  Conta, Categoria, Conferencia, Transacao, Recorrencia, NotaFiscal, Meta, Arquivo, Contexto,
 } from './tipos'
 
 export interface FiltroTransacao {
@@ -219,6 +219,8 @@ export const financas = {
   /** Dados de referência numa chamada: contas, categorias, recorrências, metas. */
   bootstrap: () => call<{
     contas: Conta[]; categorias: Categoria[]; recorrencias: Recorrencia[]; metas: Meta[]
+    /** Ausente até a edge ser publicada com a action; o store trata como []. */
+    conferencias?: Conferencia[]
   }>('eloi-financas', 'bootstrap'),
 
   transacoes: (filtro?: FiltroTransacao) =>
@@ -234,6 +236,17 @@ export const financas = {
   }) =>
     call<{ transacao: Transacao }>('eloi-financas', 'transacoes.liquidar', { id, ...dados })
       .then((r) => r.transacao),
+  /** Extrato já lido e confirmado na tela. O servidor revalida e pula chave
+   *  repetida nesta conta. Cartão entra pendente; conta comum, realizado. */
+  importar: (dados: {
+    conta_id: string; contexto?: Contexto
+    linhas: { data: string; descricao: string; valor_cents: number; chave: string }[]
+  }) => call<{ importadas: number; ignoradas: number }>('eloi-financas', 'transacoes.importar', dados),
+  /** Fotografia sistema × extrato. `criar_ajuste` grava transação própria com origem=ajuste. */
+  registrarConferencia: (dados: {
+    conta_id: string; data: string; saldo_informado_cents: number; saldo_sistema_cents: number
+    observacoes?: string; criar_ajuste?: boolean
+  }) => call<{ conferencia: Conferencia; ajuste: Transacao | null }>('eloi-financas', 'conferencias.registrar', dados),
   /** Só o vencimento muda; o status volta a ser derivado no servidor. */
   reagendar: (id: string, data_vencimento: string) =>
     call<{ transacao: Transacao }>('eloi-financas', 'transacoes.reagendar', { id, data_vencimento })

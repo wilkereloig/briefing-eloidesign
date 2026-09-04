@@ -60,6 +60,13 @@ export function saldoConta(conta: Conta, transacoes: Transacao[]): number {
   return saldo
 }
 
+/** Saldo da conta ao fim de `data`: só o que liquidou até ali. É o número
+ *  que se compara com o extrato daquele dia numa conferência. */
+export function saldoContaEm(conta: Conta, transacoes: Transacao[], data: string): number {
+  return saldoConta(conta, transacoes.filter((t) =>
+    (t.data_liquidacao ?? t.created_at.slice(0, 10)) <= data))
+}
+
 /** Soma de saldos das contas de um contexto. Cartão de crédito fica de fora:
  *  fatura é dívida, não saldo disponível — some em `faturaAberta`. */
 export function saldoDisponivel(contas: Conta[], transacoes: Transacao[], contexto?: Contexto): number {

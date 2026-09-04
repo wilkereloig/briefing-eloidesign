@@ -16,7 +16,7 @@ import {
   servicos as servicosApi, subClientes as subClientesApi,
 } from './api'
 import type {
-  BriefingLinkRow, Categoria, ClienteRow, Conta, Contexto, Meta, NotaFiscal,
+  BriefingLinkRow, Categoria, ClienteRow, Conferencia, Conta, Contexto, Meta, NotaFiscal,
   OrcamentoRow, Recorrencia, ServicoRow, SubClienteRow, Transacao,
 } from './tipos'
 
@@ -48,6 +48,8 @@ interface Estado {
   categorias: Categoria[]
   recorrencias: Recorrencia[]
   metas: Meta[]
+  /** Últimas conferências de saldo, mais recente primeiro. */
+  conferencias: Conferencia[]
   transacoes: Transacao[]
   notas: NotaFiscal[]
   clientes: ClienteRow[]
@@ -72,12 +74,12 @@ interface Estado {
 const Ctx = createContext<Estado>(null!)
 export const useFinancas = () => useContext(Ctx)
 
-type Dados = Pick<Estado, 'contas' | 'categorias' | 'recorrencias' | 'metas'
+type Dados = Pick<Estado, 'contas' | 'categorias' | 'recorrencias' | 'metas' | 'conferencias'
   | 'transacoes' | 'notas' | 'clientes' | 'subClientes' | 'servicos' | 'orcamentos'
   | 'briefings'>
 
 const VAZIO: Dados = {
-  contas: [], categorias: [], recorrencias: [], metas: [],
+  contas: [], categorias: [], recorrencias: [], metas: [], conferencias: [],
   transacoes: [], notas: [], clientes: [], subClientes: [], servicos: [], orcamentos: [],
   briefings: [],
 }
@@ -118,6 +120,7 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
       setDados({
         contas: ref.contas, categorias: ref.categorias,
         recorrencias: ref.recorrencias, metas: ref.metas,
+        conferencias: ref.conferencias ?? [],
         transacoes, notas, clientes: cli, subClientes: sub, servicos: svc, orcamentos: orc,
         briefings: bri,
       })

@@ -55,12 +55,20 @@ são linhas desta tabela. O que muda é `tipo`/`contexto`/vínculo, nunca a estr
 | `conta_id` / `conta_destino_id` | origem / destino (destino só em transferência) |
 | `grupo_id` | liga parcelas irmãs |
 | `recorrencia_id` | de que molde a linha nasceu |
+| `origem` | `manual` · `recorrencia` · `parcelamento` · `importacao` · `ajuste` — de onde a linha veio |
+| `importacao_chave` | `data\|valor\|descrição normalizada`; único por conta (índice parcial) → reimportar não duplica |
 
 Enum `eloi_status_mov`: `previsto` · `pendente` · `parcial` · `realizado` ·
 `vencido` · **`cancelado`** (masculino — escrever `cancelada` no TypeScript fez
 o estorno não estornar).
 
 **Invariante:** liquidado + em aberto sempre fecha em `valor_cents`.
+
+### `eloi_conferencias`
+Fotografia "saldo do painel × saldo do extrato" numa data, por conta.
+Histórico, não correção: `diferenca_cents` fica gravada. Se o dono pediu
+ajuste, `ajuste_transacao_id` aponta a transação criada com `origem=ajuste`.
+Nunca se edita lançamento para bater saldo.
 
 ### `eloi_recorrencias`
 Molde que gera transações. Materializado ao abrir o painel, **idempotente por

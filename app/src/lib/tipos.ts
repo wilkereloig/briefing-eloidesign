@@ -241,6 +241,27 @@ export interface Transacao {
   parcela_de: number | null
   recorrencia_id: string | null
   observacoes: string | null
+  /** De onde a linha nasceu. `ajuste` só sai de conferência de saldo. */
+  origem: OrigemMov
+  /** data|valor|descrição normalizada — única por conta; reimportar não duplica. */
+  importacao_chave: string | null
+  created_at: string
+}
+
+export type OrigemMov = 'manual' | 'recorrencia' | 'parcelamento' | 'importacao' | 'ajuste'
+
+/** Conferência: saldo do sistema vs saldo do extrato numa data. Histórico,
+ *  não correção — o ajuste, se houver, é transação separada com origem=ajuste. */
+export interface Conferencia {
+  id: string
+  conta_id: string
+  data: string
+  saldo_informado_cents: number
+  saldo_sistema_cents: number
+  /** informado − sistema. Positivo = dinheiro que o painel não conhece. */
+  diferenca_cents: number
+  observacoes: string | null
+  ajuste_transacao_id: string | null
   created_at: string
 }
 

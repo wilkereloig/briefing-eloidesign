@@ -98,17 +98,20 @@ Deno.serve(async (req: Request) => {
   // ── BOOTSTRAP ──────────────────────────────────────────────────────────────
   // Dados de referencia numa chamada so: sao tabelas pequenas e toda tela usa.
   if (action === "bootstrap") {
-    const [contas, categorias, recorrencias, metas] = await Promise.all([
+    const [contas, categorias, recorrencias, metas, conferencias] = await Promise.all([
       supabase.from("eloi_contas").select("*").order("contexto").order("nome"),
       supabase.from("eloi_categorias").select("*").eq("ativa", true).order("nome"),
       supabase.from("eloi_recorrencias").select("*").eq("ativa", true).order("proxima_cobranca"),
       supabase.from("eloi_metas").select("*").eq("ativa", true).order("inicio", { ascending: false }),
+      // Ultimas conferencias: o card da conta mostra a mais recente.
+      supabase.from("eloi_conferencias").select("*").order("data", { ascending: false }).limit(100),
     ]);
-    const erro = contas.error || categorias.error || recorrencias.error || metas.error;
+    const erro = contas.error || categorias.error || recorrencias.error || metas.error || conferencias.error;
     if (erro) return json({ error: erro.message }, 500);
     return json({
       contas: contas.data ?? [], categorias: categorias.data ?? [],
       recorrencias: recorrencias.data ?? [], metas: metas.data ?? [],
+      conferencias: conferencias.data ?? [],
     });
   }
 
@@ -300,6 +303,7 @@ Deno.serve(async (req: Request) => {
 
     const linhas = valores.map((v, i) => ({
       ...molde,
+      origem: "parcelamento",
       grupo_id: grupo,
       parcela_num: i + 1,
       parcela_de: n,
@@ -383,7 +387,7 @@ Deno.serve(async (req: Request) => {
             descricao: r.nome, valor_cents: r.valor_cents,
             conta_id: r.conta_id, categoria_id: r.categoria_id, fornecedor: r.fornecedor,
             data_competencia: proxima, data_vencimento: proxima,
-            recorrencia_id: r.id,
+            recorrencia_id: r.id, origem: "recorrencia",
           }).select().single();
           if (nova) criadas.push(nova);
         }
@@ -392,6 +396,95 @@ Deno.serve(async (req: Request) => {
       await supabase.from("eloi_recorrencias").update({ proxima_cobranca: proxima }).eq("id", r.id);
     }
     return json({ criadas: criadas.length, transacoes: criadas });
+  }
+
+  // ── IMPORTACAO DE EXTRATO ──────────────────────────────────────────────────
+  // A tela ja mostrou o que vai entrar e o dono confirmou. Aqui: validar de
+  // novo (nunca confiar so no cliente), pular chave ja importada nesta conta
+  // e gravar com origem=importacao. Cartao entra pendente (vai para a fatura);
+  // conta comum entra realizado (o extrato e fato consumado).
+  if (action === "transacoes.importar") {
+    const { conta_id, contexto, linhas } = body ?? {};
+    if (!ehUuid(conta_id)) return json({ error: "conta_id invalido" }, 400);
+    if (!Array.isArray(linhas) || linhas.length === 0) return json({ error: "nada a importar" }, 400);
+    if (linhas.length > 500) return json({ error: "maximo de 500 linhas por importacao" }, 400);
+    const { data: conta } = await supabase.from("eloi_contas").select("*").eq("id", conta_id).single();
+    if (!conta) return json({ error: "conta nao encontrada" }, 404);
+    const ctx = contexto === "pessoal" || contexto === "empresa" ? contexto : conta.contexto;
+    const ehCartao = conta.tipo === "cartao_credito";
+
+    const validas: Record<string, unknown>[] = [];
+    for (const l of linhas) {
+      const cents = Math.trunc(Number(l?.valor_cents));
+      if (!ehData(l?.data) || !Number.isFinite(cents) || cents === 0) continue;
+      const chave = typeof l.chave === "string" && l.chave ? l.chave : `${l.data}|${cents}|${String(l.descricao ?? "").toLowerCase()}`;
+      const abs = Math.abs(cents);
+      validas.push({
+        tipo: cents > 0 ? "entrada" : "saida",
+        contexto: ctx,
+        descricao: String(l.descricao ?? "").trim().slice(0, 200) || "Importado",
+        valor_cents: abs,
+        recebido_cents: ehCartao ? 0 : abs,
+        status: ehCartao ? "pendente" : "realizado",
+        conta_id,
+        data_competencia: l.data, data_vencimento: l.data,
+        data_liquidacao: ehCartao ? null : l.data,
+        origem: "importacao",
+        importacao_chave: chave,
+      });
+    }
+    if (!validas.length) return json({ error: "nenhuma linha valida" }, 400);
+
+    const chaves = validas.map((v) => v.importacao_chave as string);
+    const { data: existentes } = await supabase.from("eloi_transacoes")
+      .select("importacao_chave").eq("conta_id", conta_id).in("importacao_chave", chaves);
+    const ja = new Set((existentes ?? []).map((e: { importacao_chave: string }) => e.importacao_chave));
+    const novas = validas.filter((v) => !ja.has(v.importacao_chave as string));
+    if (!novas.length) return json({ importadas: 0, ignoradas: validas.length });
+    const { error } = await supabase.from("eloi_transacoes").insert(novas);
+    if (error) return json({ error: error.message }, 500);
+    return json({ importadas: novas.length, ignoradas: validas.length - novas.length });
+  }
+
+  // ── CONFERENCIA DE SALDO ───────────────────────────────────────────────────
+  // Registro, nao correcao. O saldo do sistema vem calculado pela tela (e a
+  // mesma conta que ela mostra); o que se grava e a fotografia. Ajuste so se
+  // pedido, e sempre como transacao propria com origem=ajuste.
+  if (action === "conferencias.registrar") {
+    const { conta_id, data, saldo_informado_cents, saldo_sistema_cents, observacoes, criar_ajuste } = body ?? {};
+    if (!ehUuid(conta_id)) return json({ error: "conta_id invalido" }, 400);
+    if (!ehData(data)) return json({ error: "data invalida" }, 400);
+    const informado = Math.trunc(Number(saldo_informado_cents));
+    const sistema = Math.trunc(Number(saldo_sistema_cents));
+    if (!Number.isFinite(informado) || !Number.isFinite(sistema)) return json({ error: "saldos invalidos" }, 400);
+    const { data: conta } = await supabase.from("eloi_contas").select("*").eq("id", conta_id).single();
+    if (!conta) return json({ error: "conta nao encontrada" }, 404);
+    const diferenca = informado - sistema;
+
+    let ajuste: unknown = null;
+    if (criar_ajuste && diferenca !== 0) {
+      const abs = Math.abs(diferenca);
+      const { data: t, error: eA } = await supabase.from("eloi_transacoes").insert({
+        tipo: diferenca > 0 ? "entrada" : "saida",
+        contexto: conta.contexto,
+        descricao: `Ajuste de conferência ${data}`,
+        valor_cents: abs, recebido_cents: abs, status: "realizado",
+        conta_id,
+        data_competencia: data, data_vencimento: data, data_liquidacao: data,
+        origem: "ajuste",
+        observacoes: `Saldo informado ${(informado / 100).toFixed(2)} × sistema ${(sistema / 100).toFixed(2)}${observacoes ? ` — ${String(observacoes).trim()}` : ""}`,
+      }).select().single();
+      if (eA) return json({ error: eA.message }, 500);
+      ajuste = t;
+    }
+    const { data: conf, error } = await supabase.from("eloi_conferencias").insert({
+      conta_id, data,
+      saldo_informado_cents: informado, saldo_sistema_cents: sistema, diferenca_cents: diferenca,
+      observacoes: typeof observacoes === "string" ? observacoes.trim() || null : null,
+      ajuste_transacao_id: (ajuste as { id?: string } | null)?.id ?? null,
+    }).select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ conferencia: conf, ajuste });
   }
 
   // ── NOTAS FISCAIS ──────────────────────────────────────────────────────────

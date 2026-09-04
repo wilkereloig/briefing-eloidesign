@@ -3,7 +3,7 @@ import {
   saldoConta, saldoDisponivel, resultado, vencidas, diasDeAtraso, proximosVencimentos,
   faturaAberta, limiteDisponivel, dividirParcelas, dataDaParcela, previsaoCaixa,
   agrupar, consumoOrcamento, saldoAberto, valorLiquidado, competenciaDe,
-  agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto,
+  agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
 } from './financeiro'
 import type { Conta, Transacao } from '../lib/tipos'
 
@@ -18,7 +18,8 @@ const tx = (p: Partial<Transacao> & { id: string; tipo: Transacao['tipo'] }): Tr
   conta_id: null, conta_destino_id: null, categoria_id: null, cliente_id: null, servico_id: null,
   fornecedor: null, data_competencia: null, data_vencimento: null, data_liquidacao: null,
   forma_pagamento: null, grupo_id: null, parcela_num: null, parcela_de: null,
-  recorrencia_id: null, observacoes: null, created_at: '2026-01-01', ...p,
+  recorrencia_id: null, observacoes: null, origem: 'manual', importacao_chave: null,
+  created_at: '2026-01-01', ...p,
 })
 
 describe('liquidação e saldo em aberto', () => {
@@ -363,5 +364,17 @@ describe('ciclo de fatura', () => {
       tx({ id: '4', tipo: 'saida', conta_id: 'outra', parcela_de: 2, status: 'pendente', valor_cents: 100 }),
     ])
     expect(r).toEqual({ qtd: 2, cents: 200 })
+  })
+})
+
+describe('saldo numa data', () => {
+  it('ignora o que liquidou depois da data conferida', () => {
+    const c = conta({ id: 'c', saldo_inicial_cents: 1000 })
+    const ts = [
+      tx({ id: '1', tipo: 'entrada', conta_id: 'c', valor_cents: 500, status: 'realizado', data_liquidacao: '2026-09-01' }),
+      tx({ id: '2', tipo: 'saida', conta_id: 'c', valor_cents: 200, status: 'realizado', data_liquidacao: '2026-09-10' }),
+    ]
+    expect(saldoContaEm(c, ts, '2026-09-05')).toBe(1500)
+    expect(saldoContaEm(c, ts, '2026-09-10')).toBe(1300)
   })
 })

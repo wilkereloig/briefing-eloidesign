@@ -6,7 +6,7 @@ import {
   agruparPorPrazo, cicloFatura, diasDeAtraso, estaEmAberto, faturaAberta, limiteDisponivel,
   parceladoAberto, resultado, ROTULO_FAIXA, saldoConta, saldoAberto,
 } from '../../../domain/financeiro'
-import type { Conta, Recorrencia, ServicoRow, Transacao } from '../../../lib/tipos'
+import type { Conferencia, Conta, Recorrencia, ServicoRow, Transacao } from '../../../lib/tipos'
 import {
   Aviso, Botao, Campo, Card, Etiqueta, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
@@ -15,6 +15,7 @@ import { custoAnual, custoMensal, dataCurta, rotuloConta, rotuloPeriodo } from '
 import { FolhaTransacao } from '../FolhaTransacao'
 import { FolhaConta, FolhaExcluir, FolhaLiquidar, FolhaReagendar, FolhaRecorrencia } from '../folhas'
 import { Onboarding } from '../Onboarding'
+import { FolhaConferencia, FolhaImportar } from '../FolhasExtrato'
 
 type Aba = 'movimentos' | 'receber' | 'pagar' | 'contas' | 'recorrencias'
 /** Recortes da fila de cobrança. São perguntas, não status: "o que está sem
@@ -45,7 +46,7 @@ const ABAS: { chave: Aba; label: string }[] = [
 
 export default function DinheiroTela() {
   const est = useFinancas()
-  const { contas, transacoes, recorrencias, servicos, mes, contexto, recarregar } = est
+  const { contas, transacoes, recorrencias, servicos, conferencias, mes, contexto, recarregar } = est
   const servicoPorId = useMemo(() => new Map(servicos.map((s) => [s.id, s])), [servicos])
   const doMes = useTransacoesDoMes()
   const nomes = useNomes()
@@ -62,6 +63,8 @@ export default function DinheiroTela() {
     | { tipo: 'excluir'; t: Transacao }
     | { tipo: 'conta'; c?: Conta }
     | { tipo: 'fatura'; c: Conta }
+    | { tipo: 'conferir'; c: Conta }
+    | { tipo: 'importar' }
     | { tipo: 'recorrencia'; r?: Recorrencia }
     | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
@@ -134,6 +137,9 @@ export default function DinheiroTela() {
       <Cabecalho secao="Financeiro" titulo={rotuloMes(mes)}>
         <SeletorLente />
         <SeletorMes />
+        <Botao onClick={() => setFolha({ tipo: 'importar' })} className="col-desktop">
+          Importar extrato
+        </Botao>
         <Botao variante="primario" onClick={() => setFolha({ tipo: 'nova' })}>
           <Icone nome="adicionar" tamanho={16} />Lançar
         </Botao>
@@ -249,7 +255,9 @@ export default function DinheiroTela() {
               <div className="grade-indicadores">
                 {contasVisiveis.map((c) => (
                   <CartaoConta key={c.id} c={c} transacoes={transacoes} hoje={hoje}
+                    conferencia={conferencias.find((x) => x.conta_id === c.id)}
                     aoEditar={() => setFolha({ tipo: 'conta', c })}
+                    aoConferir={() => setFolha({ tipo: 'conferir', c })}
                     aoPagarFatura={() => setFolha({ tipo: 'fatura', c })} />
                 ))}
               </div>
@@ -327,6 +335,8 @@ export default function DinheiroTela() {
         <FolhaPagarFatura cartao={folha.c} aoFechar={fechar} aoSalvar={apos} />
       )}
       {folha?.tipo === 'recorrencia' && <FolhaRecorrencia inicial={folha.r} aoFechar={fechar} aoSalvar={apos} />}
+      {folha?.tipo === 'conferir' && <FolhaConferencia conta={folha.c} aoFechar={fechar} aoSalvar={apos} />}
+      {folha?.tipo === 'importar' && <FolhaImportar aoFechar={fechar} aoSalvar={apos} />}
       {folha?.tipo === 'excluir' && (
         <FolhaExcluir
           titulo={`Excluir "${folha.t.descricao}"?`}
@@ -407,6 +417,7 @@ function LinhaMov({
           {parcial ? ` · faltam ${fmtBRL(saldoAberto(t))}` : ''}
           {modoCobranca && t.recebido_cents > 0
             ? ` · ${fmtBRL(t.recebido_cents)} de ${fmtBRL(t.valor_cents)} já ${t.tipo === 'entrada' ? 'recebido' : 'pago'}` : ''}
+          {t.origem === 'importacao' ? ' · importado' : t.origem === 'ajuste' ? ' · ajuste de conferência' : ''}
         </span>
       </span>
       {t.parcela_de && <span className="col-desktop t-legenda">{t.parcela_num}/{t.parcela_de}</span>}
@@ -443,11 +454,14 @@ function LinhaMov({
   )
 }
 
-function CartaoConta({ c, transacoes, hoje, aoEditar, aoPagarFatura }: {
+function CartaoConta({ c, transacoes, hoje, conferencia, aoEditar, aoConferir, aoPagarFatura }: {
   c: Conta
   transacoes: Transacao[]
   hoje: string
+  /** Última conferência desta conta, se houver. */
+  conferencia?: Conferencia
   aoEditar: () => void
+  aoConferir: () => void
   aoPagarFatura: () => void
 }) {
   const ehCartao = c.tipo === 'cartao_credito'
@@ -494,6 +508,16 @@ function CartaoConta({ c, transacoes, hoje, aoEditar, aoPagarFatura }: {
         <Botao compacto onClick={aoPagarFatura} style={{ marginTop: 'var(--e-7)' }}>
           Pagar fatura
         </Botao>
+      )}
+      {!ehCartao && (
+        <span className="linha" style={{ marginTop: 'var(--e-7)', justifyContent: 'space-between' }}>
+          <span className="t-legenda">
+            {conferencia
+              ? `Conferido ${dataCurta(conferencia.data)} · ${conferencia.diferenca_cents === 0 ? 'bateu' : `diferença ${fmtBRL(conferencia.diferenca_cents)}`}`
+              : 'Nunca conferido'}
+          </span>
+          <Botao compacto onClick={aoConferir}>Conferir</Botao>
+        </span>
       )}
     </Card>
   )
