@@ -25,6 +25,14 @@ número ficava preso na tela.
   `lib/exportar.ts` + `montarCsv` testado.
 - **Imprimir**: `@media print` esconde navegação e botões.
 
+## 2026-09-04 — Projetos agrupados por mês
+
+Sessenta projetos numa lista só, sem mês e sem data, não se lê. A lista agora
+abre por mês (mais recente primeiro), cliente e marca dentro do mês; o que não
+tem mês fica em "Sem mês" no fim. Cada linha mostra a data de competência ou
+de pagamento. Regra do mês em `domain/projeto.ts` (`mesDoProjeto`, testado):
+competência, senão pagamento, senão prazo.
+
 ## 2026-09-04 — Calendário integrado
 
 O calendário só mostrava vencimentos de transação. Tarefa, prazo de

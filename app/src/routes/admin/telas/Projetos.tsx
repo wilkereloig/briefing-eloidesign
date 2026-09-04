@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { orcamentos as orcamentosApi, servicos as servicosApi } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { useAbrirNovo } from '../../../lib/abrir-novo'
-import { hojeISO, useFinancas, useNomes } from '../../../lib/financas-store'
+import { hojeISO, rotuloMes, useFinancas, useNomes } from '../../../lib/financas-store'
 import { dataCurta } from '../../../ui/formato'
-import { juntarProjetos, type Etapa, type Projeto } from '../../../domain/projeto'
+import { juntarProjetos, mesDoProjeto, type Etapa, type Projeto } from '../../../domain/projeto'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, Dinheiro, SeletorMes } from '../../../ui/painel'
 import type { EstadoChip } from '../../../ui/tokens'
@@ -30,6 +30,43 @@ const PENDENCIAS: { chave: Pendencia; label: string; casa: (p: Projeto) => boole
   { chave: 'sem_nota', label: 'Sem nota', casa: (p) => !!p.servico && !p.servico.nf_numero },
   { chave: 'entregue_nao_pago', label: 'Entregue e não pago', casa: (p) => p.etapa === 'entregue' },
 ]
+
+type Nomes = ReturnType<typeof useNomes>
+
+// Cliente → marca. A marca é cabeçalho de sub-grupo, não etiqueta na linha —
+// é assim que a F2 se lê (Vibra, ASUS, PLANO&PLANO).
+function agruparPorCliente(itens: Projeto[], nomes: Nomes) {
+  const porCliente = new Map<string, Projeto[]>()
+  for (const p of itens) {
+    const k = p.clienteId ?? 'sem-cliente'
+    porCliente.set(k, [...(porCliente.get(k) ?? []), p])
+  }
+  const recente = (a: Projeto, b: Projeto) =>
+    (mesDoProjeto(b) ?? '9999').localeCompare(mesDoProjeto(a) ?? '9999')
+  return [...porCliente.entries()]
+    .map(([id, itens]) => {
+      const porMarca = new Map<string, Projeto[]>()
+      for (const p of itens) {
+        const k = p.servico?.sub_cliente_id ?? 'direto'
+        porMarca.set(k, [...(porMarca.get(k) ?? []), p])
+      }
+      return {
+        id,
+        nome: id === 'sem-cliente' ? 'Sem cliente' : nomes.cliente.get(id)?.nome ?? 'Cliente removido',
+        cor: id === 'sem-cliente' ? 'var(--linha-forte)' : nomes.cliente.get(id)?.cor || 'var(--roxo)',
+        total: itens.reduce((s, p) => s + p.valorCents, 0),
+        marcas: [...porMarca.entries()]
+          .map(([mid, mitens]) => ({
+            id: mid,
+            nome: mid === 'direto' ? 'Trabalho direto' : nomes.subCliente.get(mid)?.nome ?? 'Marca removida',
+            itens: [...mitens].sort(recente),
+            total: mitens.reduce((s, p) => s + p.valorCents, 0),
+          }))
+          .sort((a, b) => b.total - a.total),
+      }
+    })
+    .sort((a, b) => b.total - a.total)
+}
 
 export default function Projetos() {
   const { orcamentos, servicos, subClientes, mes, recarregar } = useFinancas()
@@ -111,9 +148,10 @@ export default function Projetos() {
     const q = busca.trim().toLowerCase()
     const casaPendencia = PENDENCIAS.find((x) => x.chave === pendencia)?.casa
     return projetos.filter((p) => {
-      // Orçamento sem serviço vinculado (sem data_competencia) nunca some no
-      // filtro de mês — só existe data depois que o orçamento é aprovado.
-      if (filtrarPorMes && p.servico?.data_competencia && p.servico.data_competencia.slice(0, 7) !== mes) return false
+      // Orçamento sem serviço (sem mês) nunca some no filtro de mês — só
+      // existe data depois que o orçamento é aprovado.
+      const m = mesDoProjeto(p)
+      if (filtrarPorMes && m && m !== mes) return false
       if (etapa !== 'todos' && p.etapa !== etapa) return false
       if (clienteFiltro && p.clienteId !== clienteFiltro) return false
       if (marcaFiltro && p.servico?.sub_cliente_id !== marcaFiltro) return false
@@ -126,39 +164,24 @@ export default function Projetos() {
     })
   }, [projetos, etapa, clienteFiltro, marcaFiltro, pendencia, filtrarPorMes, busca, nomes, mes])
 
-  // Dois níveis: cliente → marca. A marca é cabeçalho de sub-grupo, não
-  // etiqueta na linha — é assim que a F2 se lê (Vibra, ASUS, PLANO&PLANO).
-  const grupos = useMemo(() => {
-    const porCliente = new Map<string, Projeto[]>()
+  // Três níveis: mês → cliente → marca. Mês mais recente primeiro; o que
+  // não tem mês (orçamento em aberto, serviço sem data) fica por último em
+  // "Sem mês". Dentro do mês, cliente e marca como a F2 se lê.
+  const meses = useMemo(() => {
+    const porMes = new Map<string, Projeto[]>()
     for (const p of filtrados) {
-      const k = p.clienteId ?? 'sem-cliente'
-      porCliente.set(k, [...(porCliente.get(k) ?? []), p])
+      const k = mesDoProjeto(p) ?? 'sem'
+      porMes.set(k, [...(porMes.get(k) ?? []), p])
     }
-    const recente = (a: Projeto, b: Projeto) =>
-      (b.servico?.data_competencia ?? '9999').localeCompare(a.servico?.data_competencia ?? '9999')
-    return [...porCliente.entries()]
-      .map(([id, itens]) => {
-        const porMarca = new Map<string, Projeto[]>()
-        for (const p of itens) {
-          const k = p.servico?.sub_cliente_id ?? 'direto'
-          porMarca.set(k, [...(porMarca.get(k) ?? []), p])
-        }
-        return {
-          id,
-          nome: id === 'sem-cliente' ? 'Sem cliente' : nomes.cliente.get(id)?.nome ?? 'Cliente removido',
-          cor: id === 'sem-cliente' ? 'var(--linha-forte)' : nomes.cliente.get(id)?.cor || 'var(--roxo)',
-          total: itens.reduce((s, p) => s + p.valorCents, 0),
-          marcas: [...porMarca.entries()]
-            .map(([mid, mitens]) => ({
-              id: mid,
-              nome: mid === 'direto' ? 'Trabalho direto' : nomes.subCliente.get(mid)?.nome ?? 'Marca removida',
-              itens: [...mitens].sort(recente),
-              total: mitens.reduce((s, p) => s + p.valorCents, 0),
-            }))
-            .sort((a, b) => b.total - a.total),
-        }
-      })
-      .sort((a, b) => b.total - a.total)
+    return [...porMes.entries()]
+      .sort(([a], [b]) => (a === 'sem' ? -1 : b === 'sem' ? 1 : a.localeCompare(b)) * -1)
+      .map(([mes, itens]) => ({
+        mes,
+        rotulo: mes === 'sem' ? 'Sem mês' : rotuloMes(mes),
+        total: itens.reduce((s, p) => s + p.valorCents, 0),
+        qtd: itens.length,
+        clientes: agruparPorCliente(itens, nomes),
+      }))
   }, [filtrados, nomes])
 
   const porEtapa = (e: Etapa) => projetos.filter((p) => p.etapa === e)
@@ -261,11 +284,17 @@ export default function Projetos() {
               </p>
             </Painel>
 
-            {grupos.length === 0 ? (
+            {meses.length === 0 ? (
               <Vazio icone="pesquisa" titulo="Nenhum projeto nesse filtro"
                 instrucao="Ajuste cliente, marca ou etapa — ou desligue o filtro de mês."
                 acao={<Botao onClick={limparFiltros}>Limpar filtros</Botao>} />
-            ) : grupos.map((g) => (
+            ) : meses.map((m) => (
+              <section key={m.mes} className="pilha" aria-label={m.rotulo}>
+                <div className="grupo-marca-cabeca">
+                  <span className="etiqueta etiqueta-acento">{m.rotulo}</span>
+                  <span className="t-legenda">{m.qtd} · {fmtBRL(m.total)}</span>
+                </div>
+                {m.clientes.map((g) => (
               <Painel key={g.id}
                 titulo={<span className="linha">
                   <span className="marca-grupo" style={{ background: g.cor }} aria-hidden />
@@ -295,7 +324,8 @@ export default function Projetos() {
                               <span className="t-legenda espremer">
                                 {[
                                   p.servico?.nf_numero ? `NF ${p.servico.nf_numero}` : semNota ? 'Sem nota fiscal' : null,
-                                  p.servico?.data_competencia ? p.servico.data_competencia.slice(0, 7) : null,
+                                  p.servico?.data_competencia ? dataCurta(p.servico.data_competencia)
+                                    : p.servico?.data_pagamento ? `pago ${dataCurta(p.servico.data_pagamento)}` : null,
                                   p.servico?.prazo && p.servico.status_execucao !== 'concluida'
                                     ? (p.servico.prazo < hoje ? `entrega venceu ${dataCurta(p.servico.prazo)}` : `entrega ${dataCurta(p.servico.prazo)}`)
                                     : null,
@@ -359,6 +389,8 @@ export default function Projetos() {
                   </div>
                 ))}
               </Painel>
+                ))}
+              </section>
             ))}
           </>
         )}

@@ -72,3 +72,12 @@ export function juntarProjetos(orcamentos: OrcamentoRow[], servicos: ServicoRow[
 
   return projetos
 }
+
+/** Mês ('AAAA-MM') em que o projeto se encaixa na lista: competência do
+ *  serviço; sem ela, o pagamento; sem os dois, o prazo de entrega. Orçamento
+ *  ainda não aprovado não tem mês — só ganha um quando vira serviço. */
+export function mesDoProjeto(p: Pick<Projeto, 'servico'>): string | null {
+  const s = p.servico
+  const d = s?.data_competencia || s?.data_pagamento || s?.prazo
+  return d ? d.slice(0, 7) : null
+}

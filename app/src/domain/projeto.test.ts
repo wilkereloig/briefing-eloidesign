@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { etapaDoProjeto, juntarProjetos } from './projeto'
+import { etapaDoProjeto, juntarProjetos, mesDoProjeto } from './projeto'
 import type { OrcamentoRow, ServicoRow } from '../lib/tipos'
 
 function orc(over: Partial<OrcamentoRow> = {}): OrcamentoRow {
@@ -67,5 +67,16 @@ describe('juntarProjetos', () => {
   it('rascunho conta como etapa orcamento (trabalho ja iniciado, so nao enviado)', () => {
     const ps = juntarProjetos([orc({ status: 'rascunho' })], [])
     expect(ps[0].etapa).toBe('orcamento')
+  })
+})
+
+describe('mesDoProjeto', () => {
+  const srv = (p: Partial<ServicoRow>) => ({ servico: p as ServicoRow })
+  it('competência, senão pagamento, senão prazo, senão nulo', () => {
+    expect(mesDoProjeto(srv({ data_competencia: '2026-04-10', data_pagamento: '2026-05-01' }))).toBe('2026-04')
+    expect(mesDoProjeto(srv({ data_competencia: null, data_pagamento: '2026-05-01' }))).toBe('2026-05')
+    expect(mesDoProjeto(srv({ data_competencia: null, data_pagamento: null, prazo: '2026-06-30' }))).toBe('2026-06')
+    expect(mesDoProjeto(srv({ data_competencia: null, data_pagamento: null, prazo: null }))).toBeNull()
+    expect(mesDoProjeto({ servico: null })).toBeNull()
   })
 })
