@@ -128,9 +128,7 @@ Push em `master` publica o site. Edge function só pelo script
 |---|---|---|
 | Cadastrar as contas reais | `/admin/config` | Sem conta cadastrada, todo indicador mostra zero |
 | Aposentar `/gestao` e `/painel-*` | raiz | Só depois que `/admin` cobrir o que eles fazem; ao migrar, redirecionar no `vercel.json` |
-| Editor de propostas dentro de `/admin` | — | Hoje só em `/painel-orcamentos` |
-| Importação CSV/XLSX | — | Nunca começada |
-| Exportação/impressão de relatórios | — | Nunca começada |
+| Importação XLSX | `FolhasExtrato.tsx` | CSV pronto (2026-09-04); XLSX exigiria biblioteca — salvar como CSV cobre |
 | Service worker (offline real) | `app/` | O manifest existe, o worker não |
 | Etapas de projeto com pagamento por etapa | — | Precisaria de tabela nova |
 | Wordmark re-letrado para "ELOI Studio" | `assets/eloi-admin/wordmark.svg` | O desenho ainda diz "ELOI Design Studio" |
