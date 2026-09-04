@@ -218,25 +218,42 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   animation:esqueleto 1.2s infinite var(--curva-padrao)}
 @keyframes esqueleto{0%,100%{opacity:.5}50%{opacity:.8}}
 
-/* ── Folha (mobile) / Modal (desktop) ───────────────────────────────────── */
+/* ── Folha: modal (≤560, §9) no desktop, altura total no toque (§6) ──────── */
 .veu{position:fixed;inset:0;z-index:var(--z-veu);background:rgba(8,1,26,.72);
-  backdrop-filter:blur(5px);animation:aparecer 220ms linear;
+  animation:aparecer var(--movimento-padrao) var(--curva-entrada);
   display:flex;align-items:flex-end;justify-content:center}
 @keyframes aparecer{from{opacity:0}to{opacity:1}}
-.folha{position:relative;z-index:var(--z-folha);width:100%;max-height:86dvh;overflow-y:auto;
-  background:var(--cor-fundo-secundario);border-radius:var(--raio-folha) var(--raio-folha) 0 0;
+.folha{position:relative;z-index:var(--z-folha);width:100%;height:100dvh;overflow-y:auto;
+  background:var(--cor-fundo-elevado);
   padding:var(--espaco-02) var(--margem) calc(var(--espaco-05) + env(safe-area-inset-bottom));
-  animation:subir var(--t-folha) var(--curva-folha)}
+  animation:subir var(--movimento-lento) var(--curva-entrada)}
 @keyframes subir{from{transform:translateY(102%)}to{transform:translateY(0)}}
 .folha-alca{width:46px;height:4px;border-radius:var(--raio-etiqueta);
   background:var(--cor-borda-forte);margin:var(--espaco-02) auto var(--espaco-04)}
 .folha>header{margin-bottom:var(--espaco-04)}
 @media (min-width:768px){
   .veu{align-items:center}
-  .folha{max-width:520px;border-radius:var(--raio-bloco);padding:var(--espaco-05);
-    max-height:min(86dvh,700px);animation:aparecer 220ms linear}
+  .folha{max-width:560px;height:auto;border-radius:var(--raio-painel);padding:var(--espaco-06);
+    max-height:min(86dvh,720px);animation:modal var(--movimento-lento) var(--curva-entrada)}
+  @keyframes modal{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
   .folha-alca{display:none}
 }
+/* Página completa (§9): formulário com mais de 6 campos não é modal. Ocupa a
+   área de conteúdo, coluna única de 720 (§6), e o que abrir por cima dela é um
+   modal comum sobre uma página — não modal dentro de modal. */
+.veu-pagina{position:fixed;inset:0;z-index:calc(var(--z-veu) - 1);
+  background:var(--cor-fundo-primario);overflow-y:auto;
+  animation:entrar-pagina var(--movimento-lento) var(--curva-entrada)}
+@keyframes entrar-pagina{from{opacity:0;transform:translateY(var(--deslocamento-medio))}to{opacity:1;transform:none}}
+.folha-pagina{width:min(100%,var(--grade-formulario-maximo));margin:0 auto;
+  padding:var(--espaco-05) var(--margem) calc(var(--espaco-09) + env(safe-area-inset-bottom))}
+.folha-pagina>header{display:flex;align-items:center;gap:var(--espaco-03);
+  margin-bottom:var(--espaco-06)}
+@media (min-width:768px){
+  .veu-pagina{left:72px}
+  .folha-pagina{padding-top:var(--espaco-08)}
+}
+@media (min-width:1280px){ .veu-pagina{left:var(--trilho-largura)} }
 
 /* ── Aviso (toast) ──────────────────────────────────────────────────────── */
 /* secao 9 Feedback: canto inferior direito. No toque ele sobe acima da barra. */
@@ -251,9 +268,9 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 @keyframes aviso-entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (min-width:768px){ .aviso{right:var(--espaco-05);bottom:var(--espaco-05)} }
 
-/* par de campos lado a lado a partir do tablet (RESPONSIVE_GUIDELINES) */
-.grade-dois{display:grid;gap:var(--espaco-03);grid-template-columns:minmax(0,1fr)}
-@media (min-width:768px){ .grade-dois{grid-template-columns:1fr 1fr} }
+/* par de campos lado a lado só a partir de 1024 (§6): abaixo, uma coluna */
+.grade-dois{display:grid;gap:var(--espaco-05);grid-template-columns:minmax(0,1fr)}
+@media (min-width:1024px){ .grade-dois{grid-template-columns:1fr 1fr} }
 
 .campo-cor{width:56px;height:44px;padding:2px;background:var(--cor-fundo-secundario);
   border:1px solid var(--cor-borda-padrao);border-radius:var(--raio-controle);cursor:pointer}

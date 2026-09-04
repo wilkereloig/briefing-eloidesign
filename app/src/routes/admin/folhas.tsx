@@ -797,7 +797,7 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar, aoAnexarNota }: {
   }
 
   return (
-    <Folha titulo={inicial ? 'Editar serviço' : 'Novo serviço'} aoFechar={aoFechar}
+    <Folha modo="pagina" titulo={inicial ? 'Editar serviço' : 'Novo serviço'} aoFechar={aoFechar}
       rodape={<>
         <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
@@ -1229,7 +1229,7 @@ export function FolhaOrcamento({ inicial, duplicar, catalogo, aoFechar, aoSalvar
   }
 
   return (
-    <Folha titulo={editando ? 'Editar proposta' : duplicar ? 'Duplicar proposta' : 'Nova proposta'}
+    <Folha modo="pagina" titulo={editando ? 'Editar proposta' : duplicar ? 'Duplicar proposta' : 'Nova proposta'}
       aoFechar={aoFechar}
       rodape={<>
         <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>

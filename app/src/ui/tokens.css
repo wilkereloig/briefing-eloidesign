@@ -136,7 +136,7 @@
 
   /* medidas — fora do vocabulário da spec, próprias do projeto */
   --alvo-toque: 44px;
-  --trilho-largura: 236px; /* fase 5 sobe pra --grade-trilho-aberto junto do breakpoint */
+  --trilho-largura: var(--grade-trilho-aberto);
   --barra-mobile: 74px;
   --conteudo-max: var(--grade-largura-maxima);
 
@@ -152,10 +152,6 @@
   --deslocamento-pequeno: 4px;  /* hover de card */
   --deslocamento-medio: 12px;   /* entrada de bloco */
   --atraso-escalonado: 40ms;    /* stagger, máx. 6 itens */
-  /* legado, papel ainda não separado por consumidor (fase 5 resolve): a
-     folha (bottom sheet/drawer) abre nesse tempo/curva próprios hoje. */
-  --t-folha: 280ms;
-  --curva-folha: cubic-bezier(.32, 0, .24, 1);
 
   /* ========== CAMADAS ========== */
   --z-trilho: 10;

@@ -109,14 +109,35 @@ a:hover{color:var(--cor-texto-primario)}
 .trilho-criar:hover{background:var(--roxo-hover)}
 .trilho-criar:active{background:var(--roxo-press)}
 
-/* cabeçalho de toque: 54 px fixos, não some na rolagem */
-.cabecalho-toque{
+/* ── barra do topo (§9 Navegação › Topbar): 64 px em toda largura ────────── */
+/* alternador do menu (só no toque) · trilha (breadcrumb) · busca · sair */
+.barra-topo{
   position:sticky;top:0;z-index:var(--z-cabecalho);
-  display:flex;align-items:center;justify-content:space-between;gap:var(--espaco-02);
-  height:54px;padding:0 var(--espaco-03);padding-top:env(safe-area-inset-top);
-  background:var(--cor-fundo-primario);border-bottom:1px solid var(--cor-borda-padrao);user-select:none;
+  display:flex;align-items:center;gap:var(--espaco-03);
+  height:calc(var(--grade-barra-topo-altura) + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) var(--espaco-03) 0;
+  background:var(--cor-fundo-secundario);border-bottom:1px solid var(--cor-borda-sutil);user-select:none;
 }
-.cabecalho-toque .marca{font-size:17px}
+.barra-topo .marca{font-size:17px}
+.barra-topo-trilha{display:none;align-items:center;gap:var(--espaco-02);min-width:0;
+  font-size:var(--tipo-legenda-tamanho);color:var(--cor-texto-fraco)}
+.barra-topo-trilha b{font-weight:600;color:var(--cor-texto-primario);white-space:nowrap}
+.barra-topo-trilha a{color:var(--cor-texto-fraco)}
+.barra-topo-trilha a:hover{color:var(--cor-texto-primario)}
+.barra-topo-busca{display:none;align-items:center;gap:var(--espaco-02);flex:1 1 auto;
+  max-width:420px;min-height:40px;padding:0 var(--espaco-03);margin-left:auto;
+  background:var(--cor-superficie-padrao);border:1px solid var(--cor-borda-padrao);
+  border-radius:var(--raio-controle);color:var(--cor-texto-fraco);font-size:14px;cursor:pointer;
+  transition:border-color var(--movimento-rapido) var(--curva-padrao)}
+.barra-topo-busca:hover{border-color:var(--cor-borda-ativa)}
+.barra-topo-busca kbd{margin-left:auto;font-size:11px;letter-spacing:.06em}
+.barra-topo-acoes{display:flex;align-items:center;gap:var(--espaco-02);margin-left:auto}
+@media (min-width:768px){
+  .barra-topo{padding-inline:var(--margem)}
+  .barra-topo .marca,.barra-topo-menu{display:none}
+  .barra-topo-trilha,.barra-topo-busca{display:flex}
+  .barra-topo-acoes{margin-left:0}
+}
 
 /* folha "Criar": ícone em quadrado colorido + rótulo */
 .criar-opcao{width:100%;min-height:64px;cursor:pointer;text-align:left;
@@ -224,11 +245,12 @@ a:hover{color:var(--cor-texto-primario)}
 .carregando{padding:var(--espaco-07);color:var(--cor-texto-fraco)}
 .tela{min-width:0}
 @media print{
-  .trilho,.cabecalho-toque,.barra-inferior,.nao-imprime,.btn,.veu{display:none!important}
+  .trilho,.barra-topo,.nao-imprime,.btn,.veu,.veu-pagina{display:none!important}
   .app-shell{display:block}
   .app-main{padding:0}
-  body{background:#fff;color:#000}
-  .painel,.card{break-inside:avoid;border:1px solid #ccc}
+  /* impressão é a superfície inversa da spec (§2): rosa papel com tinta */
+  body{background:var(--cor-fundo-inverso);color:var(--cor-texto-inverso)}
+  .painel,.card{break-inside:avoid;border:1px solid var(--cor-texto-inverso)}
 }
 
 /* ── faixas (RESPONSIVE_GUIDELINES) ─────────────────────────────────────── */
@@ -257,17 +279,26 @@ a:hover{color:var(--cor-texto-primario)}
   .trilho-item:not([data-barra]){display:flex}
   .trilho-item[data-barra],.trilho-criar{order:0}
   .trilho-item .rotulo-curto{display:none}
-  .cabecalho-toque{display:none}
+  /* §9 Sidebar: item de 40 px, raio de controle; ativo = barra de 2 px em Lima
+     na altura toda + fundo Lima a 6 %. Hover é superfície, não elevação. */
   .trilho-item{flex-direction:row;justify-content:center;gap:0;
-    min-height:var(--alvo-toque);padding:11px 12px;border-radius:var(--raio-controle);
-    font-size:14px;font-weight:600;color:var(--cor-texto-secundario);
+    min-height:40px;padding:10px 0;border-radius:var(--raio-controle);
+    font-size:var(--tipo-corpo-pequeno-tamanho);font-weight:600;color:var(--cor-texto-secundario);
     transition:background var(--movimento-rapido) var(--curva-padrao),color var(--movimento-rapido) var(--curva-padrao)}
-  .trilho-item:hover{background:var(--cor-fundo-elevado);color:var(--cor-texto-primario)}
-  .trilho-item.ativo{color:var(--cor-texto-primario);background:none}
-  /* marca ativa: 3 px em Lima colada na aresta esquerda */
-  .trilho-item .marca-ativa{display:block;position:absolute;left:0;top:9px;bottom:9px;
-    width:3px;background:transparent;border-radius:0}
-  .trilho-item.ativo .marca-ativa{background:var(--acento)}
+  .trilho-item:hover{background:var(--cor-superficie-hover);color:var(--cor-texto-primario)}
+  .trilho-item.ativo{color:var(--cor-texto-primario);background:rgba(223,248,6,.06)}
+  .trilho-item .marca-ativa{display:block;position:absolute;left:0;top:0;bottom:0;
+    width:2px;background:transparent;border-radius:0}
+  .trilho-item.ativo .marca-ativa{background:var(--cor-acento-sinal)}
+  /* no trilho recolhido o rótulo vira tooltip à direita (§9), em movimento padrão */
+  .trilho-item[data-label]{position:relative}
+  .trilho-item[data-label]::after{content:attr(data-label);position:absolute;left:calc(100% + 10px);top:50%;
+    transform:translateY(-50%) translateX(-4px);padding:6px 10px;white-space:nowrap;
+    background:var(--cor-fundo-elevado);border:1px solid var(--cor-borda-padrao);border-radius:var(--raio-minimo);
+    color:var(--cor-texto-primario);font-size:var(--tipo-legenda-tamanho);font-weight:600;
+    opacity:0;pointer-events:none;z-index:var(--z-dropdown);
+    transition:opacity var(--movimento-padrao) var(--curva-entrada),transform var(--movimento-padrao) var(--curva-entrada)}
+  .trilho-item[data-label]:hover::after,.trilho-item[data-label]:focus-visible::after{opacity:1;transform:translateY(-50%)}
   .trilho-criar{transform:none;width:auto;height:auto;min-height:var(--alvo-toque);
     border:1px solid var(--cor-borda-forte);background:none;color:var(--cor-texto-primario);
     border-radius:var(--raio-controle);margin-top:var(--espaco-02)}
@@ -276,21 +307,19 @@ a:hover{color:var(--cor-texto-primario)}
   .cabecalho{margin-bottom:var(--espaco-05)}
 }
 
-@media (min-width:1024px){
-  /* trilho completo: 236 px com rótulos, criação rápida e Sair */
+@media (min-width:1280px){
+  :root{--margem:var(--grade-margem-desktop)}
+  /* §6: trilho aberto (248) só a partir de 1280; entre 768 e 1279 fica em 72 */
   .app-shell{grid-template-columns:var(--trilho-largura) minmax(0,1fr)}
-  .trilho-marca{display:block;margin:0 var(--espaco-02) var(--espaco-05)}
-  .trilho-item{justify-content:flex-start;gap:11px}
+  .trilho-marca{display:block;margin:0 0 var(--espaco-05);padding:0 var(--espaco-02)}
+  .trilho-item{justify-content:flex-start;gap:11px;padding:11px 16px}
+  .trilho-item[data-label]::after{display:none}
   .trilho-item .rotulo-longo,.trilho-criar .rotulo-longo,
   .trilho-rodape .rotulo-longo{display:inline;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .trilho-rotulo{display:block;padding:var(--espaco-04) var(--espaco-03) var(--espaco-02);
     color:var(--cor-texto-fraco)}
-  .trilho-criar{justify-content:flex-start;gap:11px;padding:11px 12px}
-}
-
-@media (min-width:1280px){
-  :root{--margem:var(--grade-margem-desktop)}
+  .trilho-criar{justify-content:flex-start;gap:11px;padding:11px 16px}
   /* KPI dominante de dashboard sobe pra data.xl (§10) */
   .card-dominante .t-valor-g{font-size:var(--tipo-dado-xl-tamanho);letter-spacing:var(--tipo-dado-xl-rastreio)}
 }

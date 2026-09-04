@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { useAdmin } from '../../auth/AdminAuth'
 import { CRIAR, NAV_FERRAMENTAS, NAV_PRIMARIA, type ChaveCriar } from './nav'
@@ -53,18 +53,36 @@ function ShellInterno() {
   // A barra inferior só comporta 4 destinos: o resto vive no menu de toque.
   const foraDaBarra = [...NAV_PRIMARIA.filter((i) => !i.barra), ...NAV_FERRAMENTAS]
 
+  // Trilha da barra do topo (§9): "Painel / Seção". Quem decide o nome da seção
+  // é o nav.ts — a barra não inventa rótulo.
+  const { pathname } = useLocation()
+  const secao = [...NAV_PRIMARIA, ...NAV_FERRAMENTAS].find((i) =>
+    i.path === '/admin' ? pathname === '/admin' : pathname.startsWith(i.path))
+
   return (
     <div className="app-shell">
-      <Sidebar aoCriar={() => setFolha('criar')} aoBuscar={() => setBusca(true)} />
+      <Sidebar aoCriar={() => setFolha('criar')} />
 
-      <header className="cabecalho-toque">
-        <Botao variante="icone" onClick={() => setFolha('menu')} aria-label="Abrir menu">
+      <header className="barra-topo">
+        <Botao variante="icone" className="barra-topo-menu" onClick={() => setFolha('menu')} aria-label="Abrir menu">
           <Icone nome="menu" />
         </Botao>
         <Marca />
-        <Botao variante="icone" onClick={() => setBusca(true)} aria-label="Buscar">
-          <Icone nome="pesquisa" />
-        </Botao>
+        <nav className="barra-topo-trilha" aria-label="Trilha">
+          <NavLink to="/admin">Painel</NavLink>
+          {secao && secao.path !== '/admin' && <><span aria-hidden>/</span><b aria-current="page">{secao.label}</b></>}
+        </nav>
+        <button type="button" className="barra-topo-busca" onClick={() => setBusca(true)}>
+          <Icone nome="pesquisa" tamanho={16} />Buscar<kbd>Ctrl K</kbd>
+        </button>
+        <div className="barra-topo-acoes">
+          <Botao variante="icone" className="barra-topo-menu" onClick={() => setBusca(true)} aria-label="Buscar">
+            <Icone nome="pesquisa" />
+          </Botao>
+          <Botao variante="fantasma" compacto onClick={sair} aria-label="Sair" className="col-desktop">
+            <Icone nome="sair" tamanho={16} />Sair
+          </Botao>
+        </div>
       </header>
 
       {/* Suspense aqui e não no main.tsx: lá em cima o fallback trocaria o

@@ -2,6 +2,30 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Migração para a spec ELOI Design System, fase 5: shell, navegação e responsivo
+
+- **Barra do topo de 64px em toda largura** (§9 Topbar): alternador do menu
+  (só no toque), trilha "Painel / Seção" (o nome vem do `nav.ts`), campo de
+  busca que abre o Ctrl K, e Sair. Buscar e Sair saem do trilho — ali fica só
+  navegação e Criar. O cabeçalho de toque de 54px deixa de existir.
+- **Trilho** (§6/§9): compacto de 72px entre 768 e 1279 e aberto em **248px só
+  a partir de 1280** — abria em 1024 com 236. Item de 40px com ícone de 20;
+  ativo = barra de 2px em Lima na altura toda + fundo Lima a 6%; hover é
+  superfície, não elevação. No modo compacto o rótulo vira tooltip à direita.
+- **Formulário longo é página, não modal** (§9): `Folha` ganha
+  `modo="pagina"` — ocupa a área de conteúdo em coluna de 720 (§6), com
+  Voltar. Serviço e Proposta usam. O que abria dentro deles (nova marca,
+  catálogo) continua modal, mas agora sobre uma página — os dois modais
+  aninhados que a spec proíbe deixam de existir. Decisão do Wilke: página
+  completa, não drawer.
+- **Modal**: até 560px, entra com opacidade + `scale(.98→1)` em
+  `--movimento-lento`/`--curva-entrada` (§8). Abaixo de 768 vira folha de
+  **altura total** (§6) — era 86dvh. Os tokens legado `--t-folha`/
+  `--curva-folha` foram embora.
+- Formulário de duas colunas só a partir de **1024** (§6) — era 768.
+- Impressão usa a superfície inversa da spec (rosa papel + tinta) em vez de
+  `#fff/#000/#ccc` literais. Seletores mortos do `@media print` removidos.
+
 ## 2026-09-04 — Migração para a spec ELOI Design System, fase 4: telas de gestão
 
 O que muda nas ~12 telas `standard` vem de três componentes e da escala

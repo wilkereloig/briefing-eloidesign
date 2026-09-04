@@ -82,10 +82,7 @@ export const movimento = {
   curvaPadrao: 'cubic-bezier(.3,0,.2,1)',
   curvaEntrada: 'cubic-bezier(.16,1,.3,1)',
   curvaSaida: 'cubic-bezier(.5,0,.75,0)',
-  curvaAssinatura: 'cubic-bezier(.72,0,.16,1)',
-  // legado: a folha (bottom sheet) ainda abre nesse tempo/curva próprios — fase 5 resolve
-  folha: 280,
-  curvaFolha: 'cubic-bezier(.32,0,.24,1)'
+  curvaAssinatura: 'cubic-bezier(.72,0,.16,1)'
 } as const;
 
 export const quebra = { celPequeno: 360, celPadrao: 390, celGrande: 430, tablet: 768, notebook: 1024, desktop: 1280, ampla: 1600 } as const;

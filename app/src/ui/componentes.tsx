@@ -182,11 +182,14 @@ export function Esqueleto({ linhas = 3, altura = 18 }: { linhas?: number; altura
   )
 }
 
-/** Folha no toque, modal centralizado no desktop — mesmo conteúdo. */
+/** Folha no toque, modal centralizado no desktop — mesmo conteúdo.
+ *  `modo="pagina"`: página completa em vez de modal (§9 — formulário com mais
+ *  de 6 campos). O que abrir por cima dela é modal sobre página, não modal
+ *  dentro de modal. */
 const FOCAVEIS = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
 
-export function Folha({ titulo, aoFechar, children, rodape }:
-  { titulo: string; aoFechar: () => void; children: ReactNode; rodape?: ReactNode }) {
+export function Folha({ titulo, aoFechar, children, rodape, modo = 'modal' }:
+  { titulo: string; aoFechar: () => void; children: ReactNode; rodape?: ReactNode; modo?: 'modal' | 'pagina' }) {
   const caixa = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -217,6 +220,20 @@ export function Folha({ titulo, aoFechar, children, rodape }:
     }
   }, [aoFechar])
 
+  if (modo === 'pagina') {
+    return (
+      <div className="veu-pagina">
+        <div className="folha-pagina" ref={caixa} role="dialog" aria-modal="true" aria-label={titulo}>
+          <header>
+            <Botao variante="icone" onClick={aoFechar} aria-label="Voltar"><Icone nome="voltar" /></Botao>
+            <h1 className="t-h1">{titulo}</h1>
+          </header>
+          {children}
+          {rodape && <div className="linha" style={{ marginTop: 'var(--espaco-06)', justifyContent: 'flex-end' }}>{rodape}</div>}
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="veu" onClick={aoFechar}>
       <div className="folha" ref={caixa} role="dialog" aria-modal="true" aria-label={titulo}

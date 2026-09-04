@@ -1,37 +1,29 @@
 import { NavLink } from 'react-router-dom'
-import { useAdmin } from '../../auth/AdminAuth'
 import { NAV_PRIMARIA, NAV_FERRAMENTAS, type ItemNav } from './nav'
-import { Botao, Icone, Marca } from '../../ui/componentes'
+import { Icone, Marca } from '../../ui/componentes'
 
 // Mesmo componente serve trilho lateral (≥768) e barra inferior (≤767): o que
 // muda é CSS, não árvore. Os itens fora da barra (data-barra ausente) somem no
 // mobile e vivem no menu em folha do Shell.
 function Item({ item, ordem }: { item: ItemNav; ordem?: number }) {
   return (
-    <NavLink to={item.path} end={item.path === '/admin'} data-barra={ordem}
+    <NavLink to={item.path} end={item.path === '/admin'} data-barra={ordem} data-label={item.label}
       className={({ isActive }) => 'trilho-item' + (isActive ? ' ativo' : '')}>
       <span className="marca-ativa" aria-hidden />
-      <Icone nome={item.icone} tamanho={18} />
+      <Icone nome={item.icone} tamanho={20} />
       <span className="rotulo-longo">{item.label}</span>
       <span className="rotulo-curto" aria-hidden>{item.label}</span>
     </NavLink>
   )
 }
 
-export function Sidebar({ aoCriar, aoBuscar }: { aoCriar: () => void; aoBuscar: () => void }) {
-  const { sair } = useAdmin()
+/** Trilho lateral (≥768) e barra inferior (≤767). Busca e Sair vivem na
+ *  barra do topo (§9 Topbar) — aqui só navegação e criação. */
+export function Sidebar({ aoCriar }: { aoCriar: () => void }) {
   const naBarra = NAV_PRIMARIA.filter((i) => i.barra)
   return (
     <aside className="trilho">
       <div className="trilho-marca"><Marca /></div>
-      {/* Antes da navegação de propósito: procurar costuma ser mais rápido que
-          escolher o módulo e filtrar lá dentro. */}
-      <button type="button" className="trilho-item trilho-busca" onClick={aoBuscar}>
-        <Icone nome="pesquisa" tamanho={18} />
-        <span className="rotulo-longo">Buscar</span>
-        <kbd className="rotulo-longo t-legenda">Ctrl K</kbd>
-        <span className="rotulo-curto" aria-hidden>Buscar</span>
-      </button>
 
       <nav aria-label="Seções">
         {NAV_PRIMARIA.map((item) => (
@@ -49,15 +41,6 @@ export function Sidebar({ aoCriar, aoBuscar }: { aoCriar: () => void; aoBuscar: 
         <Icone nome="adicionar" tamanho={22} />
         <span className="rotulo-longo">Criar</span>
       </button>
-      <div className="trilho-rodape">
-        {/* No trilho de 72 px a palavra não cabe (o botão media 80): o rótulo
-            usa a mesma regra dos itens de navegação e só volta a partir de
-            1024, quando o trilho abre para 236. */}
-        <Botao variante="fantasma" compacto onClick={sair} aria-label="Sair">
-          <Icone nome="sair" tamanho={16} />
-          <span className="rotulo-longo">Sair</span>
-        </Botao>
-      </div>
     </aside>
   )
 }

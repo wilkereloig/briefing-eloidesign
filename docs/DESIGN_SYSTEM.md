@@ -11,8 +11,7 @@ espaçamento, card ou padrão, procure aqui: quase sempre já existe.
 ## Migração para a spec nova — status
 
 Trabalho em 6 fases (auditoria completa: 12 agentes, 148 gaps, ver
-`CHANGELOG.md` 2026-09-04). Fases 1 a 4 concluídas — 5 e 6 ainda usam
-padrões antigos até chegar a vez de cada uma.
+`CHANGELOG.md` 2026-09-04). Fases 1 a 5 concluídas — só a 6 (ícones e acessibilidade fina) resta.
 
 | Fase | Objetivo | Status |
 |---|---|---|
@@ -20,7 +19,7 @@ padrões antigos até chegar a vez de cada uma.
 | 2. Componentes core | Botão, Campo, Card, Chip nos estados/anatomia da spec | ✅ |
 | 3. Tabela densa (financeiro) | `data-density="dense"` em Dinheiro/Notas/Relatórios/FolhasExtrato | ✅ |
 | 4. Telas de gestão (standard) | Vazio/Chip/Erro corrigidos nas ~12 telas restantes | ✅ |
-| 5. Shell, navegação, responsivo | Topbar, breakpoint da sidebar, modal aninhado→página | Pendente |
+| 5. Shell, navegação, responsivo | Topbar, breakpoint da sidebar, modal aninhado→página | ✅ |
 | 6. Ícones e acessibilidade fina | Famílias de ícone faltando, `:focus-visible`, pisos de fonte | Pendente |
 
 Decisões já batidas (não reabrir sem motivo novo): nomenclatura de token em
@@ -127,8 +126,13 @@ direto num componente, só pelo token semântico que aponta pra ela
 `.tsx`/`.css` fora desses dois arquivos é sobra de antes da Fase 1 — corrija
 para o nome novo, não recrie o antigo.
 
-Alguns tokens ficam **legado, valor mantido, papel ainda não separado por
-consumidor**: `--raio-chip` (8px, usado por chip/avatar/botão-ícone/skeleton/
-busca ao mesmo tempo) e `--t-folha`/`--curva-folha` (tempo/curva próprios da
-folha/drawer). Fase 2 e Fase 5 resolvem cada um — não usar esses dois em
-código novo.
+Um token fica **legado, valor mantido**: `--raio-chip` (8px) — ainda usado por
+avatar, botão-ícone, skeleton e kbd da busca. Não usar em código novo; o chip
+de estado já é pílula (`--raio-etiqueta`).
+
+## Folha: modal ou página
+
+`<Folha>` é modal (≤560px no desktop, altura total no toque) por padrão.
+`modo="pagina"` é para formulário com mais de 6 campos (§9): ocupa a área de
+conteúdo em coluna de 720, com Voltar. Serviço e Proposta usam. Modal dentro
+de modal é proibido — se uma folha precisa abrir outra, a de fora é página.
