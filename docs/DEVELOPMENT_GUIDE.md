@@ -31,7 +31,7 @@ Ou, da raiz, tudo de uma vez: `npm run verify`.
 ## Adicionar uma tela ao painel
 
 1. `app/src/routes/admin/telas/MinhaTela.tsx` — copie a tela mais parecida.
-2. Rota lazy em `app/src/main.tsx`.
+2. Rota lazy em `app/src/router.tsx`.
 3. Destino em `app/src/routes/admin/nav.ts` (**fonte única** — não hardcode em
    lugar nenhum). Máximo 7 na primária; 4 na barra do celular.
 4. Ícone: id do sprite `app/public/eloi-icons.svg` sem o prefixo `eloi-`.

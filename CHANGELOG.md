@@ -25,6 +25,15 @@ número ficava preso na tela.
   `lib/exportar.ts` + `montarCsv` testado.
 - **Imprimir**: `@media print` esconde navegação e botões.
 
+## 2026-09-04 — Dev: painel não quebra mais depois de hot-reload
+
+Em desenvolvimento, depois de editar arquivo, recarregar a página dava
+"Unexpected Application Error — removeChild". Causa: `main.tsx` tinha
+componentes, o plugin React do Vite o embrulhava para hot-reload com um
+auto-import e, após uma invalidação, o módulo rodava duas vezes —
+`createRoot` duplicado. Rotas e componentes foram para `router.tsx`;
+`main.tsx` só monta. Produção nunca foi afetada (não há HMR no build).
+
 ## 2026-09-04 — Notas fiscais: "anexar", não "emitir"
 
 O painel nunca emitiu nota — ela nasce na prefeitura e entra aqui como número

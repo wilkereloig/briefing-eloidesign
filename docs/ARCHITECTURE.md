@@ -64,7 +64,8 @@ estáticos, de propósito: enquanto os dois convivem, um login só serve para tu
 ## Camadas do painel (`app/src/`)
 
 ```
-main.tsx            rotas (createBrowserRouter) + lazy de cada tela
+main.tsx            só a montagem (createRoot)
+router.tsx          rotas (createBrowserRouter) + lazy de cada tela
 auth/               tela de acesso e contexto de sessão
 routes/admin/
   Shell.tsx         moldura: trilho, cabeçalho, Suspense

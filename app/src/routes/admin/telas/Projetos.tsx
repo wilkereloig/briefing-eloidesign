@@ -271,7 +271,7 @@ export default function Projetos() {
               </div>
 
               <p className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>
-                {filtrados.length} de {projetos.length} projetos · {rotuloMes(mes)}
+                {`${filtrados.length} de ${projetos.length} projetos · ${rotuloMes(mes)}`}
               </p>
             </Painel>
 
