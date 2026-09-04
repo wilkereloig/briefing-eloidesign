@@ -76,10 +76,9 @@ export default function Projetos() {
   const [clienteFiltro, setClienteFiltro] = useState('')
   const [marcaFiltro, setMarcaFiltro] = useState('')
   const [pendencia, setPendencia] = useState<Pendencia | null>(null)
-  // O mês NÃO corta a lista por padrão: 43 dos 59 serviços têm competência de
-  // meses anteriores, e cortar por mês escondia o trabalho inteiro. O `mes` do
-  // store continua intocado — Dinheiro, Notas, Calendário e Relatórios leem ele.
-  const [filtrarPorMes, setFiltrarPorMes] = useState(false)
+  // Mesmo `mes` do store que Dinheiro, Notas e Calendário usam: a tela abre
+  // no mês atual e o seletor do cabeçalho anda. Quem não tem mês (orçamento
+  // em aberto, serviço sem data) aparece sempre, numa seção própria.
   const [busca, setBusca] = useState('')
   const [folha, setFolha] = useState<{ s?: ServicoRow } | null>(null)
   useAbrirNovo(() => setFolha({}))
@@ -151,7 +150,7 @@ export default function Projetos() {
       // Orçamento sem serviço (sem mês) nunca some no filtro de mês — só
       // existe data depois que o orçamento é aprovado.
       const m = mesDoProjeto(p)
-      if (filtrarPorMes && m && m !== mes) return false
+      if (m && m !== mes) return false
       if (etapa !== 'todos' && p.etapa !== etapa) return false
       if (clienteFiltro && p.clienteId !== clienteFiltro) return false
       if (marcaFiltro && p.servico?.sub_cliente_id !== marcaFiltro) return false
@@ -162,7 +161,7 @@ export default function Projetos() {
       return p.titulo.toLowerCase().includes(q) || cliente.toLowerCase().includes(q)
         || marca.toLowerCase().includes(q)
     })
-  }, [projetos, etapa, clienteFiltro, marcaFiltro, pendencia, filtrarPorMes, busca, nomes, mes])
+  }, [projetos, etapa, clienteFiltro, marcaFiltro, pendencia, busca, nomes, mes])
 
   // Três níveis: mês → cliente → marca. Mês mais recente primeiro; o que
   // não tem mês (orçamento em aberto, serviço sem data) fica por último em
@@ -188,12 +187,13 @@ export default function Projetos() {
   const marcasDoFiltro = subClientes.filter((m) => !clienteFiltro || m.cliente_id === clienteFiltro)
   const limparFiltros = () => {
     setEtapa('todos'); setBusca(''); setClienteFiltro(''); setMarcaFiltro('')
-    setPendencia(null); setFiltrarPorMes(false)
+    setPendencia(null)
   }
 
   return (
     <div className="tela pilha">
       <Cabecalho secao="Operação" titulo="Projetos e serviços">
+        <SeletorMes />
         <Botao variante="primario" onClick={() => setFolha({})}>
           <Icone nome="adicionar" tamanho={16} />Novo serviço
         </Botao>
@@ -259,15 +259,6 @@ export default function Projetos() {
                 ))}
               </div>
 
-              <div className="linha" style={{ marginTop: 'var(--e-4)', flexWrap: 'wrap' }}>
-                <label className="linha t-legenda" style={{ gap: 'var(--e-2)', minHeight: 44 }}>
-                  <input type="checkbox" checked={filtrarPorMes}
-                    onChange={(e) => setFiltrarPorMes(e.target.checked)} />
-                  Mostrar só o mês selecionado
-                </label>
-                {filtrarPorMes && <SeletorMes />}
-              </div>
-
               <div className="busca" style={{ marginTop: 'var(--e-4)' }}>
                 <Icone nome="pesquisa" tamanho={17} />
                 <input className="campo-caixa" value={busca} onChange={(e) => setBusca(e.target.value)}
@@ -280,13 +271,13 @@ export default function Projetos() {
               </div>
 
               <p className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>
-                {filtrados.length} de {projetos.length} projetos
+                {filtrados.length} de {projetos.length} projetos · {rotuloMes(mes)}
               </p>
             </Painel>
 
             {meses.length === 0 ? (
-              <Vazio icone="pesquisa" titulo="Nenhum projeto nesse filtro"
-                instrucao="Ajuste cliente, marca ou etapa — ou desligue o filtro de mês."
+              <Vazio icone="pesquisa" titulo={`Nenhum projeto em ${rotuloMes(mes)}`}
+                instrucao="Troque o mês no cabeçalho ou ajuste cliente, marca e etapa."
                 acao={<Botao onClick={limparFiltros}>Limpar filtros</Botao>} />
             ) : meses.map((m) => (
               <section key={m.mes} className="pilha" aria-label={m.rotulo}>
