@@ -1,32 +1,109 @@
 import { useMemo, useState } from 'react'
 import { financas } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
+import { baixarCsv } from '../../../lib/exportar'
 import { deslocarMes, hojeISO, useFinancas, useNomes } from '../../../lib/financas-store'
 import {
   agrupar, consumoOrcamento, previsaoCaixa, resultado, valorLiquidado,
 } from '../../../domain/financeiro'
+import {
+  aging, aplicarFiltro, porCliente, reaisCsv, resumoFiscal, resumoProjetos, type Filtro,
+} from '../../../domain/relatorios'
+import { juntarProjetos } from '../../../domain/projeto'
 import type { Contexto, Meta } from '../../../lib/tipos'
 import {
   Aviso, Botao, Campo, Etiqueta, Folha, Icone, Indicador, Painel, Pilula, Progresso, Vazio,
 } from '../../../ui/componentes'
 import { Cabecalho, Carga, Dinheiro, SeletorLente } from '../../../ui/painel'
 
-type Aba = 'resultado' | 'clientes' | 'categorias' | 'previsao' | 'metas'
+type Aba = 'resultado' | 'clientes' | 'projetos' | 'recebiveis' | 'fiscal' | 'categorias' | 'previsao' | 'metas'
 const ABAS: { chave: Aba; label: string }[] = [
   { chave: 'resultado', label: 'Resultado' },
-  { chave: 'clientes', label: 'Por cliente' },
+  { chave: 'clientes', label: 'Clientes' },
+  { chave: 'projetos', label: 'Projetos' },
+  { chave: 'recebiveis', label: 'Recebíveis' },
+  { chave: 'fiscal', label: 'Fiscal' },
   { chave: 'categorias', label: 'Por categoria' },
   { chave: 'previsao', label: 'Previsão' },
   { chave: 'metas', label: 'Metas e orçamentos' },
 ]
 
+const ROTULO_ETAPA = {
+  orcamento: 'Em proposta', aprovado: 'Aprovado', execucao: 'Em execução', entregue: 'Entregue', pago: 'Pago',
+} as const
+
 export default function Relatorios() {
-  const { contas, transacoes, metas, mes, contexto, recarregar } = useFinancas()
+  const {
+    contas, transacoes, metas, servicos, orcamentos, notas, clientes, subClientes, mes, contexto, recarregar,
+  } = useFinancas()
   const nomes = useNomes()
   const hoje = hojeISO()
   const [aba, setAba] = useState<Aba>('resultado')
   const [folha, setFolha] = useState<Meta | 'nova' | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
+  // Um filtro para todas as abas: período por competência, cliente, marca.
+  // A lente pessoal/empresa continua no cabeçalho, como nas outras telas.
+  const [filtro, setFiltro] = useState<Filtro>({})
+  const [porMarca, setPorMarca] = useState(false)
+  const temFiltro = !!(filtro.de || filtro.ate || filtro.clienteId || filtro.subClienteId)
+
+  const servicoMapa = useMemo(() => new Map(servicos.map((s) => [s.id, s])), [servicos])
+  // Base de todas as abas: lente + filtro. O gráfico de 12 meses ignora o
+  // período (ele É o período) mas respeita cliente e marca.
+  const base = useMemo(() => aplicarFiltro(
+    transacoes.filter((t) => !contexto || t.contexto === contexto), filtro, servicoMapa),
+    [transacoes, contexto, filtro, servicoMapa])
+  const baseSemPeriodo = useMemo(() => aplicarFiltro(
+    transacoes.filter((t) => !contexto || t.contexto === contexto),
+    { clienteId: filtro.clienteId, subClienteId: filtro.subClienteId }, servicoMapa),
+    [transacoes, contexto, filtro.clienteId, filtro.subClienteId, servicoMapa])
+  const servicosFiltrados = useMemo(() => servicos.filter((s) =>
+    (!filtro.clienteId || s.cliente_id === filtro.clienteId)
+    && (!filtro.subClienteId || s.sub_cliente_id === filtro.subClienteId)),
+    [servicos, filtro.clienteId, filtro.subClienteId])
+
+  const linhasCliente = useMemo(() => porCliente(base, servicosFiltrados, porMarca), [base, servicosFiltrados, porMarca])
+  const projetos = useMemo(() => resumoProjetos(
+    juntarProjetos(orcamentos.filter((o) => !filtro.clienteId || o.cliente_id === filtro.clienteId), servicosFiltrados), hoje),
+    [orcamentos, servicosFiltrados, filtro.clienteId, hoje])
+  const recebiveis = useMemo(() => aging(base, hoje), [base, hoje])
+  const fiscal = useMemo(() => resumoFiscal(notas, filtro), [notas, filtro])
+
+  const nomeChave = (k: string) => porMarca
+    ? nomes.subCliente.get(k)?.nome ?? 'Marca removida'
+    : nomes.cliente.get(k)?.nome ?? 'Cliente removido'
+
+  // Exportação: o que a aba mostra, em CSV com ; e vírgula decimal.
+  const exportar = () => {
+    const sufixo = filtro.de || filtro.ate ? `-${filtro.de ?? 'inicio'}-a-${filtro.ate ?? 'hoje'}` : `-${mes}`
+    if (aba === 'clientes') {
+      baixarCsv(`${porMarca ? 'marcas' : 'clientes'}${sufixo}`,
+        [porMarca ? 'Marca' : 'Cliente', 'Recebido', 'A receber', 'Projetos', 'Ticket médio'],
+        linhasCliente.map((l) => [nomeChave(l.chave), reaisCsv(l.recebido_cents), reaisCsv(l.a_receber_cents), l.projetos, reaisCsv(l.ticket_cents)]))
+    } else if (aba === 'recebiveis') {
+      const abertas = base.filter((t) => t.tipo === 'entrada' && t.status !== 'cancelado' && t.status !== 'realizado')
+      baixarCsv(`recebiveis${sufixo}`,
+        ['Vencimento', 'Descrição', 'Cliente', 'Combinado', 'Recebido', 'Restante', 'Status'],
+        abertas.map((t) => [t.data_vencimento, t.descricao, t.cliente_id ? nomes.cliente.get(t.cliente_id)?.nome : '',
+          reaisCsv(t.valor_cents), reaisCsv(t.recebido_cents), reaisCsv(t.valor_cents - t.recebido_cents), t.status]))
+    } else if (aba === 'categorias') {
+      baixarCsv(`despesas-por-categoria${sufixo}`, ['Categoria', 'Total', 'Lançamentos'],
+        porCategoria.map((f) => [nomes.categoria.get(f.chave)?.nome ?? 'Sem categoria', reaisCsv(f.total_cents), f.qtd]))
+    } else if (aba === 'fiscal') {
+      baixarCsv(`notas${sufixo}`, ['Número', 'Cliente', 'Status', 'Valor', 'Imposto', 'Emitida em', 'Competência'],
+        notas.filter((n) => !filtro.clienteId || n.cliente_id === filtro.clienteId)
+          .map((n) => [n.numero, n.cliente_id ? nomes.cliente.get(n.cliente_id)?.nome : '', n.status, reaisCsv(n.valor_cents), reaisCsv(n.imposto_cents), n.emitida_em, n.competencia]))
+    } else {
+      // Resultado, projetos e previsão: exporta os lançamentos do recorte.
+      baixarCsv(`lancamentos${sufixo}`,
+        ['Competência', 'Vencimento', 'Liquidação', 'Tipo', 'Descrição', 'Cliente', 'Categoria', 'Conta', 'Combinado', 'Liquidado', 'Status', 'Origem'],
+        base.filter((t) => t.tipo !== 'transferencia').map((t) => [
+          t.data_competencia, t.data_vencimento, t.data_liquidacao, t.tipo, t.descricao,
+          t.cliente_id ? nomes.cliente.get(t.cliente_id)?.nome : '', t.categoria_id ? nomes.categoria.get(t.categoria_id)?.nome : '',
+          t.conta_id ? nomes.conta.get(t.conta_id)?.nome : '', reaisCsv(t.valor_cents), reaisCsv(valorLiquidado(t)), t.status, t.origem,
+        ]))
+    }
+  }
 
   const encerrarMeta = async (m: Meta) => {
     try {
@@ -44,9 +121,9 @@ export default function Relatorios() {
     () => Array.from({ length: 12 }, (_, i) => deslocarMes(mes, i - 11)), [mes])
 
   const serie = useMemo(() => meses.map((m) => {
-    const r = resultado(transacoes, contexto, m)
+    const r = resultado(baseSemPeriodo, contexto, m)
     return { mes: m, ...r }
-  }), [meses, transacoes, contexto])
+  }), [meses, baseSemPeriodo, contexto])
 
   const teto = Math.max(...serie.map((s) => Math.max(s.receita_cents, s.despesa_cents)), 1)
   const totalAno = serie.reduce((acc, s) => ({
@@ -54,12 +131,7 @@ export default function Relatorios() {
     despesa: acc.despesa + s.despesa_cents,
   }), { receita: 0, despesa: 0 })
 
-  const porCliente = useMemo(
-    () => agrupar(transacoes.filter((t) => !contexto || t.contexto === contexto),
-      (t) => t.cliente_id, 'entrada'), [transacoes, contexto])
-  const porCategoria = useMemo(
-    () => agrupar(transacoes.filter((t) => !contexto || t.contexto === contexto),
-      (t) => t.categoria_id, 'saida'), [transacoes, contexto])
+  const porCategoria = useMemo(() => agrupar(base, (t) => t.categoria_id, 'saida'), [base])
 
   const cenarios = useMemo(
     () => previsaoCaixa(contas, transacoes, hoje, 90, contexto), [contas, transacoes, hoje, contexto])
@@ -70,9 +142,56 @@ export default function Relatorios() {
     <div className="tela pilha">
       <Cabecalho secao="Análise" titulo="Relatórios">
         <SeletorLente />
+        <Botao onClick={exportar} className="nao-imprime">
+          <Icone nome="baixar" tamanho={16} />CSV
+        </Botao>
+        <Botao onClick={() => window.print()} className="col-desktop nao-imprime">Imprimir</Botao>
       </Cabecalho>
 
       <Carga linhas={5}>
+        <div className="grade-filtros nao-imprime" role="group" aria-label="Filtros">
+          <div className="campo">
+            <label htmlFor="rel-de">De</label>
+            <input id="rel-de" type="date" className="campo-caixa" value={filtro.de ?? ''}
+              onChange={(e) => setFiltro({ ...filtro, de: e.target.value || undefined })} />
+          </div>
+          <div className="campo">
+            <label htmlFor="rel-ate">Até</label>
+            <input id="rel-ate" type="date" className="campo-caixa" value={filtro.ate ?? ''}
+              onChange={(e) => setFiltro({ ...filtro, ate: e.target.value || undefined })} />
+          </div>
+          <div className="campo">
+            <label htmlFor="rel-cliente">Cliente</label>
+            <select id="rel-cliente" className="campo-caixa" value={filtro.clienteId ?? ''}
+              onChange={(e) => setFiltro({ ...filtro, clienteId: e.target.value || undefined, subClienteId: undefined })}>
+              <option value="">Todos</option>
+              {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+            </select>
+          </div>
+          {filtro.clienteId && subClientes.some((m) => m.cliente_id === filtro.clienteId) && (
+            <div className="campo">
+              <label htmlFor="rel-marca">Marca</label>
+              <select id="rel-marca" className="campo-caixa" value={filtro.subClienteId ?? ''}
+                onChange={(e) => setFiltro({ ...filtro, subClienteId: e.target.value || undefined })}>
+                <option value="">Todas</option>
+                {subClientes.filter((m) => m.cliente_id === filtro.clienteId).map((m) => (
+                  <option key={m.id} value={m.id}>{m.nome}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+        {temFiltro && (
+          <p className="t-legenda">
+            Recorte ativo: {[
+              filtro.de || filtro.ate ? `${filtro.de ?? 'início'} → ${filtro.ate ?? 'hoje'}` : null,
+              filtro.clienteId ? nomes.cliente.get(filtro.clienteId)?.nome : null,
+              filtro.subClienteId ? nomes.subCliente.get(filtro.subClienteId)?.nome : null,
+            ].filter(Boolean).join(' · ')}.{' '}
+            <button type="button" className="btn-texto t-legenda" onClick={() => setFiltro({})}>Limpar</button>
+          </p>
+        )}
+
         <div className="abas" role="tablist" aria-label="Relatórios">
           {ABAS.map((a) => (
             <Pilula key={a.chave} ativa={aba === a.chave} role="tab" aria-selected={aba === a.chave}
@@ -92,7 +211,7 @@ export default function Relatorios() {
                   ? `Margem de ${(((totalAno.receita - totalAno.despesa) / totalAno.receita) * 100).toFixed(0)}%`
                   : 'Sem receita no período'} />
               <Indicador rotulo="Ticket médio"
-                valor={fmtBRL(ticketMedio(transacoes.filter((t) => !contexto || t.contexto === contexto)))}
+                valor={fmtBRL(ticketMedio(base))}
                 nota="Por recebimento liquidado" />
             </div>
 
@@ -126,16 +245,105 @@ export default function Relatorios() {
         )}
 
         {aba === 'clientes' && (
-          <Painel titulo="Faturamento por cliente"
-            acao={<span className="t-legenda">{porCliente.length} clientes</span>}>
-            {porCliente.length === 0
-              ? <Vazio icone="cliente" titulo="Nenhuma receita por cliente"
-                instrucao="Vincule os recebimentos a clientes para ver o ranking." />
-              : <Ranking itens={porCliente.map((f) => ({
-                chave: nomes.cliente.get(f.chave)?.nome ?? 'Cliente removido',
-                total: f.total_cents, qtd: f.qtd,
-              }))} />}
+          <Painel titulo={porMarca ? 'Por marca' : 'Por cliente'}
+            acao={<span className="linha" style={{ gap: 'var(--e-2)' }}>
+              <Pilula ativa={!porMarca} onClick={() => setPorMarca(false)}>Cliente</Pilula>
+              <Pilula ativa={porMarca} onClick={() => setPorMarca(true)}>Marca</Pilula>
+            </span>}>
+            {linhasCliente.length === 0
+              ? <Vazio icone="cliente" titulo={temFiltro ? 'Nada neste recorte' : 'Nenhuma receita por cliente'}
+                instrucao={temFiltro ? 'Ajuste o período ou o cliente.' : 'Vincule os recebimentos a clientes para ver o ranking.'} />
+              : <div className="rolagem-x">
+                <table className="tabela">
+                  <thead>
+                    <tr><th>{porMarca ? 'Marca' : 'Cliente'}</th><th>Recebido</th><th>A receber</th><th>Projetos</th><th>Ticket</th></tr>
+                  </thead>
+                  <tbody>
+                    {linhasCliente.map((l) => (
+                      <tr key={l.chave}>
+                        <td className="t-ui">{nomeChave(l.chave)}</td>
+                        <td className="dinheiro">{fmtBRL(l.recebido_cents)}</td>
+                        <td className="dinheiro">{l.a_receber_cents ? fmtBRL(l.a_receber_cents) : '—'}</td>
+                        <td>{l.projetos}</td>
+                        <td className="dinheiro">{l.ticket_cents ? fmtBRL(l.ticket_cents) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>}
           </Painel>
+        )}
+
+        {aba === 'projetos' && (
+          <>
+            <div className="grade-indicadores">
+              <Indicador dominante rotulo="Em execução" valor={fmtBRL(projetos.em_execucao_cents)}
+                nota="Aprovado + em andamento" />
+              <Indicador rotulo="Entregues" valor={String(projetos.entregues)} nota="Entregue ou pago" />
+              <Indicador rotulo="Atrasados" valor={String(projetos.atrasados)}
+                cor={projetos.atrasados ? 'coral' : undefined} nota="Prazo combinado passou" />
+              <Indicador rotulo="Em proposta"
+                valor={String(projetos.porEtapa.find((e) => e.etapa === 'orcamento')?.qtd ?? 0)}
+                nota="Pode virar trabalho" />
+            </div>
+            <Painel titulo="Projetos por etapa">
+              <ul className="lista">
+                {projetos.porEtapa.map((e) => (
+                  <li key={e.etapa} className="lista-item">
+                    <span className="celula">
+                      <span className="t-ui">{ROTULO_ETAPA[e.etapa]}</span>
+                      <span className="t-legenda">{e.qtd} {e.qtd === 1 ? 'projeto' : 'projetos'}</span>
+                    </span>
+                    <Dinheiro cents={e.cents} className="t-valor" />
+                  </li>
+                ))}
+              </ul>
+            </Painel>
+          </>
+        )}
+
+        {aba === 'recebiveis' && (
+          <>
+            <div className="grade-indicadores">
+              <Indicador dominante rotulo="Vencido" valor={fmtBRL(recebiveis.vencido_cents)}
+                cor={recebiveis.vencido_cents ? 'coral' : undefined}
+                nota={`${recebiveis.faixas.reduce((s, f) => s + f.qtd, 0)} em atraso`} />
+              {recebiveis.proximos.map((p) => (
+                <Indicador key={p.dias} rotulo={`Próximos ${p.dias} dias`} valor={fmtBRL(p.cents)}
+                  nota={`${p.qtd} a vencer`} />
+              ))}
+            </div>
+            <Painel titulo="Atraso por faixa">
+              <ul className="lista">
+                {recebiveis.faixas.map((f) => (
+                  <li key={f.faixa} className="lista-item">
+                    <span className="celula">
+                      <span className="t-ui">{f.faixa} dias</span>
+                      <span className="t-legenda">{f.qtd} {f.qtd === 1 ? 'lançamento' : 'lançamentos'}</span>
+                    </span>
+                    <Dinheiro cents={f.cents} className="t-valor" />
+                  </li>
+                ))}
+              </ul>
+              <p className="t-legenda" style={{ marginTop: 'var(--e-5)' }}>
+                Quanto mais velho o atraso, menor a chance de entrar — a previsão de caixa usa essa lógica.
+              </p>
+            </Painel>
+          </>
+        )}
+
+        {aba === 'fiscal' && (
+          <div className="grade-indicadores">
+            <Indicador dominante rotulo="Emitido" valor={fmtBRL(fiscal.emitido_cents)}
+              nota={`${fiscal.emitidas} ${fiscal.emitidas === 1 ? 'nota' : 'notas'}`} />
+            <Indicador rotulo="Imposto estimado" valor={fmtBRL(fiscal.imposto_cents)}
+              nota="Soma do informado em cada nota" />
+            <Indicador rotulo="Pendentes" valor={String(fiscal.pendentes)}
+              cor={fiscal.pendentes ? 'coral' : undefined} nota={fmtBRL(fiscal.pendente_cents)} />
+            <Indicador rotulo="Serviços sem nota"
+              valor={String(servicosFiltrados.filter((sv) => sv.status_execucao === 'concluida' && !sv.nota_fiscal_id).length)}
+              nota="Concluídos sem NF vinculada" />
+          </div>
         )}
 
         {aba === 'categorias' && (

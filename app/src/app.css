@@ -219,6 +219,13 @@ a:hover{color:var(--texto)}
 
 .carregando{padding:var(--e-11);color:var(--texto-3)}
 .tela{min-width:0}
+@media print{
+  .trilho,.cabecalho-toque,.barra-inferior,.nao-imprime,.btn,.veu{display:none!important}
+  .app-shell{display:block}
+  .app-main{padding:0}
+  body{background:#fff;color:#000}
+  .painel,.card{break-inside:avoid;border:1px solid #ccc}
+}
 
 /* ── faixas (RESPONSIVE_GUIDELINES) ─────────────────────────────────────── */
 @media (min-width:360px){ :root{--margem:var(--e-7)} }

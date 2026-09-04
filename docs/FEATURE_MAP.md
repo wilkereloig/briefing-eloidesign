@@ -124,13 +124,15 @@ Atualizado: 2026-08-07.
 - **Portal (2026-09-03):** o cliente baixa o PDF pela nota vinculada ao serviço dele (`nota_fiscal_id` → `arquivo_path`). A coluna antiga `eloi_servicos.nf_arquivo_url` está nula em toda linha e não é mais lida.
 
 ### Relatórios
-- **Objetivo:** resultado de 12 meses, ranking, previsão e metas.
-- **Estado:** Funcional com ajustes
-- **Tela:** `telas/Relatorios.tsx`
+- **Objetivo:** responder "quem fatura, onde ganho, o que está atrasado, qual a previsão" — e levar o número para fora.
+- **Estado:** Concluído
+- **Tela:** `telas/Relatorios.tsx` · domínio `domain/relatorios.ts` (testado)
+- **Abas:** Resultado (12 meses) · Clientes / Marcas · Projetos · Recebíveis (aging) · Fiscal · Por categoria · Previsão · Metas
+- **Recorte:** período por competência, cliente, marca (`aplicarFiltro`) + lente pessoal/empresa
+- **Saída:** CSV por aba (`lib/exportar.ts`, `montarCsv`) e impressão (`@media print`)
 - **Endpoints:** `eloi-financas` (`metas.*`)
-- **Tabelas:** `eloi_metas`, `eloi_transacoes`
+- **Tabelas:** `eloi_metas`, `eloi_transacoes`, `eloi_servicos`, `eloi_notas_fiscais`
 - **Permissão:** admin
-- **Pendência:** **sem exportação nem impressão**
 
 ### Calendário
 - **Objetivo:** ver o mês inteiro — dinheiro, tarefa, entrega, recorrência — e agir dali.

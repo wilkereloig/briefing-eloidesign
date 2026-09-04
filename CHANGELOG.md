@@ -2,6 +2,29 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Relatórios com recorte, recebíveis, projetos, fiscal e exportação
+
+Relatórios não tinham filtro além da lente pessoal/empresa, nem saída: o
+número ficava preso na tela.
+
+### Adicionado
+
+- **Recorte** único para todas as abas: período (por competência), cliente
+  e marca. `domain/relatorios.ts` (`aplicarFiltro`). O gráfico de 12 meses
+  respeita cliente/marca e ignora o período — ele é o período.
+- **Clientes**: recebido · a receber · projetos · ticket médio, por cliente
+  ou por marca (`porCliente`). Tabela, não ranking.
+- **Projetos**: valor em execução, entregues, atrasados (prazo passou),
+  em proposta; quantidade e valor por etapa (`resumoProjetos`).
+- **Recebíveis**: vencido por faixa (1–30 · 31–60 · 61–90 · 90+) e a
+  vencer em 30/60/90 dias (`aging`).
+- **Fiscal**: emitido, imposto estimado, pendentes, serviços concluídos
+  sem nota (`resumoFiscal`).
+- **CSV** em toda aba (`;`, vírgula decimal, BOM — Excel pt-BR abre
+  direto): a tabela da aba, ou os lançamentos do recorte.
+  `lib/exportar.ts` + `montarCsv` testado.
+- **Imprimir**: `@media print` esconde navegação e botões.
+
 ## 2026-09-04 — Calendário integrado
 
 O calendário só mostrava vencimentos de transação. Tarefa, prazo de
