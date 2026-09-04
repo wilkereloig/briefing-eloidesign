@@ -17,7 +17,7 @@ padrões antigos em componentes/telas até chegar a vez de cada uma.
 | Fase | Objetivo | Status |
 |---|---|---|
 | 1. Fundação de tokens | `tokens.css`/`.ts` na nomenclatura e escala novas | ✅ |
-| 2. Componentes core | Botão, Campo, Card, Chip nos estados/anatomia da spec | Pendente |
+| 2. Componentes core | Botão, Campo, Card, Chip nos estados/anatomia da spec | ✅ |
 | 3. Tabela densa (financeiro) | `data-density="dense"` em Dinheiro/Notas/Relatórios/FolhasExtrato | Pendente |
 | 4. Telas de gestão (standard) | Vazio/Chip/Erro corrigidos nas ~12 telas restantes | Pendente |
 | 5. Shell, navegação, responsivo | Topbar, breakpoint da sidebar, modal aninhado→página | Pendente |
@@ -40,6 +40,7 @@ marca, decisão explícita do Wilke.
 | Tokens CSS (cor, tipo, espaço, forma, camada, movimento) | `app/src/ui/tokens.css` | `eloi-handoff/design-tokens/variables.css` |
 | Tokens em TypeScript | `app/src/ui/tokens.ts` | `eloi-handoff/design-tokens/tokens.ts` |
 | Primitivos (Botão, Campo, Chip, Ícone, Folha, Marca, Aviso) | `app/src/ui/componentes.tsx` + `.css` | — |
+| Cor e ícone de cada estado de chip | `app/src/ui/tokens.ts` (`chip`, `chipIcone`) | `eloi-handoff/design-tokens/tokens.ts` |
 | Blocos de painel (Bloco, Indicador, ListaItem, Esqueleto, Vazio) | `app/src/ui/painel.tsx` | — |
 | Formatação de rótulo | `app/src/ui/formato.ts` | — |
 | Layout do shell, trilho, cabeçalho, acesso | `app/src/app.css` | — |
@@ -102,9 +103,17 @@ download depois do CSS; `<link>` baixa em paralelo.
 ## Acessibilidade embutida nos tokens
 
 `:focus-visible` com contorno Lima de 2 px e `prefers-reduced-motion` que zera
-animação e transição já estão em `tokens.css` — valem para o app inteiro sem
-ninguém precisar lembrar. Só a raiz: botão, campo, card e chip ainda não têm
-`:focus-visible` próprio em `componentes.css` — isso é Fase 2.
+animação e transição estão em `tokens.css` — valem para o app inteiro sem
+ninguém precisar lembrar, e é por isso que nenhum componente redefine foco.
+Se um componente precisar suprimir esse contorno, precisa colocar outro no
+lugar: `outline:none` sozinho não passa.
+
+## Variantes de botão
+
+`primario` (Roxo) · `destaque` (Lima, a ação principal da tela) · `secundario`
+(contorno) · `terciario` (opaco, com borda) · `fantasma` (sem fundo nem borda)
+· `destrutivo` · `icone`. Uma ação primária por tela; duas ações lado a lado
+põem a primária à direita.
 
 ## Nomenclatura de token (fase 1)
 

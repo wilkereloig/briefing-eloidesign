@@ -54,12 +54,15 @@
   --cor-texto-acento: var(--lima);
   --cor-texto-inverso: var(--tinta);        /* sobre rosa/lima/lilás */
   --cor-texto-sobre-acento: #FFFFFF;        /* único uso do branco puro */
+  --cor-texto-sobre-acento-2: rgba(255, 255, 255, .72); /* apoio sobre Roxo */
 
   /* ========== ACENTO ========== */
   --cor-acento-primario: var(--roxo);
   --cor-acento-primario-hover: var(--roxo-hover);
   --cor-acento-primario-pressionado: var(--roxo-press);
   --cor-acento-sinal: var(--lima); /* ver seção 3 — no máx. um Lima por bloco */
+  --cor-acento-sinal-hover: #C9E005;
+  --cor-acento-sinal-pressionado: #B4C904;
   --cor-acento-suave: var(--lilas);
 
   /* acento da interface — trocável por peça, Lima por padrão */

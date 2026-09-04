@@ -9,7 +9,7 @@
   stroke-linejoin:miter;stroke-linecap:square;
 }
 /* sobre fundo Lima o ponto de sinal sumiria — vira a cor do próprio texto */
-.btn-destaque .eloi-icon,.pilula.ativa .eloi-icon,.aviso .eloi-icon,
+.btn-destaque .eloi-icon,.aviso .eloi-icon,
 .chip .eloi-icon{--eloi-signal:currentColor}
 
 /* ── Botao ──────────────────────────────────────────────────────────────── */
@@ -19,25 +19,38 @@
   border-radius:var(--raio-controle);font-size:14px;font-weight:600;line-height:1.2;
   cursor:pointer;background:none;
   transition:background var(--movimento-rapido) var(--curva-padrao),border-color var(--movimento-rapido) var(--curva-padrao),
-    color var(--movimento-rapido) var(--curva-padrao);
+    color var(--movimento-rapido) var(--curva-padrao),transform var(--movimento-rapido) var(--curva-padrao);
 }
-.btn-primario{background:var(--roxo);color:#FFF}
-.btn-primario:hover{background:var(--roxo-hover)}
-.btn-primario:active{background:var(--roxo-press)}
-.btn-destaque{background:var(--acento);color:var(--acento-texto)}
+.btn:active{transform:scale(.97)}
+.btn-primario{background:var(--cor-acento-primario);color:var(--cor-texto-sobre-acento)}
+.btn-primario:hover{background:var(--cor-acento-primario-hover)}
+.btn-primario:active{background:var(--cor-acento-primario-pressionado)}
+.btn-destaque{background:var(--cor-acento-sinal);color:var(--cor-texto-inverso)}
+.btn-destaque:hover{background:var(--cor-acento-sinal-hover)}
+.btn-destaque:active{background:var(--cor-acento-sinal-pressionado)}
 .btn-secundario{border-color:var(--cor-borda-forte);color:var(--cor-texto-primario)}
-.btn-secundario:hover{border-color:var(--acento);color:var(--acento)}
-.btn-secundario:active{transform:translateY(1px)}
-.btn-terciario{color:var(--cor-texto-secundario)}
-.btn-terciario:hover{color:var(--cor-texto-primario)}
-.btn-destrutivo{color:var(--coral);border-color:rgba(253,68,0,.5)}
-.btn-destrutivo:hover{background:rgba(253,68,0,.12)}
-.btn-icone{width:var(--alvo-toque);height:var(--alvo-toque);padding:0;background:var(--cor-fundo-elevado);color:var(--cor-texto-primario)}
-.btn-icone:hover{background:var(--cor-superficie-hover)}
+.btn-secundario:hover{border-color:var(--cor-acento-sinal);color:var(--cor-acento-sinal)}
+.btn-secundario:active{background:var(--cor-superficie-hover)}
+/* terciario e opaco e tem borda; fantasma nao tem nem fundo nem borda. Eram a
+   mesma coisa ate a fase 2 — o que existia com nome de terciario era fantasma. */
+.btn-terciario{background:var(--cor-superficie-padrao);border-color:var(--cor-borda-padrao);
+  color:var(--cor-texto-primario)}
+.btn-terciario:hover{background:var(--cor-superficie-hover)}
+.btn-terciario:active{background:var(--cor-superficie-elevada)}
+.btn-fantasma{color:var(--cor-texto-secundario)}
+.btn-fantasma:hover{background:var(--cor-superficie-hover);color:var(--cor-texto-primario)}
+.btn-fantasma:active{background:var(--cor-superficie-elevada)}
+.btn-destrutivo{color:var(--cor-feedback-erro);border-color:rgba(253,68,0,.4)}
+.btn-destrutivo:hover{background:rgba(253,68,0,.10)}
+.btn-destrutivo:active{background:rgba(253,68,0,.18)}
+.btn-icone{width:var(--alvo-toque);height:var(--alvo-toque);padding:0;color:var(--cor-texto-secundario)}
+.btn-icone:hover{background:var(--cor-superficie-hover);color:var(--cor-texto-primario)}
+.btn-icone:active{background:var(--cor-superficie-elevada)}
 .btn-compacto{min-height:36px;padding:8px 14px}
-.btn:disabled{background:rgba(253,213,211,.08);color:var(--cor-texto-fraco-35);border-color:transparent;cursor:default}
+.btn:disabled,.btn:disabled:hover{background:var(--cor-superficie-desabilitada);
+  color:var(--cor-texto-fraco);border-color:transparent;cursor:default;transform:none}
 .btn[data-carregando='true']{pointer-events:none}
-@media (min-width:768px){ .btn-icone{width:36px;height:36px} }
+@media (min-width:768px){ .btn-icone{width:40px;height:40px} }
 
 /* três quadrados de 4 px pulsando — carregando de botão */
 .btn-pulso{display:inline-flex;gap:3px}
@@ -47,8 +60,11 @@
 @keyframes pulso{0%,100%{opacity:.35}50%{opacity:.7}}
 
 /* ── Chip de estado ─────────────────────────────────────────────────────── */
-.chip{display:inline-flex;align-items:center;gap:var(--espaco-02);padding:5px 9px;
-  border-radius:var(--raio-chip);font-size:11px;font-weight:600;line-height:1.2;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:var(--espaco-01);padding:7px 14px;
+  border-radius:var(--raio-etiqueta);font-size:12px;font-weight:600;line-height:1.2;white-space:nowrap}
+/* Coral como texto so a partir de 24px (secao 14): no chip de atraso quem carrega
+   a cor e o icone, e o texto fica em rosa para continuar legivel em 12px. */
+.chip[data-estado='atrasado'] .eloi-icon{color:var(--cor-feedback-erro)}
 
 /* pílula de aba / filtro */
 .pilula{display:inline-flex;align-items:center;justify-content:center;
@@ -56,7 +72,10 @@
   border:1px solid var(--cor-borda-forte);background:none;color:var(--cor-texto-secundario);
   font-size:13px;font-weight:700;cursor:pointer;
   transition:background var(--movimento-rapido) var(--curva-padrao),color var(--movimento-rapido) var(--curva-padrao)}
-.pilula.ativa{background:var(--acento);color:var(--acento-texto);border-color:transparent}
+/* secao 3: o preenchimento solido de selecao e Roxo, nunca Lima — Lima so como
+   barra de 2px de estado ativo, ponto de sinal ou contorno de foco. */
+.pilula.ativa{background:var(--cor-superficie-selecionada);color:var(--cor-texto-primario);
+  border-color:var(--cor-acento-primario)}
 
 /* ── Campo ──────────────────────────────────────────────────────────────── */
 .campo{display:flex;flex-direction:column;gap:7px}
@@ -67,8 +86,11 @@
   border:1px solid var(--cor-borda-padrao);border-radius:var(--raio-controle);
   transition:border-color var(--movimento-rapido) var(--curva-padrao)}
 .campo-caixa::placeholder{color:var(--cor-texto-fraco-35)}
-.campo-caixa:focus{border-color:var(--roxo-claro)}
-.campo-caixa:disabled{background:rgba(253,213,211,.08);color:var(--cor-texto-fraco-35)}
+.campo-caixa:hover{border-color:var(--cor-borda-ativa)}
+.campo-caixa:focus{border-color:var(--cor-borda-ativa)}
+.campo-caixa:disabled,.campo-caixa:disabled:hover{background:var(--cor-superficie-desabilitada);
+  color:var(--cor-texto-fraco);border-color:var(--cor-borda-sutil)}
+.campo-caixa[readonly]{background:transparent;border-color:transparent;color:var(--cor-texto-primario)}
 textarea.campo-caixa{min-height:120px;resize:vertical;line-height:1.5}
 /* select: chevron próprio em Lima, sem a seta do sistema */
 select.campo-caixa{appearance:none;padding-right:38px;cursor:pointer;
@@ -87,17 +109,25 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   border-left:2px solid var(--tinta);border-bottom:2px solid var(--tinta);
   transform:rotate(-45deg) translate(1px,-1px)}
 
-.campo[data-erro='true'] .campo-caixa{border-color:var(--coral)}
-.campo-erro{font-size:13px;font-weight:600;color:var(--coral)}
+.campo[data-erro='true'] .campo-caixa{border-color:var(--cor-feedback-erro)}
+.campo[data-sucesso='true'] .campo-caixa{border-color:var(--cor-feedback-sucesso)}
+/* erro sempre com icone — texto em rosa porque Coral como texto so a partir de 24px */
+.campo-erro{display:flex;align-items:center;gap:var(--espaco-01);
+  font-size:13px;font-weight:600;color:var(--cor-texto-primario)}
+.campo-erro .eloi-icon{color:var(--cor-feedback-erro)}
 .folha .campo-caixa{background:var(--cor-fundo-primario)}
 @media (min-width:768px){ .campo-caixa{min-height:var(--alvo-toque)} }
 
 /* ── Card e Painel ──────────────────────────────────────────────────────── */
-.card{background:var(--cor-fundo-elevado);border-radius:var(--raio-painel);padding:var(--padding-card)}
-.card-hover{transition:background var(--movimento-rapido) var(--curva-padrao);cursor:pointer}
-.card-hover:hover{background:var(--cor-superficie-hover)}
-.card-dominante{background:var(--roxo);color:#FFF}
-.card-dominante .etiqueta-mini{color:rgba(255,255,255,.72)}
+.card{background:var(--cor-superficie-padrao);border:1px solid var(--cor-borda-padrao);
+  border-radius:var(--raio-cartao);padding:var(--preenchimento-cartao)}
+.card-hover{cursor:pointer;transition:background var(--movimento-padrao) var(--curva-padrao),
+  transform var(--movimento-padrao) var(--curva-padrao)}
+.card-hover:hover{background:var(--cor-superficie-hover);
+  transform:translateY(calc(var(--deslocamento-pequeno) * -1))}
+.card-dominante{background:var(--cor-acento-primario);color:var(--cor-texto-sobre-acento);
+  border-color:transparent}
+.card-dominante .etiqueta-mini{color:var(--cor-texto-sobre-acento-2)}
 
 .indicador{display:flex;flex-direction:column;min-height:150px}
 .indicador .valor{margin-top:auto;padding-top:var(--espaco-03)}
@@ -142,9 +172,9 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   border-radius:var(--raio-painel);color:var(--cor-texto-fraco)}
 .vazio svg{color:var(--cor-texto-fraco)}
 .painel-erro{border-color:var(--coral)}
-.esqueleto{background:rgba(253,213,211,.14);border-radius:var(--raio-chip);
-  animation:esqueleto 1.4s infinite var(--curva-padrao)}
-@keyframes esqueleto{0%,100%{opacity:.35}50%{opacity:.7}}
+.esqueleto{background:var(--cor-superficie-elevada);border-radius:var(--raio-minimo);
+  animation:esqueleto 1.2s infinite var(--curva-padrao)}
+@keyframes esqueleto{0%,100%{opacity:.5}50%{opacity:.8}}
 
 /* ── Folha (mobile) / Modal (desktop) ───────────────────────────────────── */
 .veu{position:fixed;inset:0;z-index:var(--z-veu);background:rgba(8,1,26,.72);
@@ -167,15 +197,17 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 }
 
 /* ── Aviso (toast) ──────────────────────────────────────────────────────── */
-.aviso{position:fixed;left:50%;translate:-50% 0;z-index:var(--z-aviso);
+/* secao 9 Feedback: canto inferior direito. No toque ele sobe acima da barra. */
+.aviso{position:fixed;right:var(--espaco-03);z-index:var(--z-aviso);
   bottom:calc(var(--barra-mobile) + env(safe-area-inset-bottom) + var(--espaco-04));
+  max-width:min(24rem,calc(100vw - var(--espaco-05)));
   display:flex;align-items:center;gap:var(--espaco-02);
   padding:12px 16px;border-radius:var(--raio-controle);
-  background:var(--acento);color:var(--acento-texto);font-size:13px;font-weight:700;
-  animation:aviso-entra 240ms var(--curva-padrao)}
-.aviso-erro{background:var(--coral);color:#FFF}
+  background:var(--cor-acento-sinal);color:var(--cor-texto-inverso);font-size:13px;font-weight:700;
+  animation:aviso-entra var(--movimento-padrao) var(--curva-entrada)}
+.aviso-erro{background:var(--cor-feedback-erro);color:var(--cor-texto-sobre-acento)}
 @keyframes aviso-entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@media (min-width:768px){ .aviso{bottom:var(--espaco-05)} }
+@media (min-width:768px){ .aviso{right:var(--espaco-05);bottom:var(--espaco-05)} }
 
 /* par de campos lado a lado a partir do tablet (RESPONSIVE_GUIDELINES) */
 .grade-dois{display:grid;gap:var(--espaco-03);grid-template-columns:minmax(0,1fr)}
@@ -226,7 +258,9 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   border-radius:var(--raio-controle)}
 .busca .eloi-icon{color:var(--cor-texto-fraco)}
 .busca .campo-caixa{flex:1;border:0;background:none;padding-left:0;padding-right:0}
-.busca .campo-caixa:focus{outline:none}
+/* o contorno de foco vem do :focus-visible da raiz; aqui ele so nao se repete
+   por cima da borda que a caixa inteira ja ganha no :focus-within */
+.busca:focus-within .campo-caixa:focus-visible{outline:none}
 .busca:focus-within{border-color:var(--roxo-claro)}
 
 /* coluna que só faz sentido com largura — some no toque em vez de espremer */
@@ -377,7 +411,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 /* Lista de seleção múltipla dentro de folha (serviços cobertos por uma nota):
    rolagem própria para não empurrar o rodapé da folha para fora da tela. */
 .lista-escolha{max-height:16rem;overflow-y:auto;border:1px solid var(--cor-borda-padrao);
-  border-radius:var(--raio-2);padding:0 var(--espaco-02)}
+  border-radius:var(--raio-minimo);padding:0 var(--espaco-02)}
 
 /* ── busca global ──────────────────────────────────────────────────────────
    Alinhada ao topo (não centralizada): a lista cresce para baixo e o campo
@@ -387,7 +421,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 @media (max-width:767px){ .busca-fundo{padding:var(--espaco-03) 0 0} }
 
 .busca-caixa{width:min(42rem,100%);max-height:min(32rem,80vh);display:flex;flex-direction:column;
-  background:var(--superficie-2);border:1px solid var(--cor-borda-padrao);border-radius:var(--raio-folha);
+  background:var(--cor-superficie-elevada);border:1px solid var(--cor-borda-padrao);border-radius:var(--raio-folha);
   overflow:hidden}
 .busca-campo{display:flex;align-items:center;gap:var(--espaco-02);padding:var(--espaco-03);
   border-bottom:1px solid var(--cor-borda-padrao)}
@@ -400,7 +434,10 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   padding:var(--espaco-02) var(--espaco-03);background:transparent;border:0;text-align:left;
   color:inherit;cursor:pointer}
 /* Estado por tom, não por sombra — e a barra à esquerda dá forma além da cor. */
-.busca-item.ativo{background:var(--superficie-3);box-shadow:inset 3px 0 0 var(--acento)}
+/* §3: barra de 2px em Lima é o desenho de "ativo" na navegação do sistema.
+   Antes era box-shadow inset — mesma forma, mas sombra é proibida (regra 4). */
+.busca-item.ativo{background:var(--cor-superficie-hover);border-left:2px solid var(--cor-acento-sinal);
+  padding-left:calc(var(--espaco-03) - 2px)}
 .busca-item:focus-visible{outline:2px solid var(--acento);outline-offset:-2px}
 
 .trilho-busca{width:100%;background:transparent;border:0;cursor:pointer;color:inherit}

@@ -79,7 +79,7 @@ export function Dinheiro({ cents, sinal, className = '' }:
 const CHIP_MOV: Record<StatusMov, { chip: EstadoChip; label: string }> = {
   previsto: { chip: 'previsto', label: 'Previsto' },
   pendente: { chip: 'aberto', label: 'Em aberto' },
-  parcial: { chip: 'execucao', label: 'Parcial' },
+  parcial: { chip: 'parcial', label: 'Parcial' },
   realizado: { chip: 'pago', label: 'Realizado' },
   vencido: { chip: 'atrasado', label: 'Vencido' },
   cancelado: { chip: 'rascunho', label: 'Cancelado' },

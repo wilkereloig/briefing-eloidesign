@@ -3,7 +3,7 @@
 // Anatomia e limites de uso: eloi-handoff/COMPONENT_INVENTORY.md.
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react'
 import { useEffect, useId, useRef } from 'react'
-import { chip as chipCores, type EstadoChip } from './tokens'
+import { chip as chipCores, chipIcone, type EstadoChip } from './tokens'
 
 const SPRITE = import.meta.env.BASE_URL + 'eloi-icons.svg'
 
@@ -24,7 +24,8 @@ export function Marca() {
   return <span className="marca"><b>ELOI</b><i>Studio</i></span>
 }
 
-type Variante = 'primario' | 'destaque' | 'secundario' | 'terciario' | 'destrutivo' | 'icone'
+/** `terciario` é opaco com borda; `fantasma` não tem fundo nem borda. */
+type Variante = 'primario' | 'destaque' | 'secundario' | 'terciario' | 'fantasma' | 'destrutivo' | 'icone'
 
 export function Botao({ variante = 'secundario', compacto, carregando, children, className = '', ...resto }:
   { variante?: Variante; compacto?: boolean; carregando?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
@@ -37,10 +38,16 @@ export function Botao({ variante = 'secundario', compacto, carregando, children,
   )
 }
 
-/** Estado de dado. O rótulo escrito é obrigatório — cor nunca informa sozinha. */
+/** Estado de dado: cor + ícone + texto, sempre os três — cor nunca informa
+ *  sozinha. O ícone sai do estado, então nenhuma tela precisa escolher um. */
 export function Chip({ estado, children }: { estado: EstadoChip; children: ReactNode }) {
   const [fundo, texto] = chipCores[estado]
-  return <span className="chip" style={{ background: fundo, color: texto }}>{children}</span>
+  return (
+    <span className="chip" data-estado={estado} style={{ background: fundo, color: texto }}>
+      <Icone nome={chipIcone[estado]} tamanho={12} />
+      {children}
+    </span>
+  )
 }
 
 export function Etiqueta({ mini, acento, children }: { mini?: boolean; acento?: boolean; children: ReactNode }) {
@@ -52,28 +59,39 @@ export function Pilula({ ativa, children, ...resto }:
   return <button type="button" aria-pressed={ativa} className={`pilula${ativa ? ' ativa' : ''}`} {...resto}>{children}</button>
 }
 
-type CampoBase = { rotulo: string; erro?: string }
+type CampoBase = { rotulo: string; erro?: string; sucesso?: boolean }
 
-export function Campo({ rotulo, erro, ...resto }: CampoBase & InputHTMLAttributes<HTMLInputElement>) {
+/** Mensagem de erro de campo: nunca só cor, sempre com ícone (§9 Campos). */
+function ErroCampo({ id, texto }: { id: string; texto: string }) {
+  return (
+    <span className="campo-erro" id={id} role="alert">
+      <Icone nome="erro" tamanho={14} />{texto}
+    </span>
+  )
+}
+
+export function Campo({ rotulo, erro, sucesso, ...resto }: CampoBase & InputHTMLAttributes<HTMLInputElement>) {
   const id = useId()
   return (
-    <div className="campo" data-erro={erro ? 'true' : undefined}>
+    <div className="campo" data-erro={erro ? 'true' : undefined}
+      data-sucesso={!erro && sucesso ? 'true' : undefined}>
       <label htmlFor={id}>{rotulo}</label>
       <input id={id} className="campo-caixa" aria-invalid={!!erro}
         aria-describedby={erro ? id + '-e' : undefined} {...resto} />
-      {erro && <span className="campo-erro" id={id + '-e'} role="alert">{erro}</span>}
+      {erro && <ErroCampo id={id + '-e'} texto={erro} />}
     </div>
   )
 }
 
-export function CampoTexto({ rotulo, erro, ...resto }: CampoBase & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function CampoTexto({ rotulo, erro, sucesso, ...resto }: CampoBase & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   const id = useId()
   return (
-    <div className="campo" data-erro={erro ? 'true' : undefined}>
+    <div className="campo" data-erro={erro ? 'true' : undefined}
+      data-sucesso={!erro && sucesso ? 'true' : undefined}>
       <label htmlFor={id}>{rotulo}</label>
       <textarea id={id} className="campo-caixa" aria-invalid={!!erro}
         aria-describedby={erro ? id + '-e' : undefined} {...resto} />
-      {erro && <span className="campo-erro" id={id + '-e'} role="alert">{erro}</span>}
+      {erro && <ErroCampo id={id + '-e'} texto={erro} />}
     </div>
   )
 }
@@ -211,7 +229,8 @@ export function Folha({ titulo, aoFechar, children, rodape }:
   )
 }
 
-/** Toast. Sai sozinho em 2,6 s; sucesso em Lima, erro em Coral. */
+/** Toast, canto inferior direito. Sai sozinho em 5 s (§9 Feedback);
+ *  sucesso em Lima, erro em Coral. */
 export function Aviso({ texto, tipo = 'ok', aoSumir }:
   { texto: string; tipo?: 'ok' | 'erro'; aoSumir: () => void }) {
   // O callback chega como arrow nova a cada render do pai. Com ele na lista de
@@ -220,7 +239,7 @@ export function Aviso({ texto, tipo = 'ok', aoSumir }:
   const ref = useRef(aoSumir)
   ref.current = aoSumir
   useEffect(() => {
-    const t = setTimeout(() => ref.current(), 2600)
+    const t = setTimeout(() => ref.current(), 5000)
     return () => clearTimeout(t)
   }, [texto])
   return (

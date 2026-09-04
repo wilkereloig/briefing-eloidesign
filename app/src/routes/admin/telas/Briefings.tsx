@@ -161,7 +161,7 @@ export default function Briefings() {
                         ? <Chip estado="rascunho">Revogado</Chip>
                         : c.status === 'respondido'
                           ? <Chip estado="pago">Respondido</Chip>
-                          : <Chip estado="aberto">Aguardando</Chip>}
+                          : <Chip estado="aguardando">Aguardando</Chip>}
 
                       {c.status === 'respondido' && (
                         <Botao compacto onClick={() => setVendo(c)}>Ver resposta</Botao>

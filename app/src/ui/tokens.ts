@@ -30,21 +30,35 @@ export const cor = {
 } as const;
 
 /** Par [fundo, texto] de cada estado de chip. Única fonte para etiquetas de estado.
- *  Fundo em 100% (execucao/enviado/atrasado) deveria virar 14% + texto na cor
- *  cheia — exceção só pra success/signal. Fica pra fase 2 (componente Chip). */
+ *  Regra: fundo a 14% da cor + texto na cor cheia. Exceção: sucesso/sinal usam
+ *  fundo cheio com texto Tinta, porque Lima a 14% não se lê.
+ *  `atrasado` é a segunda exceção: o fundo é Coral a 14%, mas o texto fica em
+ *  Rosa — Coral como texto sobre escuro só a partir de 24px, e o chip tem 12px.
+ *  Quem carrega a cor ali é o ícone (regra em componentes.css). */
 export const chip = {
   concluido: ['#DFF806', '#1B0647'],
   pago: ['#DFF806', '#1B0647'],
   aprovado: ['#DFF806', '#1B0647'],
   realizado: ['#DFF806', '#1B0647'],
-  execucao: ['#5B7CFD', '#FFFFFF'],
-  enviado: ['#5B7CFD', '#FFFFFF'],
-  atrasado: ['#FD4400', '#FFFFFF'],
-  fila: ['rgba(253,213,211,.12)', '#FDD5D3'],
-  aberto: ['rgba(253,213,211,.12)', '#FDD5D3'],
-  previsto: ['rgba(253,213,211,.12)', '#FDD5D3'],
-  rascunho: ['rgba(253,213,211,.12)', '#FDD5D3']
+  execucao: ['rgba(91,124,253,.14)', '#5B7CFD'],
+  enviado: ['rgba(91,124,253,.14)', '#5B7CFD'],
+  aguardando: ['rgba(245,163,0,.14)', '#F5A300'],
+  parcial: ['rgba(245,163,0,.14)', '#F5A300'],
+  atrasado: ['rgba(253,68,0,.14)', '#FDD5D3'],
+  fila: ['rgba(253,213,211,.14)', '#FDD5D3'],
+  aberto: ['rgba(253,213,211,.14)', '#FDD5D3'],
+  previsto: ['rgba(253,213,211,.14)', '#FDD5D3'],
+  rascunho: ['rgba(253,213,211,.14)', '#FDD5D3']
 } as const satisfies Record<string, readonly [string, string]>;
+
+/** Ícone de cada estado — cor nunca informa sozinha: é cor + ícone + texto. */
+export const chipIcone = {
+  concluido: 'ok', pago: 'ok', aprovado: 'ok', realizado: 'ok',
+  execucao: 'execucao', enviado: 'entrega',
+  aguardando: 'pendente', parcial: 'pendente',
+  atrasado: 'alerta',
+  fila: 'pendente', aberto: 'pendente', previsto: 'pendente', rascunho: 'info'
+} as const satisfies Record<keyof typeof chip, string>;
 
 /** Cor identificadora de cliente, na ordem em que devem ser distribuídas. */
 export const corCliente = ['#7D2AE8', '#DFF806', '#5B7CFD', '#EEB4E7', '#FD4400'] as const;

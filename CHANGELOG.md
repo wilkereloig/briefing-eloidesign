@@ -2,6 +2,56 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Migração para a spec ELOI Design System, fase 2: componentes
+
+Os primitivos passam a usar os tokens da Fase 1 e ganham os estados que a
+spec exige. Mudança visível em todo o painel — nenhuma tela precisou ser
+tocada, o ganho vem dos componentes compartilhados.
+
+### Corrigido (bug, não estética)
+
+- **Seleção sólida em Lima** no seletor Tudo/Empresa/Pessoal: a spec proíbe
+  Lima como fundo de item ativo (§3). Agora é Roxo translúcido com borda
+  Roxa — Lima fica reservado pra barra de 2px, ponto de sinal e foco.
+- **Quatro `var()` apontando pra token que não existe**: `--superficie-2` e
+  `--superficie-3` (a paleta da busca global ficava sem fundo e sem estado
+  ativo visível), `--raio-2` e `--padding-card`. Os três primeiros já estavam
+  quebrados antes da migração; o quarto veio da Fase 1.
+- **Chips de status com fundo 100% e texto branco** sobre azul/coral —
+  branco puro só é permitido sobre Roxo. Agora fundo a 14% da cor + texto na
+  cor cheia, exceto sucesso/sinal (fundo cheio, texto Tinta, porque Lima a
+  14% não se lê) e atraso (texto em Rosa, porque Coral como texto só a partir
+  de 24px — quem carrega a cor ali é o ícone).
+
+### Componentes
+
+- **Botão**: 7 variantes de verdade. O que se chamava `terciario` era
+  `fantasma` (sem fundo nem borda) e foi renomeado; `terciario` agora é o
+  degrau opaco com borda que faltava. Todas as variantes ganharam `hover`,
+  `active` e `pressionado scale(.97)`; `destaque` ganhou hover/pressed que
+  simplesmente não existiam. Botão-ícone vira transparente por padrão (era
+  um chip elevado) e 40×40 no desktop, não 36.
+- **Chip**: pílula de 12px com **ícone**, derivado do próprio estado — cor +
+  ícone + texto, os três sempre. Nenhuma das ~20 chamadas precisou mudar.
+- **Status Parcial e Aguardando** ganham o âmbar (`--cor-feedback-aviso`) que
+  a spec reserva pra eles; antes eram azul de "em execução".
+- **Campo**: `hover` com borda ativa, estado `readonly`, prop `sucesso`,
+  `disabled` tokenizado, e mensagem de erro **sempre com ícone**.
+- **Card**: superfície padrão + borda 1px + raio de card (era superfície
+  elevada, sem borda, raio de painel). Card clicável sobe 4px no hover.
+- **Esqueleto**: pulso .5→.8 em 1,2s sobre superfície elevada, raio mínimo.
+- **Toast**: canto inferior direito e 5s (era centralizado, 2,6s).
+- **Sombra**: o `box-shadow` inset da busca virou `border-left` de 2px —
+  mesma forma, mas sombra é proibida pela regra 4.
+
+Nota: o `:focus-visible` com contorno Lima **já existia** na raiz de
+`tokens.css` e sempre valeu pro app inteiro — a auditoria errou ao dizer que
+não havia foco visível em componente nenhum. O que existia de verdade era um
+`outline:none` na busca, esse sim removido.
+
+`npm run verify` limpo. Verificação visual do painel logado ficou pendente:
+a sessão do preview expirou e a senha de administração não passa por aqui.
+
 ## 2026-09-04 — Migração para a spec ELOI Design System, fase 1: tokens
 
 Handoff novo (`ELOI DESIGN SYSTEM — Implementation Rules`) formaliza densidade
