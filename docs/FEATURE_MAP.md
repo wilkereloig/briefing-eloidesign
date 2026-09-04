@@ -133,9 +133,13 @@ Atualizado: 2026-08-07.
 - **Pendência:** **sem exportação nem impressão**
 
 ### Calendário
-- **Objetivo:** ver vencimentos do mês numa grade.
-- **Estado:** Concluído · **Tela:** `telas/Calendario.tsx` · **Permissão:** admin
-- Estado nunca só por cor: ponto por tipo, contorno quando liquidado.
+- **Objetivo:** ver o mês inteiro — dinheiro, tarefa, entrega, recorrência — e agir dali.
+- **Estado:** Concluído
+- **Tela:** `telas/Calendario.tsx` · domínio `domain/agenda.ts` (`itensAgenda`, testado)
+- **Fontes:** `eloi_transacoes.data_vencimento`, `eloi_recorrencias.proxima_cobranca` (só não materializada), `eloi_tarefas.prazo`, `eloi_servicos.prazo`
+- **Permissão:** admin
+- **Regra:** forma por tipo (círculo/quadrado/losango/traço) e contorno para liquidado/concluído — cor nunca informa sozinha; lente pessoal/empresa filtra só dinheiro
+- **Ações:** Receber/Pagar (FolhaLiquidar) · Concluir/Reabrir tarefa · Ver projeto · Ver recorrência
 
 ### Arquivos
 - **Objetivo:** acervo com upload real e vínculo ao que o arquivo documenta.

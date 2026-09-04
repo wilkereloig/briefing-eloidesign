@@ -2,6 +2,25 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Calendário integrado
+
+O calendário só mostrava vencimentos de transação. Tarefa, prazo de
+projeto e recorrência que ainda não virou lançamento ficavam de fora.
+
+### Adicionado
+
+- **Agenda com cinco fontes**: recebimento, pagamento, tarefa, entrega de
+  projeto (`eloi_servicos.prazo`) e recorrência prevista (`proxima_cobranca`
+  ainda não materializada — some quando a edge gera a transação).
+  `domain/agenda.ts` (`itensAgenda`, `porDia`, `FORMA_AGENDA`).
+- **Forma por tipo**, não só cor: círculo (dinheiro), quadrado (tarefa),
+  losango (entrega), traço (previsto). Contorno = liquidado/concluído. Dia
+  com pendência vencida ganha marca.
+- **Filtro por tipo** na própria legenda; lente pessoal/empresa filtra
+  dinheiro e não tarefa nem prazo.
+- **Ação no item**: Receber/Pagar abre a baixa; Concluir/Reabrir tarefa
+  num clique; entrega leva a Projetos; recorrência leva a Dinheiro.
+
 ## 2026-09-04 — Tarefas leves e prazo de entrega do serviço
 
 Não havia onde anotar "ligar para a Vibra na quinta", e o serviço não tinha

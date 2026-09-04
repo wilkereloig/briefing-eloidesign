@@ -1,38 +1,55 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { tarefas as tarefasApi } from '../../../lib/api'
 import { fmtBRL } from '../../../lib/dinheiro'
 import { hojeISO, rotuloMes, useFinancas, useNomes } from '../../../lib/financas-store'
-import { estaEmAberto, saldoAberto } from '../../../domain/financeiro'
+import {
+  FORMA_AGENDA, itensAgenda, ORDEM_AGENDA, porDia, type ItemAgenda, type TipoAgenda,
+} from '../../../domain/agenda'
 import type { Transacao } from '../../../lib/tipos'
-import { Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
-import { Cabecalho, Carga, ChipMovimento, Dinheiro, SeletorLente, SeletorMes } from '../../../ui/painel'
+import { Aviso, Botao, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
+import { Cabecalho, Carga, Dinheiro, SeletorLente, SeletorMes } from '../../../ui/painel'
 import { dataLonga } from '../../../ui/formato'
+import { FolhaLiquidar, FolhaTarefa } from '../folhas'
 
 const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
+// Uma grade, cinco fontes: vencimentos, recorrências previstas, tarefas e
+// prazos de projeto. Cada tipo tem forma e rótulo — cor nunca informa sozinha.
 export default function Calendario() {
-  const { transacoes, recorrencias, mes, contexto } = useFinancas()
+  const { transacoes, recorrencias, tarefas, servicos, mes, contexto, recarregar } = useFinancas()
   const nomes = useNomes()
   const hoje = hojeISO()
   const [diaAberto, setDiaAberto] = useState<string | null>(null)
+  const [tipos, setTipos] = useState<Set<TipoAgenda>>(new Set(ORDEM_AGENDA))
+  const [folha, setFolha] = useState<{ tipo: 'liquidar'; t: Transacao } | { tipo: 'tarefa'; id: string } | null>(null)
+  const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
 
-  // Vencimentos do mês, indexados por dia. Recorrência ainda não materializada
-  // não entra: quando vence, a edge cria a transação e ela aparece aqui.
-  const porDia = useMemo(() => {
-    const mapa = new Map<string, Transacao[]>()
-    for (const t of transacoes) {
-      if (!t.data_vencimento || !t.data_vencimento.startsWith(mes)) continue
-      if (contexto && t.contexto !== contexto) continue
-      mapa.set(t.data_vencimento, [...(mapa.get(t.data_vencimento) ?? []), t])
-    }
-    return mapa
-  }, [transacoes, mes, contexto])
-
+  const todos = useMemo(
+    () => itensAgenda({ transacoes, tarefas, servicos, recorrencias }, mes, contexto),
+    [transacoes, tarefas, servicos, recorrencias, mes, contexto])
+  const itens = useMemo(() => todos.filter((i) => tipos.has(i.tipo)), [todos, tipos])
+  const mapa = useMemo(() => porDia(itens), [itens])
   const celulas = useMemo(() => montarGrade(mes), [mes])
 
-  const doMes = [...porDia.values()].flat()
-  const aReceber = doMes.filter((t) => t.tipo === 'entrada' && estaEmAberto(t))
-  const aPagar = doMes.filter((t) => t.tipo === 'saida' && estaEmAberto(t))
-  const selecionadas = diaAberto ? porDia.get(diaAberto) ?? [] : []
+  const soma = (tipo: TipoAgenda) => todos.filter((i) => i.tipo === tipo && i.aberto)
+    .reduce((s, i) => s + (i.cents ?? 0), 0)
+  const conta = (tipo: TipoAgenda) => todos.filter((i) => i.tipo === tipo && i.aberto).length
+  const selecionados = diaAberto ? mapa.get(diaAberto) ?? [] : []
+
+  const alternarTipo = (t: TipoAgenda) => setTipos((s) => {
+    const n = new Set(s); if (n.has(t)) n.delete(t); else n.add(t); return n
+  })
+  const apos = async (msg: string) => { setAviso({ texto: msg }); await recarregar() }
+
+  const concluirTarefa = async (i: ItemAgenda) => {
+    if (!('tarefa' in i.ref)) return
+    try {
+      const t = i.ref.tarefa
+      await tarefasApi.upsert({ ...t, status: t.status === 'concluida' ? 'aberta' : 'concluida' })
+      await apos(t.status === 'concluida' ? 'Tarefa reaberta' : 'Tarefa concluída')
+    } catch (e) { setAviso({ texto: (e as Error).message, tipo: 'erro' }) }
+  }
 
   return (
     <div className="tela pilha">
@@ -43,82 +60,136 @@ export default function Calendario() {
 
       <Carga linhas={4}>
         <div className="grade-indicadores">
-          <Indicador dominante rotulo="Compromissos no mês" valor={String(doMes.length)}
-            nota={`${porDia.size} dias com vencimento`} />
-          <Indicador rotulo="A receber no mês" valor={fmtBRL(aReceber.reduce((s, t) => s + saldoAberto(t), 0))}
-            cor="acento" nota={`${aReceber.length} recebimentos`} />
-          <Indicador rotulo="A pagar no mês" valor={fmtBRL(aPagar.reduce((s, t) => s + saldoAberto(t), 0))}
-            nota={`${aPagar.length} pagamentos`} />
-          <Indicador rotulo="Recorrências ativas"
-            valor={String(recorrencias.filter((r) => !contexto || r.contexto === contexto).length)}
-            nota="Lançadas automaticamente no vencimento" />
+          <Indicador dominante rotulo="No mês" valor={String(todos.length)}
+            nota={`${porDia(todos).size} dias com compromisso`} />
+          <Indicador rotulo="A receber" valor={fmtBRL(soma('recebimento'))} cor="acento"
+            nota={`${conta('recebimento')} em aberto`} />
+          <Indicador rotulo="A pagar" valor={fmtBRL(soma('pagamento') + soma('recorrencia'))}
+            nota={`${conta('pagamento')} lançados · ${conta('recorrencia')} previstos`} />
+          <Indicador rotulo="Tarefas e entregas" valor={String(conta('tarefa') + conta('prazo'))}
+            cor={todos.some((i) => (i.tipo === 'tarefa' || i.tipo === 'prazo') && i.aberto && i.data < hoje) ? 'coral' : undefined}
+            nota={`${conta('prazo')} ${conta('prazo') === 1 ? 'entrega' : 'entregas'} de projeto`} />
         </div>
 
-        <Painel titulo="Calendário financeiro">
+        {/* Filtro por tipo: a mesma legenda que explica a forma liga e desliga. */}
+        <div className="linha" role="group" aria-label="Tipos na agenda">
+          {ORDEM_AGENDA.map((t) => (
+            <Pilula key={t} ativa={tipos.has(t)} onClick={() => alternarTipo(t)} aria-pressed={tipos.has(t)}>
+              <span className="cal-ponto" data-tipo={t} aria-hidden />{FORMA_AGENDA[t].rotulo}
+            </Pilula>
+          ))}
+        </div>
+
+        <Painel titulo="Calendário">
           <div className="cal-cabecalho" aria-hidden>
             {DIAS.map((d) => <span key={d} className="etiqueta-mini">{d}</span>)}
           </div>
-          <div className="cal-grade" role="grid" aria-label={`Vencimentos de ${rotuloMes(mes)}`}>
+          <div className="cal-grade" role="grid" aria-label={`Agenda de ${rotuloMes(mes)}`}>
             {celulas.map((iso, i) => {
               if (!iso) return <span key={`v${i}`} className="cal-celula cal-vazia" aria-hidden />
-              const itens = porDia.get(iso) ?? []
-              const dia = Number(iso.slice(8))
+              const doDia = mapa.get(iso) ?? []
               const ehHoje = iso === hoje
+              const atrasado = iso < hoje && doDia.some((x) => x.aberto)
               return (
                 <button key={iso} type="button" role="gridcell"
                   className={`cal-celula${ehHoje ? ' cal-hoje' : ''}${diaAberto === iso ? ' cal-ativo' : ''}`}
+                  data-atrasado={atrasado ? 'true' : undefined}
                   onClick={() => setDiaAberto(diaAberto === iso ? null : iso)}
-                  aria-label={`${dataLonga(iso)}: ${itens.length} ${itens.length === 1 ? 'compromisso' : 'compromissos'}`}>
-                  <span className="cal-dia">{dia}</span>
-                  {/* Estado por ícone + cor, nunca só cor */}
+                  aria-label={`${dataLonga(iso)}: ${doDia.length} ${doDia.length === 1 ? 'compromisso' : 'compromissos'}${atrasado ? ', com pendência' : ''}`}>
+                  <span className="cal-dia">{Number(iso.slice(8))}</span>
                   <span className="cal-pontos">
-                    {itens.slice(0, 3).map((t) => (
-                      <span key={t.id} className="cal-ponto" data-tipo={t.tipo}
-                        data-aberto={estaEmAberto(t) ? 'true' : 'false'} />
+                    {doDia.slice(0, 4).map((x) => (
+                      <span key={x.id} className="cal-ponto" data-tipo={x.tipo}
+                        data-aberto={x.aberto ? 'true' : 'false'} />
                     ))}
-                    {itens.length > 3 && <span className="cal-mais">+{itens.length - 3}</span>}
+                    {doDia.length > 4 && <span className="cal-mais">+{doDia.length - 4}</span>}
                   </span>
                 </button>
               )
             })}
           </div>
-          <div className="linha" style={{ marginTop: 'var(--e-7)' }}>
-            <span className="legenda-item"><span className="cal-ponto" data-tipo="entrada" />Recebimento</span>
-            <span className="legenda-item"><span className="cal-ponto" data-tipo="saida" />Pagamento</span>
-            <span className="legenda-item"><span className="cal-ponto" data-tipo="entrada" data-aberto="false" />Liquidado</span>
-          </div>
+          <p className="t-legenda" style={{ marginTop: 'var(--e-5)' }}>
+            Contorno = já liquidado ou concluído. Dia com pendência vencida fica marcado.
+          </p>
         </Painel>
 
         <Painel titulo={diaAberto ? dataLonga(diaAberto) : 'Selecione um dia'}>
           {!diaAberto ? (
-            <p className="t-sec">Toque num dia do calendário para ver os compromissos daquela data.</p>
-          ) : selecionadas.length === 0 ? (
-            <Vazio icone="ok" titulo="Nada neste dia"
-              instrucao="Nenhum vencimento registrado para esta data." />
+            <p className="t-sec">Toque num dia para ver o que vence, o que entregar e o que fazer.</p>
+          ) : selecionados.length === 0 ? (
+            <Vazio icone="ok" titulo="Nada neste dia" instrucao="Nenhum compromisso nesta data com os tipos ligados." />
           ) : (
             <ul className="lista">
-              {selecionadas.map((t) => (
-                <li key={t.id} className="lista-item">
-                  <span className="mov-icone" data-tipo={t.tipo} aria-hidden>
-                    <Icone nome={t.tipo === 'entrada' ? 'avancar' : 'voltar'} tamanho={16} />
-                  </span>
+              {selecionados.map((i) => (
+                <li key={i.id} className="lista-item" data-cancelado={i.aberto ? undefined : 'true'}>
+                  <span className="cal-ponto cal-ponto-g" data-tipo={i.tipo} data-aberto={i.aberto ? 'true' : 'false'} aria-hidden />
                   <span className="celula">
-                    <span className="t-ui espremer">{t.descricao}</span>
+                    <span className="t-ui espremer">{i.titulo}</span>
                     <span className="t-legenda espremer">
-                      {t.cliente_id ? nomes.cliente.get(t.cliente_id)?.nome ?? '' : ''}
-                      {t.conta_id ? ` · ${nomes.conta.get(t.conta_id)?.nome ?? ''}` : ''}
+                      {[FORMA_AGENDA[i.tipo].rotulo, i.detalhe, apoio(i, nomes)].filter(Boolean).join(' · ')}
                     </span>
                   </span>
-                  <Dinheiro cents={estaEmAberto(t) ? saldoAberto(t) : t.valor_cents} className="t-valor" />
-                  <ChipMovimento status={t.status} />
+                  {i.cents != null && <Dinheiro cents={i.cents} className="t-valor" />}
+                  {acao(i, {
+                    liquidar: (t) => setFolha({ tipo: 'liquidar', t }),
+                    concluir: () => void concluirTarefa(i),
+                    editarTarefa: (id) => setFolha({ tipo: 'tarefa', id }),
+                  })}
                 </li>
               ))}
             </ul>
           )}
         </Painel>
       </Carga>
+
+      {folha?.tipo === 'liquidar' && (
+        <FolhaLiquidar transacao={folha.t} aoFechar={() => setFolha(null)} aoSalvar={apos} />
+      )}
+      {folha?.tipo === 'tarefa' && (
+        <FolhaTarefa inicial={tarefas.find((t) => t.id === folha.id)}
+          aoFechar={() => setFolha(null)} aoSalvar={apos} />
+      )}
+      {aviso && <Aviso texto={aviso.texto} tipo={aviso.tipo} aoSumir={() => setAviso(null)} />}
     </div>
   )
+}
+
+function apoio(i: ItemAgenda, nomes: ReturnType<typeof useNomes>): string | null {
+  if ('transacao' in i.ref) {
+    const t = i.ref.transacao
+    return [t.cliente_id ? nomes.cliente.get(t.cliente_id)?.nome : null, t.conta_id ? nomes.conta.get(t.conta_id)?.nome : null]
+      .filter(Boolean).join(' · ') || null
+  }
+  if ('tarefa' in i.ref) return i.ref.tarefa.cliente_id ? nomes.cliente.get(i.ref.tarefa.cliente_id)?.nome ?? null : null
+  if ('servico' in i.ref) return nomes.cliente.get(i.ref.servico.cliente_id)?.nome ?? null
+  return null
+}
+
+/** A ação certa para cada tipo: liquidar, concluir, abrir projeto ou recorrência. */
+function acao(i: ItemAgenda, h: {
+  liquidar: (t: Transacao) => void
+  concluir: () => void
+  editarTarefa: (id: string) => void
+}) {
+  if ('transacao' in i.ref) {
+    return i.aberto
+      ? <Botao compacto onClick={() => h.liquidar((i.ref as { transacao: Transacao }).transacao)}>
+        {i.tipo === 'recebimento' ? 'Receber' : 'Pagar'}
+      </Botao>
+      : <Link className="btn btn-secundario btn-compacto" to="/admin/dinheiro">Ver</Link>
+  }
+  if ('tarefa' in i.ref) {
+    return (
+      <>
+        <Botao compacto onClick={h.concluir}>{i.aberto ? 'Concluir' : 'Reabrir'}</Botao>
+        <Botao variante="icone" aria-label={`Editar ${i.titulo}`} onClick={() => h.editarTarefa((i.ref as { tarefa: { id: string } }).tarefa.id)}>
+          <Icone nome="editar" tamanho={16} />
+        </Botao>
+      </>
+    )
+  }
+  if ('servico' in i.ref) return <Link className="btn btn-secundario btn-compacto" to="/admin/projetos">Ver projeto</Link>
+  return <Link className="btn btn-secundario btn-compacto" to="/admin/dinheiro">Ver recorrência</Link>
 }
 
 /** Grade do mês com os vazios do começo da semana. `null` = célula fora do mês. */

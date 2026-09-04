@@ -23,7 +23,7 @@ Repositório único do **site completo** (GitHub: `wilkereloig/briefing-eloidesi
 | `/admin/orcamentos` | `app/src/routes/admin/telas/Orcamentos.tsx` | Propostas: criar, editar, duplicar, enviar, aprovar, recusar, link do cliente, catálogo. Admin. |
 | `/admin/notas` | `telas/Notas.tsx` | Notas fiscais com status (pendente→pronta→emitida→enviada), imposto estimado, **vínculo com o recebimento correspondente**, exclusão e alerta de **serviço concluído sem nota**. |
 | `/admin/relatorios` | `telas/Relatorios.tsx` | Resultado de 12 meses (gráfico em CSS puro), ranking por cliente e por categoria, previsão de caixa em 3 cenários, metas e orçamentos de gasto (criar, editar, encerrar). |
-| `/admin/calendario` | `telas/Calendario.tsx` | Grade mensal de vencimentos; ponto por tipo (entrada/saída) e contorno quando liquidado — estado nunca só por cor. |
+| `/admin/calendario` | `telas/Calendario.tsx` | Agenda integrada: vencimentos, recorrências previstas, tarefas e entregas de projeto (`domain/agenda.ts`). Forma por tipo + contorno quando liquidado/concluído; ação no item (receber, pagar, concluir, ver projeto). |
 | `/admin/arquivos` | `telas/Arquivos.tsx` | Acervo com upload real (URL assinada → bucket `eloi-notas`), filtro por categoria, **vínculo opcional a serviço, lançamento e nota fiscal** além do cliente, e leitura das entregas de marca. |
 | `/admin/config` | `telas/Config.tsx` | Contas e cartões por contexto (criar, editar, **desativar/reativar**), categorias e as regras de dado do sistema. |
 | `/admin/*` (desconhecida) | `main.tsx` | Estado "página não encontrada" dentro do shell, com volta para a visão geral. Fora de `/admin`, redireciona para `/admin`. |

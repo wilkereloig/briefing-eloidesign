@@ -320,8 +320,16 @@ select.campo-caixa option{background:var(--chao);color:var(--texto)}
   justify-content:center}
 .cal-ponto{width:6px;height:6px;border-radius:var(--raio-etiqueta);flex:none;
   background:var(--azul)}
-.cal-ponto[data-tipo='entrada']{background:var(--acento)}
-.cal-ponto[data-tipo='saida']{background:var(--coral)}
+.cal-ponto[data-tipo='entrada'],.cal-ponto[data-tipo='recebimento']{background:var(--acento)}
+.cal-ponto[data-tipo='saida'],.cal-ponto[data-tipo='pagamento']{background:var(--coral)}
+/* Forma por tipo, não só cor: quadrado = tarefa, losango = entrega, traço = previsto */
+.cal-ponto[data-tipo='tarefa']{background:var(--roxo);border-radius:1px}
+.cal-ponto[data-tipo='prazo']{background:var(--azul);border-radius:1px;transform:rotate(45deg)}
+.cal-ponto[data-tipo='recorrencia']{background:var(--texto-3);height:2px;width:8px;border-radius:0}
+.cal-ponto-g{width:10px;height:10px;flex:none}
+.cal-ponto-g[data-tipo='recorrencia']{height:3px;width:12px}
+.cal-celula[data-atrasado]{box-shadow:inset 0 0 0 1.5px var(--coral)}
+.pilula .cal-ponto{margin-right:6px}
 /* liquidado vira contorno: o estado não depende só da cor */
 .cal-ponto[data-aberto='false']{background:none;box-shadow:inset 0 0 0 1.5px var(--texto-3)}
 .cal-mais{font-size:9px;color:var(--texto-4)}
