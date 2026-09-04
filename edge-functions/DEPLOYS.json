@@ -4,14 +4,41 @@
     "eloi-financeiro": "legado sem consumidor; sai junto com /gestao"
   },
   "edges": {
-    "portal-cliente": { "commit": "d8f9499", "em": "2026-08-28" },
-    "eloi-gestao": { "commit": "d8f9499", "em": "2026-08-28" },
-    "admin-auth": { "commit": "4e67048", "em": "2026-08-28" },
-    "eloi-financas": { "commit": "63093cf", "em": "2026-08-28" },
-    "orcamentos": { "commit": "dc68be6", "em": "2026-07-28" },
-    "briefing-submit": { "commit": "dc68be6", "em": "2026-07-28" },
-    "briefing-links": { "commit": "1a8020a", "em": "2026-07-30" },
-    "get-briefings": { "commit": "1a8020a", "em": "2026-07-30" },
-    "get-ecommerce-briefings": { "commit": "1a8020a", "em": "2026-07-30" }
+    "portal-cliente": {
+      "commit": "708df45",
+      "em": "2026-09-04"
+    },
+    "eloi-gestao": {
+      "commit": "708df45",
+      "em": "2026-09-04"
+    },
+    "admin-auth": {
+      "commit": "708df45",
+      "em": "2026-09-04"
+    },
+    "eloi-financas": {
+      "commit": "708df45",
+      "em": "2026-09-04"
+    },
+    "orcamentos": {
+      "commit": "708df45",
+      "em": "2026-09-04"
+    },
+    "briefing-submit": {
+      "commit": "708df45",
+      "em": "2026-09-04"
+    },
+    "briefing-links": {
+      "commit": "708df45",
+      "em": "2026-09-04"
+    },
+    "get-briefings": {
+      "commit": "708df45",
+      "em": "2026-09-04"
+    },
+    "get-ecommerce-briefings": {
+      "commit": "708df45",
+      "em": "2026-09-04"
+    }
   }
 }
