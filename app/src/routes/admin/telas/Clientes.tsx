@@ -97,7 +97,7 @@ export default function Clientes() {
 
             <Painel titulo={`${lista.length} ${lista.length === 1 ? 'cliente' : 'clientes'}`}>
               {lista.length === 0 ? (
-                <Vazio icone="pesquisa" titulo="Nenhum resultado"
+                <Vazio icone="pesquisa" titulo={`Nada encontrado para “${busca}”`}
                   instrucao="Nenhum cliente com esse nome."
                   acao={<Botao onClick={() => setBusca('')}>Limpar busca</Botao>} />
               ) : (

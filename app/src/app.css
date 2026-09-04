@@ -14,27 +14,31 @@ button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--acento);text-decoration:none}
 a:hover{color:var(--cor-texto-primario)}
 
-/* ── escala tipográfica (secao 5 do design system) ───────────────────────── */
+/* ── escala tipográfica (§4) — valores vêm dos tokens --tipo-* ───────────── */
 .t-h1,.t-pagina,.t-h2,.t-card,.t-valor-g,.t-valor{
   font-family:var(--fonte-titulo);
   font-variation-settings:'wdth' var(--titulo-wdth);
 }
-.t-h1     {font-weight:600;font-size:28px;line-height:1.10;letter-spacing:-.02em}
-.t-pagina {font-weight:600;font-size:27px;line-height:1.10;letter-spacing:-.02em}
-.t-h2     {font-weight:600;font-size:22px;line-height:1.20;letter-spacing:-.01em}
-.t-card   {font-weight:600;font-size:18px;line-height:1.25;letter-spacing:-.01em}
-.t-valor-g{font-weight:700;font-size:24px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+/* .t-pagina é o h1 de página: mesma escala de .t-h1 (um por tela) */
+.t-h1,.t-pagina{font-weight:600;font-size:var(--tipo-titulo-1-tamanho-m);
+  line-height:var(--tipo-titulo-1-altura);letter-spacing:var(--tipo-titulo-1-rastreio)}
+.t-h2     {font-weight:600;font-size:var(--tipo-titulo-2-tamanho-m);line-height:var(--tipo-titulo-2-altura);letter-spacing:var(--tipo-titulo-2-rastreio)}
+.t-card   {font-weight:600;font-size:var(--tipo-titulo-3-tamanho-m);line-height:var(--tipo-titulo-3-altura);letter-spacing:var(--tipo-titulo-3-rastreio)}
+.t-valor-g{font-weight:600;font-size:var(--tipo-dado-grande-tamanho);line-height:1;letter-spacing:var(--tipo-dado-grande-rastreio);font-variant-numeric:tabular-nums}
 .t-valor  {font-weight:600;font-size:16px;line-height:1.2;font-variant-numeric:tabular-nums}
-.t-corpo  {font-size:15px;line-height:1.65}
-.t-ui     {font-size:14px;line-height:1.4;font-weight:600}
-.t-sec    {font-size:13px;line-height:1.5;color:var(--cor-texto-fraco)}
+.t-corpo  {font-size:var(--tipo-corpo-tamanho-m);line-height:var(--tipo-corpo-altura)}
+.t-ui     {font-size:var(--tipo-corpo-pequeno-tamanho);line-height:1.4;font-weight:600}
+.t-sec    {font-size:var(--tipo-legenda-tamanho);line-height:var(--tipo-legenda-altura);color:var(--cor-texto-fraco)}
 .t-legenda{font-size:12px;line-height:1.5;color:var(--cor-texto-fraco)}
-.t-msg    {font-size:13px;line-height:1.5;font-weight:600}
+.t-msg    {font-size:var(--tipo-legenda-tamanho);line-height:var(--tipo-legenda-altura);font-weight:600}
 .etiqueta {font-size:11px;font-weight:700;letter-spacing:.20em;text-transform:uppercase;line-height:1}
 .etiqueta-mini{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1;color:var(--cor-texto-fraco)}
 .etiqueta-acento{color:var(--acento)}
 
 /* dinheiro é sempre Archivo (regra da secao 5) */
+.dinheiro[data-natureza='negativo']{color:var(--cor-feedback-erro)}
+.dinheiro[data-natureza='recebido']{color:var(--cor-feedback-sucesso)}
+.dinheiro[data-natureza='previsto']{color:var(--cor-texto-fraco);border-bottom:1px dashed currentColor}
 .dinheiro{font-family:var(--fonte-titulo);font-variation-settings:'wdth' var(--titulo-wdth);
   font-variant-numeric:tabular-nums}
 
@@ -228,18 +232,15 @@ a:hover{color:var(--cor-texto-primario)}
 }
 
 /* ── faixas (RESPONSIVE_GUIDELINES) ─────────────────────────────────────── */
-@media (min-width:360px){ :root{--margem:var(--espaco-04)} }
-
 @media (min-width:768px){
-  :root{--margem:var(--espaco-05);--gap-grade:var(--espaco-04);--padding-card:var(--espaco-05)}
+  /* §6: margem 32 no tablet; card com 24px de recuo (§5) */
+  :root{--margem:var(--grade-margem-tablet);--gap-grade:var(--espaco-04);--preenchimento-cartao:var(--espaco-05)}
   body{font-size:16px}
-  .t-h1{font-size:44px}
-  .t-pagina{font-size:32px}
-  .t-h2{font-size:28px}
-  .t-card{font-size:20px}
-  .t-valor-g{font-size:30px}
+  .t-h1,.t-pagina{font-size:var(--tipo-titulo-1-tamanho)}
+  .t-h2{font-size:var(--tipo-titulo-2-tamanho)}
+  .t-card{font-size:var(--tipo-titulo-3-tamanho)}
   .t-valor{font-size:17px}
-  .t-corpo{font-size:16px}
+  .t-corpo{font-size:var(--tipo-corpo-tamanho)}
 
   /* trilho recolhido: 72 px, só ícone */
   .app-shell{grid-template-columns:72px minmax(0,1fr)}
@@ -278,7 +279,6 @@ a:hover{color:var(--cor-texto-primario)}
 @media (min-width:1024px){
   /* trilho completo: 236 px com rótulos, criação rápida e Sair */
   .app-shell{grid-template-columns:var(--trilho-largura) minmax(0,1fr)}
-  :root{--margem:var(--espaco-06)}
   .trilho-marca{display:block;margin:0 var(--espaco-02) var(--espaco-05)}
   .trilho-item{justify-content:flex-start;gap:11px}
   .trilho-item .rotulo-longo,.trilho-criar .rotulo-longo,
@@ -290,8 +290,9 @@ a:hover{color:var(--cor-texto-primario)}
 }
 
 @media (min-width:1280px){
-  :root{--margem:36px}
-  .t-valor-g{font-size:34px}
+  :root{--margem:var(--grade-margem-desktop)}
+  /* KPI dominante de dashboard sobe pra data.xl (§10) */
+  .card-dominante .t-valor-g{font-size:var(--tipo-dado-xl-tamanho);letter-spacing:var(--tipo-dado-xl-rastreio)}
 }
 
 @media (min-width:1600px){

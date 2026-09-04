@@ -11,15 +11,15 @@ espaçamento, card ou padrão, procure aqui: quase sempre já existe.
 ## Migração para a spec nova — status
 
 Trabalho em 6 fases (auditoria completa: 12 agentes, 148 gaps, ver
-`CHANGELOG.md` 2026-09-04). **Fase 1 concluída** — as demais ainda usam
-padrões antigos em componentes/telas até chegar a vez de cada uma.
+`CHANGELOG.md` 2026-09-04). Fases 1 a 4 concluídas — 5 e 6 ainda usam
+padrões antigos até chegar a vez de cada uma.
 
 | Fase | Objetivo | Status |
 |---|---|---|
 | 1. Fundação de tokens | `tokens.css`/`.ts` na nomenclatura e escala novas | ✅ |
 | 2. Componentes core | Botão, Campo, Card, Chip nos estados/anatomia da spec | ✅ |
 | 3. Tabela densa (financeiro) | `data-density="dense"` em Dinheiro/Notas/Relatórios/FolhasExtrato | ✅ |
-| 4. Telas de gestão (standard) | Vazio/Chip/Erro corrigidos nas ~12 telas restantes | Pendente |
+| 4. Telas de gestão (standard) | Vazio/Chip/Erro corrigidos nas ~12 telas restantes | ✅ |
 | 5. Shell, navegação, responsivo | Topbar, breakpoint da sidebar, modal aninhado→página | Pendente |
 | 6. Ícones e acessibilidade fina | Famílias de ícone faltando, `:focus-visible`, pisos de fonte | Pendente |
 

@@ -140,13 +140,15 @@ export function Progresso({ pct, rotulo }: { pct: number; rotulo: string }) {
   )
 }
 
+/** Estado vazio (§12): arco da marca + h3 + uma linha + uma ação. Em tela
+ *  densa o arco some e fica só o ícone de 40px — CSS decide pela densidade. */
 export function Vazio({ icone = 'info', titulo, instrucao, acao }:
   { icone?: string; titulo: string; instrucao: string; acao?: ReactNode }) {
   return (
     <div className="vazio">
-      <Icone nome={icone} tamanho={30} />
+      <span className="vazio-arco" aria-hidden><Icone nome={icone} tamanho={40} /></span>
       <div>
-        <p className="t-card">{titulo}</p>
+        <h3 className="t-card">{titulo}</h3>
         <p className="t-sec">{instrucao}</p>
       </div>
       {acao}
@@ -158,7 +160,9 @@ export function Erro({ causa, aoTentar, offline }:
   { causa: string; aoTentar?: () => void; offline?: boolean }) {
   return (
     <Painel erro titulo={<Etiqueta acento>Erro</Etiqueta>}>
-      <p className="t-msg" role="alert" style={{ color: 'var(--coral)' }}>{causa}</p>
+      <p className="t-msg linha" role="alert" style={{ gap: 'var(--espaco-02)' }}>
+        <Icone nome="erro" tamanho={16} />{causa}
+      </p>
       {offline && <p className="t-sec">Os dados na tela são do último acesso.</p>}
       {aoTentar && <Botao onClick={aoTentar} className="btn-espaco"
         style={{ marginTop: 'var(--espaco-04)' }}>Tentar de novo</Botao>}

@@ -4,7 +4,7 @@ import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import type { BriefingLegadoRow, BriefingLinkRow } from '../../../lib/tipos'
 import {
-  Aviso, Botao, Campo, Chip, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
+  Aviso, Botao, Campo, Chip, Erro, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
 import { Cabecalho } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
@@ -122,14 +122,7 @@ export default function Briefings() {
               nota="Precisam ser vinculadas" />
           </div>
 
-          {erro && (
-            <Painel erro titulo="Erro">
-              <p className="t-msg" role="alert" style={{ color: 'var(--coral)' }}>{erro}</p>
-              <Botao onClick={() => void carregar()} style={{ marginTop: 'var(--espaco-04)' }}>
-                Tentar de novo
-              </Botao>
-            </Painel>
-          )}
+          {erro && <Erro causa={erro} aoTentar={() => void carregar()} />}
 
           <div className="abas" role="tablist" aria-label="Origem do briefing">
             <Pilula ativa={aba === 'convites'} role="tab" aria-selected={aba === 'convites'}

@@ -63,13 +63,17 @@ export function SeletorLente() {
   )
 }
 
-/** Valor monetário: Archivo, tabular, com aria-label legível. */
-export function Dinheiro({ cents, sinal, className = '' }:
-  { cents: number; sinal?: boolean; className?: string }) {
+/** Valor monetário: Archivo, tabular, com aria-label legível. Cor por natureza
+ *  (§4 Números): negativo em erro com sinal, previsto em texto fraco com
+ *  tracejado, recebido em sucesso. Sem natureza, negativo já vira erro sozinho —
+ *  a tela não escolhe a cor de uma despesa. */
+export function Dinheiro({ cents, sinal, natureza, className = '' }:
+  { cents: number; sinal?: boolean; natureza?: 'recebido' | 'previsto' | 'pendente'; className?: string }) {
   const texto = fmtBRL(Math.abs(cents))
   const prefixo = sinal ? (cents < 0 ? '−' : '+') : cents < 0 ? '−' : ''
+  const nat = natureza ?? (cents < 0 ? 'negativo' : undefined)
   return (
-    <span className={`dinheiro ${className}`} aria-label={`${prefixo}${texto}`}>
+    <span className={`dinheiro ${className}`} data-natureza={nat} aria-label={`${prefixo}${texto}`}>
       {prefixo}{texto}
     </span>
   )

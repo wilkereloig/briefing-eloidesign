@@ -199,11 +199,21 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 .progresso>span{display:block;height:100%;background:var(--azul)}
 
 /* ── Vazio, erro, esqueleto ─────────────────────────────────────────────── */
+/* §12: arco da marca em 96px no standard, só o ícone de 40px no dense */
 .vazio{display:flex;flex-direction:column;align-items:flex-start;gap:var(--espaco-03);
-  padding:var(--espaco-06) var(--espaco-05);border:1px dashed rgba(253,213,211,.2);
+  padding:var(--espaco-06) var(--espaco-05);border:1px dashed var(--cor-borda-forte);
   border-radius:var(--raio-painel);color:var(--cor-texto-fraco)}
-.vazio svg{color:var(--cor-texto-fraco)}
-.painel-erro{border-color:var(--coral)}
+.vazio-arco{display:grid;place-items:center;width:96px;height:96px;
+  border:4px solid var(--cor-borda-padrao);border-radius:var(--raio-arco);
+  color:var(--cor-texto-fraco)}
+.vazio-arco .eloi-icon{transform:translate(8px,8px)}
+[data-density='dense'] .vazio-arco{width:40px;height:40px;border:0;border-radius:0}
+[data-density='dense'] .vazio-arco .eloi-icon{transform:none}
+.vazio .t-card{color:var(--cor-texto-primario)}
+/* §9 Feedback › alert: ícone + texto, fundo a 10% da cor, borda esquerda 2px */
+.painel-erro{border-color:var(--cor-borda-padrao);border-left:2px solid var(--cor-feedback-erro);
+  background:rgba(253,68,0,.10)}
+.painel-erro>header .etiqueta-acento{color:var(--cor-feedback-erro)}
 .esqueleto{background:var(--cor-superficie-elevada);border-radius:var(--raio-minimo);
   animation:esqueleto 1.2s infinite var(--curva-padrao)}
 @keyframes esqueleto{0%,100%{opacity:.5}50%{opacity:.8}}

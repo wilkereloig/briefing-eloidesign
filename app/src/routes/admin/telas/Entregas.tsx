@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { materiaisApi } from '../../../lib/api'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import type { MaterialRow, MaterialStatus } from '../../../lib/tipos'
-import { Chip, Esqueleto, Icone, Indicador, Painel, Pilula, Vazio, Botao, Aviso } from '../../../ui/componentes'
+import { Chip, Erro, Esqueleto, Icone, Indicador, Painel, Pilula, Vazio, Botao, Aviso } from '../../../ui/componentes'
 import { FolhaEntrega, FolhaExcluir } from '../folhas'
 import { Cabecalho } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
@@ -107,14 +107,7 @@ export default function Entregas() {
               nota="Fora do portal" />
           </div>
 
-          {erro && (
-            <Painel erro titulo="Erro">
-              <p className="t-msg" role="alert" style={{ color: 'var(--coral)' }}>{erro}</p>
-              <Botao onClick={() => void carregar()} style={{ marginTop: 'var(--espaco-04)' }}>
-                Tentar de novo
-              </Botao>
-            </Painel>
-          )}
+          {erro && <Erro causa={erro} aoTentar={() => void carregar()} />}
 
           <div className="abas" role="tablist" aria-label="Status do material">
             <Pilula ativa={filtro === 'todos'} role="tab" aria-selected={filtro === 'todos'}

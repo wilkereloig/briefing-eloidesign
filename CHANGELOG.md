@@ -2,6 +2,28 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Migração para a spec ELOI Design System, fase 4: telas de gestão
+
+O que muda nas ~12 telas `standard` vem de três componentes e da escala
+tipográfica — nenhuma tela reescrita.
+
+- **Escala tipográfica lê os tokens** `--tipo-*` (§4): h1 de página 28→44px
+  (era 27→32 e nunca chegava no tamanho), h2 22→28, h3 19→22, KPI de card 28
+  e o KPI dominante 44 no desktop (`data.xl`, §10). Corpo 15→16, legenda 13.
+- **Estado vazio** (§12): arco da marca em 96px com o ícone dentro, título em
+  `<h3>`; em tela densa o arco some e fica o ícone de 40px. Vazio por busca
+  diz o termo ("Nada encontrado para “x”") e vazio por filtro oferece limpar
+  o filtro, não cadastrar — Clientes e Arquivos corrigidos.
+- **Erro** vira alert de verdade (§9 Feedback): ícone + texto, fundo a 10% do
+  Coral, borda esquerda 2px. Entregas, Briefings e Arquivos paravam de
+  recriar o bloco à mão e usam `<Erro>`.
+- **Dinheiro por natureza** (§4 Números): valor negativo sai em Coral com o
+  sinal sozinho — a tela não escolhe mais a cor de uma despesa. Props
+  `recebido` (sucesso) e `previsto` (fraco + tracejado) pra quem precisar.
+- **Margens da grade** (§6): 20 no mobile, 32 no tablet, 48 no desktop —
+  eram 16/24/32/36 em quatro faixas. Card ganha 24px de recuo a partir de
+  768px (§5). Achei mais um `var()` órfão nessa media query (`--padding-card`).
+
 ## 2026-09-04 — Migração para a spec ELOI Design System, fase 3: densidade e tabela
 
 Dinheiro, Notas, Relatórios e a prévia de importação de extrato declaram

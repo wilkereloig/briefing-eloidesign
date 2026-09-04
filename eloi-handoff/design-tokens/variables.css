@@ -10,6 +10,7 @@
 
 
 
+
 :root {
   /* ========== PALETA — cor de marca crua, não usar direto em componente ========== */
   --roxo: #7D2AE8;
@@ -164,7 +165,7 @@
   --z-aviso: 60;
 
   /* margem de conteúdo — cresce por faixa (RESPONSIVE_GUIDELINES) */
-  --margem: var(--espaco-04);
+  --margem: var(--grade-margem-mobile);
   --gap-grade: var(--espaco-03);
   --preenchimento-cartao: var(--espaco-04); /* fase 2 sobe pra 24/32 junto do resto do card */
 }

@@ -3,7 +3,7 @@ import { financas, materiaisApi } from '../../../lib/api'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import type { Arquivo, MaterialRow } from '../../../lib/tipos'
 import {
-  Aviso, Botao, Campo, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
+  Aviso, Botao, Campo, Erro, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
 // Arquivos tem carga própria (não vem do store financeiro), então trata
 // esqueleto e erro localmente em vez de usar <Carga>.
@@ -87,8 +87,7 @@ export default function Arquivos() {
               nota="Materiais do portal do cliente" />
           </div>
 
-          {erro && <Painel erro titulo="Erro"><p className="t-msg" role="alert"
-            style={{ color: 'var(--coral)' }}>{erro}</p></Painel>}
+          {erro && <Erro causa={erro} aoTentar={() => void carregar()} />}
 
           <div className="abas" role="tablist" aria-label="Categoria do arquivo">
             <Pilula ativa={filtro === 'todos'} role="tab" aria-selected={filtro === 'todos'}
@@ -114,9 +113,16 @@ export default function Arquivos() {
 
           <Painel titulo={`${lista.length} ${lista.length === 1 ? 'arquivo' : 'arquivos'}`}>
             {lista.length === 0 ? (
+              busca || filtro !== 'todos' ? (
+                /* §12: vazio por filtro oferece limpar o filtro, não cadastrar */
+                <Vazio icone="pesquisa" titulo={busca ? `Nada encontrado para “${busca}”` : 'Nada nesta categoria'}
+                  instrucao="Limpe o filtro para ver todos os arquivos."
+                  acao={<Botao onClick={() => { setBusca(''); setFiltro('todos') }}>Limpar filtro</Botao>} />
+              ) : (
               <Vazio icone="documentos" titulo="Nenhum arquivo aqui"
                 instrucao="Envie contratos, comprovantes e notas para manter tudo ligado ao cliente certo."
                 acao={<Botao variante="primario" onClick={() => setFolha('novo')}>Enviar arquivo</Botao>} />
+              )
             ) : (
               <ul className="lista">
                 {lista.map((a) => (
