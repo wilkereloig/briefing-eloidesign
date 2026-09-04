@@ -34,7 +34,7 @@ export const ROTULO_EVENTO: Record<TipoEvento, string> = {
   projeto_criado: 'Projeto criado',
   projeto_entregue: 'Projeto entregue',
   projeto_pago: 'Pagamento recebido',
-  nota_emitida: 'Nota emitida',
+  nota_emitida: 'Nota registrada',
   entrega_publicada: 'Entrega publicada',
 }
 

@@ -63,7 +63,7 @@ Molde que gera Transações (`eloi_recorrencias`). Materializada ao abrir o pain
 Mesma tabela (`eloi_metas`), discriminada por `especie`. `orcamento` compara gasto da categoria com um limite no período; `meta` acumula em direção a um alvo. Desativar preserva o histórico do que foi planejado.
 
 **Nota fiscal**:
-`eloi_notas_fiscais`, ligada a Cliente, Serviço e Transação. Nota com status `emitida`/`enviada` **exige número** — validado no servidor. Serviço concluído sem nota vira Decisão.
+`eloi_notas_fiscais`, ligada a Cliente, Serviço e Transação. **O painel não emite nota**: ela é emitida no sistema da prefeitura e anexada aqui (número + PDF). Os status descrevem a nota, não uma ação do painel. Nota com status `emitida`/`enviada` **exige número** — validado no servidor. Serviço concluído sem nota vira Decisão.
 
 **Movimento** (legado):
 Entrada/saída em `eloi_movimentos_financeiros`, do painel `/gestao`. Tabela vazia e congelada; substituída por Transação.

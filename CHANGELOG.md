@@ -25,6 +25,13 @@ número ficava preso na tela.
   `lib/exportar.ts` + `montarCsv` testado.
 - **Imprimir**: `@media print` esconde navegação e botões.
 
+## 2026-09-04 — Notas fiscais: "anexar", não "emitir"
+
+O painel nunca emitiu nota — ela nasce na prefeitura e entra aqui como número
+e PDF. Os textos diziam "Emitir", "Nova nota", "Aguardando emissão" e davam a
+entender o contrário. Agora: "Anexar nota", "Sem PDF anexado", "Nota anexada".
+Os status (`emitida`, `enviada`…) continuam: descrevem a nota, não o painel.
+
 ## 2026-09-04 — Projetos agrupados por mês
 
 Sessenta projetos numa lista só, sem mês e sem data, não se lê. A lista agora

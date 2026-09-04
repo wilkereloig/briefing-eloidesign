@@ -341,7 +341,7 @@ export default function Projetos() {
                             {/* estado da NF por ícone além da cor (acessibilidade) */}
                             <span className="col-desktop" style={{ color: semNota ? 'var(--coral)' : 'var(--acento)' }}>
                               <Icone nome="nota-fiscal" tamanho={16}
-                                rotulo={p.servico?.nf_numero ? 'Nota emitida' : 'Sem nota fiscal'} />
+                                rotulo={p.servico?.nf_numero ? 'Nota anexada' : 'Sem nota fiscal'} />
                             </span>
                             {editandoValor ? (
                               <input className="campo-caixa valor-linha" inputMode="decimal"

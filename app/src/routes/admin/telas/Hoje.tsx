@@ -82,7 +82,7 @@ export default function Hoje() {
               <Indicador rotulo="Notas pendentes"
                 valor={String(notas.filter((n) => n.status === 'pendente' || n.status === 'pronta').length)}
                 cor={notas.some((n) => n.status === 'pronta') ? 'coral' : undefined}
-                nota="Aguardando emissão" />
+                nota="Sem PDF anexado" />
               <Indicador rotulo="Em execução"
                 valor={String(servicos.filter((s) => s.status_execucao === 'em_execucao').length)}
                 nota={`${servicos.filter((s) => s.status_execucao === 'aguardando_inicio').length} na fila`} />

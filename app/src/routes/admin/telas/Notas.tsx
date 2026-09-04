@@ -60,7 +60,7 @@ export default function Notas() {
     <div className="tela pilha">
       <Cabecalho secao="Fiscal" titulo="Notas fiscais">
         <Botao variante="primario" onClick={() => setFolha({})}>
-          <Icone nome="adicionar" tamanho={16} />Nova nota
+          <Icone nome="adicionar" tamanho={16} />Anexar nota
         </Botao>
       </Cabecalho>
 
@@ -68,7 +68,7 @@ export default function Notas() {
         <div className="grade-indicadores">
           <Indicador dominante rotulo="Emitidas" valor={String(emitidas.length)}
             nota={fmtBRL(emitidas.reduce((s, n) => s + n.valor_cents, 0))} />
-          <Indicador rotulo="Aguardando emissão"
+          <Indicador rotulo="Sem PDF anexado"
             valor={String(notas.filter((n) => n.status === 'pendente' || n.status === 'pronta').length)}
             cor={notas.some((n) => n.status === 'pronta') ? 'coral' : undefined}
             nota="Pendentes e prontas" />
@@ -93,7 +93,7 @@ export default function Notas() {
                     </span>
                   </span>
                   <Dinheiro cents={s.valor_cents} className="t-valor" />
-                  <Botao compacto onClick={() => setFolha({ servicoId: s.id })}>Emitir</Botao>
+                  <Botao compacto onClick={() => setFolha({ servicoId: s.id })}>Anexar nota</Botao>
                 </li>
               ))}
             </ul>
@@ -134,7 +134,7 @@ export default function Notas() {
           {notasFiltradas === null ? <Esqueleto linhas={3} altura={56} /> : lista.length === 0 ? (
             <Vazio icone="nota-fiscal" titulo="Nenhuma nota neste filtro"
               instrucao="Registre uma nota fiscal para acompanhar emissão, envio e imposto."
-              acao={<Botao variante="primario" onClick={() => setFolha({})}>Nova nota</Botao>} />
+              acao={<Botao variante="primario" onClick={() => setFolha({})}>Anexar nota</Botao>} />
           ) : (
             <ul className="lista">
               {lista.map((n) => (
@@ -216,7 +216,7 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
   const [imposto, setImposto] = useState(inicial ? fmtBRL(inicial.imposto_cents) : '')
   const [competencia, setCompetencia] = useState(
     inicial?.competencia ?? servico?.data_competencia ?? '')
-  // Serviços que esta nota cobre (D-22). Abrir a folha por "Emitir" já traz o
+  // Serviços que esta nota cobre (D-22). Abrir a folha por "Anexar nota" já traz o
   // serviço que originou a ação.
   const [escolhidos, setEscolhidos] = useState<string[]>(
     inicial?.servicos?.map((s) => s.id) ?? (servicoId ? [servicoId] : []))
@@ -249,7 +249,7 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
     const e: Record<string, string> = {}
     // Regra do servidor repetida aqui só para o erro aparecer antes do envio.
     if ((status === 'emitida' || status === 'enviada') && !numero.trim()) {
-      e.numero = 'Nota emitida precisa de número'
+      e.numero = 'Nota com status emitida precisa do número da prefeitura'
     }
     if (centsDeBRL(valor) <= 0) e.valor = 'Informe o valor da nota'
     setErros(e)
@@ -303,7 +303,7 @@ function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
   }
 
   return (
-    <Folha titulo={inicial ? 'Editar nota fiscal' : 'Nova nota fiscal'} aoFechar={aoFechar}
+    <Folha titulo={inicial ? 'Editar nota fiscal' : 'Anexar nota fiscal'} aoFechar={aoFechar}
       rodape={<>
         <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}

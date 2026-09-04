@@ -56,7 +56,7 @@ export function Busca({ aberta, aoFechar, aoCriar }: {
     { id: 'cmd:servico', titulo: 'Novo serviço', detalhe: 'Registrar trabalho', destino: '/admin/projetos?novo=1' },
     { id: 'cmd:orcamento', titulo: 'Nova proposta', detalhe: 'Montar orçamento', destino: '/admin/orcamentos?novo=1' },
     { id: 'cmd:briefing', titulo: 'Novo convite de briefing', detalhe: 'Gerar link', destino: '/admin/briefings?novo=1' },
-    { id: 'cmd:nota', titulo: 'Nova nota fiscal', detalhe: 'Registrar NF', destino: '/admin/notas?novo=1' },
+    { id: 'cmd:nota', titulo: 'Anexar nota fiscal', detalhe: 'Registrar NF emitida fora do painel', destino: '/admin/notas?novo=1' },
     { id: 'cmd:entrada', titulo: 'Lançar receita', detalhe: 'Dinheiro entrando' },
     { id: 'cmd:saida', titulo: 'Lançar despesa', detalhe: 'Dinheiro saindo' },
     { id: 'cmd:tarefa', titulo: 'Nova tarefa', detalhe: 'Lembrete com prazo' },
