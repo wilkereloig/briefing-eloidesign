@@ -401,6 +401,7 @@ export default function Projetos() {
 
       {folha && (
         <FolhaServico inicial={folha.s} aoFechar={() => setFolha(null)}
+          aoAnexarNota={(id) => { setFolha(null); setNotaPara(id) }}
           aoSalvar={async (msg) => { setAviso({ texto: msg }); await recarregar() }} />
       )}
       {notaPara && (

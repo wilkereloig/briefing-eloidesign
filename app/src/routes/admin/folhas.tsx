@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   CATEGORIAS_ENTREGA, clientes as clientesApi, contatos as contatosApi, financas,
   materiaisApi, orcamentos as orcamentosApi, servicos as servicosApi,
@@ -742,10 +743,13 @@ export function FolhaTarefa({ inicial, clienteInicial, servicoInicial, aoFechar,
 
 /** Serviço é a unidade de trabalho entregue. A etapa do projeto é calculada
  *  daqui + do orçamento de origem (domain/projeto.ts): não existe campo etapa. */
-export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
+export function FolhaServico({ inicial, aoFechar, aoSalvar, aoAnexarNota }: {
   inicial?: ServicoRow
   aoFechar: () => void
   aoSalvar: (msg: string) => void
+  /** Quem chama decide como anexar a nota (Projetos abre a FolhaNota). Sem
+   *  isso, a folha só aponta para a tela Notas. */
+  aoAnexarNota?: (servicoId: string) => void
 }) {
   const { clientes, subClientes, recarregar } = useFinancas()
   const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? '')
@@ -859,11 +863,19 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
             <span className="etiqueta-mini">Nota fiscal</span>
             {/* O número não se digita aqui desde 2026-09-03: quem define é a
                 nota (eloi_notas_fiscais) e nf_numero é espelho por trigger. */}
-            <p className="t-legenda">
-              {inicial?.nf_numero
-                ? `NF ${inicial.nf_numero} — vinculada na tela Notas fiscais.`
-                : 'Vincule este serviço a uma nota na tela Notas fiscais.'}
-            </p>
+            {inicial?.nf_numero ? (
+              <p className="t-legenda">
+                NF {inicial.nf_numero} · <Link to="/admin/notas">ver em Notas fiscais</Link>
+              </p>
+            ) : inicial && aoAnexarNota ? (
+              <Botao compacto onClick={() => aoAnexarNota(inicial.id)} style={{ alignSelf: 'flex-start' }}>
+                <Icone nome="nota-fiscal" tamanho={14} />Anexar nota (PDF)
+              </Botao>
+            ) : (
+              <p className="t-legenda">
+                {inicial ? 'Anexe a nota na tela Notas fiscais.' : 'Salve o serviço; depois anexe a nota pela lista.'}
+              </p>
+            )}
           </div>
         </div>
 

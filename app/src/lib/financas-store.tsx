@@ -9,7 +9,7 @@
 // frente (parcelas e previsão). Histórico inteiro nunca entra — o briefing pede
 // explicitamente para não carregar tudo de uma vez.
 import {
-  createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode,
+  createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode,
 } from 'react'
 import {
   briefingsApi, clientes as clientesApi, financas, orcamentos as orcamentosApi,
@@ -93,8 +93,12 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
   const [mes, setMes] = useState(mesAtual)
   const [lente, setLente] = useState<Lente>('tudo')
 
+  // Esqueleto só na primeira carga (ou troca de mês). Salvar uma folha chama
+  // `recarregar` e a tela não pode piscar inteira por isso: os dados velhos
+  // ficam na tela até os novos chegarem.
+  const jaCarregou = useRef(false)
   const carregar = useCallback(async () => {
-    setCarregando(true)
+    if (!jaCarregou.current) setCarregando(true)
     setErro(null)
     try {
       // Materializa recorrências vencidas antes de ler: abrir o painel é o
@@ -130,6 +134,7 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       setErro((e as Error).message)
     } finally {
+      jaCarregou.current = true
       setCarregando(false)
     }
   }, [mes])

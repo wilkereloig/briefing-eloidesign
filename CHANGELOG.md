@@ -25,6 +25,14 @@ número ficava preso na tela.
   `lib/exportar.ts` + `montarCsv` testado.
 - **Imprimir**: `@media print` esconde navegação e botões.
 
+## 2026-09-04 — Salvar folha não pisca a tela
+
+Toda folha salva chamava `recarregar()` e o painel inteiro voltava ao
+esqueleto, perdendo a rolagem. Agora o esqueleto só aparece na primeira
+carga; depois, os dados velhos ficam na tela até os novos chegarem. Na folha
+do serviço, a seção Nota fiscal virou ação: "Anexar nota (PDF)" abre a
+folha de nota já vinculada ao serviço; com nota, mostra "NF n · ver em Notas".
+
 ## 2026-09-04 — Anexar nota direto da lista de projetos
 
 Serviço entregue ou pago sem nota mostrava só o ícone coral; anexar exigia
