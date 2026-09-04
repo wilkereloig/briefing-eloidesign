@@ -3,7 +3,7 @@ import {
   saldoConta, saldoDisponivel, resultado, vencidas, diasDeAtraso, proximosVencimentos,
   faturaAberta, limiteDisponivel, dividirParcelas, dataDaParcela, previsaoCaixa,
   agrupar, consumoOrcamento, saldoAberto, valorLiquidado, competenciaDe,
-  agruparPorPrazo, faixaDePrazo,
+  agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto,
 } from './financeiro'
 import type { Conta, Transacao } from '../lib/tipos'
 
@@ -327,5 +327,41 @@ describe('fila de cobrança por prazo', () => {
     expect(grupos[0].itens.map((t) => t.id)).toEqual(['z', 'y'])
     expect(grupos[0].total_cents).toBe(700)
     expect(grupos[1].total_cents).toBe(600)
+  })
+})
+
+describe('ciclo de fatura', () => {
+  const cartao = conta({ id: 'k', tipo: 'cartao_credito', dia_fechamento: 25, dia_vencimento: 5 })
+
+  it('antes do fechamento: fecha este mês, vence no próximo', () => {
+    expect(cicloFatura(cartao, '2026-09-10')).toEqual({ fechamento: '2026-09-25', vencimento: '2026-10-05' })
+  })
+
+  it('depois do fechamento: ciclo já é o do mês seguinte', () => {
+    expect(cicloFatura(cartao, '2026-09-26')).toEqual({ fechamento: '2026-10-25', vencimento: '2026-11-05' })
+  })
+
+  it('vencimento depois do fechamento no mesmo mês', () => {
+    const c = conta({ id: 'k', tipo: 'cartao_credito', dia_fechamento: 5, dia_vencimento: 15 })
+    expect(cicloFatura(c, '2026-09-01')).toEqual({ fechamento: '2026-09-05', vencimento: '2026-09-15' })
+  })
+
+  it('fechamento dia 31 em mês de 30 cai no último dia', () => {
+    const c = conta({ id: 'k', tipo: 'cartao_credito', dia_fechamento: 31, dia_vencimento: 10 })
+    expect(cicloFatura(c, '2026-09-01')!.fechamento).toBe('2026-09-30')
+  })
+
+  it('sem dias configurados não inventa ciclo', () => {
+    expect(cicloFatura(conta({ id: 'k', tipo: 'cartao_credito' }), '2026-09-01')).toBeNull()
+  })
+
+  it('parcelado em aberto conta só parcelas do cartão ainda devidas', () => {
+    const r = parceladoAberto(cartao, [
+      tx({ id: '1', tipo: 'saida', conta_id: 'k', parcela_de: 3, parcela_num: 1, status: 'realizado', valor_cents: 100 }),
+      tx({ id: '2', tipo: 'saida', conta_id: 'k', parcela_de: 3, parcela_num: 2, status: 'pendente', valor_cents: 100 }),
+      tx({ id: '3', tipo: 'saida', conta_id: 'k', parcela_de: 3, parcela_num: 3, status: 'pendente', valor_cents: 100 }),
+      tx({ id: '4', tipo: 'saida', conta_id: 'outra', parcela_de: 2, status: 'pendente', valor_cents: 100 }),
+    ])
+    expect(r).toEqual({ qtd: 2, cents: 200 })
   })
 })

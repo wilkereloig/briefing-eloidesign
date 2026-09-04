@@ -199,6 +199,30 @@ export function faturaAberta(cartao: Conta, transacoes: Transacao[]): number {
     .reduce((s, t) => s + saldoAberto(t), 0)
 }
 
+/**
+ * Datas do ciclo atual do cartão a partir de `hoje`: quando a fatura fecha e
+ * quando vence. Fechamento já passou neste mês → o ciclo é o do mês que vem.
+ * Vencimento menor que fechamento significa que vence no mês seguinte ao
+ * fechamento (fecha dia 25, vence dia 5).
+ */
+export function cicloFatura(cartao: Conta, hoje: string): { fechamento: string; vencimento: string } | null {
+  if (!cartao.dia_fechamento || !cartao.dia_vencimento) return null
+  const [a, m, d] = hoje.split('-').map(Number)
+  const desloc = d > cartao.dia_fechamento ? 1 : 0
+  const fecha = dataDaParcela(`${a}-${String(m).padStart(2, '0')}-${String(cartao.dia_fechamento).padStart(2, '0')}`, desloc)
+  const vence = dataDaParcela(
+    `${fecha.slice(0, 8)}${String(cartao.dia_vencimento).padStart(2, '0')}`,
+    cartao.dia_vencimento < cartao.dia_fechamento ? 1 : 0)
+  return { fechamento: fecha, vencimento: vence }
+}
+
+/** Parcelas ainda em aberto no cartão: quantas linhas e quanto falta. */
+export function parceladoAberto(cartao: Conta, transacoes: Transacao[]): { qtd: number; cents: number } {
+  const linhas = transacoes.filter((t) =>
+    t.conta_id === cartao.id && t.tipo === 'saida' && !!t.parcela_de && estaEmAberto(t))
+  return { qtd: linhas.length, cents: linhas.reduce((s, t) => s + saldoAberto(t), 0) }
+}
+
 export function limiteDisponivel(cartao: Conta, transacoes: Transacao[]): number | null {
   if (cartao.limite_cents == null) return null
   return cartao.limite_cents - faturaAberta(cartao, transacoes)

@@ -2,6 +2,25 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Onboarding financeiro; ciclo de fatura; recorrências legíveis
+
+Instalação com zero contas mostrava um dashboard de zeros — e zero parece
+resultado, não configuração faltando. O cartão mostrava fatura sem dizer
+quando fecha; a recorrência não dizia categoria, conta nem desde quando.
+
+### Adicionado
+
+- **Configure seu financeiro** em Hoje e em Dinheiro: cinco passos com
+  estado (contas → saldos iniciais → cartões (opcional) → categorias →
+  lançamentos). Some sozinho quando o essencial existe.
+  `domain/onboarding.ts` (`passosOnboarding`, `precisaOnboarding`),
+  `routes/admin/Onboarding.tsx`.
+- **Cartão**: fecha em / vence em / parcelado em aberto (quantas parcelas e
+  quanto falta), e "limite não informado" em vez de "R$ 0,00 disponível".
+  `domain/financeiro.ts`: `cicloFatura`, `parceladoAberto`.
+- **Recorrência** mostra categoria · conta · contexto · desde · até, além
+  da próxima geração. Editar continua mudando só o molde (D-21).
+
 ## 2026-09-04 — Fila de cobrança por prazo; baixa com conta e observação; reagendar
 
 "A receber" e "A pagar" eram uma lista plana ordenada por vencimento: para

@@ -8,7 +8,8 @@ import {
   valorLiquidado,
 } from '../../../domain/financeiro'
 import { ACAO, decisoesDoDia } from '../../../domain/decisoes'
-import { Etiqueta, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
+import { Etiqueta, Icone, Indicador, Painel } from '../../../ui/componentes'
+import { Onboarding } from '../Onboarding'
 import { Cabecalho, Carga, ChipMovimento, Dinheiro, SeletorLente, SeletorMes } from '../../../ui/painel'
 import { dataCurta, rotuloConta, variacao } from '../../../ui/formato'
 import { fmtBRL } from '../../../lib/dinheiro'
@@ -54,14 +55,9 @@ export default function Hoje() {
       </Cabecalho>
 
       <Carga linhas={5}>
-        {semNada ? (
-          <Vazio
-            icone="caixa"
-            titulo="Nenhuma conta cadastrada ainda"
-            instrucao="Cadastre suas contas e cartões para o painel começar a somar saldo, receita e despesa."
-            acao={<Link className="btn btn-primario" to="/admin/config">Cadastrar conta</Link>}
-          />
-        ) : (
+        {/* Instalação vazia: a lista de passos substitui o dashboard de zeros. */}
+        <Onboarding />
+        {semNada ? null : (
           <>
             <div className="grade-indicadores">
               <Indicador dominante

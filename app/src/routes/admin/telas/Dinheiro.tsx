@@ -3,8 +3,8 @@ import { financas } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { hojeISO, rotuloMes, useFinancas, useNomes, useTransacoesDoMes } from '../../../lib/financas-store'
 import {
-  agruparPorPrazo, diasDeAtraso, estaEmAberto, faturaAberta, limiteDisponivel, resultado,
-  ROTULO_FAIXA, saldoConta, saldoAberto,
+  agruparPorPrazo, cicloFatura, diasDeAtraso, estaEmAberto, faturaAberta, limiteDisponivel,
+  parceladoAberto, resultado, ROTULO_FAIXA, saldoConta, saldoAberto,
 } from '../../../domain/financeiro'
 import type { Conta, Recorrencia, ServicoRow, Transacao } from '../../../lib/tipos'
 import {
@@ -14,6 +14,7 @@ import { Cabecalho, Carga, ChipMovimento, Dinheiro, SeletorLente, SeletorMes } f
 import { custoAnual, custoMensal, dataCurta, rotuloConta, rotuloPeriodo } from '../../../ui/formato'
 import { FolhaTransacao } from '../FolhaTransacao'
 import { FolhaConta, FolhaExcluir, FolhaLiquidar, FolhaReagendar, FolhaRecorrencia } from '../folhas'
+import { Onboarding } from '../Onboarding'
 
 type Aba = 'movimentos' | 'receber' | 'pagar' | 'contas' | 'recorrencias'
 /** Recortes da fila de cobrança. São perguntas, não status: "o que está sem
@@ -139,6 +140,7 @@ export default function DinheiroTela() {
       </Cabecalho>
 
       <Carga linhas={6}>
+        <Onboarding />
         <div className="grade-indicadores">
           <Indicador dominante rotulo="Resultado do mês" valor={fmtBRL(r.lucro_cents)}
             nota={`${fmtBRL(r.receita_cents)} recebido · ${fmtBRL(r.despesa_cents)} gasto`} />
@@ -246,7 +248,7 @@ export default function DinheiroTela() {
             ) : (
               <div className="grade-indicadores">
                 {contasVisiveis.map((c) => (
-                  <CartaoConta key={c.id} c={c} transacoes={transacoes}
+                  <CartaoConta key={c.id} c={c} transacoes={transacoes} hoje={hoje}
                     aoEditar={() => setFolha({ tipo: 'conta', c })}
                     aoPagarFatura={() => setFolha({ tipo: 'fatura', c })} />
                 ))}
@@ -260,6 +262,8 @@ export default function DinheiroTela() {
             acao={<Botao compacto onClick={() => setFolha({ tipo: 'recorrencia' })}>
               <Icone nome="adicionar" tamanho={14} />Nova
             </Botao>}>
+            {/* Editar muda só o molde: o que já foi gerado é obrigação real e
+                fica como está — ver recorrencias.upsert na edge. */}
             {recVisiveis.length === 0 ? (
               <Vazio icone="cronograma" titulo="Nenhuma recorrência ativa"
                 instrucao="Cadastre assinaturas e contas fixas para o painel lançar sozinho todo mês."
@@ -273,10 +277,16 @@ export default function DinheiroTela() {
                     <span className="celula">
                       <span className="t-ui espremer">{x.nome}</span>
                       <span className="t-legenda espremer">
-                        {rotuloPeriodo(x.periodicidade)} · {x.contexto}
+                        {[
+                          rotuloPeriodo(x.periodicidade),
+                          x.categoria_id ? nomes.categoria.get(x.categoria_id)?.nome : null,
+                          x.conta_id ? nomes.conta.get(x.conta_id)?.nome : null,
+                          x.contexto,
+                        ].filter(Boolean).join(' · ')}
                         {x.pausada_em
                           ? ' · pausada'
                           : x.proxima_cobranca ? ` · próxima em ${dataCurta(x.proxima_cobranca)}` : ''}
+                        {` · desde ${dataCurta(x.inicio)}`}{x.fim ? ` até ${dataCurta(x.fim)}` : ''}
                       </span>
                     </span>
                     <span className="col-desktop t-legenda">
@@ -433,15 +443,18 @@ function LinhaMov({
   )
 }
 
-function CartaoConta({ c, transacoes, aoEditar, aoPagarFatura }: {
+function CartaoConta({ c, transacoes, hoje, aoEditar, aoPagarFatura }: {
   c: Conta
   transacoes: Transacao[]
+  hoje: string
   aoEditar: () => void
   aoPagarFatura: () => void
 }) {
   const ehCartao = c.tipo === 'cartao_credito'
   const fatura = ehCartao ? faturaAberta(c, transacoes) : 0
   const disponivel = ehCartao ? limiteDisponivel(c, transacoes) : null
+  const ciclo = ehCartao ? cicloFatura(c, hoje) : null
+  const parcelado = ehCartao ? parceladoAberto(c, transacoes) : null
 
   return (
     <Card className="conta-card">
@@ -460,9 +473,21 @@ function CartaoConta({ c, transacoes, aoEditar, aoPagarFatura }: {
       </p>
       <p className="t-legenda">
         {ehCartao
-          ? `Fatura aberta · ${fmtBRL(disponivel ?? 0)} de limite disponível`
+          ? disponivel == null
+            ? 'Fatura aberta · limite não informado'
+            : `Fatura aberta · ${fmtBRL(disponivel)} de ${fmtBRL(c.limite_cents ?? 0)} disponível`
           : `${c.contexto}${c.instituicao ? ` · ${c.instituicao}` : ''}`}
       </p>
+      {ciclo && (
+        <span className="conta-ciclo">
+          <span><span className="etiqueta-mini">Fecha</span><span className="t-ui">{dataCurta(ciclo.fechamento)}</span></span>
+          <span><span className="etiqueta-mini">Vence</span><span className="t-ui">{dataCurta(ciclo.vencimento)}</span></span>
+          <span>
+            <span className="etiqueta-mini">Parcelado</span>
+            <span className="t-ui">{parcelado!.qtd ? `${parcelado!.qtd}× · ${fmtBRL(parcelado!.cents)}` : '—'}</span>
+          </span>
+        </span>
+      )}
       {/* Pagar fatura é TRANSFERÊNCIA (conta → cartão), nunca despesa nova: a
           despesa já foi lançada em cada compra. Lançar de novo dobraria o gasto. */}
       {ehCartao && fatura > 0 && (

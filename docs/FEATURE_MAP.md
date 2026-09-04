@@ -33,6 +33,8 @@ Atualizado: 2026-08-07.
 - **Permissão:** admin
 - **Fluxos:** receita · despesa · transferência · parcelamento · pagamento parcial (com conta e observação) · reagendar · estorno · pagar fatura de cartão · recorrência (pausar/retomar/encerrar)
 - **Fila de cobrança:** A receber / A pagar agrupadas por faixa de prazo (`agruparPorPrazo`) com recortes Vencidos · Sem NF · Recorrentes · Parciais
+- **Cartão:** fatura aberta, limite disponível, ciclo (`cicloFatura`), parcelado em aberto (`parceladoAberto`)
+- **Onboarding:** `routes/admin/Onboarding.tsx` (Hoje e Dinheiro) enquanto faltar conta ou lançamento — `domain/onboarding.ts`
 - **Pendência:** conciliação de saldo; importação CSV/XLSX
 - **Testes:** `domain/financeiro.test.ts` (incluindo estorno e a invariante liquidado+aberto=combinado)
 

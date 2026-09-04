@@ -236,6 +236,16 @@ select.campo-caixa option{background:var(--chao);color:var(--texto)}
 .ponto-cor{width:8px;height:8px;border-radius:var(--raio-etiqueta);flex:none}
 .conta-card{cursor:pointer;text-align:left;min-height:150px;
   display:flex;flex-direction:column}
+.conta-ciclo{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--e-4);
+  margin-top:var(--e-5)}
+.conta-ciclo>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+
+/* ── onboarding ─────────────────────────────────────────────────────────── */
+.passo-num{flex:none;width:28px;height:28px;display:grid;place-items:center;
+  border-radius:var(--raio-etiqueta);background:var(--chao-3);
+  font-family:var(--fonte-titulo);font-weight:600;font-size:13px}
+.passos .lista-item[data-feito]{color:var(--texto-3)}
+.passos .lista-item[data-feito] .passo-num{background:var(--acento);color:var(--tinta)}
 
 /* ── cliente ────────────────────────────────────────────────────────────── */
 .grade-clientes{display:grid;gap:var(--gap-grade);
