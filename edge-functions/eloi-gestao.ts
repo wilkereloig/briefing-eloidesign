@@ -234,6 +234,11 @@ Deno.serve(async (req: Request) => {
     if (valorCents > 0) { row.valor_sugerido_cents = null; row.valor_sugerido_em = null; row.valor_sugerido_observacao = null; }
     if (typeof s.nf_arquivo_url === "string") row.nf_arquivo_url = s.nf_arquivo_url || null;
     if (typeof s.observacoes === "string") row.observacoes = s.observacoes || null;
+    // Prazo de entrega: undefined nao mexe; "" ou null limpa.
+    if (s.prazo !== undefined) {
+      if (s.prazo && !/^\d{4}-\d{2}-\d{2}$/.test(String(s.prazo))) return json({ error: "prazo inválido" }, 400);
+      row.prazo = s.prazo || null;
+    }
     if (s.id) {
       const { data, error } = await supabase.from("eloi_servicos").update(row).eq("id", s.id).select().single();
       if (error) return json({ error: error.message }, 500);
@@ -411,6 +416,63 @@ Deno.serve(async (req: Request) => {
     if (!body?.id) return json({ error: "id obrigatório" }, 400);
     // Contato nao tem historico financeiro pendurado: pode sair de verdade.
     const { error } = await supabase.from("eloi_contatos").delete().eq("id", body.id);
+    if (error) return json({ error: error.message }, 500);
+    return json({ ok: true });
+  }
+
+  // ── TAREFAS ── lembrete manual. Sem subtarefa, sem responsavel, sem comentario.
+  // Pendencia automatica (sem NF, vencido) e derivada no cliente e NAO entra aqui.
+  if (action === "tarefas.list") {
+    // Abertas inteiras + concluidas/canceladas dos ultimos 60 dias: historico
+    // antigo nao ajuda a decidir o que fazer hoje.
+    const corte = new Date(Date.now() - 60 * 86_400_000).toISOString();
+    const { data, error } = await supabase.from("eloi_tarefas").select("*")
+      .or(`status.in.(aberta,em_andamento),updated_at.gte.${corte}`)
+      .order("prazo", { ascending: true, nullsFirst: false }).order("created_at", { ascending: false });
+    if (error) return json({ error: error.message }, 500);
+    return json({ tarefas: data ?? [] });
+  }
+
+  if (action === "tarefas.upsert") {
+    const t = body?.tarefa || {};
+    const titulo = String(t.titulo || "").trim();
+    if (!titulo) return json({ error: "titulo obrigatório" }, 400);
+    const status = ["aberta", "em_andamento", "concluida", "cancelada"];
+    const prioridade = ["baixa", "normal", "alta"];
+    if (t.status && !status.includes(t.status)) return json({ error: "status inválido" }, 400);
+    if (t.prioridade && !prioridade.includes(t.prioridade)) return json({ error: "prioridade inválida" }, 400);
+    if (t.prazo && !/^\d{4}-\d{2}-\d{2}$/.test(String(t.prazo))) return json({ error: "prazo inválido" }, 400);
+    // Marca precisa ser do cliente informado — mesma regra dos servicos.
+    if (t.sub_cliente_id && t.cliente_id) {
+      const { data: m } = await supabase.from("eloi_sub_clientes").select("cliente_id").eq("id", t.sub_cliente_id).maybeSingle();
+      if (!m || m.cliente_id !== t.cliente_id) return json({ error: "marca não pertence a esse cliente" }, 400);
+    }
+    const row: any = {
+      titulo,
+      prazo: t.prazo || null,
+      status: t.status || "aberta",
+      prioridade: t.prioridade || "normal",
+      cliente_id: t.cliente_id || null,
+      sub_cliente_id: t.sub_cliente_id || null,
+      servico_id: t.servico_id || null,
+      observacoes: typeof t.observacoes === "string" ? t.observacoes.trim() || null : null,
+      updated_at: new Date().toISOString(),
+    };
+    // concluida_em e do servidor: marca ao concluir, limpa ao reabrir.
+    row.concluida_em = row.status === "concluida" ? new Date().toISOString() : null;
+    const q = t.id
+      ? supabase.from("eloi_tarefas").update(row).eq("id", t.id)
+      : supabase.from("eloi_tarefas").insert(row);
+    const { data, error } = await q.select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ tarefa: data });
+  }
+
+  // Excluir de verdade: tarefa nao e historico financeiro. Cancelar existe
+  // para quem quer manter o registro.
+  if (action === "tarefas.delete") {
+    if (!body?.id) return json({ error: "id obrigatório" }, 400);
+    const { error } = await supabase.from("eloi_tarefas").delete().eq("id", body.id);
     if (error) return json({ error: error.message }, 500);
     return json({ ok: true });
   }

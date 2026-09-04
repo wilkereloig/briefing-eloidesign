@@ -64,6 +64,12 @@ o estorno não estornar).
 
 **Invariante:** liquidado + em aberto sempre fecha em `valor_cents`.
 
+### `eloi_tarefas`
+Tarefa manual do dono: `titulo`, `prazo`, `status` (aberta · em_andamento ·
+concluida · cancelada), `prioridade` (baixa · normal · alta), `cliente_id` /
+`sub_cliente_id` / `servico_id` opcionais (`SET NULL`), `concluida_em` (servidor
+marca ao concluir). Pendência automática **não** entra aqui — é derivada.
+
 ### `eloi_conferencias`
 Fotografia "saldo do painel × saldo do extrato" numa data, por conta.
 Histórico, não correção: `diferenca_cents` fica gravada. Se o dono pediu
@@ -128,6 +134,9 @@ legado sem id tenta se adotar pelo nome; id que não pertence ao `cliente_id`
 (D-22). `nf_numero` é espelho de `numero` pelo mesmo trigger; sem nota
 vinculada aceita texto legado até `FolhaServico` perder o campo.
 `nf_arquivo_url` está sempre nulo — PDF vive em `eloi_notas_fiscais.arquivo_path`.
+`prazo` (date, nulo = sem prazo) é a entrega combinada. "Atrasado" = `prazo < hoje`
+e não concluída — derivado, nunca gravado. `data_competencia` é outra coisa: a
+que mês o valor pertence.
 
 `valor_sugerido_cents` / `valor_sugerido_em` / `valor_sugerido_observacao`: o
 cliente propõe valor (e observação opcional) pelo portal, aba Pendências

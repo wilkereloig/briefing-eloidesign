@@ -245,6 +245,19 @@ select.campo-caixa option{background:var(--chao);color:var(--texto)}
   border-radius:var(--raio-etiqueta);background:var(--chao-3);
   font-family:var(--fonte-titulo);font-weight:600;font-size:13px}
 .passos .lista-item[data-feito]{color:var(--texto-3)}
+
+/* ── tarefas ────────────────────────────────────────────────────────────── */
+.btn-texto{background:none;border:0;padding:0;cursor:pointer;color:inherit;
+  min-height:44px;font:inherit}
+.btn-texto:hover{text-decoration:underline}
+.tarefa-check{flex:none;width:44px;height:44px;display:grid;place-items:center;
+  border:1.5px solid var(--linha);border-radius:var(--raio-chip);background:none;
+  color:var(--texto);cursor:pointer}
+.tarefa-check:hover{background:var(--chao-2)}
+.tarefa-check[data-feita='true']{background:var(--acento);border-color:var(--acento);color:var(--tinta)}
+.lista-item[data-prioridade='alta'] .t-ui::before{content:'!';display:inline-block;margin-right:6px;
+  font-family:var(--fonte-titulo);font-weight:700;color:var(--coral)}
+.lista-item[data-atrasada='true'] .t-legenda{color:var(--coral)}
 .passos .lista-item[data-feito] .passo-num{background:var(--acento);color:var(--tinta)}
 
 /* ── cliente ────────────────────────────────────────────────────────────── */

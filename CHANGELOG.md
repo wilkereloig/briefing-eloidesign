@@ -2,6 +2,34 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Tarefas leves e prazo de entrega do serviço
+
+Não havia onde anotar "ligar para a Vibra na quinta", e o serviço não tinha
+data de entrega combinada — "atrasado" era impossível de detectar.
+
+### Adicionado
+
+- **Tarefas** (`eloi_tarefas`): título, prazo, prioridade (baixa/normal/
+  alta), situação (aberta/em andamento/concluída/cancelada), cliente, marca
+  e serviço opcionais. Sem subtarefa, responsável ou comentário — quem opera
+  é uma pessoa. Painel em **Hoje** (6 mais urgentes, `?novo=1` abre o
+  formulário) e na **ficha do cliente**; concluir/reabrir num clique.
+  `domain/tarefas.ts` (`tarefasAbertas`: atrasadas → prazo → sem prazo,
+  prioridade desempata). `eloi-gestao`: `tarefas.list/upsert/delete`.
+- **Criar** (botão central) e **Ctrl+K** ganham "Tarefa".
+- **Prazo de entrega** em serviço (`eloi_servicos.prazo`, campo "Entrega
+  combinada" na folha). Projetos mostra "entrega dd/mm" ou "entrega venceu".
+- **Precisa de você**: "serviço com prazo vencido e não concluído" vira
+  decisão atrasada com ação "Ver projeto". Serviço sem prazo nunca fica
+  atrasado por chute. `prazos()` passa a usar `prazo` (antes usava
+  competência, que é "a que mês pertence", não "quando entrega").
+
+### Regra
+
+Pendência automática (sem NF, conta vencida, prazo vencido) **não vira
+tarefa no banco** — é derivada em `domain/decisoes.ts`. Tarefa é o que o
+dono decidiu fazer; a fila é o que o sistema detectou.
+
 ## 2026-09-04 — Conferência de saldo e importação de extrato CSV
 
 Não havia como saber se o saldo do painel batia com o do banco, nem como

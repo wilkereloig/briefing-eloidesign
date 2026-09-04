@@ -2,15 +2,16 @@ import { useState } from 'react'
 import {
   CATEGORIAS_ENTREGA, clientes as clientesApi, contatos as contatosApi, financas,
   materiaisApi, orcamentos as orcamentosApi, servicos as servicosApi,
-  subClientes as subClientesApi, type CatalogoItem, type CategoriaEntrega,
+  subClientes as subClientesApi, tarefas as tarefasApi, type CatalogoItem, type CategoriaEntrega,
 } from '../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../lib/dinheiro'
 import { hojeISO, useFinancas } from '../../lib/financas-store'
 import { saldoAberto } from '../../domain/financeiro'
 import type {
   ClienteRow, Conta, ContatoRow, Contexto, MaterialRow, OrcamentoRow, Periodicidade,
-  Recorrencia, ServicoRow, StatusExecucao, SubClienteRow, TipoConta, TipoMov, Transacao,
+  Recorrencia, ServicoRow, StatusExecucao, SubClienteRow, TarefaRow, TipoConta, TipoMov, Transacao,
 } from '../../lib/tipos'
+import { ROTULO_PRIORIDADE, ROTULO_STATUS_TAREFA, STATUS_TAREFA } from '../../domain/tarefas'
 import {
   calcular, COMPLEXIDADES, lerItens, URGENCIAS,
   type Complexidade, type ItemOrcamento, type Urgencia,
@@ -617,6 +618,128 @@ export function FolhaSubCliente({ clienteId, inicial, aoFechar, aoSalvar }: {
   )
 }
 
+/** Tarefa manual: título, prazo, prioridade e, se quiser, cliente/marca/serviço. */
+export function FolhaTarefa({ inicial, clienteInicial, servicoInicial, aoFechar, aoSalvar }: {
+  inicial?: TarefaRow
+  clienteInicial?: string
+  servicoInicial?: string
+  aoFechar: () => void
+  aoSalvar: (msg: string) => void
+}) {
+  const { clientes, subClientes, servicos } = useFinancas()
+  const [titulo, setTitulo] = useState(inicial?.titulo ?? '')
+  const [prazo, setPrazo] = useState(inicial?.prazo ?? '')
+  const [prioridade, setPrioridade] = useState<TarefaRow['prioridade']>(inicial?.prioridade ?? 'normal')
+  const [status, setStatus] = useState<TarefaRow['status']>(inicial?.status ?? 'aberta')
+  const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? clienteInicial ?? '')
+  const [subClienteId, setSubClienteId] = useState(inicial?.sub_cliente_id ?? '')
+  const [servicoId, setServicoId] = useState(inicial?.servico_id ?? servicoInicial ?? '')
+  const [observacoes, setObservacoes] = useState(inicial?.observacoes ?? '')
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+
+  const marcas = subClientes.filter((m) => m.cliente_id === clienteId && (m.ativo || m.id === subClienteId))
+  const servicosDoCliente = servicos.filter((s) => s.cliente_id === clienteId
+    && (s.status_execucao !== 'concluida' || s.id === servicoId))
+
+  async function salvar() {
+    if (!titulo.trim()) return setErro('Escreva o que precisa ser feito')
+    setSalvando(true)
+    try {
+      await tarefasApi.upsert({
+        id: inicial?.id, titulo: titulo.trim(), prazo: prazo || null, prioridade, status,
+        cliente_id: clienteId || null, sub_cliente_id: subClienteId || null,
+        servico_id: servicoId || null, observacoes: observacoes.trim() || null,
+      })
+      aoSalvar(inicial ? 'Tarefa atualizada' : 'Tarefa criada')
+      aoFechar()
+    } catch (err) {
+      setErro((err as Error).message)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Folha titulo={inicial ? 'Editar tarefa' : 'Nova tarefa'} aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>Salvar</Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+        <Campo rotulo="O que fazer" value={titulo} erro={erro} autoFocus
+          onChange={(e) => { setTitulo(e.target.value); setErro('') }}
+          placeholder="Mandar a proposta revisada para a Vibra" />
+
+        <div className="grade-filtros">
+          <div className="campo">
+            <label htmlFor="tar-prazo">Prazo</label>
+            <input id="tar-prazo" type="date" className="campo-caixa" value={prazo}
+              onChange={(e) => setPrazo(e.target.value)} />
+          </div>
+          <div className="campo">
+            <span className="etiqueta-mini">Prioridade</span>
+            <div className="linha" style={{ marginTop: 'var(--e-2)' }}>
+              {(['baixa', 'normal', 'alta'] as const).map((p) => (
+                <Pilula key={p} ativa={prioridade === p} onClick={() => setPrioridade(p)}>
+                  {ROTULO_PRIORIDADE[p]}
+                </Pilula>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {inicial && (
+          <div className="campo">
+            <label htmlFor="tar-status">Situação</label>
+            <select id="tar-status" className="campo-caixa" value={status}
+              onChange={(e) => setStatus(e.target.value as TarefaRow['status'])}>
+              {STATUS_TAREFA.map((s) => <option key={s} value={s}>{ROTULO_STATUS_TAREFA[s]}</option>)}
+            </select>
+          </div>
+        )}
+
+        <div className="campo">
+          <label htmlFor="tar-cliente">Cliente (opcional)</label>
+          <select id="tar-cliente" className="campo-caixa" value={clienteId}
+            onChange={(e) => { setClienteId(e.target.value); setSubClienteId(''); setServicoId('') }}>
+            <option value="">Sem cliente</option>
+            {clientes.filter((c) => !c.arquivado_em || c.id === clienteId).map((c) => (
+              <option key={c.id} value={c.id}>{c.nome}</option>
+            ))}
+          </select>
+        </div>
+
+        {marcas.length > 0 && (
+          <div className="campo">
+            <label htmlFor="tar-marca">Marca</label>
+            <select id="tar-marca" className="campo-caixa" value={subClienteId}
+              onChange={(e) => setSubClienteId(e.target.value)}>
+              <option value="">Cliente inteiro</option>
+              {marcas.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+            </select>
+          </div>
+        )}
+
+        {servicosDoCliente.length > 0 && (
+          <div className="campo">
+            <label htmlFor="tar-servico">Projeto ou serviço</label>
+            <select id="tar-servico" className="campo-caixa" value={servicoId}
+              onChange={(e) => setServicoId(e.target.value)}>
+              <option value="">Nenhum</option>
+              {servicosDoCliente.map((s) => <option key={s.id} value={s.id}>{s.descricao}</option>)}
+            </select>
+          </div>
+        )}
+
+        <CampoTexto rotulo="Observação" value={observacoes} rows={2}
+          onChange={(e) => setObservacoes(e.target.value)} placeholder="Opcional" />
+      </div>
+    </Folha>
+  )
+}
+
 /** Serviço é a unidade de trabalho entregue. A etapa do projeto é calculada
  *  daqui + do orçamento de origem (domain/projeto.ts): não existe campo etapa. */
 export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
@@ -633,6 +756,7 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
   const [status, setStatus] = useState<StatusExecucao>(inicial?.status_execucao ?? 'em_execucao')
   const [pago, setPago] = useState(inicial?.pago ?? false)
   const [competencia, setCompetencia] = useState(inicial?.data_competencia ?? '')
+  const [prazo, setPrazo] = useState(inicial?.prazo ?? '')
   const [observacoes, setObservacoes] = useState(inicial?.observacoes ?? '')
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
@@ -656,6 +780,7 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
         status_execucao: status, pago,
         data_pagamento: pago ? inicial?.data_pagamento ?? hojeISO() : null,
         data_competencia: competencia || null,
+        prazo: prazo || null,
         observacoes: observacoes.trim(),
       })
       aoSalvar(inicial ? 'Serviço atualizado' : 'Serviço criado')
@@ -724,6 +849,11 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar }: {
             <label htmlFor="srv-comp">Competência</label>
             <input id="srv-comp" type="date" className="campo-caixa" value={competencia}
               onChange={(e) => setCompetencia(e.target.value)} />
+          </div>
+          <div className="campo">
+            <label htmlFor="srv-prazo">Entrega combinada</label>
+            <input id="srv-prazo" type="date" className="campo-caixa" value={prazo}
+              onChange={(e) => setPrazo(e.target.value)} />
           </div>
           <div className="campo">
             <span className="etiqueta-mini">Nota fiscal</span>

@@ -7,7 +7,7 @@ import { diasDeAtraso, estaEmAberto } from './financeiro'
 export type Urgencia = 'normal' | 'atrasado'
 export type AcaoDecisao = 'lancar_nf' | 'cobrar_pagamento' | 'conferir_recebimento'
   | 'cobrar_decisao' | 'pagar_conta' | 'emitir_nf'
-  | 'aprovar_valor' | 'ler_briefing' | 'configurar_conta'
+  | 'aprovar_valor' | 'ler_briefing' | 'configurar_conta' | 'ver_projeto'
 
 /** O que o botão da fila diz e para onde leva. Uma fila que só descreve o
  *  problema devolve o trabalho de descobrir onde resolvê-lo. */
@@ -21,6 +21,7 @@ export const ACAO: Record<AcaoDecisao, { rotulo: string; destino: string }> = {
   aprovar_valor: { rotulo: 'Aprovar valor', destino: '/admin/projetos' },
   ler_briefing: { rotulo: 'Ler resposta', destino: '/admin/briefings' },
   configurar_conta: { rotulo: 'Cadastrar conta', destino: '/admin/config' },
+  ver_projeto: { rotulo: 'Ver projeto', destino: '/admin/projetos' },
 }
 
 export interface Decisao {
@@ -70,6 +71,20 @@ export function decisoesDoDia(input: {
         acao: 'cobrar_pagamento', urgencia: venceu ? 'atrasado' : 'normal',
       })
     }
+  }
+
+  // Prazo de entrega passou e o serviço não foi concluído. Só existe se
+  // alguém combinou prazo — serviço sem prazo não fica "atrasado" por chute.
+  const hojeISO = new Date(agora).toISOString().slice(0, 10)
+  for (const s of input.servicos) {
+    if (s.status_execucao === 'concluida' || !s.prazo || s.prazo >= hojeISO) continue
+    const dias = Math.floor((agora - new Date(s.prazo).getTime()) / DIA_MS)
+    decisoes.push({
+      id: `prazo:${s.id}`, titulo: s.descricao,
+      detalhe: `Entrega combinada para ${s.prazo.slice(8, 10)}/${s.prazo.slice(5, 7)} · ${dias} ${dias === 1 ? 'dia' : 'dias'} de atraso`,
+      clienteId: s.cliente_id, marca: s.sub_cliente, valorCents: s.valor_cents,
+      acao: 'ver_projeto', urgencia: 'atrasado',
+    })
   }
 
   // Valor sugerido pelo cliente trava o serviço: enquanto ninguém decide, o
@@ -187,13 +202,14 @@ export interface Prazo {
 
 export function prazos(input: { servicos: ServicoRow[]; agora?: number }): Prazo[] {
   const agora = input.agora ?? Date.now()
+  // Prazo combinado; competência é "a que mês pertence", não "quando entrega".
   return input.servicos
-    .filter((s) => s.status_execucao !== 'concluida' && s.data_competencia)
+    .filter((s) => s.status_execucao !== 'concluida' && s.prazo)
     .map((s) => ({
       id: s.id,
       titulo: s.descricao,
       clienteId: s.cliente_id,
-      dias: Math.round((new Date(s.data_competencia as string).getTime() - agora) / DIA_MS),
+      dias: Math.round((new Date(s.prazo as string).getTime() - agora) / DIA_MS),
     }))
     .sort((a, b) => a.dias - b.dias)
 }

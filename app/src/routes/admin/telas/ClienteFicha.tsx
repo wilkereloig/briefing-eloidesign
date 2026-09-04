@@ -6,6 +6,7 @@ import { useFinancas } from '../../../lib/financas-store'
 import { estaEmAberto, saldoAberto, valorLiquidado } from '../../../domain/financeiro'
 import { juntarProjetos } from '../../../domain/projeto'
 import { ROTULO_EVENTO, timeline } from '../../../domain/timeline'
+import { PainelTarefas } from '../Tarefas'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, ChipMovimento, ChipNota, Dinheiro } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
@@ -493,6 +494,8 @@ export default function ClienteFicha() {
             {/* Derivada das datas que já existem, não gravada: uma tabela de
                 eventos precisaria ser escrita em todo caminho que muda algo, e
                 o primeiro esquecido cria um histórico que mente. */}
+            <PainelTarefas clienteId={id} />
+
             <Painel titulo="Linha do tempo"
               acao={<span className="t-legenda">{eventos.length} eventos</span>}>
               {eventos.length === 0

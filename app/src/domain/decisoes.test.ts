@@ -7,7 +7,7 @@ const DIA = 24 * 3600 * 1000
 
 function srv(over: Partial<ServicoRow> = {}): ServicoRow {
   return {
-    id: 's1', cliente_id: 'c1', orcamento_id: null, sub_cliente_id: null, sub_cliente: null, nota_fiscal_id: null, descricao: 'Identidade visual',
+    id: 's1', cliente_id: 'c1', orcamento_id: null, sub_cliente_id: null, sub_cliente: null, nota_fiscal_id: null, prazo: null, descricao: 'Identidade visual',
     valor_cents: 500000, status_execucao: 'concluida', pago: false, data_pagamento: null,
     data_competencia: null, nf_numero: null, nf_arquivo_url: null, observacoes: null,
     valor_sugerido_cents: null, valor_sugerido_em: null, valor_sugerido_observacao: null,
@@ -161,19 +161,37 @@ describe('prazos', () => {
   it('ordena por distancia, atrasados primeiro (dias negativo)', () => {
     const ps = prazos({
       servicos: [
-        srv({ id: 'a', status_execucao: 'em_execucao', data_competencia: new Date(AGORA + 3 * DIA).toISOString() }),
-        srv({ id: 'b', status_execucao: 'em_execucao', data_competencia: new Date(AGORA - 1 * DIA).toISOString() }),
+        srv({ id: 'a', status_execucao: 'em_execucao', prazo: new Date(AGORA + 3 * DIA).toISOString().slice(0, 10) }),
+        srv({ id: 'b', status_execucao: 'em_execucao', prazo: new Date(AGORA - 1 * DIA).toISOString().slice(0, 10) }),
       ],
       agora: AGORA,
     })
     expect(ps.map((p) => p.id)).toEqual(['b', 'a'])
     expect(ps[0].dias).toBeLessThan(0)
   })
-  it('ignora servico concluido ou sem data_competencia', () => {
+  it('ignora servico concluido ou sem prazo', () => {
     const ps = prazos({
-      servicos: [srv({ status_execucao: 'concluida', data_competencia: '2026-08-01' }), srv({ id: 'x', data_competencia: null })],
+      servicos: [srv({ status_execucao: 'concluida', prazo: '2026-08-01' }), srv({ id: 'x', prazo: null })],
       agora: AGORA,
     })
     expect(ps).toHaveLength(0)
+  })
+})
+
+describe('serviço com prazo vencido', () => {
+  it('em execução e prazo passado vira decisão atrasada; concluído ou sem prazo não', () => {
+    const d = decisoesDoDia({
+      servicos: [
+        srv({ id: 'a', status_execucao: 'em_execucao', prazo: new Date(AGORA - 2 * DIA).toISOString().slice(0, 10) }),
+        srv({ id: 'b', status_execucao: 'concluida', prazo: new Date(AGORA - 2 * DIA).toISOString().slice(0, 10) }),
+        srv({ id: 'c', status_execucao: 'em_execucao', prazo: null }),
+        srv({ id: 'd', status_execucao: 'em_execucao', prazo: new Date(AGORA + 2 * DIA).toISOString().slice(0, 10) }),
+      ],
+      orcamentos: [], agora: AGORA,
+    })
+    const prazo = d.filter((x) => x.id.startsWith('prazo:'))
+    expect(prazo.map((x) => x.id)).toEqual(['prazo:a'])
+    expect(prazo[0]).toMatchObject({ acao: 'ver_projeto', urgencia: 'atrasado' })
+    expect(prazo[0].detalhe).toContain('2 dias de atraso')
   })
 })

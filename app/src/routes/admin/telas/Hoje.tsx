@@ -10,6 +10,7 @@ import {
 import { ACAO, decisoesDoDia } from '../../../domain/decisoes'
 import { Etiqueta, Icone, Indicador, Painel } from '../../../ui/componentes'
 import { Onboarding } from '../Onboarding'
+import { PainelTarefas } from '../Tarefas'
 import { Cabecalho, Carga, ChipMovimento, Dinheiro, SeletorLente, SeletorMes } from '../../../ui/painel'
 import { dataCurta, rotuloConta, variacao } from '../../../ui/formato'
 import { fmtBRL } from '../../../lib/dinheiro'
@@ -119,6 +120,10 @@ export default function Hoje() {
                 </ul>
               )}
             </Painel>
+
+            {/* Manual, separado do automático: tarefa é o que o dono decidiu
+                fazer; "Precisa de você" é o que o sistema detectou. */}
+            <PainelTarefas limite={6} aceitaUrlNovo />
 
             <div className="grade-dupla">
               <Painel titulo="Contas e cartões"

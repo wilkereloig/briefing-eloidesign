@@ -70,3 +70,15 @@ Entrada/saída em `eloi_movimentos_financeiros`, do painel `/gestao`. Tabela vaz
 
 **Convite** (Briefings):
 Um link com token (`briefing_links`) que dá acesso a um dos 4 formulários de briefing. Tem estado `pendente`/`respondido`. Formulário respondido sem token vira registro "legado" (sem Cliente vinculado).
+
+## Tarefa × pendência
+
+**Tarefa** é o que o dono anotou para fazer (`eloi_tarefas`): tem prazo,
+prioridade e situação, e pode apontar cliente, marca ou serviço.
+**Pendência** (ou decisão, na fila "Precisa de você") é o que o sistema
+detecta sozinho a partir dos dados — serviço sem NF, conta vencida, prazo
+passado — e vive só em `domain/decisoes.ts`. Pendência nunca vira linha de
+tarefa: duas fontes da mesma coisa divergem na primeira mudança.
+
+**Prazo** (`eloi_servicos.prazo`) é a entrega combinada. **Competência**
+(`data_competencia`) é a que mês o valor pertence. Não são a mesma data.

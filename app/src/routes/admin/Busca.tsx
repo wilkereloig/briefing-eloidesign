@@ -59,6 +59,7 @@ export function Busca({ aberta, aoFechar, aoCriar }: {
     { id: 'cmd:nota', titulo: 'Nova nota fiscal', detalhe: 'Registrar NF', destino: '/admin/notas?novo=1' },
     { id: 'cmd:entrada', titulo: 'Lançar receita', detalhe: 'Dinheiro entrando' },
     { id: 'cmd:saida', titulo: 'Lançar despesa', detalhe: 'Dinheiro saindo' },
+    { id: 'cmd:tarefa', titulo: 'Nova tarefa', detalhe: 'Lembrete com prazo' },
     { id: 'cmd:receber', titulo: 'Ver contas a receber', destino: '/admin/dinheiro' },
     { id: 'cmd:relatorios', titulo: 'Ver relatórios', destino: '/admin/relatorios' },
   ], [])
@@ -94,6 +95,7 @@ export function Busca({ aberta, aoFechar, aoCriar }: {
     aoFechar()
     if (r.id === 'cmd:entrada') return aoCriar('entrada')
     if (r.id === 'cmd:saida') return aoCriar('saida')
+    if (r.id === 'cmd:tarefa') return aoCriar('tarefa')
     if (r.destino) navegar(r.destino)
   }
 

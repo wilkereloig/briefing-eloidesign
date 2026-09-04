@@ -13,11 +13,11 @@ import {
 } from 'react'
 import {
   briefingsApi, clientes as clientesApi, financas, orcamentos as orcamentosApi,
-  servicos as servicosApi, subClientes as subClientesApi,
+  servicos as servicosApi, subClientes as subClientesApi, tarefas as tarefasApi,
 } from './api'
 import type {
   BriefingLinkRow, Categoria, ClienteRow, Conferencia, Conta, Contexto, Meta, NotaFiscal,
-  OrcamentoRow, Recorrencia, ServicoRow, SubClienteRow, Transacao,
+  OrcamentoRow, Recorrencia, ServicoRow, SubClienteRow, TarefaRow, Transacao,
 } from './tipos'
 
 /** Filtro de contexto da interface: 'tudo' soma pessoal + empresa. */
@@ -59,6 +59,8 @@ interface Estado {
   /** Convites por token. Fonte única: a tela de Briefings e a fila de "Precisa
    *  de você" leem daqui, não cada uma da sua busca. */
   briefings: BriefingLinkRow[]
+  /** Tarefas manuais (abertas + recentes). Hoje, calendário e ficha leem daqui. */
+  tarefas: TarefaRow[]
   carregando: boolean
   erro: string | null
   /** Mês em foco, 'AAAA-MM'. */
@@ -76,12 +78,12 @@ export const useFinancas = () => useContext(Ctx)
 
 type Dados = Pick<Estado, 'contas' | 'categorias' | 'recorrencias' | 'metas' | 'conferencias'
   | 'transacoes' | 'notas' | 'clientes' | 'subClientes' | 'servicos' | 'orcamentos'
-  | 'briefings'>
+  | 'briefings' | 'tarefas'>
 
 const VAZIO: Dados = {
   contas: [], categorias: [], recorrencias: [], metas: [], conferencias: [],
   transacoes: [], notas: [], clientes: [], subClientes: [], servicos: [], orcamentos: [],
-  briefings: [],
+  briefings: [], tarefas: [],
 }
 
 export function FinancasProvider({ children }: { children: ReactNode }) {
@@ -102,7 +104,7 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
 
       const de = deslocarMes(mes, -11) + '-01'
       const ate = ultimoDiaDoMes(deslocarMes(mes, 12))
-      const [ref, transacoes, notas, cli, sub, svc, orc, bri] = await Promise.all([
+      const [ref, transacoes, notas, cli, sub, svc, orc, bri, tar] = await Promise.all([
         financas.bootstrap(),
         financas.transacoes({ de, ate, limite: 2000 }),
         financas.notas(),
@@ -116,13 +118,14 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
         // aqui não derruba o painel financeiro inteiro.
         orcamentosApi.list().catch(() => [] as OrcamentoRow[]),
         briefingsApi.convites().catch(() => [] as BriefingLinkRow[]),
+        tarefasApi.list().catch(() => [] as TarefaRow[]),
       ])
       setDados({
         contas: ref.contas, categorias: ref.categorias,
         recorrencias: ref.recorrencias, metas: ref.metas,
         conferencias: ref.conferencias ?? [],
         transacoes, notas, clientes: cli, subClientes: sub, servicos: svc, orcamentos: orc,
-        briefings: bri,
+        briefings: bri, tarefas: tar,
       })
     } catch (e) {
       setErro((e as Error).message)

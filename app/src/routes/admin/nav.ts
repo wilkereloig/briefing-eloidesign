@@ -37,6 +37,8 @@ export const CRIAR = [
     icone: 'caixa', cor: 'var(--coral)', sinal: 'var(--lima)' },
   { chave: 'transferencia', label: 'Transferência', descricao: 'Entre contas, sem virar receita',
     icone: 'compartilhar', cor: 'var(--azul)', sinal: 'var(--lima)' },
+  { chave: 'tarefa', label: 'Tarefa', descricao: 'Lembrete com prazo',
+    icone: 'ok', cor: 'var(--roxo)', sinal: 'var(--lima)' },
 ] as const
 
 export type ChaveCriar = (typeof CRIAR)[number]['chave']

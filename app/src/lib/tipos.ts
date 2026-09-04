@@ -54,6 +54,8 @@ export interface ServicoRow {
   pago: boolean
   data_pagamento: string | null
   data_competencia: string | null
+  /** Entrega combinada. Atrasado = prazo < hoje e não concluída (derivado). */
+  prazo: string | null
   nf_numero: string | null
   nf_arquivo_url: string | null
   observacoes: string | null
@@ -61,6 +63,22 @@ export interface ServicoRow {
   valor_sugerido_cents: number | null
   valor_sugerido_em: string | null
   valor_sugerido_observacao: string | null
+}
+
+/** Tarefa manual do dono. Pendência automática NÃO vira tarefa (domain/decisoes.ts). */
+export interface TarefaRow {
+  id: string
+  titulo: string
+  prazo: string | null
+  status: 'aberta' | 'em_andamento' | 'concluida' | 'cancelada'
+  prioridade: 'baixa' | 'normal' | 'alta'
+  cliente_id: string | null
+  sub_cliente_id: string | null
+  servico_id: string | null
+  observacoes: string | null
+  concluida_em: string | null
+  created_at: string
+  updated_at: string
 }
 
 /** Pessoa de contato do cliente (e opcionalmente de uma marca). Agenda, não CRM. */

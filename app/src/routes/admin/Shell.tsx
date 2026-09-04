@@ -6,6 +6,7 @@ import { CRIAR, NAV_FERRAMENTAS, NAV_PRIMARIA, type ChaveCriar } from './nav'
 import { Aviso, Botao, Esqueleto, Folha, Icone, Marca } from '../../ui/componentes'
 import { FinancasProvider, useFinancas } from '../../lib/financas-store'
 import { FolhaTransacao } from './FolhaTransacao'
+import { FolhaTarefa } from './folhas'
 import { Busca } from './Busca'
 
 // Shell monta trilho/barra + área de conteúdo; cada rota filha (telas/) cuida do
@@ -115,7 +116,11 @@ function ShellInterno() {
 
       <Busca aberta={busca} aoFechar={() => setBusca(false)} aoCriar={setTipoNovo} />
 
-      {tipoNovo && (
+      {tipoNovo === 'tarefa' && (
+        <FolhaTarefa aoFechar={() => setTipoNovo(null)}
+          aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
+      )}
+      {tipoNovo && tipoNovo !== 'tarefa' && (
         <FolhaTransacao inicial={{ tipo: tipoNovo }} aoFechar={() => setTipoNovo(null)}
           aoSalvar={async (msg) => { setAviso(msg); await recarregar() }} />
       )}

@@ -72,6 +72,16 @@ Atualizado: 2026-08-07.
 - **Dicionários:** `lib/briefing-mapas.ts`, portados do painel estático
 - **Limite conhecido:** tipo sem dicionário (Guia Viver Bem) cai num bloco genérico com as chaves cruas — antes não era exibível em lugar nenhum.
 
+### Tarefas
+- **Objetivo:** anotar o que precisa ser feito, com prazo, ligado ao cliente/marca/serviço quando fizer sentido.
+- **Estado:** Concluído
+- **Telas:** `routes/admin/Tarefas.tsx` (`PainelTarefas`, em Hoje e na ficha do cliente), `FolhaTarefa` em `folhas.tsx`, opção "Tarefa" no Criar e no Ctrl+K
+- **Endpoints:** `eloi-gestao` — `tarefas.list/upsert/delete`
+- **Tabelas:** `eloi_tarefas`
+- **Permissão:** admin
+- **Regra:** pendência automática (sem NF, vencido, prazo passado) é derivada em `domain/decisoes.ts` e não entra aqui
+- **Testes:** `domain/tarefas.test.ts`
+
 ### Contatos
 - **Objetivo:** saber quem procurar em cada cliente sem sair do painel.
 - **Estado:** Concluído

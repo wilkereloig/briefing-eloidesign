@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { orcamentos as orcamentosApi, servicos as servicosApi } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { useAbrirNovo } from '../../../lib/abrir-novo'
-import { useFinancas, useNomes } from '../../../lib/financas-store'
+import { hojeISO, useFinancas, useNomes } from '../../../lib/financas-store'
+import { dataCurta } from '../../../ui/formato'
 import { juntarProjetos, type Etapa, type Projeto } from '../../../domain/projeto'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, Dinheiro, SeletorMes } from '../../../ui/painel'
@@ -33,6 +34,7 @@ const PENDENCIAS: { chave: Pendencia; label: string; casa: (p: Projeto) => boole
 export default function Projetos() {
   const { orcamentos, servicos, subClientes, mes, recarregar } = useFinancas()
   const nomes = useNomes()
+  const hoje = hojeISO()
   const [etapa, setEtapa] = useState<Etapa | 'todos'>('todos')
   const [clienteFiltro, setClienteFiltro] = useState('')
   const [marcaFiltro, setMarcaFiltro] = useState('')
@@ -286,12 +288,18 @@ export default function Projetos() {
                         const semNota = !p.servico?.nf_numero && (p.etapa === 'pago' || p.etapa === 'entregue')
                         const editandoValor = p.servico && !p.servico.pago
                         return (
-                          <li key={p.id} className="lista-item">
+                          <li key={p.id} className="lista-item"
+                            data-atrasada={p.servico?.prazo && p.servico.prazo < hoje && p.servico.status_execucao !== 'concluida' ? 'true' : undefined}>
                             <span className="celula">
                               <span className="t-ui espremer">{p.titulo}</span>
                               <span className="t-legenda espremer">
-                                {p.servico?.nf_numero ? `NF ${p.servico.nf_numero}` : semNota ? 'Sem nota fiscal' : ''}
-                                {p.servico?.data_competencia ? ` · ${p.servico.data_competencia.slice(0, 7)}` : ''}
+                                {[
+                                  p.servico?.nf_numero ? `NF ${p.servico.nf_numero}` : semNota ? 'Sem nota fiscal' : null,
+                                  p.servico?.data_competencia ? p.servico.data_competencia.slice(0, 7) : null,
+                                  p.servico?.prazo && p.servico.status_execucao !== 'concluida'
+                                    ? (p.servico.prazo < hoje ? `entrega venceu ${dataCurta(p.servico.prazo)}` : `entrega ${dataCurta(p.servico.prazo)}`)
+                                    : null,
+                                ].filter(Boolean).join(' · ')}
                               </span>
                               {p.servico?.valor_sugerido_cents != null && (
                                 <span className="t-legenda espremer" style={{ color: 'var(--acento)' }}>
