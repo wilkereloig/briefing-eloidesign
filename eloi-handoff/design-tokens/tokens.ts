@@ -72,7 +72,7 @@ export const fonte = {
 
 export const espaco = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 24, 6: 32, 7: 40, 8: 48, 9: 64, 10: 80, 11: 96, 12: 120 } as const;
 
-export const raio = { minimo: 6, controle: 10, chip: 8, cartao: 14, painel: 16, bloco: 18, folha: 16, etiqueta: 999 } as const;
+export const raio = { minimo: 6, controle: 10, cartao: 14, painel: 16, bloco: 18, folha: 16, etiqueta: 999 } as const;
 
 export const movimento = {
   rapido: 140,

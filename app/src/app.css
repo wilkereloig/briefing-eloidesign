@@ -32,7 +32,7 @@ a:hover{color:var(--cor-texto-primario)}
 .t-legenda{font-size:12px;line-height:1.5;color:var(--cor-texto-fraco)}
 .t-msg    {font-size:var(--tipo-legenda-tamanho);line-height:var(--tipo-legenda-altura);font-weight:600}
 .etiqueta {font-size:11px;font-weight:700;letter-spacing:.20em;text-transform:uppercase;line-height:1}
-.etiqueta-mini{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1;color:var(--cor-texto-fraco)}
+.etiqueta-mini{font-size:var(--tipo-etiqueta-tamanho);font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1;color:var(--cor-texto-fraco)}
 .etiqueta-acento{color:var(--acento)}
 
 /* dinheiro é sempre Archivo (regra da secao 5) */
@@ -89,7 +89,7 @@ a:hover{color:var(--cor-texto-primario)}
 .trilho-item{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
   min-width:0;min-height:var(--alvo-toque);padding:6px 2px;position:relative;
-  font-size:10px;font-weight:700;line-height:1;color:var(--cor-texto-fraco);
+  font-size:var(--tipo-etiqueta-tamanho);font-weight:700;line-height:1;color:var(--cor-texto-fraco);
   text-decoration:none;transition:color var(--movimento-rapido) var(--curva-padrao);
 }
 .trilho-item .rotulo-curto{max-width:100%;overflow:hidden;text-overflow:ellipsis;
@@ -102,12 +102,12 @@ a:hover{color:var(--cor-texto-primario)}
 .trilho-criar{
   justify-self:center;display:flex;align-items:center;justify-content:center;
   width:56px;height:56px;transform:translateY(-16px);
-  background:var(--roxo);color:#FFF;border:4px solid var(--cor-fundo-primario);
+  background:var(--cor-acento-primario);color:var(--cor-texto-sobre-acento);border:4px solid var(--cor-fundo-primario);
   border-radius:var(--raio-painel);cursor:pointer;
   transition:background var(--movimento-rapido) var(--curva-padrao);
 }
-.trilho-criar:hover{background:var(--roxo-hover)}
-.trilho-criar:active{background:var(--roxo-press)}
+.trilho-criar:hover{background:var(--cor-acento-primario-hover)}
+.trilho-criar:active{background:var(--cor-acento-primario-pressionado)}
 
 /* ── barra do topo (§9 Navegação › Topbar): 64 px em toda largura ────────── */
 /* alternador do menu (só no toque) · trilha (breadcrumb) · busca · sair */
@@ -144,7 +144,7 @@ a:hover{color:var(--cor-texto-primario)}
   transition:background var(--movimento-rapido) var(--curva-padrao)}
 .criar-opcao:active{background:var(--cor-fundo-elevado)}
 .criar-icone{display:flex;align-items:center;justify-content:center;flex:none;
-  width:40px;height:40px;border-radius:var(--raio-chip);color:var(--tinta)}
+  width:40px;height:40px;border-radius:var(--raio-controle);color:var(--tinta)}
 
 /* ── cabeçalho ──────────────────────────────────────────────────────────── */
 /* O cabeçalho quebra em vez de espremer: com filtros + seletor de mês na mesma

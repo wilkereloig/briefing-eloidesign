@@ -88,11 +88,11 @@ function ShellInterno() {
       {/* Suspense aqui e não no main.tsx: lá em cima o fallback trocaria o
           Shell inteiro (trilho, barra, cabeçalho) por uma linha de texto a cada
           navegação. Aqui só a área de conteúdo pisca. */}
-      <div className="app-main">
+      <main className="app-main">
         <Suspense fallback={<Esqueleto linhas={5} altura={64} />}>
           <Outlet />
         </Suspense>
-      </div>
+      </main>
 
       {folha === 'menu' && (
         <Folha titulo="Menu" aoFechar={fechar}>

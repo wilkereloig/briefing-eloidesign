@@ -12,6 +12,7 @@
 
 
 
+
 :root {
   /* ========== PALETA — cor de marca crua, não usar direto em componente ========== */
   --roxo: #7D2AE8;
@@ -118,9 +119,6 @@
   --raio-bloco: 18px;    /* bloco institucional */
   --raio-etiqueta: 999px; /* tag, avatar, contador, ponto */
   --raio-arco: 100% 0 0 0; /* arco da marca — camada expressive */
-  /* legado, papel ainda não separado por consumidor (fase 2 resolve):
-     chip/avatar/botão-ícone/skeleton/busca compartilham este valor hoje. */
-  --raio-chip: 8px;
   --raio-folha: var(--raio-painel);
 
   /* ========== GRADE — grid e arquétipos de layout (§6) ========== */

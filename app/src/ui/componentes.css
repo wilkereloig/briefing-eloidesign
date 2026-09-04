@@ -277,7 +277,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 
 /* ícone da confirmação destrutiva: quadrado de 44 em Coral a 14% */
 .alerta-icone{display:flex;align-items:center;justify-content:center;flex:none;
-  width:44px;height:44px;border-radius:var(--raio-chip);
+  width:44px;height:44px;border-radius:var(--raio-controle);
   background:rgba(253,68,0,.14);color:var(--coral)}
 
 /* ── seletor de período ─────────────────────────────────────────────────── */
@@ -298,7 +298,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 
 /* ícone de movimento: entrada sobe em Lima, saída desce em Coral */
 .mov-icone{display:flex;align-items:center;justify-content:center;flex:none;
-  width:34px;height:34px;border-radius:var(--raio-chip);
+  width:34px;height:34px;border-radius:var(--raio-controle);
   background:rgba(253,213,211,.12);color:var(--cor-texto-primario)}
 .mov-icone[data-tipo='entrada']{background:var(--acento);color:var(--tinta);--eloi-signal:currentColor}
 .mov-icone[data-tipo='saida']{background:var(--coral);color:#FFF;--eloi-signal:currentColor}
@@ -344,13 +344,18 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   min-height:44px;font:inherit}
 .btn-texto:hover{text-decoration:underline}
 .tarefa-check{flex:none;width:44px;height:44px;display:grid;place-items:center;
-  border:1.5px solid var(--cor-borda-padrao);border-radius:var(--raio-chip);background:none;
+  border:1.5px solid var(--cor-borda-padrao);border-radius:var(--raio-controle);background:none;
   color:var(--cor-texto-primario);cursor:pointer}
 .tarefa-check:hover{background:var(--cor-fundo-elevado)}
 .tarefa-check[data-feita='true']{background:var(--acento);border-color:var(--acento);color:var(--tinta)}
 .lista-item[data-prioridade='alta'] .t-ui::before{content:'!';display:inline-block;margin-right:6px;
   font-family:var(--fonte-titulo);font-weight:700;color:var(--coral)}
-.lista-item[data-atrasada='true'] .t-legenda{color:var(--coral)}
+/* Coral como texto só a partir de 24px (§14): o atraso é um ponto de 7px na
+   cor de erro + o texto ("entrega venceu ...") em rosa — nunca só cor. */
+.lista-item[data-atrasada='true'] .t-legenda{color:var(--cor-texto-primario)}
+.lista-item[data-atrasada='true'] .t-legenda::before{content:'';display:inline-block;
+  width:7px;height:7px;margin-right:6px;border-radius:var(--raio-etiqueta);
+  background:var(--cor-feedback-erro);vertical-align:middle}
 .passos .lista-item[data-feito] .passo-num{background:var(--acento);color:var(--tinta)}
 
 /* ── cliente ────────────────────────────────────────────────────────────── */
@@ -401,7 +406,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 .cal-cabecalho{margin-bottom:var(--espaco-02);text-align:center}
 .cal-celula{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   gap:var(--espaco-01);min-height:var(--alvo-toque);padding:var(--espaco-02) 2px;
-  background:none;border:1px solid transparent;border-radius:var(--raio-chip);
+  background:none;border:1px solid transparent;border-radius:var(--raio-minimo);
   color:var(--cor-texto-secundario);cursor:pointer;
   transition:background var(--movimento-rapido) var(--curva-padrao)}
 .cal-celula:hover{background:var(--cor-fundo-elevado)}
@@ -425,7 +430,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 .pilula .cal-ponto{margin-right:6px}
 /* liquidado vira contorno: o estado não depende só da cor */
 .cal-ponto[data-aberto='false']{background:none;box-shadow:inset 0 0 0 1.5px var(--cor-texto-fraco)}
-.cal-mais{font-size:9px;color:var(--cor-texto-fraco)}
+.cal-mais{font-size:var(--tipo-etiqueta-tamanho);color:var(--cor-texto-fraco)}
 
 /* ── upload e chips de categoria ────────────────────────────────────────── */
 .area-upload{display:flex;flex-direction:column;align-items:center;gap:var(--espaco-02);
@@ -436,7 +441,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 .area-upload .eloi-icon{color:var(--cor-texto-fraco)}
 
 .chip-categoria{display:inline-flex;align-items:center;padding:5px 9px;
-  border-radius:var(--raio-chip);font-size:11px;font-weight:600;
+  border-radius:var(--raio-etiqueta);font-size:11px;font-weight:600;
   background:var(--cor-fundo-elevado);color:var(--cor-texto-secundario)}
 .chip-categoria[data-tipo='entrada']{color:var(--acento)}
 
@@ -487,7 +492,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 .busca-campo{display:flex;align-items:center;gap:var(--espaco-02);padding:var(--espaco-03);
   border-bottom:1px solid var(--cor-borda-padrao)}
 .busca-campo .campo-caixa{flex:1;border:0;background:transparent;min-height:44px}
-.busca-campo kbd{border:1px solid var(--cor-borda-padrao);border-radius:var(--raio-chip);padding:2px 6px}
+.busca-campo kbd{border:1px solid var(--cor-borda-padrao);border-radius:var(--raio-minimo);padding:2px 6px}
 
 .busca-resultados{overflow-y:auto;padding-bottom:var(--espaco-03)}
 .busca-grupo{display:block;padding:var(--espaco-03) var(--espaco-03) var(--espaco-02)}

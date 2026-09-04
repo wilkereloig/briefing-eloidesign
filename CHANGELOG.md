@@ -2,6 +2,32 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Migração para a spec ELOI Design System, fase 6: ícones e acessibilidade fina
+
+Última fase. Com ela, as seis do plano estão no código.
+
+- **Sprite**: dois ícones (`cronograma`, `comunicacao`) tinham um segundo
+  ponto preenchido em Lilás — §13 diz que preenchimento é só o ponto de
+  sinal. O segundo ponto vira traço. Nenhum ícone novo foi desenhado: tudo
+  que o código usa já existe no sprite, e ícone só entra quando alguém
+  precisar dele (§13, "entra no sprite antes de ser usado").
+- **Pisos de fonte** (§14): etiqueta-mini 10→11, rótulo da barra inferior
+  10→11, "+N" do calendário 9→11. Nada abaixo de 11px no painel.
+- **Coral como texto só ≥24px** (§14): o prazo vencido na lista de projetos
+  deixa a legenda em Coral e vira ponto de 7px de erro + texto em rosa.
+  Exceção mantida de propósito: o botão `destrutivo` tem texto em Coral
+  porque a própria tabela de botões da spec (§9) define assim.
+- **`--raio-chip` aposentado**: cada um dos 7 consumidores ganhou o raio do
+  seu papel — quadrado de ícone e checkbox de tarefa em raio de controle,
+  célula do calendário e kbd em raio mínimo, chip de categoria em pílula.
+- **Landmark**: a área de conteúdo é `<main>`; trilho já era `<aside>`,
+  barra do topo `<header>`, navegações `<nav>`.
+- Botão Criar da barra inferior usava `--roxo` e `#FFF` direto: agora
+  acento primário + texto sobre acento, como o resto.
+- Fica de fora, com motivo: navegação por teclado com setas em tabela (§14)
+  — a única `<table>` de dados do painel é o ranking de Relatórios, que não
+  tem ação por linha. Entra quando uma tabela com ação por linha existir.
+
 ## 2026-09-04 — Migração para a spec ELOI Design System, fase 5: shell, navegação e responsivo
 
 - **Barra do topo de 64px em toda largura** (§9 Topbar): alternador do menu

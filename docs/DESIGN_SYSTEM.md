@@ -11,7 +11,8 @@ espaçamento, card ou padrão, procure aqui: quase sempre já existe.
 ## Migração para a spec nova — status
 
 Trabalho em 6 fases (auditoria completa: 12 agentes, 148 gaps, ver
-`CHANGELOG.md` 2026-09-04). Fases 1 a 5 concluídas — só a 6 (ícones e acessibilidade fina) resta.
+`CHANGELOG.md` 2026-09-04). **As seis fases estão no código.** Verificação visual do painel logado
+em 1440/1024/768/375 ainda pendente — ver CHANGELOG.
 
 | Fase | Objetivo | Status |
 |---|---|---|
@@ -20,7 +21,7 @@ Trabalho em 6 fases (auditoria completa: 12 agentes, 148 gaps, ver
 | 3. Tabela densa (financeiro) | `data-density="dense"` em Dinheiro/Notas/Relatórios/FolhasExtrato | ✅ |
 | 4. Telas de gestão (standard) | Vazio/Chip/Erro corrigidos nas ~12 telas restantes | ✅ |
 | 5. Shell, navegação, responsivo | Topbar, breakpoint da sidebar, modal aninhado→página | ✅ |
-| 6. Ícones e acessibilidade fina | Famílias de ícone faltando, `:focus-visible`, pisos de fonte | Pendente |
+| 6. Ícones e acessibilidade fina | Sprite, pisos de fonte, Coral como texto, `<main>` | ✅ |
 
 Decisões já batidas (não reabrir sem motivo novo): nomenclatura de token em
 **português com 4 segmentos** (`--cor-fundo-primario`, não `--color-background-primary`
@@ -75,7 +76,7 @@ descobriu que três tokens de margem existiam só de um lado.
    não deve achar nada fora de `ui/tokens.*`.
 2. **Cor nunca informa sozinha.** Todo estado tem rótulo escrito ou forma própria —
    chip com texto, ponto por tipo, contorno quando liquidado.
-3. **Elevação é tom, não sombra.** `--chao`, `--chao-2`, `--chao-3`.
+3. **Elevação é tom, não sombra.** `--cor-fundo-primario` → `--cor-fundo-secundario` → `--cor-fundo-elevado`; hover é `--cor-superficie-hover`.
 4. **Alvo de toque ≥ 44 px** em qualquer controle de interação.
    Exceção conhecida e deliberada: `.btn-compacto` (36 px), valor de ação
    secundária definido no `COMPONENT_INVENTORY`.
@@ -126,9 +127,8 @@ direto num componente, só pelo token semântico que aponta pra ela
 `.tsx`/`.css` fora desses dois arquivos é sobra de antes da Fase 1 — corrija
 para o nome novo, não recrie o antigo.
 
-Um token fica **legado, valor mantido**: `--raio-chip` (8px) — ainda usado por
-avatar, botão-ícone, skeleton e kbd da busca. Não usar em código novo; o chip
-de estado já é pílula (`--raio-etiqueta`).
+Não há mais token legado: `--raio-chip`, `--t-folha` e `--curva-folha` foram
+aposentados na Fase 6 e na Fase 5.
 
 ## Folha: modal ou página
 
