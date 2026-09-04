@@ -108,7 +108,7 @@ export default function Calendario() {
               )
             })}
           </div>
-          <p className="t-legenda" style={{ marginTop: 'var(--e-5)' }}>
+          <p className="t-legenda" style={{ marginTop: 'var(--espaco-03)' }}>
             Contorno = já liquidado ou concluído. Dia com pendência vencida fica marcado.
           </p>
         </Painel>

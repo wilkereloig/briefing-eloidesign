@@ -54,7 +54,7 @@ function agruparPorCliente(itens: Projeto[], nomes: Nomes) {
       return {
         id,
         nome: id === 'sem-cliente' ? 'Sem cliente' : nomes.cliente.get(id)?.nome ?? 'Cliente removido',
-        cor: id === 'sem-cliente' ? 'var(--linha-forte)' : nomes.cliente.get(id)?.cor || 'var(--roxo)',
+        cor: id === 'sem-cliente' ? 'var(--cor-borda-forte)' : nomes.cliente.get(id)?.cor || 'var(--roxo)',
         total: itens.reduce((s, p) => s + p.valorCents, 0),
         marcas: [...porMarca.entries()]
           .map(([mid, mitens]) => ({
@@ -262,7 +262,7 @@ export default function Projetos() {
                 ))}
               </div>
 
-              <div className="busca" style={{ marginTop: 'var(--e-4)' }}>
+              <div className="busca" style={{ marginTop: 'var(--espaco-03)' }}>
                 <Icone nome="pesquisa" tamanho={17} />
                 <input className="campo-caixa" value={busca} onChange={(e) => setBusca(e.target.value)}
                   placeholder="Buscar por projeto, cliente ou marca" aria-label="Buscar projeto" />
@@ -273,7 +273,7 @@ export default function Projetos() {
                 )}
               </div>
 
-              <p className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>
+              <p className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>
                 {`${filtrados.length} de ${projetos.length} projetos · ${rotuloMes(mes)}`}
               </p>
             </Painel>

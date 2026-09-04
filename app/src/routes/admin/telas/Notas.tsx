@@ -100,8 +100,8 @@ export default function Notas() {
           </Painel>
         )}
 
-        <div className="linha" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--e-6)' }}>
-          <label className="linha t-legenda" style={{ gap: 'var(--e-2)', minHeight: 44 }}>
+        <div className="linha" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--espaco-04)' }}>
+          <label className="linha t-legenda" style={{ gap: 'var(--espaco-02)', minHeight: 44 }}>
             <input type="checkbox" checked={filtrarPorMes}
               onChange={(e) => setFiltrarPorMes(e.target.checked)} />
             Mostrar só o mês selecionado
@@ -309,7 +309,7 @@ export function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>{enviando ? 'Enviando PDF…' : 'Salvar'}</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         {servico && <p className="t-sec">Referente ao serviço “{servico.descricao}”.</p>}
 
         <div className="campo">
@@ -371,7 +371,7 @@ export function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
             <span className="t-legenda">Escolha o cliente para listar os serviços.</span>
           ) : (
             <>
-              <label className="linha t-legenda" style={{ gap: 'var(--e-2)', minHeight: 44 }}>
+              <label className="linha t-legenda" style={{ gap: 'var(--espaco-02)', minHeight: 44 }}>
                 <input id="nf-servicos-busca" type="checkbox" checked={soSemNota}
                   onChange={(e) => setSoSemNota(e.target.checked)} />
                 Mostrar só os que ainda não têm nota
@@ -382,7 +382,7 @@ export function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
                 <ul className="lista lista-escolha">
                   {candidatos.map((s) => (
                     <li key={s.id} className="lista-item">
-                      <label className="linha" style={{ gap: 'var(--e-3)', minHeight: 44, flex: 1 }}>
+                      <label className="linha" style={{ gap: 'var(--espaco-02)', minHeight: 44, flex: 1 }}>
                         <input type="checkbox" checked={escolhidos.includes(s.id)}
                           onChange={() => alternar(s.id)} />
                         <span className="celula">

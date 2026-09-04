@@ -221,7 +221,7 @@ export default function DinheiroTela() {
               /* Um painel por faixa de prazo: "vencidos" e "depois" na mesma
                  lista fazem o dono ler tudo para achar o que urge. */
               <Painel key={g.faixa} titulo={ROTULO_FAIXA[g.faixa]}
-                acao={<span className="linha" style={{ gap: 'var(--e-3)' }}>
+                acao={<span className="linha" style={{ gap: 'var(--espaco-02)' }}>
                   <span className="t-legenda">{g.itens.length}</span>
                   <Dinheiro cents={g.total_cents} className="t-valor" />
                 </span>}>
@@ -474,15 +474,15 @@ function CartaoConta({ c, transacoes, hoje, conferencia, aoEditar, aoConferir, a
     <Card className="conta-card">
       <span className="linha" style={{ justifyContent: 'space-between' }}>
         <Etiqueta mini>{rotuloConta(c.tipo)}</Etiqueta>
-        <span className="linha" style={{ gap: 'var(--e-2)' }}>
+        <span className="linha" style={{ gap: 'var(--espaco-02)' }}>
           <span className="ponto-cor" style={{ background: c.cor || 'var(--roxo)' }} aria-hidden />
           <Botao variante="icone" onClick={aoEditar} aria-label={`Editar ${c.nome}`}>
             <Icone nome="editar" tamanho={16} />
           </Botao>
         </span>
       </span>
-      <p className="t-card espremer" style={{ marginTop: 'var(--e-3)' }}>{c.nome}</p>
-      <p className="t-valor-g dinheiro" style={{ marginTop: 'var(--e-5)' }}>
+      <p className="t-card espremer" style={{ marginTop: 'var(--espaco-02)' }}>{c.nome}</p>
+      <p className="t-valor-g dinheiro" style={{ marginTop: 'var(--espaco-03)' }}>
         {fmtBRL(ehCartao ? fatura : saldoConta(c, transacoes))}
       </p>
       <p className="t-legenda">
@@ -505,12 +505,12 @@ function CartaoConta({ c, transacoes, hoje, conferencia, aoEditar, aoConferir, a
       {/* Pagar fatura é TRANSFERÊNCIA (conta → cartão), nunca despesa nova: a
           despesa já foi lançada em cada compra. Lançar de novo dobraria o gasto. */}
       {ehCartao && fatura > 0 && (
-        <Botao compacto onClick={aoPagarFatura} style={{ marginTop: 'var(--e-7)' }}>
+        <Botao compacto onClick={aoPagarFatura} style={{ marginTop: 'var(--espaco-04)' }}>
           Pagar fatura
         </Botao>
       )}
       {!ehCartao && (
-        <span className="linha" style={{ marginTop: 'var(--e-7)', justifyContent: 'space-between' }}>
+        <span className="linha" style={{ marginTop: 'var(--espaco-04)', justifyContent: 'space-between' }}>
           <span className="t-legenda">
             {conferencia
               ? `Conferido ${dataCurta(conferencia.data)} · ${conferencia.diferenca_cents === 0 ? 'bateu' : `diferença ${fmtBRL(conferencia.diferenca_cents)}`}`
@@ -570,7 +570,7 @@ function FolhaPagarFatura({ cartao, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Confirmar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div>
           <p className="t-card">{cartao.nome}</p>
           <p className="t-sec">Fatura aberta: <span className="dinheiro">{fmtBRL(fatura)}</span></p>

@@ -87,7 +87,7 @@ function ShellInterno() {
             ))}
           </nav>
           <Botao variante="secundario" onClick={sair}
-            style={{ marginTop: 'var(--e-8)', width: '100%' }}>
+            style={{ marginTop: 'var(--espaco-05)', width: '100%' }}>
             <Icone nome="sair" tamanho={16} />Sair
           </Botao>
         </Folha>

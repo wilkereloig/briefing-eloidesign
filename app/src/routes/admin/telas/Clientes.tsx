@@ -107,7 +107,7 @@ export default function Clientes() {
                     const qtd = servicos.filter((s) => s.cliente_id === c.id).length
                     return (
                       <Link key={c.id} to={`/admin/clientes/${c.id}`} className="card card-hover cliente-card">
-                        <span className="linha" style={{ gap: 'var(--e-5)', alignItems: 'flex-start' }}>
+                        <span className="linha" style={{ gap: 'var(--espaco-03)', alignItems: 'flex-start' }}>
                           {/* barra de cor, nunca avatar redondo com inicial */}
                           <span className="marca-cor" aria-hidden
                             style={{ background: c.cor || corCliente[i % corCliente.length] }} />
@@ -132,7 +132,7 @@ export default function Clientes() {
                           </span>
                         </div>
 
-                        <span className="linha" style={{ marginTop: 'var(--e-5)' }}>
+                        <span className="linha" style={{ marginTop: 'var(--espaco-03)' }}>
                           {c.portal_ativo
                             ? <Chip estado="pago">Portal ativo</Chip>
                             : <Chip estado="rascunho">Sem portal</Chip>}

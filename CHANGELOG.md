@@ -2,6 +2,60 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Migração para a spec ELOI Design System, fase 1: tokens
+
+Handoff novo (`ELOI DESIGN SYSTEM — Implementation Rules`) formaliza densidade
+de tela, escala de espaço de 12 passos, tipografia completa e vocabulário de
+token por categoria-grupo-função — refinamento do KV aprovado em 04/08/2026,
+não substituição: a paleta de cor não mudou, mesmo hex de sempre.
+
+Auditoria em 12 agentes (Workflow) comparou a spec com todo o painel `/admin`
+e achou 148 gaps. Plano em 6 fases; esta entrega é a Fase 1.
+
+### Tokens (`app/src/ui/tokens.css`/`.ts`, espelhados em `eloi-handoff/design-tokens/`)
+
+- **Nomenclatura**: `--cor-fundo-primario`, `--espaco-05`, `--raio-cartao`,
+  `--movimento-lento`... — português, categoria-grupo-função. Cor de marca
+  crua (`--roxo`, `--lima`...) vira paleta interna; token semântico aponta
+  pra ela. 358 usos renomeados em 22 arquivos.
+- **Escala de espaço**: 12 passos (4/8/12/16/24/32/40/48/64/80/96/120px),
+  antes 4/6/8/10/12/14/16/20/26/32/40/56. Cada uso antigo foi remapeado pro
+  degrau novo mais próximo (não por índice) — evita inchar espaçamento em até
+  150% num rename mecânico; telas que devem crescer pra valer (padding de
+  card, por exemplo) sobem na Fase 2.
+- **13 tokens que não existiam**: `--cor-feedback-aviso` (âmbar, status
+  Aguardando/Parcial), `--cor-borda-ativa`/`--cor-borda-foco`,
+  `--cor-superficie-selecionada`/`--cor-superficie-desabilitada`,
+  `--raio-minimo`/`--raio-arco`, `--movimento-lento`/`--movimento-apresentacao`/
+  `--curva-entrada`/`--curva-saida`/`--deslocamento-pequeno`/`--deslocamento-medio`/
+  `--atraso-escalonado`.
+- **Camada tipográfica inteira**, ausente até agora: 15 tokens `--tipo-*`
+  (capa-xl → etiqueta, mais `--tipo-dado-*` pra número tabular). Só o token
+  existe por enquanto — vira classe `.t-*` quando um componente precisar
+  (Fase 2+), não antes.
+- **Densidade** (`data-density="standard"|"dense"|"expressive"`): mecanismo
+  ligado, `standard` no root. `dense` entra de verdade nas telas financeiras
+  na Fase 3.
+- Três correções de valor sem mudar nome: `--cor-texto-secundario` .72→.68,
+  `--cor-borda-sutil` .07→.08, `--grade-largura-maxima` 1240→1440px.
+- Dois tokens bespoke (fora de qualquer escala aprovada) corrigidos por
+  fusão: `--raio-folha` 22px agora é `var(--raio-painel)` (16px);
+  `--faixa-grupo`/`--linha-hover` (cores de tabela fora da paleta) viram
+  `--cor-fundo-secundario`/`--cor-superficie-hover`.
+- **Ficam como estão, de propósito** (legado, papel ainda não separado por
+  consumidor): `--raio-chip` (Fase 2 — chip/avatar/botão-ícone/skeleton/busca
+  hoje dividem um valor que deveria ser 4 coisas diferentes) e
+  `--t-folha`/`--curva-folha` (Fase 5 — junto da reconstrução do drawer).
+
+### Decisões registradas (não reabrir sem fato novo)
+
+Nomenclatura em português com 4 segmentos · densidade só no financeiro por
+ora · os 2 modais aninhados em `folhas.tsx` viram página completa na Fase 5 ·
+grafismo da tela de acesso mantém os 4 blocos (não vira o arco de marca).
+
+`npm run verify` limpo (typecheck, lint, 174 testes, build). Conferido
+visualmente em Hoje e Dinheiro — sem regressão de layout.
+
 ## 2026-09-04 — Relatórios com recorte, recebíveis, projetos, fiscal e exportação
 
 Relatórios não tinham filtro além da lente pessoal/empresa, nem saída: o

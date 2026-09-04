@@ -125,7 +125,7 @@ export default function Briefings() {
           {erro && (
             <Painel erro titulo="Erro">
               <p className="t-msg" role="alert" style={{ color: 'var(--coral)' }}>{erro}</p>
-              <Botao onClick={() => void carregar()} style={{ marginTop: 'var(--e-7)' }}>
+              <Botao onClick={() => void carregar()} style={{ marginTop: 'var(--espaco-04)' }}>
                 Tentar de novo
               </Botao>
             </Painel>
@@ -301,7 +301,7 @@ function FolhaConvite({ clientes, aoFechar, aoSalvar }: {
           <Botao variante="destaque" onClick={() => void gerar()} carregando={salvando}
             style={{ flex: 2 }}>Gerar link</Botao>
         </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         {link ? (
           <>
             <p className="t-corpo">Link pronto. Mande para o cliente:</p>
@@ -384,7 +384,7 @@ function FolhaResposta({ convite, aoFechar }: {
           Copiar tudo
         </Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <dl className="ficha">
           <div><dt className="etiqueta-mini">Tipo</dt>
             <dd className="t-corpo">{rotuloTipo(convite.tipo)}</dd></div>

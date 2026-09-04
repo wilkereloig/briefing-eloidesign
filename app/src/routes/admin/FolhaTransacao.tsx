@@ -126,10 +126,10 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div>
-          <span className="etiqueta" style={{ color: 'var(--texto-3)' }}>Tipo</span>
-          <div className="linha" style={{ marginTop: 'var(--e-3)' }} role="group" aria-label="Tipo">
+          <span className="etiqueta" style={{ color: 'var(--cor-texto-fraco)' }}>Tipo</span>
+          <div className="linha" style={{ marginTop: 'var(--espaco-02)' }} role="group" aria-label="Tipo">
             {TIPOS.map((t) => (
               <Pilula key={t.chave} ativa={tipo === t.chave} onClick={() => setTipo(t.chave)}>
                 {t.label}
@@ -139,8 +139,8 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
         </div>
 
         <div>
-          <span className="etiqueta" style={{ color: 'var(--texto-3)' }}>Contexto</span>
-          <div className="linha" style={{ marginTop: 'var(--e-3)' }} role="group" aria-label="Contexto">
+          <span className="etiqueta" style={{ color: 'var(--cor-texto-fraco)' }}>Contexto</span>
+          <div className="linha" style={{ marginTop: 'var(--espaco-02)' }} role="group" aria-label="Contexto">
             <Pilula ativa={contexto === 'empresa'} onClick={() => setContexto('empresa')}>Empresa</Pilula>
             <Pilula ativa={contexto === 'pessoal'} onClick={() => setContexto('pessoal')}>Pessoal</Pilula>
           </div>
@@ -249,7 +249,7 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
         )}
 
         {parcelas === 1 && !jaLiquidado && (
-          <label className="linha" style={{ gap: 'var(--e-3)', cursor: 'pointer' }}>
+          <label className="linha" style={{ gap: 'var(--espaco-02)', cursor: 'pointer' }}>
             <input type="checkbox" className="caixa-marcar" checked={jaPago}
               onChange={(e) => setJaPago(e.target.checked)} />
             <span className="t-ui">

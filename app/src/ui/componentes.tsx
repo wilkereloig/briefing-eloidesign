@@ -92,7 +92,7 @@ export function Indicador({ rotulo, valor, nota, cor, dominante }:
       <Etiqueta mini>{rotulo}</Etiqueta>
       <span className="valor t-valor-g dinheiro" aria-label={valor}
         style={cor ? { color: `var(--${cor === 'acento' ? 'acento' : 'coral'})` } : undefined}>{valor}</span>
-      {nota && <span className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>{nota}</span>}
+      {nota && <span className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>{nota}</span>}
     </Card>
   )
 }
@@ -143,7 +143,7 @@ export function Erro({ causa, aoTentar, offline }:
       <p className="t-msg" role="alert" style={{ color: 'var(--coral)' }}>{causa}</p>
       {offline && <p className="t-sec">Os dados na tela são do último acesso.</p>}
       {aoTentar && <Botao onClick={aoTentar} className="btn-espaco"
-        style={{ marginTop: 'var(--e-7)' }}>Tentar de novo</Botao>}
+        style={{ marginTop: 'var(--espaco-04)' }}>Tentar de novo</Botao>}
     </Painel>
   )
 }
@@ -151,7 +151,7 @@ export function Erro({ causa, aoTentar, offline }:
 /** Esqueleto de carga. Reproduz a forma do conteúdo real, não um retângulo. */
 export function Esqueleto({ linhas = 3, altura = 18 }: { linhas?: number; altura?: number }) {
   return (
-    <div className="pilha" aria-hidden style={{ gap: 'var(--e-5)' }}>
+    <div className="pilha" aria-hidden style={{ gap: 'var(--espaco-03)' }}>
       {Array.from({ length: linhas }, (_, i) => (
         <div key={i} className="esqueleto"
           style={{ height: altura, width: `${100 - i * 12}%`, animationDelay: `${i * 200}ms` }} />
@@ -205,7 +205,7 @@ export function Folha({ titulo, aoFechar, children, rodape }:
           <Botao variante="icone" onClick={aoFechar} aria-label="Fechar"><Icone nome="fechar" /></Botao>
         </header>
         {children}
-        {rodape && <div className="linha" style={{ marginTop: 'var(--e-9)', justifyContent: 'flex-end' }}>{rodape}</div>}
+        {rodape && <div className="linha" style={{ marginTop: 'var(--espaco-05)', justifyContent: 'flex-end' }}>{rodape}</div>}
       </div>
     </div>
   )

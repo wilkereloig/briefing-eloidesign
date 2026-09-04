@@ -1,8 +1,35 @@
 # Sistema Visual — ELOI Studio
 
-KV aprovado (KV Completo, 04/08/2026). **Única referência visual ativa.**
-Antes de criar cor, componente, espaçamento, card ou padrão, procure aqui: quase
-sempre já existe.
+KV aprovado (KV Completo, 04/08/2026), refinado pela especificação ELOI DESIGN
+SYSTEM — Implementation Rules (04/09/2026), que formaliza densidade
+(`expressive`/`standard`/`dense`), a escala de espaço de 12 passos, a camada
+tipográfica completa e o vocabulário de token por categoria-grupo-função. A
+paleta de cor **não mudou** — mesmo hex de sempre — só a estrutura por trás
+dela. **Única referência visual ativa.** Antes de criar cor, componente,
+espaçamento, card ou padrão, procure aqui: quase sempre já existe.
+
+## Migração para a spec nova — status
+
+Trabalho em 6 fases (auditoria completa: 12 agentes, 148 gaps, ver
+`CHANGELOG.md` 2026-09-04). **Fase 1 concluída** — as demais ainda usam
+padrões antigos em componentes/telas até chegar a vez de cada uma.
+
+| Fase | Objetivo | Status |
+|---|---|---|
+| 1. Fundação de tokens | `tokens.css`/`.ts` na nomenclatura e escala novas | ✅ |
+| 2. Componentes core | Botão, Campo, Card, Chip nos estados/anatomia da spec | Pendente |
+| 3. Tabela densa (financeiro) | `data-density="dense"` em Dinheiro/Notas/Relatórios/FolhasExtrato | Pendente |
+| 4. Telas de gestão (standard) | Vazio/Chip/Erro corrigidos nas ~12 telas restantes | Pendente |
+| 5. Shell, navegação, responsivo | Topbar, breakpoint da sidebar, modal aninhado→página | Pendente |
+| 6. Ícones e acessibilidade fina | Famílias de ícone faltando, `:focus-visible`, pisos de fonte | Pendente |
+
+Decisões já batidas (não reabrir sem motivo novo): nomenclatura de token em
+**português com 4 segmentos** (`--cor-fundo-primario`, não `--color-background-primary`
+nem `--pagina`); densidade `dense` só nas telas financeiras por ora; os dois
+modais aninhados (`folhas.tsx` `FolhaServico`→`FolhaSubCliente` e
+`FolhaOrcamento`→`FolhaCatalogo`) vão virar página completa na Fase 5; o
+grafismo da tela de acesso (4 blocos) **fica como está** — não vira o arco de
+marca, decisão explícita do Wilke.
 
 ---
 
@@ -76,4 +103,22 @@ download depois do CSS; `<link>` baixa em paralelo.
 
 `:focus-visible` com contorno Lima de 2 px e `prefers-reduced-motion` que zera
 animação e transição já estão em `tokens.css` — valem para o app inteiro sem
-ninguém precisar lembrar.
+ninguém precisar lembrar. Só a raiz: botão, campo, card e chip ainda não têm
+`:focus-visible` próprio em `componentes.css` — isso é Fase 2.
+
+## Nomenclatura de token (fase 1)
+
+`categoria-grupo-função`, em português: `--cor-fundo-primario`,
+`--cor-texto-secundario`, `--espaco-05`, `--raio-cartao`, `--movimento-lento`.
+Cor de marca crua (`--roxo`, `--lima`, `--coral`...) é **paleta** — nunca usada
+direto num componente, só pelo token semântico que aponta pra ela
+(`--cor-acento-primario: var(--roxo)`). Token com nome antigo (`--e-7`,
+`--texto-3`, `--chao-2`) não existe mais em `tokens.css`; se aparecer em algum
+`.tsx`/`.css` fora desses dois arquivos é sobra de antes da Fase 1 — corrija
+para o nome novo, não recrie o antigo.
+
+Alguns tokens ficam **legado, valor mantido, papel ainda não separado por
+consumidor**: `--raio-chip` (8px, usado por chip/avatar/botão-ícone/skeleton/
+busca ao mesmo tempo) e `--t-folha`/`--curva-folha` (tempo/curva próprios da
+folha/drawer). Fase 2 e Fase 5 resolvem cada um — não usar esses dois em
+código novo.

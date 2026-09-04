@@ -96,7 +96,7 @@ export default function Config() {
           acao={<Botao compacto onClick={() => setFolha({ tipo: 'categoria', contexto: 'empresa' })}>
             <Icone nome="adicionar" tamanho={14} />Nova
           </Botao>}>
-          <p className="t-sec" style={{ marginBottom: 'var(--e-7)' }}>
+          <p className="t-sec" style={{ marginBottom: 'var(--espaco-04)' }}>
             {categorias.length} categorias ativas. Elas classificam despesas e receitas nos
             relatórios e nos limites de gasto.
           </p>
@@ -104,7 +104,7 @@ export default function Config() {
             {(['empresa', 'pessoal'] as Contexto[]).map((ctx) => (
               <div key={ctx}>
                 <Etiqueta acento>{ctx}</Etiqueta>
-                <div className="linha" style={{ marginTop: 'var(--e-5)' }}>
+                <div className="linha" style={{ marginTop: 'var(--espaco-03)' }}>
                   {categorias.filter((c) => c.contexto === ctx).map((c) => (
                     <span key={c.id} className="chip-categoria" data-tipo={c.tipo}>
                       {c.nome}
@@ -218,7 +218,7 @@ function FolhaCategoria({ contextoInicial, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <Campo rotulo="Nome" value={nome} erro={erro}
           onChange={(e) => { setNome(e.target.value); setErro('') }} placeholder="Equipamentos" />
         <div className="linha">

@@ -18,7 +18,7 @@ export function Onboarding() {
         Sem conta, o painel não tem onde somar. Cinco passos, na ordem — os
         indicadores começam a fazer sentido a partir do primeiro.
       </p>
-      <ol className="lista passos" style={{ marginTop: 'var(--e-5)' }}>
+      <ol className="lista passos" style={{ marginTop: 'var(--espaco-03)' }}>
         {passos.map((p, i) => (
           <li key={p.chave} className="lista-item" data-feito={p.feito ? 'true' : undefined}>
             <span className="passo-num" aria-hidden>

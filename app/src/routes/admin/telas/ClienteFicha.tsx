@@ -304,13 +304,13 @@ export default function ClienteFicha() {
                     <a href="/portal/" target="_blank" rel="noreferrer">/portal/</a>
                   </dd></div>
               </dl>
-              <div className="linha" style={{ marginTop: 'var(--e-5)' }}>
+              <div className="linha" style={{ marginTop: 'var(--espaco-03)' }}>
                 <Botao variante="primario" onClick={() => setSenhaPortal(true)}>
                   <Icone nome="usuario" tamanho={16} />
                   {cliente.portal_senha_gerada_em ? 'Gerar nova senha' : 'Gerar senha de acesso'}
                 </Botao>
               </div>
-              <p className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>
+              <p className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>
                 A senha aparece uma única vez. O portal mostra ao cliente só os
                 materiais publicados.
               </p>
@@ -361,7 +361,7 @@ export default function ClienteFicha() {
                     </li>
                   ))}
                 </ul>}
-              <p className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>
+              <p className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>
                 Marca com serviço não se exclui — encerre pela edição. O histórico fica.
               </p>
             </Painel>

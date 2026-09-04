@@ -90,7 +90,7 @@ export function PainelTarefas({ clienteId, servicoId, limite, aceitaUrlNovo }: {
   return (
     <>
       <Painel titulo="Tarefas"
-        acao={<span className="linha" style={{ gap: 'var(--e-3)' }}>
+        acao={<span className="linha" style={{ gap: 'var(--espaco-02)' }}>
           {feitas.length > 0 && (
             <button type="button" className="t-legenda btn-texto" onClick={() => setVerFeitas((v) => !v)}>
               {verFeitas ? 'Esconder feitas' : `${feitas.length} feitas`}
@@ -111,7 +111,7 @@ export function PainelTarefas({ clienteId, servicoId, limite, aceitaUrlNovo }: {
           </ul>
         )}
         {limite && abertas.length > limite && (
-          <p className="t-legenda" style={{ marginTop: 'var(--e-4)' }}>
+          <p className="t-legenda" style={{ marginTop: 'var(--espaco-03)' }}>
             Mais {abertas.length - limite} abertas — as próximas aparecem conforme estas fecham.
           </p>
         )}

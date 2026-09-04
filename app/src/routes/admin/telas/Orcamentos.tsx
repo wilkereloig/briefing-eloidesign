@@ -143,7 +143,7 @@ export default function Orcamentos() {
                 )}
               </div>
 
-              <div className="grade-filtros" style={{ marginTop: 'var(--e-4)' }}>
+              <div className="grade-filtros" style={{ marginTop: 'var(--espaco-03)' }}>
                 <div className="campo">
                   <label htmlFor="orc-cliente">Cliente</label>
                   <select id="orc-cliente" className="campo-caixa" value={clienteFiltro}

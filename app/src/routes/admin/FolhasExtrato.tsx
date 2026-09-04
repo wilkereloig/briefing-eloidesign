@@ -59,7 +59,7 @@ export function FolhaConferencia({ conta, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Registrar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div className="campo">
           <label htmlFor="conf-data">Data do extrato</label>
           <input id="conf-data" type="date" className="campo-caixa" value={data}
@@ -84,7 +84,7 @@ export function FolhaConferencia({ conta, aoFechar, aoSalvar }: {
         )}
 
         {diferenca != null && diferenca !== 0 && (
-          <label className="linha" style={{ gap: 'var(--e-3)', alignItems: 'flex-start' }}>
+          <label className="linha" style={{ gap: 'var(--espaco-02)', alignItems: 'flex-start' }}>
             <input type="checkbox" checked={criarAjuste} onChange={(e) => setCriarAjuste(e.target.checked)}
               style={{ marginTop: 4 }} />
             <span className="t-sec">
@@ -100,7 +100,7 @@ export function FolhaConferencia({ conta, aoFechar, aoSalvar }: {
         {anteriores.length > 0 && (
           <div>
             <p className="etiqueta-mini">Conferências anteriores</p>
-            <ul className="lista" style={{ marginTop: 'var(--e-3)' }}>
+            <ul className="lista" style={{ marginTop: 'var(--espaco-02)' }}>
               {anteriores.map((c) => (
                 <li key={c.id} className="lista-item">
                   <span className="celula">
@@ -217,14 +217,14 @@ export function FolhaImportar({ aoFechar, aoSalvar }: {
           Importar {selecionadas.length ? `${selecionadas.length}` : ''}
         </Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div>
           <input ref={entrada} type="file" accept=".csv,.txt,text/csv" className="so-leitor"
             aria-label="Arquivo CSV" onChange={(e) => void lerArquivo(e.target.files?.[0])} />
           <Botao onClick={() => entrada.current?.click()}>
             {nomeArquivo ? `Trocar arquivo (${nomeArquivo})` : 'Escolher arquivo CSV'}
           </Botao>
-          <p className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>
+          <p className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>
             CSV exportado do banco. Planilha XLSX: salve como CSV antes.
           </p>
         </div>
@@ -238,7 +238,7 @@ export function FolhaImportar({ aoFechar, aoSalvar }: {
               {selectColuna('Descrição', 'descricao')}
               {selectColuna('Valor', 'valor')}
             </div>
-            <label className="linha" style={{ gap: 'var(--e-3)' }}>
+            <label className="linha" style={{ gap: 'var(--espaco-02)' }}>
               <input type="checkbox" checked={inverter} onChange={(e) => setInverter(e.target.checked)} />
               <span className="t-sec">Inverter sinal (extrato de cartão em que compra vem positiva)</span>
             </label>
@@ -258,7 +258,7 @@ export function FolhaImportar({ aoFechar, aoSalvar }: {
               </div>
               <div className="campo">
                 <span className="etiqueta-mini">Contexto</span>
-                <div className="linha" style={{ marginTop: 'var(--e-2)' }}>
+                <div className="linha" style={{ marginTop: 'var(--espaco-02)' }}>
                   <Pilula ativa={contexto === 'empresa'} onClick={() => setContexto('empresa')}>Empresa</Pilula>
                   <Pilula ativa={contexto === 'pessoal'} onClick={() => setContexto('pessoal')}>Pessoal</Pilula>
                 </div>
@@ -269,7 +269,7 @@ export function FolhaImportar({ aoFechar, aoSalvar }: {
               <span className="t-sec">
                 {selecionadas.length} de {linhas.length} marcadas · entra {fmtBRL(totais.entrada)} · sai {fmtBRL(totais.saida)}
               </span>
-              <span className="linha" style={{ gap: 'var(--e-2)' }}>
+              <span className="linha" style={{ gap: 'var(--espaco-02)' }}>
                 <Botao compacto onClick={() => setMarcadas(new Set(situacoes.flatMap((s, i) => (s === 'nova' ? [i] : []))))}>Só novas</Botao>
                 <Botao compacto onClick={() => setMarcadas(new Set())}>Nenhuma</Botao>
               </span>

@@ -236,7 +236,7 @@ export default function Relatorios() {
                   </div>
                 ))}
               </div>
-              <div className="linha" style={{ marginTop: 'var(--e-7)' }}>
+              <div className="linha" style={{ marginTop: 'var(--espaco-04)' }}>
                 <span className="legenda-item"><span className="ponto-cor" style={{ background: 'var(--roxo)' }} />Recebido</span>
                 <span className="legenda-item"><span className="ponto-cor" style={{ background: 'var(--coral)' }} />Gasto</span>
               </div>
@@ -246,7 +246,7 @@ export default function Relatorios() {
 
         {aba === 'clientes' && (
           <Painel titulo={porMarca ? 'Por marca' : 'Por cliente'}
-            acao={<span className="linha" style={{ gap: 'var(--e-2)' }}>
+            acao={<span className="linha" style={{ gap: 'var(--espaco-02)' }}>
               <Pilula ativa={!porMarca} onClick={() => setPorMarca(false)}>Cliente</Pilula>
               <Pilula ativa={porMarca} onClick={() => setPorMarca(true)}>Marca</Pilula>
             </span>}>
@@ -325,7 +325,7 @@ export default function Relatorios() {
                   </li>
                 ))}
               </ul>
-              <p className="t-legenda" style={{ marginTop: 'var(--e-5)' }}>
+              <p className="t-legenda" style={{ marginTop: 'var(--espaco-03)' }}>
                 Quanto mais velho o atraso, menor a chance de entrar — a previsão de caixa usa essa lógica.
               </p>
             </Painel>
@@ -379,7 +379,7 @@ export default function Relatorios() {
                 conta vencida tem menos chance de entrar do que conta a vencer. Despesa prevista é
                 descontada por inteiro nos três — obrigação não escolhe cenário.
               </p>
-              <p className="t-sec" style={{ marginTop: 'var(--e-5)' }}>
+              <p className="t-sec" style={{ marginTop: 'var(--espaco-03)' }}>
                 Valores projetados nunca se misturam com realizado: o que já foi liquidado está no saldo.
               </p>
             </Painel>
@@ -519,10 +519,10 @@ function FolhaMeta({ inicial, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div>
           <Etiqueta>Tipo</Etiqueta>
-          <div className="linha" style={{ marginTop: 'var(--e-3)' }}>
+          <div className="linha" style={{ marginTop: 'var(--espaco-02)' }}>
             <Pilula ativa={especie === 'orcamento'} onClick={() => setEspecie('orcamento')}>
               Limite de gasto
             </Pilula>
@@ -530,7 +530,7 @@ function FolhaMeta({ inicial, aoFechar, aoSalvar }: {
               Meta de acúmulo
             </Pilula>
           </div>
-          <p className="t-legenda" style={{ marginTop: 'var(--e-3)' }}>
+          <p className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>
             {especie === 'orcamento'
               ? 'Compara o gasto da categoria com o limite no período.'
               : 'Acompanha quanto já entrou em direção a um alvo.'}

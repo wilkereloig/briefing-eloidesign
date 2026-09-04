@@ -123,7 +123,7 @@ export function Busca({ aberta, aoFechar, aoCriar }: {
 
         <div className="busca-resultados" id="busca-resultados" role="listbox">
           {planos.length === 0 ? (
-            <p className="t-sec" style={{ padding: 'var(--e-6)' }}>
+            <p className="t-sec" style={{ padding: 'var(--espaco-04)' }}>
               {termo.trim().length < 2
                 ? 'Digite pelo menos duas letras.'
                 : `Nada encontrado para "${termo.trim()}".`}

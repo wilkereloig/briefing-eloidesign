@@ -110,7 +110,7 @@ export default function Entregas() {
           {erro && (
             <Painel erro titulo="Erro">
               <p className="t-msg" role="alert" style={{ color: 'var(--coral)' }}>{erro}</p>
-              <Botao onClick={() => void carregar()} style={{ marginTop: 'var(--e-7)' }}>
+              <Botao onClick={() => void carregar()} style={{ marginTop: 'var(--espaco-04)' }}>
                 Tentar de novo
               </Botao>
             </Painel>

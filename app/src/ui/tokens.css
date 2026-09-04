@@ -1,20 +1,19 @@
-/* ELOI Studio — tokens do sistema visual aprovado (KV Completo, 04/08/2026).
+/* ELOI Studio — tokens do sistema visual.
    FONTE ÚNICA de valores. eloi-handoff/design-tokens/variables.css é espelho
    deste arquivo (mantido em sincronia por app/src/ui/tokens.test.ts).
    As duas famílias entram por <link> no index.html, não por @import: @import
-   encadeia o download depois do CSS, <link> com preconnect baixa em paralelo. */
+   encadeia o download depois do CSS, <link> com preconnect baixa em paralelo.
+
+   Nomenclatura: português, categoria-grupo-função(-estado), espelhando a
+   estrutura `categoria.grupo.função.estado` da especificação (docs/DESIGN_SYSTEM.md
+   e CHANGELOG explicam a decisão — "código em português" do projeto vence a
+   convenção literal em inglês da spec). Cor de marca crua (--roxo, --lima...)
+   é PALETA: nunca usada direto em componente, só através do token semântico
+   que aponta pra ela. Isso deixa claro qual cor tem qual PAPEL sem perder o
+   nome que a spec e o time já usam na conversa ("o Roxo", "o Lima"). */
 
 :root {
-  /* chão — elevação é tom, não sombra */
-  --pagina: #08011A;
-  --chao: #0D0225;
-  --chao-2: #170B33;
-  --chao-3: #20114A;
-  --trilho: #0D0225;
-  --faixa-grupo: #0A0132;
-  --linha-hover: #150733;
-
-  /* marca */
+  /* ========== PALETA — cor de marca crua, não usar direto em componente ========== */
   --roxo: #7D2AE8;
   --roxo-hover: #6A1FD0;
   --roxo-press: #5A17B0;
@@ -27,58 +26,135 @@
   --tinta: #1B0647;
   --marinho: #0A0A60;
 
-  /* texto */
-  --texto: #FDD5D3;
-  --texto-2: rgba(253, 213, 211, .72);
-  --texto-3: rgba(253, 213, 211, .55);
-  --texto-4: rgba(253, 213, 211, .45);
-  --texto-off: rgba(253, 213, 211, .35);
+  /* ========== FUNDO — chão de cada camada da aplicação ========== */
+  --cor-fundo-primario: #08011A;   /* chão de toda página */
+  --cor-fundo-secundario: #0D0225; /* trilho, cabeçalho, faixa estrutural */
+  --cor-fundo-elevado: #170B33;    /* folha, popover */
+  --cor-fundo-inverso: var(--rosa); /* documento, contrato, impressão */
 
-  /* linhas */
-  --linha: rgba(253, 213, 211, .12);
-  --linha-fraca: rgba(253, 213, 211, .07);
-  --linha-forte: rgba(253, 213, 211, .28);
-  --linha-campo: rgba(253, 213, 211, .16);
+  /* ========== SUPERFÍCIE — mesma escada de tom, papel de card/lista ========== */
+  --cor-superficie-padrao: var(--cor-fundo-secundario);
+  --cor-superficie-elevada: var(--cor-fundo-elevado);
+  --cor-superficie-hover: #20114A;
+  --cor-superficie-selecionada: rgba(125, 42, 232, .22);
+  --cor-superficie-desabilitada: rgba(253, 213, 211, .06);
+
+  /* ========== BORDA — sempre 1px ========== */
+  --cor-borda-sutil: rgba(253, 213, 211, .08);  /* divisor de linha/lista */
+  --cor-borda-padrao: rgba(253, 213, 211, .16); /* card, campo, painel */
+  --cor-borda-forte: rgba(253, 213, 211, .28);  /* botão secundário */
+  --cor-borda-ativa: var(--roxo-claro);         /* hover/cursor dentro de campo */
+  --cor-borda-foco: var(--lima);                /* foco de teclado */
+
+  /* ========== TEXTO ========== */
+  --cor-texto-primario: var(--rosa);
+  --cor-texto-secundario: rgba(253, 213, 211, .68);
+  --cor-texto-fraco: rgba(253, 213, 211, .45);       /* mínimo 12px */
+  --cor-texto-fraco-35: rgba(253, 213, 211, .35);     /* só "sem valor definido" em dinheiro — seção 4 */
+  --cor-texto-acento: var(--lima);
+  --cor-texto-inverso: var(--tinta);        /* sobre rosa/lima/lilás */
+  --cor-texto-sobre-acento: #FFFFFF;        /* único uso do branco puro */
+
+  /* ========== ACENTO ========== */
+  --cor-acento-primario: var(--roxo);
+  --cor-acento-primario-hover: var(--roxo-hover);
+  --cor-acento-primario-pressionado: var(--roxo-press);
+  --cor-acento-sinal: var(--lima); /* ver seção 3 — no máx. um Lima por bloco */
+  --cor-acento-suave: var(--lilas);
 
   /* acento da interface — trocável por peça, Lima por padrão */
-  --acento: var(--lima);
-  --acento-texto: var(--tinta);
+  --acento: var(--cor-acento-sinal);
+  --acento-texto: var(--cor-texto-inverso);
 
-  /* tipografia */
+  /* ========== FEEDBACK ========== */
+  --cor-feedback-sucesso: var(--lima);
+  --cor-feedback-aviso: #F5A300;  /* âmbar derivado — só status */
+  --cor-feedback-erro: var(--coral);
+  --cor-feedback-info: var(--azul);
+  --cor-feedback-neutro: rgba(253, 213, 211, .14);
+
+  /* ========== TIPOGRAFIA ========== */
   --fonte-titulo: 'Archivo', system-ui, sans-serif;
   --fonte-corpo: 'Manrope', system-ui, sans-serif;
   --marca-wdth: 72;
   --titulo-wdth: 100;
 
-  /* espaço */
-  --e-1: 4px;  --e-2: 6px;  --e-3: 8px;  --e-4: 10px;
-  --e-5: 12px; --e-6: 14px; --e-7: 16px; --e-8: 20px;
-  --e-9: 26px; --e-10: 32px; --e-11: 40px; --e-12: 56px;
+  /* escala — tamanho desktop, mobile é o segundo valor de cada par (§4).
+     Consumo vira classe .t-* em app.css/componentes.css conforme a tela for
+     precisando — o token existe antes do uso (§0), a classe não. */
+  --tipo-capa-xl-tamanho: 96px;      --tipo-capa-xl-tamanho-m: 56px; --tipo-capa-xl-altura: 1.00; --tipo-capa-xl-rastreio: -.04em;
+  --tipo-capa-tamanho: 72px;         --tipo-capa-tamanho-m: 40px;    --tipo-capa-altura: 1.05;    --tipo-capa-rastreio: -.03em;
+  --tipo-titulo-1-tamanho: 44px;     --tipo-titulo-1-tamanho-m: 28px; --tipo-titulo-1-altura: 1.10; --tipo-titulo-1-rastreio: -.02em;
+  --tipo-titulo-2-tamanho: 28px;     --tipo-titulo-2-tamanho-m: 22px; --tipo-titulo-2-altura: 1.20; --tipo-titulo-2-rastreio: -.02em;
+  --tipo-titulo-3-tamanho: 22px;     --tipo-titulo-3-tamanho-m: 19px; --tipo-titulo-3-altura: 1.25; --tipo-titulo-3-rastreio: -.01em;
+  --tipo-titulo-4-tamanho: 18px;     --tipo-titulo-4-tamanho-m: 18px; --tipo-titulo-4-altura: 1.30; --tipo-titulo-4-rastreio: -.01em;
+  --tipo-nome-tamanho: 16px;         --tipo-nome-tamanho-m: 16px;    --tipo-nome-altura: 1.35;    --tipo-nome-rastreio: 0em;
+  --tipo-subtitulo-tamanho: 20px;    --tipo-subtitulo-tamanho-m: 17px; --tipo-subtitulo-altura: 1.45; --tipo-subtitulo-rastreio: 0em;
+  --tipo-corpo-grande-tamanho: 18px; --tipo-corpo-grande-tamanho-m: 17px; --tipo-corpo-grande-altura: 1.60; --tipo-corpo-grande-rastreio: 0em;
+  --tipo-corpo-tamanho: 16px;        --tipo-corpo-tamanho-m: 15px;   --tipo-corpo-altura: 1.65;   --tipo-corpo-rastreio: 0em;
+  --tipo-corpo-pequeno-tamanho: 14px; --tipo-corpo-pequeno-tamanho-m: 14px; --tipo-corpo-pequeno-altura: 1.55; --tipo-corpo-pequeno-rastreio: 0em;
+  --tipo-legenda-tamanho: 13px;      --tipo-legenda-tamanho-m: 13px; --tipo-legenda-altura: 1.50; --tipo-legenda-rastreio: 0em;
+  --tipo-etiqueta-tamanho: 11px;     --tipo-etiqueta-altura: 1.3;    --tipo-etiqueta-rastreio: .20em;
 
-  /* forma */
-  --raio-controle: 10px;
+  /* números — sempre com font-variant-numeric: tabular-nums (§4 Números) */
+  --tipo-dado-xl-tamanho: 44px;   --tipo-dado-xl-rastreio: -.03em;
+  --tipo-dado-grande-tamanho: 28px; --tipo-dado-grande-rastreio: -.02em;
+  --tipo-dado-medio-tamanho: 18px;
+  --tipo-dado-pequeno-tamanho: 14px;
+
+  /* ========== ESPAÇO — base 4, doze passos ========== */
+  --espaco-01: 4px;  --espaco-02: 8px;  --espaco-03: 12px; --espaco-04: 16px;
+  --espaco-05: 24px; --espaco-06: 32px; --espaco-07: 40px; --espaco-08: 48px;
+  --espaco-09: 64px; --espaco-10: 80px; --espaco-11: 96px; --espaco-12: 120px;
+
+  /* ========== RAIO — canto controlado, não canto redondo ========== */
+  --raio-minimo: 6px;    /* checkbox, amostra, etiqueta quadrada */
+  --raio-controle: 10px; /* todo controle: botão, campo, select */
+  --raio-cartao: 14px;   /* card */
+  --raio-painel: 16px;   /* painel, modal, drawer */
+  --raio-bloco: 18px;    /* bloco institucional */
+  --raio-etiqueta: 999px; /* tag, avatar, contador, ponto */
+  --raio-arco: 100% 0 0 0; /* arco da marca — camada expressive */
+  /* legado, papel ainda não separado por consumidor (fase 2 resolve):
+     chip/avatar/botão-ícone/skeleton/busca compartilham este valor hoje. */
   --raio-chip: 8px;
-  --raio-card: 14px;
-  --raio-painel: 16px;
-  --raio-bloco: 18px;
-  --raio-folha: 22px;
-  --raio-etiqueta: 999px;
+  --raio-folha: var(--raio-painel);
 
-  /* medidas */
+  /* ========== GRADE — grid e arquétipos de layout (§6) ========== */
+  --grade-largura-maxima: 1440px;
+  --grade-colunas-desktop: 12; --grade-espaco-desktop: 24px; --grade-margem-desktop: 48px;
+  --grade-colunas-tablet: 8;   --grade-espaco-tablet: 20px;  --grade-margem-tablet: 32px;
+  --grade-colunas-mobile: 4;   --grade-espaco-mobile: 16px;  --grade-margem-mobile: 20px;
+  --grade-trilho-aberto: 248px;
+  --grade-trilho-compacto: 72px;
+  --grade-barra-topo-altura: 64px;
+  --grade-formulario-maximo: 720px;
+  --grade-painel-lista: 38%;
+
+  /* medidas — fora do vocabulário da spec, próprias do projeto */
   --alvo-toque: 44px;
-  --trilho-largura: 236px;
+  --trilho-largura: 236px; /* fase 5 sobe pra --grade-trilho-aberto junto do breakpoint */
   --barra-mobile: 74px;
-  --conteudo-max: 1240px;
+  --conteudo-max: var(--grade-largura-maxima);
 
-  /* movimento */
-  --t-micro: 140ms;
-  --t-padrao: 260ms;
+  /* ========== MOVIMENTO ========== */
+  --movimento-rapido: 140ms;       /* hover, foco, checkbox, troca de cor */
+  --movimento-padrao: 240ms;       /* dropdown, tooltip, tab, expansão de linha, toast */
+  --movimento-lento: 420ms;        /* modal, drawer, sidebar, entrada de página, gráfico */
+  --movimento-apresentacao: 670ms; /* só a assinatura da marca */
+  --curva-padrao: cubic-bezier(.3, 0, .2, 1);
+  --curva-entrada: cubic-bezier(.16, 1, .3, 1);
+  --curva-saida: cubic-bezier(.5, 0, .75, 0);
+  --curva-assinatura: cubic-bezier(.72, 0, .16, 1);
+  --deslocamento-pequeno: 4px;  /* hover de card */
+  --deslocamento-medio: 12px;   /* entrada de bloco */
+  --atraso-escalonado: 40ms;    /* stagger, máx. 6 itens */
+  /* legado, papel ainda não separado por consumidor (fase 5 resolve): a
+     folha (bottom sheet/drawer) abre nesse tempo/curva próprios hoje. */
   --t-folha: 280ms;
-  --curva: cubic-bezier(.4, 0, .2, 1);
   --curva-folha: cubic-bezier(.32, 0, .24, 1);
-  --curva-marca: cubic-bezier(.72, 0, .16, 1);
 
-  /* camadas */
+  /* ========== CAMADAS ========== */
   --z-trilho: 10;
   --z-cabecalho: 20;
   --z-dropdown: 30;
@@ -87,13 +163,30 @@
   --z-aviso: 60;
 
   /* margem de conteúdo — cresce por faixa (RESPONSIVE_GUIDELINES) */
-  --margem: var(--e-7);
-  --gap-grade: var(--e-5);
-  --padding-card: var(--e-7);
+  --margem: var(--espaco-04);
+  --gap-grade: var(--espaco-03);
+  --preenchimento-cartao: var(--espaco-04); /* fase 2 sobe pra 24/32 junto do resto do card */
+}
+
+/* ========== DENSIDADE (§1) — respiro, corpo de texto, altura de linha.
+   Não muda cor nem família. Padrão do painel é `standard`; `dense` é
+   ligado por tela via [data-density] (financeiro, fase 3). */
+:root, [data-density='standard'] {
+  --densidade-linha-tabela: 44px;
+  --densidade-celula-padding: 14px 20px;
+  --densidade-espaco-blocos: var(--espaco-06);
+}
+[data-density='dense'] {
+  --densidade-linha-tabela: 32px;
+  --densidade-celula-padding: 8px 14px;
+  --densidade-espaco-blocos: var(--espaco-05);
+}
+[data-density='expressive'] {
+  --densidade-espaco-blocos: var(--espaco-12);
 }
 
 :focus-visible {
-  outline: 2px solid var(--lima);
+  outline: 2px solid var(--cor-borda-foco);
   outline-offset: 2px;
 }
 

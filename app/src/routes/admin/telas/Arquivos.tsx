@@ -246,7 +246,7 @@ function FolhaUpload({ aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={enviando}
           style={{ flex: 2 }}>Enviar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <button type="button" className="area-upload" onClick={() => entrada.current?.click()}>
           <Icone nome="upload" tamanho={30} />
           <span className="t-ui">{file ? file.name : 'Toque para escolher um arquivo'}</span>

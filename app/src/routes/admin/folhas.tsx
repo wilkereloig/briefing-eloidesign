@@ -89,13 +89,13 @@ export function FolhaConta({ inicial, contextoInicial, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <Campo rotulo="Nome" value={nome} erro={erros.nome}
           onChange={(e) => setNome(e.target.value)} placeholder="Conta PJ Inter" />
 
         <div>
-          <span className="etiqueta" style={{ color: 'var(--texto-3)' }}>Contexto</span>
-          <div className="linha" style={{ marginTop: 'var(--e-3)' }}>
+          <span className="etiqueta" style={{ color: 'var(--cor-texto-fraco)' }}>Contexto</span>
+          <div className="linha" style={{ marginTop: 'var(--espaco-02)' }}>
             <Pilula ativa={contexto === 'empresa'} onClick={() => setContexto('empresa')}>Empresa</Pilula>
             <Pilula ativa={contexto === 'pessoal'} onClick={() => setContexto('pessoal')}>Pessoal</Pilula>
           </div>
@@ -191,7 +191,7 @@ export function FolhaLiquidar({ transacao, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Confirmar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div>
           <p className="t-card">{transacao.descricao}</p>
           <p className="t-sec">
@@ -260,7 +260,7 @@ export function FolhaReagendar({ transacao, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Confirmar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <p className="t-card">{transacao.descricao}</p>
         <div className="campo" data-erro={erro ? 'true' : undefined}>
           <label htmlFor="reag-data">Novo vencimento</label>
@@ -330,7 +330,7 @@ export function FolhaRecorrencia({ inicial, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <Campo rotulo="Nome" value={nome} erro={erros.nome}
           onChange={(e) => setNome(e.target.value)} placeholder="Adobe Creative Cloud" />
 
@@ -430,7 +430,7 @@ export function FolhaCliente({ inicial, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <Campo rotulo="Nome" value={nome} erro={erros.nome}
           onChange={(e) => setNome(e.target.value)} placeholder="Solarium" />
         <Campo rotulo="Contato" value={contato}
@@ -511,7 +511,7 @@ export function FolhaContato({ clienteId, inicial, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <Campo rotulo="Nome" value={nome} erro={erros.nome}
           onChange={(e) => setNome(e.target.value)} placeholder="Ana Prado" />
         <Campo rotulo="Função" value={funcao}
@@ -537,7 +537,7 @@ export function FolhaContato({ clienteId, inicial, aoFechar, aoSalvar }: {
           </div>
         )}
 
-        <label className="linha" style={{ gap: 'var(--e-3)', minHeight: 44 }}>
+        <label className="linha" style={{ gap: 'var(--espaco-02)', minHeight: 44 }}>
           <input type="checkbox" checked={principal}
             onChange={(e) => setPrincipal(e.target.checked)} />
           <span className="celula">
@@ -595,14 +595,14 @@ export function FolhaSubCliente({ clienteId, inicial, aoFechar, aoSalvar }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <Campo rotulo="Nome da marca" value={nome} erro={erros.nome}
           onChange={(e) => setNome(e.target.value)} placeholder="Vibra" />
         <CampoTexto rotulo="Observações" value={observacoes} rows={2}
           onChange={(e) => setObservacoes(e.target.value)}
           placeholder="Opcional — contato, particularidade do fluxo" />
         {inicial && (
-          <label className="linha" style={{ gap: 'var(--e-3)', minHeight: 44 }}>
+          <label className="linha" style={{ gap: 'var(--espaco-02)', minHeight: 44 }}>
             <input type="checkbox" checked={!ativo}
               onChange={(e) => setAtivo(!e.target.checked)} />
             <span className="celula">
@@ -668,7 +668,7 @@ export function FolhaTarefa({ inicial, clienteInicial, servicoInicial, aoFechar,
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <Campo rotulo="O que fazer" value={titulo} erro={erro} autoFocus
           onChange={(e) => { setTitulo(e.target.value); setErro('') }}
           placeholder="Mandar a proposta revisada para a Vibra" />
@@ -681,7 +681,7 @@ export function FolhaTarefa({ inicial, clienteInicial, servicoInicial, aoFechar,
           </div>
           <div className="campo">
             <span className="etiqueta-mini">Prioridade</span>
-            <div className="linha" style={{ marginTop: 'var(--e-2)' }}>
+            <div className="linha" style={{ marginTop: 'var(--espaco-02)' }}>
               {(['baixa', 'normal', 'alta'] as const).map((p) => (
                 <Pilula key={p} ativa={prioridade === p} onClick={() => setPrioridade(p)}>
                   {ROTULO_PRIORIDADE[p]}
@@ -803,7 +803,7 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar, aoAnexarNota }: {
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div className="campo" data-erro={erros.cliente ? 'true' : undefined}>
           <label htmlFor="srv-cliente">Cliente</label>
           <select id="srv-cliente" className="campo-caixa" value={clienteId}
@@ -887,7 +887,7 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar, aoAnexarNota }: {
         <CampoTexto rotulo="Observações" value={observacoes} rows={3}
           onChange={(e) => setObservacoes(e.target.value)} placeholder="Opcional" />
 
-        <label className="linha" style={{ gap: 'var(--e-3)', cursor: 'pointer' }}>
+        <label className="linha" style={{ gap: 'var(--espaco-02)', cursor: 'pointer' }}>
           <input type="checkbox" className="caixa-marcar" checked={pago}
             onChange={(e) => setPago(e.target.checked)} />
           <span className="t-ui">Serviço já pago</span>
@@ -993,7 +993,7 @@ export function FolhaEntrega({ inicial, clienteInicial, aoFechar, aoSalvar }: {
               : publicar ? 'Publicar' : 'Salvar rascunho'}
         </Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div className="campo" data-erro={erros.cliente ? 'true' : undefined}>
           <label htmlFor="ent-cliente">Cliente</label>
           <select id="ent-cliente" className="campo-caixa" value={clienteId}
@@ -1011,8 +1011,8 @@ export function FolhaEntrega({ inicial, clienteInicial, aoFechar, aoSalvar }: {
         </div>
 
         <div>
-          <span className="etiqueta" style={{ color: 'var(--texto-3)' }}>Categoria</span>
-          <div className="linha" style={{ marginTop: 'var(--e-3)' }}>
+          <span className="etiqueta" style={{ color: 'var(--cor-texto-fraco)' }}>Categoria</span>
+          <div className="linha" style={{ marginTop: 'var(--espaco-02)' }}>
             {CATEGORIAS_ENTREGA.map((c) => (
               <Pilula key={c} ativa={categoria === c} onClick={() => setCategoria(c)}>
                 {ROTULO_CATEGORIA[c]}
@@ -1042,12 +1042,12 @@ export function FolhaEntrega({ inicial, clienteInicial, aoFechar, aoSalvar }: {
         <Campo rotulo="Versão" value={versao} inputMode="numeric"
           onChange={(e) => setVersao(e.target.value)} placeholder="1" />
 
-        <label className="linha" style={{ gap: 'var(--e-3)', cursor: 'pointer' }}>
+        <label className="linha" style={{ gap: 'var(--espaco-02)', cursor: 'pointer' }}>
           <input type="checkbox" className="caixa-marcar" checked={publicar}
             onChange={(e) => setPublicar(e.target.checked)} />
           <span className="t-ui">Publicar no portal do cliente agora</span>
         </label>
-        <p className="t-legenda" style={{ marginTop: 'calc(var(--e-5) * -1)' }}>
+        <p className="t-legenda" style={{ marginTop: 'calc(var(--espaco-03) * -1)' }}>
           {publicar
             ? 'O cliente passa a ver e baixar este material assim que você salvar.'
             : 'Fica guardado só para você até ser publicado.'}
@@ -1109,7 +1109,7 @@ export function FolhaSenhaPortal({ cliente, aoFechar, aoSalvar }: {
           <Botao variante="destaque" onClick={() => void gerar()} carregando={indo}
             style={{ flex: 2 }}>{jaTinha ? 'Gerar nova senha' : 'Gerar senha'}</Botao>
         </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div>
           <p className="t-card">{cliente.nome}</p>
           <p className="t-sec">
@@ -1236,7 +1236,7 @@ export function FolhaOrcamento({ inicial, duplicar, catalogo, aoFechar, aoSalvar
         <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
           style={{ flex: 2 }}>Salvar · {emReais(conta.total)}</Botao>
       </>}>
-      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         {editando && inicial!.status === 'aprovado' && (
           <p className="t-sec">
             Proposta aprovada com projeto criado tem título, valor e cliente
@@ -1252,7 +1252,7 @@ export function FolhaOrcamento({ inicial, duplicar, catalogo, aoFechar, aoSalvar
             {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </select>
           {!clienteId && (
-            <input className="campo-caixa" style={{ marginTop: 'var(--e-3)' }}
+            <input className="campo-caixa" style={{ marginTop: 'var(--espaco-02)' }}
               value={clienteTexto} onChange={(e) => setClienteTexto(e.target.value)}
               placeholder="Nome de quem vai receber" aria-label="Nome do cliente não cadastrado" />
           )}
@@ -1284,7 +1284,7 @@ export function FolhaOrcamento({ inicial, duplicar, catalogo, aoFechar, aoSalvar
               </li>
             ))}
           </ul>
-          <div className="linha" style={{ marginTop: 'var(--e-3)', flexWrap: 'wrap' }}>
+          <div className="linha" style={{ marginTop: 'var(--espaco-02)', flexWrap: 'wrap' }}>
             <Botao compacto onClick={() => setItens((a) => [...a, { nome: '', valor: 0 }])}>
               <Icone nome="adicionar" tamanho={14} />Item
             </Botao>
@@ -1434,7 +1434,7 @@ export function FolhaExcluir({ titulo, consequencia, aoFechar, aoConfirmar }: {
           finally { setIndo(false) }
         }}>Excluir</Botao>
       </>}>
-      <div className="linha" style={{ alignItems: 'flex-start', gap: 'var(--e-5)' }}>
+      <div className="linha" style={{ alignItems: 'flex-start', gap: 'var(--espaco-03)' }}>
         <span className="alerta-icone" aria-hidden><Icone nome="alerta" tamanho={20} /></span>
         <div>
           <p className="t-h2">{titulo}</p>

@@ -6,13 +6,13 @@
 html{-webkit-text-size-adjust:100%}
 body{
   font-family:var(--fonte-corpo);font-size:15px;line-height:1.65;font-weight:400;
-  background:var(--pagina);color:var(--texto);
+  background:var(--cor-fundo-primario);color:var(--cor-texto-primario);
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
 }
 img,svg{display:block;max-width:100%}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--acento);text-decoration:none}
-a:hover{color:var(--texto)}
+a:hover{color:var(--cor-texto-primario)}
 
 /* ── escala tipográfica (secao 5 do design system) ───────────────────────── */
 .t-h1,.t-pagina,.t-h2,.t-card,.t-valor-g,.t-valor{
@@ -27,11 +27,11 @@ a:hover{color:var(--texto)}
 .t-valor  {font-weight:600;font-size:16px;line-height:1.2;font-variant-numeric:tabular-nums}
 .t-corpo  {font-size:15px;line-height:1.65}
 .t-ui     {font-size:14px;line-height:1.4;font-weight:600}
-.t-sec    {font-size:13px;line-height:1.5;color:var(--texto-3)}
-.t-legenda{font-size:12px;line-height:1.5;color:var(--texto-3)}
+.t-sec    {font-size:13px;line-height:1.5;color:var(--cor-texto-fraco)}
+.t-legenda{font-size:12px;line-height:1.5;color:var(--cor-texto-fraco)}
 .t-msg    {font-size:13px;line-height:1.5;font-weight:600}
 .etiqueta {font-size:11px;font-weight:700;letter-spacing:.20em;text-transform:uppercase;line-height:1}
-.etiqueta-mini{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1;color:var(--texto-4)}
+.etiqueta-mini{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;line-height:1;color:var(--cor-texto-fraco)}
 .etiqueta-acento{color:var(--acento)}
 
 /* dinheiro é sempre Archivo (regra da secao 5) */
@@ -54,7 +54,7 @@ a:hover{color:var(--texto)}
 /* linhas explícitas: sem isso a grade estica o cabeçalho de toque para metade
    da altura da tela, porque linhas automáticas dividem a sobra igualmente */
 .app-shell{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr;
-  min-height:100dvh;background:var(--pagina)}
+  min-height:100dvh;background:var(--cor-fundo-primario)}
 .app-main{min-width:0;width:100%;max-width:var(--conteudo-max);
   padding:18px var(--margem) calc(var(--barra-mobile) + env(safe-area-inset-bottom) + 44px)}
 
@@ -67,7 +67,7 @@ a:hover{color:var(--texto)}
   display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:center;
   height:calc(var(--barra-mobile) + env(safe-area-inset-bottom));
   padding-bottom:env(safe-area-inset-bottom);
-  background:var(--chao);border-top:1px solid var(--linha);user-select:none;
+  background:var(--cor-fundo-secundario);border-top:1px solid var(--cor-borda-padrao);user-select:none;
 }
 /* display:contents faz os links do <nav> virarem colunas da grade da barra */
 .trilho nav{display:contents}
@@ -85,22 +85,22 @@ a:hover{color:var(--texto)}
 .trilho-item{
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
   min-width:0;min-height:var(--alvo-toque);padding:6px 2px;position:relative;
-  font-size:10px;font-weight:700;line-height:1;color:var(--texto-3);
-  text-decoration:none;transition:color var(--t-micro) var(--curva);
+  font-size:10px;font-weight:700;line-height:1;color:var(--cor-texto-fraco);
+  text-decoration:none;transition:color var(--movimento-rapido) var(--curva-padrao);
 }
 .trilho-item .rotulo-curto{max-width:100%;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
 .trilho-item .marca-ativa{display:none}
 .trilho-item.ativo{color:var(--acento)}
-.trilho-item:active{color:var(--texto)}
+.trilho-item:active{color:var(--cor-texto-primario)}
 
 /* botão central de criação — 56x56, elevado, borda na cor da página */
 .trilho-criar{
   justify-self:center;display:flex;align-items:center;justify-content:center;
   width:56px;height:56px;transform:translateY(-16px);
-  background:var(--roxo);color:#FFF;border:4px solid var(--pagina);
+  background:var(--roxo);color:#FFF;border:4px solid var(--cor-fundo-primario);
   border-radius:var(--raio-painel);cursor:pointer;
-  transition:background var(--t-micro) var(--curva);
+  transition:background var(--movimento-rapido) var(--curva-padrao);
 }
 .trilho-criar:hover{background:var(--roxo-hover)}
 .trilho-criar:active{background:var(--roxo-press)}
@@ -108,29 +108,29 @@ a:hover{color:var(--texto)}
 /* cabeçalho de toque: 54 px fixos, não some na rolagem */
 .cabecalho-toque{
   position:sticky;top:0;z-index:var(--z-cabecalho);
-  display:flex;align-items:center;justify-content:space-between;gap:var(--e-3);
-  height:54px;padding:0 var(--e-5);padding-top:env(safe-area-inset-top);
-  background:var(--pagina);border-bottom:1px solid var(--linha);user-select:none;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--espaco-02);
+  height:54px;padding:0 var(--espaco-03);padding-top:env(safe-area-inset-top);
+  background:var(--cor-fundo-primario);border-bottom:1px solid var(--cor-borda-padrao);user-select:none;
 }
 .cabecalho-toque .marca{font-size:17px}
 
 /* folha "Criar": ícone em quadrado colorido + rótulo */
 .criar-opcao{width:100%;min-height:64px;cursor:pointer;text-align:left;
-  transition:background var(--t-micro) var(--curva)}
-.criar-opcao:active{background:var(--chao-2)}
+  transition:background var(--movimento-rapido) var(--curva-padrao)}
+.criar-opcao:active{background:var(--cor-fundo-elevado)}
 .criar-icone{display:flex;align-items:center;justify-content:center;flex:none;
   width:40px;height:40px;border-radius:var(--raio-chip);color:var(--tinta)}
 
 /* ── cabeçalho ──────────────────────────────────────────────────────────── */
 /* O cabeçalho quebra em vez de espremer: com filtros + seletor de mês na mesma
    linha, "agosto de 2026" virava três linhas de uma palavra cada no tablet. */
-.cabecalho{display:flex;align-items:center;flex-wrap:wrap;gap:var(--e-5);
-  min-height:54px;margin-bottom:var(--e-8)}
+.cabecalho{display:flex;align-items:center;flex-wrap:wrap;gap:var(--espaco-03);
+  min-height:54px;margin-bottom:var(--espaco-05)}
 .cabecalho-titulo{min-width:min(100%,240px);flex:1}
-.cabecalho-titulo .etiqueta{color:var(--acento);margin-bottom:var(--e-3);display:block}
+.cabecalho-titulo .etiqueta{color:var(--acento);margin-bottom:var(--espaco-02);display:block}
 /* `flex:none` fixava a largura no max-content (644 px com lente + seletor de mês
    + botão): a linha nunca encolhia e o celular ganhava rolagem horizontal. */
-.cabecalho-acoes{display:flex;align-items:center;flex-wrap:wrap;gap:var(--e-3);
+.cabecalho-acoes{display:flex;align-items:center;flex-wrap:wrap;gap:var(--espaco-02);
   flex:0 1 auto;min-width:0}
 .seletor-mes-rotulo{min-width:0}
 
@@ -139,15 +139,15 @@ a:hover{color:var(--texto)}
    porque o teclado virtual come a metade de baixo. Desktop (≥900): composição
    dividida — identidade à esquerda, acesso à direita. */
 .acesso{display:grid;grid-template-columns:minmax(0,1fr);min-height:100dvh;
-  background:var(--pagina)}
+  background:var(--cor-fundo-primario)}
 .acesso-identidade{display:none}
 .acesso-painel{display:flex;align-items:flex-start;justify-content:center;
-  padding:var(--e-11) var(--margem) var(--e-12)}
+  padding:var(--espaco-07) var(--margem) var(--espaco-09)}
 .acesso-caixa{width:100%;max-width:400px}
-.acesso-marca-toque{margin-bottom:var(--e-11)}
+.acesso-marca-toque{margin-bottom:var(--espaco-07)}
 .acesso-marca-toque .marca{font-size:22px}
-.acesso-titulo{margin:var(--e-3) 0 var(--e-2)}
-.acesso-caixa form{margin-top:var(--e-9);display:flex;flex-direction:column;gap:var(--e-7)}
+.acesso-titulo{margin:var(--espaco-02) 0 var(--espaco-02)}
+.acesso-caixa form{margin-top:var(--espaco-05);display:flex;flex-direction:column;gap:var(--espaco-04)}
 
 /* campo de senha: o botão de mostrar/ocultar vive dentro da caixa e mantém
    44 px de alvo, sem empurrar a largura do input */
@@ -155,58 +155,58 @@ a:hover{color:var(--texto)}
 .acesso-senha .campo-caixa{padding-right:92px}
 .acesso-olho{position:absolute;right:4px;top:50%;translate:0 -50%;
   display:flex;align-items:center;justify-content:center;
-  min-width:76px;height:var(--alvo-toque);padding:0 var(--e-5);
+  min-width:76px;height:var(--alvo-toque);padding:0 var(--espaco-03);
   background:none;border:0;border-radius:var(--raio-controle);
   font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--texto-3);cursor:pointer;transition:color var(--t-micro) var(--curva)}
+  color:var(--cor-texto-fraco);cursor:pointer;transition:color var(--movimento-rapido) var(--curva-padrao)}
 .acesso-olho:hover,.acesso-olho[aria-pressed='true']{color:var(--acento)}
 
 /* A caixa marcável tem 20 px por desenho; o alvo de toque é a linha inteira,
    com os 44 px mínimos. */
-.acesso-manter{display:flex;align-items:center;gap:var(--e-3);cursor:pointer;
-  min-height:var(--alvo-toque);color:var(--texto-2)}
+.acesso-manter{display:flex;align-items:center;gap:var(--espaco-02);cursor:pointer;
+  min-height:var(--alvo-toque);color:var(--cor-texto-secundario)}
 .acesso-enviar{width:100%}
 
-.acesso-nota,.acesso-erro{display:flex;align-items:flex-start;gap:var(--e-3);
-  margin-top:var(--e-7);padding:var(--e-5) var(--e-6);border-radius:var(--raio-controle);
+.acesso-nota,.acesso-erro{display:flex;align-items:flex-start;gap:var(--espaco-02);
+  margin-top:var(--espaco-04);padding:var(--espaco-03) var(--espaco-04);border-radius:var(--raio-controle);
   font-size:13px;line-height:1.45;font-weight:600}
-.acesso-nota{background:var(--chao-2);color:var(--texto-2)}
+.acesso-nota{background:var(--cor-fundo-elevado);color:var(--cor-texto-secundario)}
 .acesso-nota .eloi-icon{color:var(--azul);margin-top:1px}
 .acesso-erro{margin-top:0;background:rgba(253,68,0,.12);color:var(--coral)}
 .acesso-erro .eloi-icon{margin-top:1px}
 
-.acesso-link{display:inline-flex;align-items:center;margin-top:var(--e-8);
+.acesso-link{display:inline-flex;align-items:center;margin-top:var(--espaco-05);
   min-height:var(--alvo-toque);background:none;border:0;
-  font-size:13px;font-weight:600;color:var(--texto-3);cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--cor-texto-fraco);cursor:pointer;
   text-decoration:underline;text-underline-offset:3px;
-  transition:color var(--t-micro) var(--curva)}
+  transition:color var(--movimento-rapido) var(--curva-padrao)}
 .acesso-link:hover{color:var(--acento)}
-.acesso-ajuda{display:flex;flex-direction:column;gap:var(--e-5);
-  margin-top:var(--e-5);padding:var(--e-7);
-  background:var(--chao);border:1px solid var(--linha);border-radius:var(--raio-card)}
-.acesso-cod{font-family:var(--fonte-titulo);font-weight:600;color:var(--texto)}
+.acesso-ajuda{display:flex;flex-direction:column;gap:var(--espaco-03);
+  margin-top:var(--espaco-03);padding:var(--espaco-04);
+  background:var(--cor-fundo-secundario);border:1px solid var(--cor-borda-padrao);border-radius:var(--raio-cartao)}
+.acesso-cod{font-family:var(--fonte-titulo);font-weight:600;color:var(--cor-texto-primario)}
 
 @media (min-width:900px){
   .acesso{grid-template-columns:1.05fr 1fr}
   .acesso-identidade{position:relative;overflow:hidden;
     display:flex;flex-direction:column;justify-content:space-between;
-    padding:var(--e-12) var(--e-12) var(--e-11);
-    background:var(--chao);border-right:1px solid var(--linha)}
+    padding:var(--espaco-09) var(--espaco-09) var(--espaco-07);
+    background:var(--cor-fundo-secundario);border-right:1px solid var(--cor-borda-padrao)}
   .acesso-identidade .marca{font-size:clamp(34px,3.4vw,46px)}
   .acesso-identidade-corpo{position:relative;z-index:1;max-width:26ch}
-  .acesso-conceito{margin-top:var(--e-8);font-size:19px;line-height:1.45;
-    color:var(--texto-2)}
+  .acesso-conceito{margin-top:var(--espaco-05);font-size:19px;line-height:1.45;
+    color:var(--cor-texto-secundario)}
   .acesso-rodape{position:relative;z-index:1}
   /* grafismo: quatro blocos da paleta, canto reto, sem gradiente */
   .acesso-grafismo{position:absolute;right:-40px;top:12%;z-index:0;
-    display:grid;grid-template-columns:repeat(2,84px);gap:var(--e-5);
+    display:grid;grid-template-columns:repeat(2,84px);gap:var(--espaco-03);
     transform:rotate(-8deg);opacity:.9}
   .acesso-grafismo i{display:block;height:84px;border-radius:0}
   .acesso-grafismo i:nth-child(1){background:var(--roxo)}
   .acesso-grafismo i:nth-child(2){background:var(--lima);height:36px;align-self:end}
   .acesso-grafismo i:nth-child(3){background:none;border:2px solid var(--lilas);height:36px}
   .acesso-grafismo i:nth-child(4){background:var(--coral)}
-  .acesso-painel{align-items:center;padding:var(--e-12)}
+  .acesso-painel{align-items:center;padding:var(--espaco-09)}
   .acesso-marca-toque{display:none}
   .acesso-caixa{max-width:380px}
 }
@@ -217,7 +217,7 @@ a:hover{color:var(--texto)}
   .acesso-grafismo i:nth-child(2),.acesso-grafismo i:nth-child(3){height:52px}
 }
 
-.carregando{padding:var(--e-11);color:var(--texto-3)}
+.carregando{padding:var(--espaco-07);color:var(--cor-texto-fraco)}
 .tela{min-width:0}
 @media print{
   .trilho,.cabecalho-toque,.barra-inferior,.nao-imprime,.btn,.veu{display:none!important}
@@ -228,10 +228,10 @@ a:hover{color:var(--texto)}
 }
 
 /* ── faixas (RESPONSIVE_GUIDELINES) ─────────────────────────────────────── */
-@media (min-width:360px){ :root{--margem:var(--e-7)} }
+@media (min-width:360px){ :root{--margem:var(--espaco-04)} }
 
 @media (min-width:768px){
-  :root{--margem:var(--e-9);--gap-grade:var(--e-7);--padding-card:var(--e-9)}
+  :root{--margem:var(--espaco-05);--gap-grade:var(--espaco-04);--padding-card:var(--espaco-05)}
   body{font-size:16px}
   .t-h1{font-size:44px}
   .t-pagina{font-size:32px}
@@ -243,49 +243,49 @@ a:hover{color:var(--texto)}
 
   /* trilho recolhido: 72 px, só ícone */
   .app-shell{grid-template-columns:72px minmax(0,1fr)}
-  .app-main{padding:var(--e-9) var(--margem) var(--e-12)}
+  .app-main{padding:var(--espaco-05) var(--margem) var(--espaco-09)}
   .trilho{position:sticky;top:0;bottom:auto;height:100dvh;
-    display:flex;flex-direction:column;gap:var(--e-1);
-    padding:var(--e-9) var(--e-6) var(--e-8);
-    border-top:0;border-right:1px solid var(--linha)}
-  .trilho nav{display:flex;flex-direction:column;gap:var(--e-1)}
+    display:flex;flex-direction:column;gap:var(--espaco-01);
+    padding:var(--espaco-05) var(--espaco-04) var(--espaco-05);
+    border-top:0;border-right:1px solid var(--cor-borda-padrao)}
+  .trilho nav{display:flex;flex-direction:column;gap:var(--espaco-01)}
   /* No trilho recolhido (72 px) a assinatura não cabe: ela vazava 78 px e
      aparecia cortada. Só entra a partir de 1024, quando o trilho tem 236. */
   .trilho-marca{display:none}
-  .trilho-ferramentas{display:block;margin-top:var(--e-7)}
+  .trilho-ferramentas{display:block;margin-top:var(--espaco-04)}
   .trilho-item:not([data-barra]){display:flex}
   .trilho-item[data-barra],.trilho-criar{order:0}
   .trilho-item .rotulo-curto{display:none}
   .cabecalho-toque{display:none}
   .trilho-item{flex-direction:row;justify-content:center;gap:0;
     min-height:var(--alvo-toque);padding:11px 12px;border-radius:var(--raio-controle);
-    font-size:14px;font-weight:600;color:var(--texto-2);
-    transition:background var(--t-micro) var(--curva),color var(--t-micro) var(--curva)}
-  .trilho-item:hover{background:var(--chao-2);color:var(--texto)}
-  .trilho-item.ativo{color:var(--texto);background:none}
+    font-size:14px;font-weight:600;color:var(--cor-texto-secundario);
+    transition:background var(--movimento-rapido) var(--curva-padrao),color var(--movimento-rapido) var(--curva-padrao)}
+  .trilho-item:hover{background:var(--cor-fundo-elevado);color:var(--cor-texto-primario)}
+  .trilho-item.ativo{color:var(--cor-texto-primario);background:none}
   /* marca ativa: 3 px em Lima colada na aresta esquerda */
   .trilho-item .marca-ativa{display:block;position:absolute;left:0;top:9px;bottom:9px;
     width:3px;background:transparent;border-radius:0}
   .trilho-item.ativo .marca-ativa{background:var(--acento)}
   .trilho-criar{transform:none;width:auto;height:auto;min-height:var(--alvo-toque);
-    border:1px solid var(--linha-forte);background:none;color:var(--texto);
-    border-radius:var(--raio-controle);margin-top:var(--e-3)}
+    border:1px solid var(--cor-borda-forte);background:none;color:var(--cor-texto-primario);
+    border-radius:var(--raio-controle);margin-top:var(--espaco-02)}
   .trilho-criar:hover{background:none;border-color:var(--acento);color:var(--acento)}
-  .trilho-rodape{display:flex;margin-top:auto;padding-top:var(--e-5)}
-  .cabecalho{margin-bottom:var(--e-9)}
+  .trilho-rodape{display:flex;margin-top:auto;padding-top:var(--espaco-03)}
+  .cabecalho{margin-bottom:var(--espaco-05)}
 }
 
 @media (min-width:1024px){
   /* trilho completo: 236 px com rótulos, criação rápida e Sair */
   .app-shell{grid-template-columns:var(--trilho-largura) minmax(0,1fr)}
-  :root{--margem:var(--e-10)}
-  .trilho-marca{display:block;margin:0 var(--e-3) var(--e-9)}
+  :root{--margem:var(--espaco-06)}
+  .trilho-marca{display:block;margin:0 var(--espaco-02) var(--espaco-05)}
   .trilho-item{justify-content:flex-start;gap:11px}
   .trilho-item .rotulo-longo,.trilho-criar .rotulo-longo,
   .trilho-rodape .rotulo-longo{display:inline;min-width:0;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .trilho-rotulo{display:block;padding:var(--e-6) var(--e-5) var(--e-2);
-    color:var(--texto-4)}
+  .trilho-rotulo{display:block;padding:var(--espaco-04) var(--espaco-03) var(--espaco-02);
+    color:var(--cor-texto-fraco)}
   .trilho-criar{justify-content:flex-start;gap:11px;padding:11px 12px}
 }
 
