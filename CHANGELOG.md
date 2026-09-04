@@ -2,6 +2,31 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Fila de cobrança por prazo; baixa com conta e observação; reagendar
+
+"A receber" e "A pagar" eram uma lista plana ordenada por vencimento: para
+saber o que urgia, lia-se tudo. E a baixa não dizia em que conta o dinheiro
+caiu nem por que veio pela metade.
+
+### Adicionado
+
+- **Faixas de prazo** nas abas A receber / A pagar: Vencidos · Hoje ·
+  Próximos 7 dias · Ainda este mês · Depois · Sem vencimento. Faixa vazia
+  não aparece; cada uma mostra quantidade e quanto falta.
+  `domain/financeiro.ts`: `faixaDePrazo`, `agruparPorPrazo`, `ROTULO_FAIXA`.
+- **Recortes** da fila: Vencidos, Sem NF (receber), Recorrentes (pagar),
+  Parciais. "Sem NF" olha `eloi_servicos.nota_fiscal_id` do serviço ligado
+  ao lançamento — não há coluna de NF na transação, de propósito (D-22).
+- **Linha de cobrança** mostra cliente · marca · serviço · NF ok/sem NF ·
+  conta, e "R$ X de R$ Y já recebido" quando parcial.
+- **Registrar recebimento/pagamento** ganhou "caiu na conta" (quando difere
+  da prevista) e observação datada, que se acumula no rodapé do lançamento.
+  `transacoes.liquidar` aceita `conta_id` e `observacoes`.
+- **Reagendar**: só o vencimento muda; o status volta a ser derivado no
+  servidor (`transacoes.reagendar`). Vencida que ganha data futura deixa de
+  ser vencida sem ninguém escolher.
+- Linha nascida de recorrência tem atalho para a aba Recorrências.
+
 ## 2026-09-03 — Briefings completos no /admin; dois painéis estáticos aposentados
 
 `/admin/briefings` só listava e vinculava: gerar convite e ler a resposta

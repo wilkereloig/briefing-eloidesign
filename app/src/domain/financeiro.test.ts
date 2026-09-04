@@ -3,6 +3,7 @@ import {
   saldoConta, saldoDisponivel, resultado, vencidas, diasDeAtraso, proximosVencimentos,
   faturaAberta, limiteDisponivel, dividirParcelas, dataDaParcela, previsaoCaixa,
   agrupar, consumoOrcamento, saldoAberto, valorLiquidado, competenciaDe,
+  agruparPorPrazo, faixaDePrazo,
 } from './financeiro'
 import type { Conta, Transacao } from '../lib/tipos'
 
@@ -298,5 +299,33 @@ describe('orçamento de gasto', () => {
 
   it('alvo zero não divide por zero', () => {
     expect(consumoOrcamento(0, 100).percentual).toBe(0)
+  })
+})
+
+describe('fila de cobrança por prazo', () => {
+  const hoje = '2026-09-10'
+  const aberta = (id: string, venc: string | null, valor = 1000) =>
+    tx({ id, tipo: 'entrada', status: 'pendente', valor_cents: valor, data_vencimento: venc })
+
+  it('classifica cada vencimento na faixa certa', () => {
+    expect(faixaDePrazo(aberta('a', '2026-09-01'), hoje)).toBe('vencido')
+    expect(faixaDePrazo(aberta('b', '2026-09-10'), hoje)).toBe('hoje')
+    expect(faixaDePrazo(aberta('c', '2026-09-17'), hoje)).toBe('semana')
+    expect(faixaDePrazo(aberta('d', '2026-09-25'), hoje)).toBe('mes')
+    expect(faixaDePrazo(aberta('e', '2026-10-02'), hoje)).toBe('proximo')
+    expect(faixaDePrazo(aberta('f', null), hoje)).toBe('sem_data')
+  })
+
+  it('agrupa em ordem de urgência, omite faixa vazia e soma o que falta', () => {
+    const grupos = agruparPorPrazo([
+      aberta('x', '2026-10-02', 300),
+      aberta('y', '2026-09-03', 500),
+      aberta('z', '2026-09-01', 200),
+      tx({ id: 'w', tipo: 'entrada', status: 'parcial', valor_cents: 1000, recebido_cents: 400, data_vencimento: '2026-09-10' }),
+    ], hoje)
+    expect(grupos.map((g) => g.faixa)).toEqual(['vencido', 'hoje', 'proximo'])
+    expect(grupos[0].itens.map((t) => t.id)).toEqual(['z', 'y'])
+    expect(grupos[0].total_cents).toBe(700)
+    expect(grupos[1].total_cents).toBe(600)
   })
 })

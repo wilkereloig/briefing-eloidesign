@@ -146,12 +146,19 @@ export function FolhaLiquidar({ transacao, aoFechar, aoSalvar }: {
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
+  const { contas } = useFinancas()
   const aberto = saldoAberto(transacao)
   const [valor, setValor] = useState(fmtBRL(aberto))
   const [data, setData] = useState(hojeISO())
   const [forma, setForma] = useState(transacao.forma_pagamento ?? '')
+  // Conta em que o dinheiro caiu. Começa na prevista; mudar aqui evita o
+  // segundo passo de "editar lançamento" só para trocar a conta.
+  const [contaId, setContaId] = useState(transacao.conta_id ?? '')
+  const [observacoes, setObservacoes] = useState('')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
+  const contasPossiveis = contas.filter((c) => c.ativa && c.contexto === transacao.contexto
+    && (transacao.tipo === 'saida' || c.tipo !== 'cartao_credito'))
 
   const cents = centsDeBRL(valor)
 
@@ -160,7 +167,11 @@ export function FolhaLiquidar({ transacao, aoFechar, aoSalvar }: {
     if (cents > aberto) return setErro(`O máximo em aberto é ${fmtBRL(aberto)}`)
     setSalvando(true)
     try {
-      await financas.liquidar(transacao.id, cents, data, forma.trim() || undefined)
+      await financas.liquidar(transacao.id, {
+        valor_cents: cents, data_liquidacao: data, forma_pagamento: forma.trim() || undefined,
+        conta_id: contaId && contaId !== transacao.conta_id ? contaId : undefined,
+        observacoes: observacoes.trim() || undefined,
+      })
       aoSalvar(cents === aberto ? 'Baixa registrada' : 'Pagamento parcial registrado')
       aoFechar()
     } catch (err) {
@@ -196,8 +207,68 @@ export function FolhaLiquidar({ transacao, aoFechar, aoSalvar }: {
             onChange={(e) => setData(e.target.value)} />
         </div>
 
+        <div className="campo">
+          <label htmlFor="liq-conta">{transacao.tipo === 'entrada' ? 'Caiu na conta' : 'Saiu da conta'}</label>
+          <select id="liq-conta" className="campo-caixa" value={contaId}
+            onChange={(e) => setContaId(e.target.value)}>
+            <option value="">Manter a prevista</option>
+            {contasPossiveis.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+        </div>
+
         <Campo rotulo="Forma de pagamento" value={forma}
           onChange={(e) => setForma(e.target.value)} placeholder="Pix, boleto, cartão…" />
+
+        <CampoTexto rotulo="Observação" value={observacoes} rows={2}
+          onChange={(e) => setObservacoes(e.target.value)}
+          placeholder="Ex.: pagou só metade, resto em 10 dias" />
+      </div>
+    </Folha>
+  )
+}
+
+/** Muda só o vencimento. Status volta a ser derivado no servidor. */
+export function FolhaReagendar({ transacao, aoFechar, aoSalvar }: {
+  transacao: Transacao
+  aoFechar: () => void
+  aoSalvar: (msg: string) => void
+}) {
+  const [data, setData] = useState(transacao.data_vencimento ?? hojeISO())
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+
+  async function salvar() {
+    if (!data) return setErro('Informe a nova data')
+    setSalvando(true)
+    try {
+      await financas.reagendar(transacao.id, data)
+      aoSalvar('Vencimento alterado')
+      aoFechar()
+    } catch (err) {
+      setErro((err as Error).message)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Folha titulo="Reagendar" aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>Confirmar</Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--e-7)' }}>
+        <p className="t-card">{transacao.descricao}</p>
+        <div className="campo" data-erro={erro ? 'true' : undefined}>
+          <label htmlFor="reag-data">Novo vencimento</label>
+          <input id="reag-data" type="date" className="campo-caixa" value={data}
+            onChange={(e) => { setData(e.target.value); setErro('') }} />
+          {erro && <span className="campo-erro" role="alert">{erro}</span>}
+        </div>
+        <p className="t-legenda">
+          Só a data muda. Valor, conta e o que já foi liquidado ficam como estão.
+        </p>
       </div>
     </Folha>
   )

@@ -139,6 +139,53 @@ export function proximosVencimentos(transacoes: Transacao[], hoje: string, dias 
     .sort((a, b) => (a.data_vencimento! < b.data_vencimento! ? -1 : 1))
 }
 
+/** Faixas de prazo da fila de cobrança. A ordem é a ordem de urgência. */
+export type FaixaPrazo = 'vencido' | 'hoje' | 'semana' | 'mes' | 'proximo' | 'sem_data'
+
+export const ROTULO_FAIXA: Record<FaixaPrazo, string> = {
+  vencido: 'Vencidos',
+  hoje: 'Hoje',
+  semana: 'Próximos 7 dias',
+  mes: 'Ainda este mês',
+  proximo: 'Depois',
+  sem_data: 'Sem vencimento',
+}
+
+const ORDEM_FAIXA: FaixaPrazo[] = ['vencido', 'hoje', 'semana', 'mes', 'proximo', 'sem_data']
+
+export function faixaDePrazo(t: Transacao, hoje: string): FaixaPrazo {
+  const v = t.data_vencimento
+  if (!v) return 'sem_data'
+  if (v < hoje) return 'vencido'
+  if (v === hoje) return 'hoje'
+  const semana = new Date(Date.parse(hoje) + 7 * 86_400_000).toISOString().slice(0, 10)
+  if (v <= semana) return 'semana'
+  if (v.slice(0, 7) === hoje.slice(0, 7)) return 'mes'
+  return 'proximo'
+}
+
+/**
+ * Fila de cobrança agrupada por prazo, do mais urgente ao mais distante.
+ * Faixa vazia não aparece: título sem item é ruído. Dentro da faixa, ordena
+ * por vencimento — e o vencido mais antigo vem primeiro.
+ */
+export function agruparPorPrazo(
+  transacoes: Transacao[], hoje: string,
+): { faixa: FaixaPrazo; itens: Transacao[]; total_cents: number }[] {
+  const mapa = new Map<FaixaPrazo, Transacao[]>()
+  for (const t of transacoes) {
+    const f = faixaDePrazo(t, hoje)
+    mapa.set(f, [...(mapa.get(f) ?? []), t])
+  }
+  return ORDEM_FAIXA
+    .filter((f) => mapa.has(f))
+    .map((f) => {
+      const itens = mapa.get(f)!.sort((a, b) =>
+        (a.data_vencimento ?? '9999').localeCompare(b.data_vencimento ?? '9999'))
+      return { faixa: f, itens, total_cents: itens.reduce((s, t) => s + saldoAberto(t), 0) }
+    })
+}
+
 // ── cartão de crédito ────────────────────────────────────────────────────────
 
 /**

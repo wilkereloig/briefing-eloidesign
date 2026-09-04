@@ -28,10 +28,11 @@ Atualizado: 2026-08-07.
 - **Objetivo:** lançar, liquidar, parcelar, estornar e acompanhar todo movimento.
 - **Estado:** Concluído
 - **Telas:** `telas/Dinheiro.tsx` (5 abas), `FolhaTransacao.tsx`, `folhas.tsx`
-- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/cancelar/parcelar/remover`, `contas.*`, `recorrencias.*`
+- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover`, `contas.*`, `recorrencias.*`
 - **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`
 - **Permissão:** admin
-- **Fluxos:** receita · despesa · transferência · parcelamento · pagamento parcial · estorno · pagar fatura de cartão · recorrência (pausar/retomar/encerrar)
+- **Fluxos:** receita · despesa · transferência · parcelamento · pagamento parcial (com conta e observação) · reagendar · estorno · pagar fatura de cartão · recorrência (pausar/retomar/encerrar)
+- **Fila de cobrança:** A receber / A pagar agrupadas por faixa de prazo (`agruparPorPrazo`) com recortes Vencidos · Sem NF · Recorrentes · Parciais
 - **Pendência:** conciliação de saldo; importação CSV/XLSX
 - **Testes:** `domain/financeiro.test.ts` (incluindo estorno e a invariante liquidado+aberto=combinado)
 

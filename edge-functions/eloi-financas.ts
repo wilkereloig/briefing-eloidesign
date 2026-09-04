@@ -221,7 +221,8 @@ Deno.serve(async (req: Request) => {
 
   // Registrar pagamento (total ou parcial). O status sai do valor, nao da tela.
   if (action === "transacoes.liquidar") {
-    const { id, valor_cents, data_liquidacao, forma_pagamento } = body ?? {};
+    const { id, valor_cents, data_liquidacao, forma_pagamento, conta_id, observacoes } = body ?? {};
+    if (conta_id != null && !ehUuid(conta_id)) return json({ error: "conta_id invalido" }, 400);
     if (!id) return json({ error: "id obrigatorio" }, 400);
     const { data: atual, error: e1 } = await supabase
       .from("eloi_transacoes").select("*").eq("id", id).single();
@@ -235,13 +236,41 @@ Deno.serve(async (req: Request) => {
       return json({ error: "pagamento excede o valor em aberto" }, 400);
     }
     const status = statusPorValor(Number(atual.valor_cents), soma, atual.data_vencimento, hoje);
+    // Observacao da baixa vai para o rodape do que ja existe: quem recebeu em
+    // duas vezes quer ver as duas anotacoes, nao a ultima sobrescrevendo.
+    const nota = typeof observacoes === "string" && observacoes.trim()
+      ? [atual.observacoes, `${data_liquidacao || hoje}: ${observacoes.trim()}`].filter(Boolean).join("\n")
+      : atual.observacoes;
     const { data, error } = await supabase.from("eloi_transacoes").update({
       recebido_cents: soma,
       status,
       data_liquidacao: data_liquidacao || hoje,
       forma_pagamento: forma_pagamento ?? atual.forma_pagamento,
+      // Conta em que o dinheiro caiu, quando difere da prevista.
+      conta_id: conta_id ?? atual.conta_id,
+      observacoes: nota,
       updated_at: new Date().toISOString(),
     }).eq("id", id).select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ transacao: data });
+  }
+
+  // Reagendar so mexe no vencimento. O status volta a ser derivado: uma conta
+  // vencida que ganha data futura deixa de ser "vencido" sem ninguem escolher.
+  if (action === "transacoes.reagendar") {
+    const { id, data_vencimento } = body ?? {};
+    if (!id) return json({ error: "id obrigatorio" }, 400);
+    if (!ehData(data_vencimento)) return json({ error: "data_vencimento invalida" }, 400);
+    const { data: atual, error: e1 } = await supabase
+      .from("eloi_transacoes").select("*").eq("id", id).single();
+    if (e1 || !atual) return json({ error: e1?.message || "transacao nao encontrada" }, 404);
+    if (atual.status === "cancelado" || atual.status === "realizado") {
+      return json({ error: "so lancamento em aberto pode ser reagendado" }, 400);
+    }
+    const status = statusPorValor(Number(atual.valor_cents), Number(atual.recebido_cents), data_vencimento, hoje);
+    const { data, error } = await supabase.from("eloi_transacoes")
+      .update({ data_vencimento, status, updated_at: new Date().toISOString() })
+      .eq("id", id).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ transacao: data });
   }

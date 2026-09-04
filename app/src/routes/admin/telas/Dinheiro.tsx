@@ -3,19 +3,37 @@ import { financas } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { hojeISO, rotuloMes, useFinancas, useNomes, useTransacoesDoMes } from '../../../lib/financas-store'
 import {
-  diasDeAtraso, estaEmAberto, faturaAberta, limiteDisponivel, resultado,
-  saldoConta, saldoAberto,
+  agruparPorPrazo, diasDeAtraso, estaEmAberto, faturaAberta, limiteDisponivel, resultado,
+  ROTULO_FAIXA, saldoConta, saldoAberto,
 } from '../../../domain/financeiro'
-import type { Conta, Recorrencia, Transacao } from '../../../lib/tipos'
+import type { Conta, Recorrencia, ServicoRow, Transacao } from '../../../lib/tipos'
 import {
   Aviso, Botao, Campo, Card, Etiqueta, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
 import { Cabecalho, Carga, ChipMovimento, Dinheiro, SeletorLente, SeletorMes } from '../../../ui/painel'
 import { custoAnual, custoMensal, dataCurta, rotuloConta, rotuloPeriodo } from '../../../ui/formato'
 import { FolhaTransacao } from '../FolhaTransacao'
-import { FolhaConta, FolhaExcluir, FolhaLiquidar, FolhaRecorrencia } from '../folhas'
+import { FolhaConta, FolhaExcluir, FolhaLiquidar, FolhaReagendar, FolhaRecorrencia } from '../folhas'
 
 type Aba = 'movimentos' | 'receber' | 'pagar' | 'contas' | 'recorrencias'
+/** Recortes da fila de cobrança. São perguntas, não status: "o que está sem
+ *  nota?" e "quem pagou só uma parte?" não existem como coluna. */
+type Recorte = 'todos' | 'vencidos' | 'sem_nf' | 'parciais' | 'recorrentes'
+const RECORTES: Record<'receber' | 'pagar', { chave: Recorte; label: string }[]> = {
+  receber: [
+    { chave: 'todos', label: 'Tudo' },
+    { chave: 'vencidos', label: 'Vencidos' },
+    { chave: 'sem_nf', label: 'Sem NF' },
+    { chave: 'parciais', label: 'Parciais' },
+  ],
+  pagar: [
+    { chave: 'todos', label: 'Tudo' },
+    { chave: 'vencidos', label: 'Vencidos' },
+    { chave: 'recorrentes', label: 'Recorrentes' },
+    { chave: 'parciais', label: 'Parciais' },
+  ],
+}
+
 const ABAS: { chave: Aba; label: string }[] = [
   { chave: 'movimentos', label: 'Movimentações' },
   { chave: 'receber', label: 'A receber' },
@@ -26,17 +44,20 @@ const ABAS: { chave: Aba; label: string }[] = [
 
 export default function DinheiroTela() {
   const est = useFinancas()
-  const { contas, transacoes, recorrencias, mes, contexto, recarregar } = est
+  const { contas, transacoes, recorrencias, servicos, mes, contexto, recarregar } = est
+  const servicoPorId = useMemo(() => new Map(servicos.map((s) => [s.id, s])), [servicos])
   const doMes = useTransacoesDoMes()
   const nomes = useNomes()
   const hoje = hojeISO()
 
   const [aba, setAba] = useState<Aba>('movimentos')
   const [busca, setBusca] = useState('')
+  const [recorte, setRecorte] = useState<Recorte>('todos')
   const [folha, setFolha] = useState<
     | { tipo: 'nova' }
     | { tipo: 'editar'; t: Transacao }
     | { tipo: 'liquidar'; t: Transacao }
+    | { tipo: 'reagendar'; t: Transacao }
     | { tipo: 'excluir'; t: Transacao }
     | { tipo: 'conta'; c?: Conta }
     | { tipo: 'fatura'; c: Conta }
@@ -89,10 +110,23 @@ export default function DinheiroTela() {
   const aPagar = useMemo(
     () => filtrar(emAberto.filter((t) => t.tipo === 'saida').sort(porVencimento)), [emAberto, filtrar])
 
+  // Recorte aplicado sobre a lista da aba, depois agrupado por prazo.
+  const listaAtual = aba === 'receber' ? aReceber : aPagar
+  const recortada = useMemo(() => listaAtual.filter((t) => {
+    if (recorte === 'vencidos') return diasDeAtraso(t, hoje) > 0
+    if (recorte === 'parciais') return t.recebido_cents > 0
+    if (recorte === 'recorrentes') return !!t.recorrencia_id
+    if (recorte === 'sem_nf') {
+      const sv = t.servico_id ? servicoPorId.get(t.servico_id) : null
+      return !sv || !sv.nota_fiscal_id
+    }
+    return true
+  }), [listaAtual, recorte, hoje, servicoPorId])
+  const grupos = useMemo(() => agruparPorPrazo(recortada, hoje), [recortada, hoje])
+
   const r = useMemo(() => resultado(transacoes, contexto, mes), [transacoes, contexto, mes])
   const contasVisiveis = contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto))
   const recVisiveis = recorrencias.filter((x) => !contexto || x.contexto === contexto)
-  const listaAtual = aba === 'receber' ? aReceber : aPagar
 
   return (
     <div className="tela pilha">
@@ -121,7 +155,7 @@ export default function DinheiroTela() {
         <div className="abas" role="tablist" aria-label="Seções do financeiro">
           {ABAS.map((a) => (
             <Pilula key={a.chave} ativa={aba === a.chave} role="tab" aria-selected={aba === a.chave}
-              onClick={() => setAba(a.chave)}>{a.label}</Pilula>
+              onClick={() => { setAba(a.chave); setRecorte('todos') }}>{a.label}</Pilula>
           ))}
         </div>
 
@@ -161,23 +195,43 @@ export default function DinheiroTela() {
         )}
 
         {(aba === 'receber' || aba === 'pagar') && (
-          <Painel titulo={aba === 'receber' ? 'Contas a receber' : 'Contas a pagar'}
-            acao={<Dinheiro cents={somaAberto(listaAtual)} className="t-valor" />}>
+          <>
+            <div className="linha" role="group" aria-label="Recorte da fila">
+              {RECORTES[aba].map((rc) => (
+                <Pilula key={rc.chave} ativa={recorte === rc.chave}
+                  onClick={() => setRecorte(rc.chave)}>{rc.label}</Pilula>
+              ))}
+            </div>
             {listaAtual.length === 0 ? (
               <Vazio icone="ok" titulo={aba === 'receber' ? 'Nada a receber' : 'Nada a pagar'}
                 instrucao="Nenhuma conta em aberto neste contexto." />
-            ) : (
-              <ul className="lista">
-                {listaAtual.map((t) => (
-                  <LinhaMov key={t.id} t={t} nomes={nomes} hoje={hoje} modoCobranca
-                    aoEditar={() => setFolha({ tipo: 'editar', t })}
-                    aoCancelar={() => void alternarCancelamento(t)}
-                    aoLiquidar={() => setFolha({ tipo: 'liquidar', t })}
-                    aoExcluir={() => setFolha({ tipo: 'excluir', t })} />
-                ))}
-              </ul>
-            )}
-          </Painel>
+            ) : recortada.length === 0 ? (
+              <Vazio icone="pesquisa" titulo="Nada neste recorte"
+                instrucao={busca ? 'Nenhum resultado para essa busca.' : 'Nenhum lançamento em aberto com esse recorte.'}
+                acao={<Botao onClick={() => { setRecorte('todos'); setBusca('') }}>Ver tudo</Botao>} />
+            ) : grupos.map((g) => (
+              /* Um painel por faixa de prazo: "vencidos" e "depois" na mesma
+                 lista fazem o dono ler tudo para achar o que urge. */
+              <Painel key={g.faixa} titulo={ROTULO_FAIXA[g.faixa]}
+                acao={<span className="linha" style={{ gap: 'var(--e-3)' }}>
+                  <span className="t-legenda">{g.itens.length}</span>
+                  <Dinheiro cents={g.total_cents} className="t-valor" />
+                </span>}>
+                <ul className="lista">
+                  {g.itens.map((t) => (
+                    <LinhaMov key={t.id} t={t} nomes={nomes} hoje={hoje} modoCobranca
+                      servico={t.servico_id ? servicoPorId.get(t.servico_id) : undefined}
+                      aoEditar={() => setFolha({ tipo: 'editar', t })}
+                      aoCancelar={() => void alternarCancelamento(t)}
+                      aoLiquidar={() => setFolha({ tipo: 'liquidar', t })}
+                      aoReagendar={() => setFolha({ tipo: 'reagendar', t })}
+                      aoRecorrencia={t.recorrencia_id ? () => setAba('recorrencias') : undefined}
+                      aoExcluir={() => setFolha({ tipo: 'excluir', t })} />
+                  ))}
+                </ul>
+              </Painel>
+            ))}
+          </>
         )}
 
         {aba === 'contas' && (
@@ -257,6 +311,7 @@ export default function DinheiroTela() {
         <FolhaTransacao inicial={folha.t} aoFechar={fechar} aoSalvar={apos} />
       )}
       {folha?.tipo === 'liquidar' && <FolhaLiquidar transacao={folha.t} aoFechar={fechar} aoSalvar={apos} />}
+      {folha?.tipo === 'reagendar' && <FolhaReagendar transacao={folha.t} aoFechar={fechar} aoSalvar={apos} />}
       {folha?.tipo === 'conta' && <FolhaConta inicial={folha.c} aoFechar={fechar} aoSalvar={apos} />}
       {folha?.tipo === 'fatura' && (
         <FolhaPagarFatura cartao={folha.c} aoFechar={fechar} aoSalvar={apos} />
@@ -289,16 +344,23 @@ const somaAberto = (ts: Transacao[]) => ts.reduce((s, t) => s + saldoAberto(t), 
 
 /** Uma árvore só para toque e desktop: as colunas extras entram por CSS
  *  (.col-desktop) em vez de existir uma tabela e uma lista em paralelo. */
-function LinhaMov({ t, nomes, hoje, modoCobranca, aoEditar, aoCancelar, aoLiquidar, aoExcluir }: {
+function LinhaMov({
+  t, nomes, hoje, modoCobranca, servico, aoEditar, aoCancelar, aoLiquidar, aoReagendar, aoRecorrencia, aoExcluir,
+}: {
   t: Transacao
   nomes: ReturnType<typeof useNomes>
   hoje: string
+  /** Serviço ligado ao lançamento: dá marca e situação da NF na linha. */
+  servico?: ServicoRow
   /** Abas A receber / A pagar: o número que importa é quanto FALTA, e o atraso
    *  aparece. No extrato de movimentações vale o valor do lançamento. */
   modoCobranca?: boolean
   aoEditar: () => void
   aoCancelar: () => void
   aoLiquidar: () => void
+  aoReagendar?: () => void
+  /** Presente quando a linha nasceu de uma recorrência. */
+  aoRecorrencia?: () => void
   aoExcluir: () => void
 }) {
   const cancelado = t.status === 'cancelado'
@@ -308,6 +370,18 @@ function LinhaMov({ t, nomes, hoje, modoCobranca, aoEditar, aoCancelar, aoLiquid
   const categoria = t.categoria_id ? nomes.categoria.get(t.categoria_id)?.nome : null
   const valor = modoCobranca ? saldoAberto(t) : t.valor_cents
   const parcial = !modoCobranca && t.recebido_cents > 0 && t.recebido_cents < t.valor_cents
+  // Na fila de cobrança a linha responde "de quem, por quê e tem nota?" sem
+  // abrir nada. Só entrada com serviço tem NF a mostrar.
+  const apoio = modoCobranca
+    ? [
+      cliente,
+      servico?.sub_cliente,
+      servico?.descricao,
+      t.tipo === 'entrada' && servico ? (servico.nota_fiscal_id ? 'NF ok' : 'sem NF') : null,
+      !servico ? categoria : null,
+      conta,
+    ].filter(Boolean).join(' · ')
+    : [cliente, categoria, conta].filter(Boolean).join(' · ')
 
   return (
     <li className="lista-item" data-cancelado={cancelado ? 'true' : undefined}>
@@ -317,10 +391,12 @@ function LinhaMov({ t, nomes, hoje, modoCobranca, aoEditar, aoCancelar, aoLiquid
       <span className="celula">
         <span className="t-ui espremer">{t.descricao}</span>
         <span className="t-legenda espremer">
-          {[cliente, categoria, conta].filter(Boolean).join(' · ') || 'Sem classificação'}
+          {apoio || 'Sem classificação'}
           {t.data_vencimento ? ` · ${dataCurta(t.data_vencimento)}` : ''}
           {atraso > 0 ? ` · ${atraso} ${atraso === 1 ? 'dia' : 'dias'} de atraso` : ''}
           {parcial ? ` · faltam ${fmtBRL(saldoAberto(t))}` : ''}
+          {modoCobranca && t.recebido_cents > 0
+            ? ` · ${fmtBRL(t.recebido_cents)} de ${fmtBRL(t.valor_cents)} já ${t.tipo === 'entrada' ? 'recebido' : 'pago'}` : ''}
         </span>
       </span>
       {t.parcela_de && <span className="col-desktop t-legenda">{t.parcela_num}/{t.parcela_de}</span>}
@@ -330,6 +406,16 @@ function LinhaMov({ t, nomes, hoje, modoCobranca, aoEditar, aoCancelar, aoLiquid
         <Botao variante="icone" onClick={aoLiquidar}
           aria-label={`Registrar ${t.tipo === 'entrada' ? 'recebimento' : 'pagamento'} de ${t.descricao}`}>
           <Icone nome="ok" tamanho={16} />
+        </Botao>
+      )}
+      {aoReagendar && estaEmAberto(t) && (
+        <Botao variante="icone" onClick={aoReagendar} aria-label={`Reagendar ${t.descricao}`}>
+          <Icone nome="calendario" tamanho={16} />
+        </Botao>
+      )}
+      {aoRecorrencia && (
+        <Botao variante="icone" onClick={aoRecorrencia} aria-label={`Ver recorrência de ${t.descricao}`}>
+          <Icone nome="iteracao" tamanho={16} />
         </Botao>
       )}
       <Botao variante="icone" onClick={aoEditar} aria-label={`Editar ${t.descricao}`}>

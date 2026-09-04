@@ -226,9 +226,18 @@ export const financas = {
       .then((r) => r.transacoes),
   salvar: (transacao: Partial<Transacao>) =>
     call<{ transacao: Transacao }>('eloi-financas', 'transacoes.upsert', { transacao }).then((r) => r.transacao),
-  liquidar: (id: string, valor_cents: number, data_liquidacao?: string, forma_pagamento?: string) =>
-    call<{ transacao: Transacao }>('eloi-financas', 'transacoes.liquidar',
-      { id, valor_cents, data_liquidacao, forma_pagamento }).then((r) => r.transacao),
+  /** Baixa total ou parcial. `conta_id` quando o dinheiro caiu noutra conta;
+   *  `observacoes` vai para o rodapé da transação, datada. */
+  liquidar: (id: string, dados: {
+    valor_cents: number; data_liquidacao?: string; forma_pagamento?: string
+    conta_id?: string; observacoes?: string
+  }) =>
+    call<{ transacao: Transacao }>('eloi-financas', 'transacoes.liquidar', { id, ...dados })
+      .then((r) => r.transacao),
+  /** Só o vencimento muda; o status volta a ser derivado no servidor. */
+  reagendar: (id: string, data_vencimento: string) =>
+    call<{ transacao: Transacao }>('eloi-financas', 'transacoes.reagendar', { id, data_vencimento })
+      .then((r) => r.transacao),
   parcelar: (transacao: Partial<Transacao>, parcelas: number) =>
     call<{ transacoes: Transacao[]; grupo_id: string }>('eloi-financas', 'transacoes.parcelar',
       { transacao, parcelas }),
