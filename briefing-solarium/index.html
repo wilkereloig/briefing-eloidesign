@@ -510,7 +510,7 @@
   }
   function markGroupInvalid(id, bad) {
     const g = document.getElementById(id); if (!g) return;
-    if (bad) { g.style.outline = '2px solid #e05260'; g.style.outlineOffset = '4px'; g.style.borderRadius = '8px'; }
+    if (bad) { g.style.outline = '2px solid var(--cor-feedback-erro)'; g.style.outlineOffset = '4px'; g.style.borderRadius = '8px'; }
     else g.style.outline = 'none';
   }
   function validateStep(step) {

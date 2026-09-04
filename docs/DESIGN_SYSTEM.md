@@ -22,6 +22,7 @@ em 1440/1024/768/375 ainda pendente — ver CHANGELOG.
 | 4. Telas de gestão (standard) | Vazio/Chip/Erro corrigidos nas ~12 telas restantes | ✅ |
 | 5. Shell, navegação, responsivo | Topbar, breakpoint da sidebar, modal aninhado→página | ✅ |
 | 6. Ícones e acessibilidade fina | Sprite, pisos de fonte, Coral como texto, `<main>` | ✅ |
+| 7. Páginas estáticas | `admin.css` espelha os tokens semânticos; portal, home, gestão, briefings e painéis legados nos mesmos valores/componentes | ✅ |
 
 Decisões já batidas (não reabrir sem motivo novo): nomenclatura de token em
 **português com 4 segmentos** (`--cor-fundo-primario`, não `--color-background-primary`
@@ -48,6 +49,8 @@ marca, decisão explícita do Wilke.
 | Ícones autorais | `app/public/eloi-icons.svg` (sprite) | `eloi-handoff/assets/icons/` (45 avulsos) |
 | Logos e assinaturas | `app/public/assinatura.svg`, `icone-app.svg` | `eloi-handoff/assets/logos/` |
 | Wordmark das páginas estáticas | `assets/eloi-admin/wordmark.svg` | — |
+| Tokens e componentes das páginas estáticas (portal, gestão, briefings, painéis) | `assets/eloi-admin/admin.css` — `:root` repete o subconjunto de `tokens.css` com os MESMOS nomes; o resto do `:root` é alias antigo (`--brand`, `--ink`, `--texto-2`…) que 14 páginas ainda usam | — |
+| Tokens da home (`/index.html`) | `:root` inline na própria página (não carrega `admin.css`) | — |
 | Guias escritas | — | `eloi-handoff/*.md` |
 
 **`app/src/ui/tokens.css` é a fonte.** A cópia em `eloi-handoff/` existe porque o
@@ -55,6 +58,11 @@ handoff é um pacote entregável, que precisa funcionar sozinho fora do app (por
 isso ela traz o `@import` das fontes, que o painel carrega por `<link>`).
 `app/src/ui/tokens.test.ts` falha se as duas divergirem — foi assim que se
 descobriu que três tokens de margem existiam só de um lado.
+
+**Fora do bundler não há teste**: `assets/eloi-admin/admin.css` e o `:root` da
+home repetem valores à mão. Mudou valor em `tokens.css`? Muda nos dois no
+mesmo commit. Nome semântico novo (`--cor-*`, `--raio-*`) é o mesmo nos três
+lugares; alias antigo só existe no `admin.css` e não cresce.
 
 ## Guias do handoff
 

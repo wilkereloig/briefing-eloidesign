@@ -129,7 +129,7 @@
       color:var(--ink);font-family:var(--font);font-size:.82rem;padding:9px 12px;outline:none;
       transition:border-color .16s;
     }
-    .filters label{font-size:.68rem;color:var(--txt-dim);display:block;margin-bottom:5px;letter-spacing:.04em}
+    .filters label{font-size:11px;color:var(--txt-dim);display:block;margin-bottom:5px;letter-spacing:.04em}
     /* .content usa gap, mas o conteúdo DENTRO de cada aba precisa do próprio respiro */
     #tabServicos>.filtersbox{margin-bottom:20px}
     #tabClientes>.filters{margin-bottom:18px}
@@ -149,7 +149,7 @@
     .grupo-h{
       display:flex;align-items:center;gap:10px;margin-bottom:10px;
       position:sticky;top:74px;z-index:2;padding:6px 0;
-      background:linear-gradient(180deg,var(--bg) 62%,transparent);
+      background:var(--bg);
     }
     .grupo-h .gtot{margin-left:auto;font-size:.79rem;color:var(--txt-dim)}
     .subgrp{margin:8px 0 8px 10px;border-left:2px solid var(--c700);padding-left:14px}
@@ -175,9 +175,9 @@
     .svc .valor{font-variation-settings:'wght' 700;font-size:.96rem;white-space:nowrap;margin-left:4px}
 
     .badge{
-      font-size:.67rem;border-radius:99px;padding:3px 10px;white-space:nowrap;
+      font-size:11px;border-radius:var(--raio-etiqueta);padding:3px 10px;white-space:nowrap;
       border:1px solid transparent;font-variation-settings:'wght' 560;letter-spacing:.02em;
-      background:rgba(253,213,211,.12);color:var(--rosa); /* neutro por padrão */
+      background:var(--cor-feedback-neutro);color:var(--cor-texto-primario); /* neutro por padrão */
     }
     /* neutro/previsto = tinta translúcida + Rosa */
     .badge.aguard{background:rgba(253,213,211,.12);color:var(--rosa)}
@@ -638,7 +638,7 @@ function renderRanking(){
       <div class="rbar"><span style="width:${Math.round(r.fat/max*100)}%;background:${esc(r.cor)}"></span></div>
       <span class="rv" title="faturado">${brl(r.fat)}</span>
       <span style="font-size:.72rem;color:var(--good)" title="recebido">${brl(r.rec)}</span>
-      <span style="font-size:.72rem;color:#f0c46a" title="a receber">${brl(r.ar)}</span>
+      <span style="font-size:.72rem;color:var(--cor-feedback-aviso)" title="a receber">${brl(r.ar)}</span>
     </div>`).join('');
 }
 /* CLIENTES */

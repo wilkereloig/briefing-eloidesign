@@ -41,10 +41,11 @@
     .btn-sm{padding:7px 14px;font-size:.8rem}
 
     .badge{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-variation-settings:'wght' 700;padding:3px 10px;border-radius:var(--raio-etiqueta);white-space:nowrap}
-    .badge.rascunho,.badge.pendente{background:rgba(253,213,211,.12);color:var(--rosa)}
-    .badge.enviado{background:var(--azul);color:var(--white)}
-    .badge.aprovado,.badge.pago,.badge.respondido{background:var(--lima);color:var(--tinta)}
-    .badge.recusado,.badge.aberto{background:var(--coral);color:var(--white)}
+    .badge.rascunho,.badge.pendente{background:var(--cor-feedback-neutro);color:var(--cor-texto-primario)}
+    .badge.enviado{background:rgba(91,124,253,.14);color:var(--cor-feedback-info)}
+    .badge.aprovado,.badge.pago,.badge.respondido{background:var(--cor-feedback-sucesso);color:var(--cor-texto-inverso)}
+    /* Coral como texto so a partir de 24px: fundo Coral a 14%, texto Rosa */
+    .badge.recusado,.badge.aberto{background:rgba(253,68,0,.14);color:var(--cor-texto-primario)}
 
     .empty{text-align:center;padding:60px 24px;color:var(--muted)}
     .empty .ic{font-size:2.4rem;opacity:.5;margin-bottom:14px}
@@ -54,11 +55,11 @@
     .marca-hero .nm{font-variation-settings:'wght' 700;font-size:1.15rem}
     .zip-cta{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--brand-soft);border:1px solid var(--line);border-radius:var(--raio-card);padding:14px 18px;margin-bottom:22px;flex-wrap:wrap}
 
-    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--roxo);color:var(--white);padding:12px 22px;border-radius:var(--raio-controle);font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--cor-acento-primario);color:var(--cor-texto-sobre-acento);padding:12px 22px;border-radius:var(--raio-controle);font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
     .toast.show{opacity:1}
 
     .pend-editor{display:flex;gap:8px;flex-wrap:wrap;width:100%;margin-top:2px}
-    .sug-input,.sug-obs{border:1px solid var(--line-field,var(--line));border-radius:var(--raio-chip);padding:8px 10px;font-family:var(--font);font-size:.86rem;background:var(--surface);color:var(--ink)}
+    .sug-input,.sug-obs{border:1px solid var(--line-field,var(--line));border-radius:var(--raio-controle);padding:8px 10px;font-family:var(--font);font-size:.86rem;background:var(--surface);color:var(--ink)}
     .sug-input{width:120px}
     .sug-obs{flex:1;min-width:160px}
   </style>
@@ -216,7 +217,7 @@ async function renderMarca(){
     const heroCor = (claros[0] || m.paleta[0]).hex;                    // logo claro por cima (visível)
     const heroPath = completa?.arquivos[heroCor]?.svg;
     el.innerHTML = `
-      <div class="marca-hero card-base" style="background:${heroBg};color:#fff">
+      <div class="marca-hero card-base" style="background:${heroBg};color:var(--cor-texto-sobre-acento)">
         ${heroPath ? `<img src="${base}/${heroPath}" alt="${esc(m.marca || '')}">` : ''}
         <div class="nm">${esc(m.marca || '')}</div>
       </div>

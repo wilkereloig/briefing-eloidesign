@@ -46,10 +46,11 @@
    subconjunto que esta página usa — o site não carrega o CSS do painel. */
 :root{
   --pagina:#08011A; --chao:#0D0225; --chao-2:#170B33; --chao-3:#20114A;
-  --roxo:#7D2AE8; --roxo-hover:#6A1FD0; --lima:#DFF806; --coral:#FD4400;
+  --roxo:#7D2AE8; --roxo-hover:#6A1FD0; --roxo-press:#5A17B0; --lima:#DFF806; --coral:#FD4400;
   --lilas:#EEB4E7; --azul:#5B7CFD; --tinta:#1B0647;
-  --texto:#FDD5D3; --texto-2:rgba(253,213,211,.75); --texto-3:rgba(253,213,211,.55);
-  --linha:rgba(253,213,211,.12); --linha-forte:rgba(253,213,211,.28);
+  --texto:#FDD5D3; --texto-2:rgba(253,213,211,.68); --texto-3:rgba(253,213,211,.45);
+  --texto-sobre-acento:#FFFFFF; /* unico branco puro: texto sobre Roxo */
+  --linha:rgba(253,213,211,.16); --linha-forte:rgba(253,213,211,.28);
   --fonte-titulo:'Archivo',system-ui,sans-serif;
   --fonte-corpo:'Manrope',system-ui,sans-serif;
   --acento:var(--lima);
@@ -101,8 +102,9 @@ a{color:var(--acento);text-decoration:none}
   transition:background .2s,border-color .2s,color .2s,opacity .2s;cursor:pointer}
 .btn-acento{background:var(--acento);color:var(--tinta);font-weight:700}
 .btn-acento:hover{opacity:.88;color:var(--tinta)}
-.btn-roxo{background:var(--roxo);color:#fff}
-.btn-roxo:hover{background:var(--roxo-hover);color:#fff}
+.btn-roxo{background:var(--roxo);color:var(--texto-sobre-acento)}
+.btn-roxo:hover{background:var(--roxo-hover);color:var(--texto-sobre-acento)}
+.btn-roxo:active{background:var(--roxo-press)}
 .btn-linha{border-color:var(--linha-forte);color:var(--texto)}
 .btn-linha:hover{border-color:var(--acento);color:var(--acento)}
 .btn-compacto{padding:11px 20px;font-size:14px}
@@ -134,9 +136,10 @@ h3{font-family:var(--fonte-titulo);font-variation-settings:'wdth' 100,'wght' 600
 .quadro{position:relative;border-radius:18px;overflow:hidden;background:var(--chao-2);
   display:grid;place-items:center;isolation:isolate}
 .quadro::before{content:'';position:absolute;inset:0;z-index:-1;
+  /* sistema proibe degrade: manchas solidas com parada dura, so tom */
   background:
-    radial-gradient(circle at 22% 18%,rgba(125,42,232,.55),transparent 58%),
-    radial-gradient(circle at 82% 78%,rgba(91,124,253,.35),transparent 55%)}
+    radial-gradient(circle at 22% 18%,rgba(125,42,232,.32) 0 34%,transparent 34%),
+    radial-gradient(circle at 82% 78%,rgba(91,124,253,.22) 0 30%,transparent 30%)}
 .quadro-capa{aspect-ratio:4/5}
 .quadro-projeto{aspect-ratio:4/3;border-radius:14px}
 .quadro-grafismo{display:flex;gap:6px;transform:rotate(-8deg)}
@@ -166,7 +169,7 @@ section[id]{scroll-margin-top:90px}
 .cartao:hover{background:var(--chao-3)}
 .cartao-destaque{grid-row:span 2;background:var(--roxo);padding:36px;min-height:340px}
 .cartao-destaque:hover{background:var(--roxo)}
-.cartao-destaque h3,.cartao-destaque p{color:#fff}
+.cartao-destaque h3,.cartao-destaque p{color:var(--texto-sobre-acento)}
 .cartao-destaque p{color:rgba(255,255,255,.82)}
 .cartao-destaque .etiqueta{color:rgba(255,255,255,.72)}
 .cartao h3{font-size:22px}
@@ -194,7 +197,7 @@ section[id]{scroll-margin-top:90px}
 .projeto h3{font-size:22px}
 .projeto p{font-size:14px;line-height:1.55;color:rgba(253,213,211,.7)}
 .tags{display:flex;align-items:center;gap:8px}
-.tag{padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;color:#fff}
+.tag{padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;color:var(--texto-sobre-acento)}
 .ano{font-size:12px;color:var(--texto-3)}
 .link-secao{font-size:14px;font-weight:600;min-height:var(--alvo);
   display:inline-flex;align-items:center;padding:0 10px;margin-right:-10px;border-radius:8px}
@@ -323,7 +326,7 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
     </div>
     <div class="servicos">
       <article class="cartao cartao-destaque">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="miter" style="width:34px;height:34px" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><rect x="3" y="3" width="7" height="7" fill="var(--lima)" stroke="none"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--texto-sobre-acento)" stroke-width="2" stroke-linejoin="miter" style="width:34px;height:34px" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><rect x="3" y="3" width="7" height="7" fill="var(--lima)" stroke="none"/></svg>
         <div class="cartao-corpo">
           <span class="etiqueta">01</span>
           <h3>Identidade visual</h3>
@@ -331,14 +334,14 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
         </div>
       </article>
       <article class="cartao">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:30px;height:30px" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><path d="M9 3v18"/><rect x="12" y="7" width="6" height="2.5" fill="var(--lima)" stroke="none"/><path d="M12 13h6M12 17h4"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--texto)" stroke-width="2" stroke-linejoin="miter" style="width:30px;height:30px" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><path d="M9 3v18"/><rect x="12" y="7" width="6" height="2.5" fill="var(--lima)" stroke="none"/><path d="M12 13h6M12 17h4"/></svg>
         <div class="cartao-corpo">
           <h3>Sites &amp; sistemas</h3>
           <p>Do institucional ao painel interno, rápido e sob medida.</p>
         </div>
       </article>
       <article class="cartao">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:30px;height:30px" aria-hidden="true"><path d="M3 21V3"/><path d="M3 4h14v7H3"/><rect x="3" y="14" width="9" height="5" fill="var(--lima)" stroke="none"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--texto)" stroke-width="2" stroke-linejoin="miter" style="width:30px;height:30px" aria-hidden="true"><path d="M3 21V3"/><path d="M3 4h14v7H3"/><rect x="3" y="14" width="9" height="5" fill="var(--lima)" stroke="none"/></svg>
         <div class="cartao-corpo">
           <h3>Campanhas</h3>
           <p>Peças que convertem, prontas pra rodar.</p>
@@ -354,7 +357,7 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
     </div>
     <div class="etapas">
       <article class="etapa">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M8 17h6"/><rect x="8" y="11" width="4" height="3" fill="var(--lima)" stroke="none"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--texto)" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M8 17h6"/><rect x="8" y="11" width="4" height="3" fill="var(--lima)" stroke="none"/></svg>
         <div class="cartao-corpo">
           <span class="etiqueta">Etapa 01</span>
           <h3>Briefing</h3>
@@ -362,7 +365,7 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
         </div>
       </article>
       <article class="etapa">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><rect x="3" y="3" width="7" height="7" fill="var(--lima)" stroke="none"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--texto)" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><rect x="3" y="3" width="18" height="18"/><rect x="3" y="3" width="7" height="7" fill="var(--lima)" stroke="none"/></svg>
         <div class="cartao-corpo">
           <span class="etiqueta">Etapa 02</span>
           <h3>Estratégia</h3>
@@ -370,7 +373,7 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
         </div>
       </article>
       <article class="etapa">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FDD5D3" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><path d="M3 21V12A9 9 0 0 1 12 3h9"/><circle cx="19.4" cy="19.4" r="2.6" fill="var(--lima)" stroke="none"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--texto)" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><path d="M3 21V12A9 9 0 0 1 12 3h9"/><circle cx="19.4" cy="19.4" r="2.6" fill="var(--lima)" stroke="none"/></svg>
         <div class="cartao-corpo">
           <span class="etiqueta">Etapa 03</span>
           <h3>Execução</h3>
@@ -378,7 +381,7 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
         </div>
       </article>
       <article class="etapa etapa-final">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#1B0647" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><path d="M3 13v8h18v-8"/><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--tinta)" stroke-width="2" stroke-linejoin="miter" style="width:32px;height:32px" aria-hidden="true"><path d="M3 13v8h18v-8"/><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/></svg>
         <div class="cartao-corpo">
           <span class="etiqueta">Etapa 04</span>
           <h3>Entrega</h3>

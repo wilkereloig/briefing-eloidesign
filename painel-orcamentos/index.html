@@ -101,7 +101,7 @@
 .item-btns .add-item{flex:1;min-width:150px}
 .item-btns .add-item[disabled]{opacity:.45;cursor:not-allowed}
 .cat-group{margin-bottom:14px}
-.cat-title{font-size:.68rem;letter-spacing:.20em;text-transform:uppercase;opacity:.5;margin-bottom:6px}
+.cat-title{font-size:11px;letter-spacing:.20em;text-transform:uppercase;opacity:.5;margin-bottom:6px}
 .svc{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--linha);border-radius:var(--raio-chip);margin-bottom:6px;cursor:pointer}
 .svc.on{border-color:var(--roxo)}
 .svc .nm{font-size:.85rem}
@@ -305,7 +305,7 @@ function render(){
     const svc = o.servico_id
       ? `<div class="dt" style="color:var(--apr)">✓ Serviço criado — <a href="/gestao/?servico=${esc(o.servico_id)}" style="color:var(--apr)" onclick="event.stopPropagation()">abrir na Gestão ↗</a></div>`
       : (st==='aprovado'
-        ? `<div class="dt" style="color:#f0c46a">⚠ Aprovado sem serviço — <a href="#" style="color:#f0c46a" onclick="event.stopPropagation();event.preventDefault();repararServico('${esc(o.id)}')">criar agora</a></div>`
+        ? `<div class="dt" style="color:var(--cor-feedback-aviso)">⚠ Aprovado sem serviço — <a href="#" style="color:var(--cor-feedback-aviso)" onclick="event.stopPropagation();event.preventDefault();repararServico('${esc(o.id)}')">criar agora</a></div>`
         : '');
     return `<div class="card" onclick="abrirView(${i})">
       <div class="cli">${esc(o.cliente||'—')}</div>

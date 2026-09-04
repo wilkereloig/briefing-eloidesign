@@ -2,6 +2,43 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Páginas estáticas no KV novo (portal do cliente, home, gestão, briefings, painéis)
+
+As seis fases da migração cobriram só o painel React (`app/`). Portal do
+cliente, home, `/gestao`, os quatro briefings, `/marca`, `/orcamento*` e os
+painéis legados carregam `assets/eloi-admin/admin.css`, que tinha cópia
+própria dos tokens com valores da rodada anterior (texto secundário a .72,
+borda a .12, folha 22px, chip Roxo cheio…). Wilke apontou pelo portal.
+
+- **`admin.css`**: o `:root` agora repete o subconjunto de `tokens.css`
+  com os mesmos nomes semânticos (`--cor-fundo-primario`, `--cor-borda-padrao`,
+  `--cor-feedback-aviso`…). Os 70 nomes antigos que as 14 páginas usam em
+  `<style>`/`style=""` (`--brand`, `--ink`, `--texto-2`, `--raio-chip`…)
+  viram alias — nenhum some, nenhuma página quebra.
+- **Componentes compartilhados** nas decisões das fases 2 e 4: botão com
+  raio de controle (10px) e hover só por tom (o `translateY` saiu); aba
+  ativa é superfície selecionada + borda, não bloco Roxo; chip neutro a 14%;
+  aviso é âmbar, não Coral; foco pelo token de borda de foco.
+- **Login**: campo em tom de fundo (destaca do card por tom, não só borda) e
+  regra de `:-webkit-autofill` — o Chrome pintava o campo de azul-claro sobre
+  o card escuro (o "input branco" do print do portal).
+- **Portal**: badges na regra de chip (14% + texto na cor; sucesso cheio com
+  Tinta; recusado/aberto com fundo Coral 14% e texto Rosa — Coral como texto
+  só a partir de 24px).
+- **Home** (`:root` próprio, não carrega `admin.css`): texto secundário .68,
+  fraco .45, borda .16, `--roxo-press`; o degradê radial do quadro do hero
+  vira duas manchas sólidas com parada dura (sistema proíbe degradê).
+- **Miúdos nas páginas**: `#fff` de botão/toast → `--cor-texto-sobre-acento`;
+  outline de erro `#e05260` (3 briefings) → `--cor-feedback-erro`;
+  `#f0c46a` (a receber, no gestão e painel-orçamentos) → `--cor-feedback-aviso`;
+  degradê do cabeçalho de grupo sticky do gestão → fundo sólido; fontes
+  .67/.68rem → 11px (piso §14).
+
+Não mexido, de propósito: paletas de cor em JS (`PALETA_MARCA`, nomes de cor
+do briefing, cor do cliente) são dado, não interface; `entregas-marca/` é
+entrega do cliente com a marca dele. Portal logado não foi conferido
+visualmente — exige senha de cliente; login, home e gestão foram.
+
 ## 2026-09-04 — Fix: conteúdo sumindo em todas as telas (grid do shell)
 
 Achado na conferência visual pós-fase-6, logado, em 1440/1024/768/375.
