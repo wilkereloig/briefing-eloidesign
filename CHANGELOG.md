@@ -25,6 +25,12 @@ número ficava preso na tela.
   `lib/exportar.ts` + `montarCsv` testado.
 - **Imprimir**: `@media print` esconde navegação e botões.
 
+## 2026-09-04 — Anexar nota direto da lista de projetos
+
+Serviço entregue ou pago sem nota mostrava só o ícone coral; anexar exigia
+ir a Notas e procurar o serviço. O ícone agora é botão "Anexar nota" e abre
+a mesma folha de Notas, já com cliente, serviço e valor, com campo de PDF.
+
 ## 2026-09-04 — Dev: painel não quebra mais depois de hot-reload
 
 Em desenvolvimento, depois de editar arquivo, recarregar a página dava

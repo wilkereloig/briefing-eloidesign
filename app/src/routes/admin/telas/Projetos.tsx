@@ -11,6 +11,7 @@ import { Cabecalho, Carga, Dinheiro, SeletorMes } from '../../../ui/painel'
 import type { EstadoChip } from '../../../ui/tokens'
 import type { ServicoRow } from '../../../lib/tipos'
 import { FolhaExcluir, FolhaServico } from '../folhas'
+import { FolhaNota } from './Notas'
 
 // Etapa é calculada de orçamento + serviço (domain/projeto.ts), não é coluna.
 const ETAPAS: { chave: Etapa; label: string; chip: EstadoChip }[] = [
@@ -81,6 +82,8 @@ export default function Projetos() {
   // em aberto, serviço sem data) aparece sempre, numa seção própria.
   const [busca, setBusca] = useState('')
   const [folha, setFolha] = useState<{ s?: ServicoRow } | null>(null)
+  // Serviço entregue/pago sem NF: anexa a nota (número + PDF) sem sair da lista.
+  const [notaPara, setNotaPara] = useState<string | null>(null)
   useAbrirNovo(() => setFolha({}))
   const [excluir, setExcluir] = useState<Projeto | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
@@ -329,11 +332,20 @@ export default function Projetos() {
                                 </span>
                               )}
                             </span>
-                            {/* estado da NF por ícone além da cor (acessibilidade) */}
-                            <span className="col-desktop" style={{ color: semNota ? 'var(--coral)' : 'var(--acento)' }}>
-                              <Icone nome="nota-fiscal" tamanho={16}
-                                rotulo={p.servico?.nf_numero ? 'Nota anexada' : 'Sem nota fiscal'} />
-                            </span>
+                            {/* estado da NF por ícone além da cor (acessibilidade);
+                                sem nota, o ícone vira o botão de anexar */}
+                            {semNota && p.servico ? (
+                              <Botao variante="icone" aria-label={`Anexar nota de ${p.titulo}`}
+                                title="Anexar nota fiscal" style={{ color: 'var(--coral)' }}
+                                onClick={() => setNotaPara(p.servico!.id)}>
+                                <Icone nome="nota-fiscal" tamanho={16} />
+                              </Botao>
+                            ) : (
+                              <span className="col-desktop" style={{ color: 'var(--acento)' }}>
+                                <Icone nome="nota-fiscal" tamanho={16}
+                                  rotulo={p.servico?.nf_numero ? 'Nota anexada' : 'Sem nota fiscal'} />
+                              </span>
+                            )}
                             {editandoValor ? (
                               <input className="campo-caixa valor-linha" inputMode="decimal"
                                 aria-label={`Valor de ${p.titulo}`}
@@ -390,6 +402,10 @@ export default function Projetos() {
       {folha && (
         <FolhaServico inicial={folha.s} aoFechar={() => setFolha(null)}
           aoSalvar={async (msg) => { setAviso({ texto: msg }); await recarregar() }} />
+      )}
+      {notaPara && (
+        <FolhaNota servicoId={notaPara} aoFechar={() => setNotaPara(null)}
+          aoSalvar={async (msg) => { setNotaPara(null); setAviso({ texto: msg }); await recarregar() }} />
       )}
       {excluir?.servico && (
         <FolhaExcluir titulo={excluir.titulo}

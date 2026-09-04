@@ -198,7 +198,7 @@ export default function Notas() {
   )
 }
 
-function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
+export function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
   inicial?: NotaFiscal
   servicoId?: string
   aoFechar: () => void
