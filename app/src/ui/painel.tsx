@@ -7,6 +7,7 @@ import { deslocarMes, rotuloMes, useFinancas, type Lente } from '../lib/financas
 import type { StatusMov, StatusNF } from '../lib/tipos'
 import { Botao, Chip, Erro, Esqueleto, Etiqueta, Icone, Pilula } from './componentes'
 import type { EstadoChip } from './tokens'
+import { TAMANHOS, type usePaginacao } from './paginacao'
 
 /** Cabeçalho de tela: etiqueta da seção + título + ações à direita. */
 export function Cabecalho({ secao, titulo, children }:
@@ -102,6 +103,30 @@ const CHIP_NF: Record<StatusNF, { chip: EstadoChip; label: string }> = {
 export function ChipNota({ status }: { status: StatusNF }) {
   const m = CHIP_NF[status] ?? CHIP_NF.pendente
   return <Chip estado={m.chip}>{m.label}</Chip>
+}
+
+/** Rodapé de lista: contagem à esquerda, controles à direita (§9 Tabelas).
+ *  Some quando tudo cabe numa página — rodapé de "1–3 de 3" é ruído. */
+export function Paginacao({ pagina, paginas, porPagina, total, setPagina, setPorPagina }:
+  ReturnType<typeof usePaginacao<unknown>>) {
+  if (total <= TAMANHOS[0]) return null
+  const de = (pagina - 1) * porPagina + 1
+  const ate = Math.min(pagina * porPagina, total)
+  return (
+    <div className="paginacao">
+      <span className="t-legenda dinheiro">{de}–{ate} de {total}</span>
+      <span className="linha" style={{ gap: 'var(--espaco-02)' }}>
+        <select className="campo-caixa paginacao-tamanho" value={porPagina} aria-label="Itens por página"
+          onChange={(e) => setPorPagina(Number(e.target.value))}>
+          {TAMANHOS.map((n) => <option key={n} value={n}>{n} por página</option>)}
+        </select>
+        <Botao variante="icone" aria-label="Página anterior" disabled={pagina <= 1}
+          onClick={() => setPagina(pagina - 1)}><Icone nome="voltar" tamanho={16} /></Botao>
+        <Botao variante="icone" aria-label="Próxima página" disabled={pagina >= paginas}
+          onClick={() => setPagina(pagina + 1)}><Icone nome="avancar" tamanho={16} /></Botao>
+      </span>
+    </div>
+  )
 }
 
 /**

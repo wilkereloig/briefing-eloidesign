@@ -2,6 +2,25 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-04 — Migração para a spec ELOI Design System, fase 3: densidade e tabela
+
+Dinheiro, Notas, Relatórios e a prévia de importação de extrato declaram
+`data-density="dense"` (§1): linha de 32px, célula 8px 14px, 24px entre
+blocos. A lista financeira deixa de ser um card por linha e vira grade de
+1px — é a diferença entre 60 lançamentos caberem numa tela ou em três.
+
+- **Tabela** (`.tabela`): cabeçalho fixo no scroll, padding e altura de linha
+  lidos da densidade, texto à esquerda / valor e data à direita / status no
+  centro, `tabular-nums` em toda célula, linha selecionada em Roxo. Abaixo
+  de 768px cada linha vira cartão com pares rótulo/valor (`.tabela-cartoes`
+  + `data-rotulo`) — aplicado no ranking de clientes de Relatórios.
+- **Paginação** (`usePaginacao` + `<Paginacao>`): "1–25 de 184", 25/50/100
+  por página com escolha persistida por lista, controles à direita. Aplicada
+  em Movimentações e em Notas; some quando a lista cabe numa página.
+- Fica de fora, de propósito: checkbox de seleção e ações em lote (§9) — não
+  existe hoje nenhuma ação que opere em lote; entra quando a primeira
+  existir. Edição em linha já existe no valor do serviço em Projetos.
+
 ## 2026-09-04 — Migração para a spec ELOI Design System, fase 2: componentes
 
 Os primitivos passam a usar os tokens da Fase 1 e ganham os estados que a

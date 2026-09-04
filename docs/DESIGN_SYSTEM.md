@@ -18,7 +18,7 @@ padrões antigos em componentes/telas até chegar a vez de cada uma.
 |---|---|---|
 | 1. Fundação de tokens | `tokens.css`/`.ts` na nomenclatura e escala novas | ✅ |
 | 2. Componentes core | Botão, Campo, Card, Chip nos estados/anatomia da spec | ✅ |
-| 3. Tabela densa (financeiro) | `data-density="dense"` em Dinheiro/Notas/Relatórios/FolhasExtrato | Pendente |
+| 3. Tabela densa (financeiro) | `data-density="dense"` em Dinheiro/Notas/Relatórios/FolhasExtrato | ✅ |
 | 4. Telas de gestão (standard) | Vazio/Chip/Erro corrigidos nas ~12 telas restantes | Pendente |
 | 5. Shell, navegação, responsivo | Topbar, breakpoint da sidebar, modal aninhado→página | Pendente |
 | 6. Ícones e acessibilidade fina | Famílias de ícone faltando, `:focus-visible`, pisos de fonte | Pendente |
@@ -43,6 +43,7 @@ marca, decisão explícita do Wilke.
 | Cor e ícone de cada estado de chip | `app/src/ui/tokens.ts` (`chip`, `chipIcone`) | `eloi-handoff/design-tokens/tokens.ts` |
 | Blocos de painel (Bloco, Indicador, ListaItem, Esqueleto, Vazio) | `app/src/ui/painel.tsx` | — |
 | Formatação de rótulo | `app/src/ui/formato.ts` | — |
+| Paginação de lista longa | `app/src/ui/paginacao.ts` (hook) + `Paginacao` em `painel.tsx` | — |
 | Layout do shell, trilho, cabeçalho, acesso | `app/src/app.css` | — |
 | Ícones autorais | `app/public/eloi-icons.svg` (sprite) | `eloi-handoff/assets/icons/` (45 avulsos) |
 | Logos e assinaturas | `app/public/assinatura.svg`, `icone-app.svg` | `eloi-handoff/assets/logos/` |

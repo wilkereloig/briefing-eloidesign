@@ -277,9 +277,9 @@ export function FolhaImportar({ aoFechar, aoSalvar }: {
 
             {/* Prévia: tudo que vai entrar, linha a linha. Ninguém importa no escuro. */}
             <div className="rolagem-x">
-              <table className="tabela tabela-previa">
+              <table className="tabela tabela-previa" data-density="dense">
                 <thead>
-                  <tr><th /><th>Data</th><th>Descrição</th><th>Valor</th><th>Situação</th></tr>
+                  <tr><th /><th className="col-data">Data</th><th>Descrição</th><th className="col-valor">Valor</th><th className="col-status">Situação</th></tr>
                 </thead>
                 <tbody>
                   {linhas.slice(0, 300).map((l, i) => {
@@ -290,10 +290,10 @@ export function FolhaImportar({ aoFechar, aoSalvar }: {
                           <input type="checkbox" checked={marcadas.has(i)} disabled={s === 'invalida'}
                             onChange={() => alternar(i)} aria-label={`Importar linha ${i + 1}`} />
                         </td>
-                        <td className="t-ui">{l.data ? dataCurta(l.data) : '—'}</td>
+                        <td className="t-ui col-data">{l.data ? dataCurta(l.data) : '—'}</td>
                         <td className="espremer" style={{ maxWidth: 220 }}>{l.descricao}</td>
                         <td className="dinheiro">{l.valor_cents != null ? fmtBRL(l.valor_cents) : '—'}</td>
-                        <td><Chip estado={ESTADO_SITUACAO[s]}>{l.problema ?? ROTULO_SITUACAO[s]}</Chip></td>
+                        <td className="col-status"><Chip estado={ESTADO_SITUACAO[s]}>{l.problema ?? ROTULO_SITUACAO[s]}</Chip></td>
                       </tr>
                     )
                   })}

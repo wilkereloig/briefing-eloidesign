@@ -139,7 +139,7 @@ export default function Relatorios() {
   const metasVisiveis = metas.filter((m) => !contexto || m.contexto === contexto)
 
   return (
-    <div className="tela pilha">
+    <div className="tela pilha" data-density="dense">
       <Cabecalho secao="Análise" titulo="Relatórios">
         <SeletorLente />
         <Botao onClick={exportar} className="nao-imprime">
@@ -254,18 +254,19 @@ export default function Relatorios() {
               ? <Vazio icone="cliente" titulo={temFiltro ? 'Nada neste recorte' : 'Nenhuma receita por cliente'}
                 instrucao={temFiltro ? 'Ajuste o período ou o cliente.' : 'Vincule os recebimentos a clientes para ver o ranking.'} />
               : <div className="rolagem-x">
-                <table className="tabela">
+                <table className="tabela tabela-cartoes">
                   <thead>
-                    <tr><th>{porMarca ? 'Marca' : 'Cliente'}</th><th>Recebido</th><th>A receber</th><th>Projetos</th><th>Ticket</th></tr>
+                    <tr><th>{porMarca ? 'Marca' : 'Cliente'}</th><th className="col-valor">Recebido</th>
+                      <th className="col-valor">A receber</th><th className="col-valor">Projetos</th><th className="col-valor">Ticket</th></tr>
                   </thead>
                   <tbody>
                     {linhasCliente.map((l) => (
                       <tr key={l.chave}>
-                        <td className="t-ui">{nomeChave(l.chave)}</td>
-                        <td className="dinheiro">{fmtBRL(l.recebido_cents)}</td>
-                        <td className="dinheiro">{l.a_receber_cents ? fmtBRL(l.a_receber_cents) : '—'}</td>
-                        <td>{l.projetos}</td>
-                        <td className="dinheiro">{l.ticket_cents ? fmtBRL(l.ticket_cents) : '—'}</td>
+                        <td className="t-ui" data-rotulo="">{nomeChave(l.chave)}</td>
+                        <td className="dinheiro" data-rotulo="Recebido">{fmtBRL(l.recebido_cents)}</td>
+                        <td className="dinheiro" data-rotulo="A receber">{l.a_receber_cents ? fmtBRL(l.a_receber_cents) : '—'}</td>
+                        <td className="col-valor" data-rotulo="Projetos">{l.projetos}</td>
+                        <td className="dinheiro" data-rotulo="Ticket">{l.ticket_cents ? fmtBRL(l.ticket_cents) : '—'}</td>
                       </tr>
                     ))}
                   </tbody>

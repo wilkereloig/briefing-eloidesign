@@ -10,7 +10,8 @@ import type { Conferencia, Conta, Recorrencia, ServicoRow, Transacao } from '../
 import {
   Aviso, Botao, Campo, Card, Etiqueta, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
-import { Cabecalho, Carga, ChipMovimento, Dinheiro, SeletorLente, SeletorMes } from '../../../ui/painel'
+import { Cabecalho, Carga, ChipMovimento, Dinheiro, Paginacao, SeletorLente, SeletorMes } from '../../../ui/painel'
+import { usePaginacao } from '../../../ui/paginacao'
 import { custoAnual, custoMensal, dataCurta, rotuloConta, rotuloPeriodo } from '../../../ui/formato'
 import { FolhaTransacao } from '../FolhaTransacao'
 import { FolhaConta, FolhaExcluir, FolhaLiquidar, FolhaReagendar, FolhaRecorrencia } from '../folhas'
@@ -128,12 +129,13 @@ export default function DinheiroTela() {
   }), [listaAtual, recorte, hoje, servicoPorId])
   const grupos = useMemo(() => agruparPorPrazo(recortada, hoje), [recortada, hoje])
 
+  const pagMov = usePaginacao(movimentos, 'dinheiro-movimentos')
   const r = useMemo(() => resultado(transacoes, contexto, mes), [transacoes, contexto, mes])
   const contasVisiveis = contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto))
   const recVisiveis = recorrencias.filter((x) => !contexto || x.contexto === contexto)
 
   return (
-    <div className="tela pilha">
+    <div className="tela pilha" data-density="dense">
       <Cabecalho secao="Financeiro" titulo={rotuloMes(mes)}>
         <SeletorLente />
         <SeletorMes />
@@ -189,15 +191,18 @@ export default function DinheiroTela() {
                   ? <Botao onClick={() => setBusca('')}>Limpar busca</Botao>
                   : <Botao variante="primario" onClick={() => setFolha({ tipo: 'nova' })}>Lançar</Botao>} />
             ) : (
-              <ul className="lista">
-                {movimentos.map((t) => (
-                  <LinhaMov key={t.id} t={t} nomes={nomes} hoje={hoje}
-                    aoEditar={() => setFolha({ tipo: 'editar', t })}
-                    aoCancelar={() => void alternarCancelamento(t)}
-                    aoLiquidar={() => setFolha({ tipo: 'liquidar', t })}
-                    aoExcluir={() => setFolha({ tipo: 'excluir', t })} />
-                ))}
-              </ul>
+              <>
+                <ul className="lista">
+                  {pagMov.visiveis.map((t) => (
+                    <LinhaMov key={t.id} t={t} nomes={nomes} hoje={hoje}
+                      aoEditar={() => setFolha({ tipo: 'editar', t })}
+                      aoCancelar={() => void alternarCancelamento(t)}
+                      aoLiquidar={() => setFolha({ tipo: 'liquidar', t })}
+                      aoExcluir={() => setFolha({ tipo: 'excluir', t })} />
+                  ))}
+                </ul>
+                <Paginacao {...pagMov} />
+              </>
             )}
           </Painel>
         )}

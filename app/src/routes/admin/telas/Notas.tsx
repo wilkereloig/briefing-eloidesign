@@ -7,7 +7,8 @@ import type { NotaFiscal, ServicoRow, StatusNF } from '../../../lib/tipos'
 import {
   Aviso, Botao, Campo, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
-import { Cabecalho, Carga, ChipNota, Dinheiro, SeletorMes } from '../../../ui/painel'
+import { Cabecalho, Carga, ChipNota, Dinheiro, Paginacao, SeletorMes } from '../../../ui/painel'
+import { usePaginacao } from '../../../ui/paginacao'
 import { dataCurta } from '../../../ui/formato'
 import { FolhaExcluir } from '../folhas'
 
@@ -52,12 +53,13 @@ export default function Notas() {
   const lista = useMemo(() => (notasFiltradas ?? [])
     .filter((n) => filtro === 'todas' || n.status === filtro)
     .sort((a, b) => (b.competencia ?? '').localeCompare(a.competencia ?? '')), [notasFiltradas, filtro])
+  const pag = usePaginacao(lista, 'notas')
 
   const emitidas = notas.filter((n) => n.status === 'emitida' || n.status === 'enviada')
   const totalImposto = emitidas.reduce((s, n) => s + n.imposto_cents, 0)
 
   return (
-    <div className="tela pilha">
+    <div className="tela pilha" data-density="dense">
       <Cabecalho secao="Fiscal" titulo="Notas fiscais">
         <Botao variante="primario" onClick={() => setFolha({})}>
           <Icone nome="adicionar" tamanho={16} />Anexar nota
@@ -136,8 +138,9 @@ export default function Notas() {
               instrucao="Registre uma nota fiscal para acompanhar emissão, envio e imposto."
               acao={<Botao variante="primario" onClick={() => setFolha({})}>Anexar nota</Botao>} />
           ) : (
+            <>
             <ul className="lista">
-              {lista.map((n) => (
+              {pag.visiveis.map((n) => (
                 <li key={n.id} className="lista-item">
                   <Icone nome="nota-fiscal" tamanho={18} />
                   <span className="celula">
@@ -172,6 +175,8 @@ export default function Notas() {
                 </li>
               ))}
             </ul>
+            <Paginacao {...pag} />
+            </>
           )}
         </Painel>
       </Carga>

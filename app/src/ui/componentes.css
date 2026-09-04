@@ -140,22 +140,54 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   gap:var(--espaco-03);margin-bottom:var(--espaco-05)}
 
 /* ── Tabela ─────────────────────────────────────────────────────────────── */
-/* Abaixo de 768 a tabela não existe: vira lista de cards (Tabela.tsx troca). */
+/* Padding de célula e altura de linha vêm da densidade da tela (§1):
+   standard 14px 20px / 44px, dense 8px 14px / 32px. */
 .tabela{width:100%;border-collapse:collapse}
-.tabela thead th{background:var(--cor-fundo-primario);padding:12px var(--espaco-05);text-align:left;
-  font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--cor-texto-fraco)}
-.tabela tbody td{padding:15px var(--espaco-05);border-top:1px solid var(--cor-borda-sutil);font-size:14px}
-.tabela tbody tr{transition:background var(--movimento-rapido) var(--curva-padrao)}
+.tabela thead th{position:sticky;top:0;z-index:1;background:var(--cor-fundo-primario);
+  padding:var(--densidade-celula-padding);text-align:left;border-bottom:1px solid var(--cor-borda-padrao);
+  font-size:var(--tipo-etiqueta-tamanho);font-weight:700;letter-spacing:var(--tipo-etiqueta-rastreio);
+  text-transform:uppercase;color:var(--cor-texto-fraco)}
+.tabela tbody td{padding:var(--densidade-celula-padding);border-top:1px solid var(--cor-borda-sutil);
+  font-size:14px;font-variant-numeric:tabular-nums}
+.tabela tbody tr{height:var(--densidade-linha-tabela);transition:background var(--movimento-rapido) var(--curva-padrao)}
 .tabela tbody tr:hover{background:var(--cor-superficie-hover)}
-.tabela .col-valor{text-align:right;font-family:var(--fonte-titulo);font-weight:600;
-  font-variant-numeric:tabular-nums}
+.tabela tbody tr[aria-selected='true']{background:var(--cor-superficie-selecionada)}
+/* texto à esquerda; valor, percentual e data à direita; status no centro */
+.tabela .col-valor,.tabela td.dinheiro,.tabela .col-data{text-align:right}
+.tabela .col-valor,.tabela td.dinheiro{font-family:var(--fonte-titulo);font-weight:600}
+.tabela .col-status{text-align:center}
 .tabela .faixa-grupo td{background:var(--cor-fundo-secundario);padding:10px var(--espaco-05)}
+/* Abaixo de 768 cada linha vira cartão (§6): nome no topo, valor à direita,
+   resto em pares rótulo/valor. Opt-in por .tabela-cartoes — exige data-rotulo em cada td. */
+@media (max-width:767px){
+  .tabela-cartoes thead{display:none}
+  .tabela-cartoes,.tabela-cartoes tbody,.tabela-cartoes tr,.tabela-cartoes td{display:block;height:auto}
+  .tabela-cartoes tr{padding:var(--espaco-03) 0;border-top:1px solid var(--cor-borda-padrao)}
+  .tabela-cartoes td{display:flex;justify-content:space-between;gap:var(--espaco-03);
+    padding:var(--espaco-01) 0;border:0;text-align:right}
+  .tabela-cartoes td::before{content:attr(data-rotulo);color:var(--cor-texto-fraco);
+    font-size:var(--tipo-etiqueta-tamanho);letter-spacing:var(--tipo-etiqueta-rastreio);
+    text-transform:uppercase;text-align:left;flex:none}
+  .tabela-cartoes td[data-rotulo='']::before{display:none}
+}
+
+/* ── Paginação ──────────────────────────────────────────────────────────── */
+.paginacao{display:flex;align-items:center;justify-content:space-between;gap:var(--espaco-03);
+  flex-wrap:wrap;margin-top:var(--espaco-03);padding-top:var(--espaco-03);border-top:1px solid var(--cor-borda-sutil)}
+.paginacao-tamanho{width:auto;min-height:40px;padding-top:0;padding-bottom:0;font-size:13px}
 
 /* ── Lista ──────────────────────────────────────────────────────────────── */
 .lista{display:flex;flex-direction:column;gap:var(--espaco-02);list-style:none}
 .lista-item{display:flex;align-items:center;gap:var(--espaco-03);min-height:66px;
   padding:var(--espaco-03) var(--espaco-04);background:var(--cor-fundo-secundario);border:1px solid var(--cor-borda-padrao);
   border-radius:var(--raio-cartao)}
+/* Em tela densa (financeiro) a lista aperta: sem card por linha, só o divisor
+   de 1px, gap zero e a altura da linha de tabela densa (§1). */
+[data-density='dense'] .lista{gap:0}
+[data-density='dense'] .lista-item{min-height:var(--densidade-linha-tabela);
+  padding:var(--densidade-celula-padding);border-radius:0;border-width:0 0 1px;
+  border-color:var(--cor-borda-sutil);background:transparent}
+[data-density='dense'] .lista-item:hover{background:var(--cor-superficie-hover)}
 .marca-cor{flex:none;width:10px;height:26px;border-radius:0}
 /* cancelado/inativo continua legível e continua clicável: o estado aparece no
    chip escrito, e a opacidade só reforça — cor nunca informa sozinha */
@@ -387,6 +419,8 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 
 /* ── util ───────────────────────────────────────────────────────────────── */
 .pilha{display:flex;flex-direction:column;gap:var(--espaco-05)}
+/* raiz da tela: espaço entre blocos vem da densidade (§1) */
+.tela.pilha{gap:var(--densidade-espaco-blocos)}
 .linha{display:flex;align-items:center;gap:var(--espaco-02);flex-wrap:wrap}
 .espremer{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .so-leitor{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
