@@ -32,6 +32,10 @@ Abra qualquer um deles direto no navegador — `support.js` acompanha a pasta. V
 ```
 eloi-handoff/
 ├── README.md                      este arquivo
+├── CONTEXTO_COMPLETO.md           marca + paleta + tipografia + movimento + ícones em um arquivo só
+├── sistema/                       eloi.css, tokens.json, icones.md — pacote autônomo da spec
+├── references/Eloi DS 01 Brand    marca: assinatura, grafismos, ícones, animação (fonte visual)
+├── references/Eloi DS 02 UI System  tokens, componentes, estados (fonte visual do produto)
 ├── ELOI_DESIGN_SYSTEM.md          o sistema completo: marca, cor, tipografia, forma, movimento
 ├── IMPLEMENTATION_GUIDE.md        como aplicar no código atual, em ordem
 ├── COMPONENT_INVENTORY.md         cada componente, anatomia, estados e quando não usar
@@ -58,7 +62,7 @@ Não há `tailwind-theme.js`: o projeto não usa Tailwind.
 
 ## Por onde começar
 
-1. Leia `prompts/CLAUDE_CODE_CONTEXT.md`.
+1. Leia `CONTEXTO_COMPLETO.md` — um arquivo só com marca, paleta, tipografia, movimento e os 59 ícones. Depois `prompts/CLAUDE_CODE_CONTEXT.md`.
 2. Substitua `app/src/ui/tokens.css` por `design-tokens/variables.css` e ajuste `app/src/app.css` conforme `IMPLEMENTATION_GUIDE.md`.
 3. Migre tela por tela, na ordem sugerida no guia de implementação.
 4. Antes de fechar cada tela, passe pelo `VISUAL_REVIEW_CHECKLIST.md`.

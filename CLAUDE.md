@@ -17,7 +17,8 @@ Leia, nesta ordem, o que for do assunto:
 | Rota, arquivo, permissão | `docs/ROUTE_MAP.md` |
 | Nome certo de um conceito | `docs/GLOSSARY.md` |
 | Tabela, coluna, vínculo | `docs/DATA_MODEL.md` |
-| Cor, componente, espaço | `docs/DESIGN_SYSTEM.md` |
+| **Regra visual — lida antes de qualquer tela** | `docs/DESIGN_RULES.md` (spec, fonte textual) · visual: `eloi-handoff/references/Eloi DS 01 Brand.dc.html`, `Eloi DS 02 UI System.dc.html` |
+| Cor, componente, espaço no código | `docs/DESIGN_SYSTEM.md` |
 | Como adicionar tela/briefing/edge | `docs/DEVELOPMENT_GUIDE.md` |
 | Por que algo está assim | `docs/DECISIONS.md` |
 

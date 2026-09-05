@@ -1,0 +1,171 @@
+/* ELOI — folha única do sistema visual. Importe e use apenas estas variáveis e classes.
+   Fontes: Archivo + Manrope (carregue os dois links antes desta folha).
+   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap">
+   Regra dura: nenhum degradê. Cor cheia sempre. */
+
+:root {
+  /* cor — primária */
+  --eloi-roxo: #7D2AE8;
+  --eloi-tinta: #1B0647;
+  /* cor — secundária */
+  --eloi-lima: #DFF806;
+  --eloi-coral: #FD4400;
+  --eloi-lilas: #EEB4E7;
+  --eloi-azul: #5B7CFD;
+  --eloi-ambar: #F5A300; /* derivado — só status de atenção, nunca marca */
+  /* cor — apoio */
+  --eloi-rosa: #FDD5D3;
+  --eloi-roxo-claro: #9184D9;
+  --eloi-marinho: #0A0A60;
+  /* chão */
+  --eloi-base: #08011A;
+  --eloi-superficie: #0D0225;
+  --eloi-elevada: #170B33;
+  --eloi-hover: #20114A;
+  /* texto sobre chão escuro */
+  --eloi-texto: #FDD5D3;
+  --eloi-texto-2: rgba(253, 213, 211, .72);
+  --eloi-texto-3: rgba(253, 213, 211, .55);
+  --eloi-linha: rgba(253, 213, 211, .12);
+  --eloi-linha-forte: rgba(253, 213, 211, .28);
+  /* sinal dos ícones */
+  --eloi-signal: #DFF806;
+  /* tipografia */
+  --eloi-font-titulo: "Archivo", sans-serif;
+  --eloi-font-texto: "Manrope", sans-serif;
+  /* forma */
+  --eloi-raio-controle: 10px;
+  --eloi-raio-card: 14px;
+  --eloi-raio-painel: 16px;
+  --eloi-raio-bloco: 18px;
+  /* animação da assinatura */
+  --eloi-ciclo: 5.6s;
+  --eloi-curva: cubic-bezier(.72, 0, .16, 1);
+}
+
+/* ───────── base ───────── */
+body.eloi {
+  margin: 0;
+  background: var(--eloi-base);
+  color: var(--eloi-texto);
+  font-family: var(--eloi-font-texto);
+  -webkit-font-smoothing: antialiased;
+}
+.eloi a { color: var(--eloi-lima); text-decoration: none; border-bottom: 1px solid rgba(223, 248, 6, .35); }
+.eloi a:hover { color: var(--eloi-rosa); border-bottom-color: rgba(253, 213, 211, .5); }
+.eloi ::selection { background: var(--eloi-roxo); color: #fff; }
+.eloi :focus-visible { outline: 2px solid var(--eloi-lima); outline-offset: 2px; }
+
+/* ───────── assinatura ───────── */
+/* <span class="eloi-mark"><b>ELOI</b><i>Studio</i></span>  — troque Studio por Design */
+.eloi-mark {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--eloi-font-titulo);
+  line-height: 1.24;
+  white-space: nowrap;
+  font-style: normal;
+}
+.eloi-mark > b,
+.eloi-mark > i {
+  font-variation-settings: 'wdth' 72, 'wght' 700;
+  font-weight: 700;
+  font-style: normal;
+}
+.eloi-mark > b { letter-spacing: -.02em; color: var(--eloi-rosa); }  /* ELOI */
+.eloi-mark > i { letter-spacing: 0; color: var(--eloi-lilas); }      /* complemento — nunca a mesma cor de ELOI */
+.eloi-mark--stack { flex-direction: column; align-items: flex-start; line-height: 1.05; }
+/* sobre fundo claro */
+.eloi-mark--positiva > b { color: var(--eloi-tinta); }
+.eloi-mark--positiva > i { color: var(--eloi-roxo); }
+/* monocromática (uso técnico: gravação, fax, 1 cor) */
+.eloi-mark--mono > b { color: currentColor; }
+.eloi-mark--mono > i { color: currentColor; opacity: .55; }
+/* área de proteção: X = altura da caixa-alta do E */
+.eloi-mark-clear { display: inline-block; padding: 1em; }
+
+/* animação: ELOI fixo, complemento rola dentro da máscara */
+.eloi-swap { display: block; height: 1.24em; overflow: hidden; }
+.eloi-swap > span {
+  display: flex;
+  flex-direction: column;
+  animation: eloi-roll var(--eloi-ciclo) var(--eloi-curva) infinite;
+}
+.eloi-swap > span > span {
+  height: 1.24em;
+  line-height: 1.24em;
+  font-family: var(--eloi-font-titulo);
+  font-variation-settings: 'wdth' 72, 'wght' 700;
+}
+.eloi-swap > span > span:first-child { color: var(--eloi-lilas); }
+.eloi-swap > span > span:last-child { color: var(--eloi-lima); }
+@keyframes eloi-roll {
+  0%, 38% { transform: translateY(0); }
+  50%, 88% { transform: translateY(-50%); }
+  100% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eloi-swap > span { animation: none; }
+}
+
+/* ───────── tipografia ───────── */
+.eloi-display { font-family: var(--eloi-font-titulo); font-variation-settings: 'wdth' 100, 'wght' 700; font-size: 72px; line-height: 1.05; letter-spacing: -.03em; margin: 0; }
+.eloi-h1 { font-family: var(--eloi-font-titulo); font-variation-settings: 'wdth' 100, 'wght' 600; font-size: 44px; line-height: 1.1; letter-spacing: -.02em; margin: 0; }
+.eloi-h2 { font-family: var(--eloi-font-titulo); font-variation-settings: 'wdth' 100, 'wght' 600; font-size: 28px; line-height: 1.2; letter-spacing: -.01em; margin: 0; }
+.eloi-sub { font-family: var(--eloi-font-texto); font-weight: 500; font-size: 20px; line-height: 1.45; margin: 0; }
+.eloi-corpo { font-family: var(--eloi-font-texto); font-weight: 400; font-size: 16px; line-height: 1.65; max-width: 68ch; text-wrap: pretty; margin: 0; color: var(--eloi-texto-2); }
+.eloi-legenda { font-family: var(--eloi-font-texto); font-weight: 400; font-size: 13px; line-height: 1.5; color: var(--eloi-texto-3); }
+.eloi-etiqueta { font-family: var(--eloi-font-texto); font-weight: 700; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--eloi-lima); }
+@media (max-width: 720px) {
+  .eloi-display { font-size: 40px; }
+  .eloi-h1 { font-size: 28px; }
+  .eloi-sub { font-size: 17px; }
+  .eloi-corpo { font-size: 15px; }
+}
+
+/* ───────── ícones ───────── */
+.eloi-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: miter; }
+.eloi-icon--sm { width: 20px; height: 20px; }
+.eloi-icon--lg { width: 40px; height: 40px; }
+
+/* ───────── componentes ───────── */
+.eloi-btn { display: inline-flex; align-items: center; gap: 9px; padding: 12px 22px; border: 1px solid transparent; border-radius: var(--eloi-raio-controle); font-family: var(--eloi-font-texto); font-size: 14px; font-weight: 600; cursor: pointer; }
+.eloi-btn--primario { background: var(--eloi-roxo); color: #fff; }
+.eloi-btn--primario:hover { background: #6A1FD0; }
+.eloi-btn--primario:active { background: #5A17B0; }
+.eloi-btn--secundario { background: transparent; border-color: var(--eloi-linha-forte); color: var(--eloi-texto); }
+.eloi-btn--secundario:hover { border-color: var(--eloi-lima); color: var(--eloi-lima); }
+.eloi-btn--destaque { background: var(--eloi-lima); color: var(--eloi-tinta); font-weight: 700; }
+.eloi-btn--destaque:hover { background: #C9E005; }
+.eloi-btn:disabled { background: rgba(253, 213, 211, .08); color: rgba(253, 213, 211, .35); cursor: default; }
+
+.eloi-tag { display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 999px; font-family: var(--eloi-font-texto); font-size: 12px; font-weight: 600; }
+.eloi-tag--marca { background: var(--eloi-roxo); color: #fff; }
+.eloi-tag--ok { background: var(--eloi-lima); color: var(--eloi-tinta); }
+.eloi-tag--alerta { background: var(--eloi-coral); color: #fff; }
+.eloi-tag--info { background: var(--eloi-azul); color: #fff; }
+.eloi-tag--rascunho { border: 1px solid var(--eloi-linha-forte); color: var(--eloi-texto); }
+
+.eloi-campo { width: 100%; padding: 12px 14px; border-radius: var(--eloi-raio-controle); background: var(--eloi-superficie); border: 1px solid rgba(253, 213, 211, .16); color: var(--eloi-texto); font-family: var(--eloi-font-texto); font-size: 14px; }
+.eloi-campo:hover, .eloi-campo:focus { border-color: var(--eloi-roxo-claro); outline: none; }
+
+.eloi-card { border-radius: var(--eloi-raio-card); background: var(--eloi-elevada); padding: 26px; display: flex; flex-direction: column; gap: 10px; }
+.eloi-card:hover { background: var(--eloi-hover); }
+.eloi-painel { border-radius: var(--eloi-raio-painel); background: var(--eloi-superficie); border: 1px solid var(--eloi-linha); padding: 32px; }
+.eloi-regua { height: 1px; background: var(--eloi-linha); border: 0; margin: 0; }
+
+/* ───────── grafismos ───────── */
+.eloi-arco { display: block; width: 88px; height: 88px; border: 4px solid var(--eloi-lima); border-radius: 100% 0 0 0; }
+.eloi-quadrante { display: block; width: 96px; height: 96px; background: var(--eloi-roxo); border-radius: 0 0 100% 0; }
+.eloi-barra { display: flex; gap: 4px; }
+.eloi-barra > span { height: 6px; }
+.eloi-barra > span:nth-child(1) { flex: 2.4; background: var(--eloi-roxo); }
+.eloi-barra > span:nth-child(2) { flex: 1; background: var(--eloi-coral); }
+.eloi-barra > span:nth-child(3) { flex: 1.5; background: var(--eloi-lima); }
+.eloi-barra > span:nth-child(4) { flex: 1; background: var(--eloi-azul); }
+.eloi-barra > span:nth-child(5) { flex: .6; background: var(--eloi-lilas); }
+.eloi-troca { display: flex; flex-direction: column; gap: 9px; }
+.eloi-troca > span { height: 5px; border-radius: 99px; }
+.eloi-troca > span:nth-child(1) { background: var(--eloi-roxo); }
+.eloi-troca > span:nth-child(2) { width: 70%; background: var(--eloi-lilas); }
+.eloi-troca > span:nth-child(3) { width: 42%; background: var(--eloi-lima); }

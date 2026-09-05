@@ -2,6 +2,17 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-05 — Spec do design system entra no repositório
+
+A spec que guiou a migração (as "IMPLEMENTATION RULES" do handoff) só
+existia na conversa. Agora é `docs/DESIGN_RULES.md`, fonte textual da direção
+visual; `CLAUDE.md` aponta pra ela antes de `DESIGN_SYSTEM.md`. Do handoff
+de 2026-09-04 entram `eloi-handoff/CONTEXTO_COMPLETO.md`, `sistema/`
+(`eloi.css`, `tokens.json`, `icones.md`) e as duas fontes visuais em
+`references/`: `Eloi DS 01 Brand` e `Eloi DS 02 UI System`. Não entram:
+`design-tokens/` (o repo já espelha `tokens.css`, com teste) e o sprite do
+zip (traz de volta os dois preenchimentos Lilás removidos na fase 6).
+
 ## 2026-09-04 — Páginas estáticas no KV novo (portal do cliente, home, gestão, briefings, painéis)
 
 As seis fases da migração cobriram só o painel React (`app/`). Portal do

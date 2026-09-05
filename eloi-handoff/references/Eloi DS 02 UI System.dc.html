@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap">
+<style>
+  html,body{margin:0;padding:0;background:#08011a}
+  *{box-sizing:border-box}
+  a{color:#dff806;text-decoration:none}
+  a:hover{color:#fdd5d3}
+  ::selection{background:#dff806;color:#1b0647}
+</style>
+</helmet>
+
+<div style="background:#08011a;min-height:100vh;font-family:Manrope;-webkit-font-smoothing:antialiased">
+
+  <div style="position:sticky;top:0;z-index:40;background:rgba(8,1,26,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(253,213,211,.10)">
+    <div style="max-width:1440px;margin:0 auto;padding:0 48px;height:60px;display:flex;align-items:center;justify-content:space-between;gap:32px">
+      <span style="display:inline-flex;align-items:baseline;font-family:Archivo;font-size:17px;line-height:1;white-space:nowrap"><span style="font-variation-settings:'wdth' 72,'wght' 700;color:#fdd5d3;letter-spacing:-.02em">ELOI</span><span style="font-variation-settings:'wdth' 72,'wght' 700;color:#eeb4e7">Design</span></span>
+      <div style="display:flex;align-items:center;gap:22px;overflow-x:auto;scrollbar-width:none;flex-wrap:nowrap;min-width:0">
+        <a href="#s01" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:rgba(253,213,211,.5)" style-hover="color:#dff806">Cor</a>
+        <a href="#s02" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:rgba(253,213,211,.5)" style-hover="color:#dff806">Lima</a>
+        <a href="#s03" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:rgba(253,213,211,.5)" style-hover="color:#dff806">Tipografia</a>
+        <a href="#s04" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:rgba(253,213,211,.5)" style-hover="color:#dff806">Números</a>
+        <a href="#s05" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:rgba(253,213,211,.5)" style-hover="color:#dff806">Espaço</a>
+        <a href="#s06" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:rgba(253,213,211,.5)" style-hover="color:#dff806">Grid</a>
+        <a href="#s07" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:rgba(253,213,211,.5)" style-hover="color:#dff806">Raio</a>
+        <a href="#s08" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:rgba(253,213,211,.5)" style-hover="color:#dff806">Movimento</a>
+        <a href="#s09" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:rgba(253,213,211,.5)" style-hover="color:#dff806">Densidade</a>
+        <a href="#s10" style="font:600 11px/1 Manrope;letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto;white-space:nowrap;color:#dff806" style-hover="color:#fdd5d3">Tokens</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1440px;margin:0 auto;padding:96px 48px 120px;display:flex;flex-direction:column;gap:40px">
+    <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Camada 02 de 03</span>
+    <h1 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 700,'wdth' 100;font-size:104px;line-height:.94;letter-spacing:-.04em;color:#fdd5d3;max-width:15ch;text-wrap:pretty">UI Design System</h1>
+    <p style="margin:0;font:400 20px/1.55 Manrope;color:rgba(253,213,211,.66);max-width:62ch;text-wrap:pretty">Os valores que constroem qualquer interface do estúdio. Nada aqui pertence a uma tela específica: tudo é token, e toda tela é consequência de token.</p>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:24px">
+      <span style="font:700 12px/1 Manrope;letter-spacing:.16em;text-transform:uppercase;color:#dff806">Identidade</span>
+      <span style="width:26px;height:1px;background:rgba(253,213,211,.3)"></span>
+      <span style="font:700 12px/1 Manrope;letter-spacing:.16em;text-transform:uppercase;color:#fdd5d3">Token</span>
+      <span style="width:26px;height:1px;background:rgba(253,213,211,.3)"></span>
+      <span style="font:700 12px/1 Manrope;letter-spacing:.16em;text-transform:uppercase;color:#fdd5d3">Componente</span>
+      <span style="width:26px;height:1px;background:rgba(253,213,211,.3)"></span>
+      <span style="font:700 12px/1 Manrope;letter-spacing:.16em;text-transform:uppercase;color:#fdd5d3">Padrão</span>
+      <span style="width:26px;height:1px;background:rgba(253,213,211,.3)"></span>
+      <span style="font:700 12px/1 Manrope;letter-spacing:.16em;text-transform:uppercase;color:#eeb4e7">Tela</span>
+    </div>
+  </div>
+
+  <div style="border-top:1px solid rgba(253,213,211,.10);display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(253,213,211,.10)">
+    <div style="background:#08011a;padding:48px" style-hover="background:#0d0225">
+      <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.4)">01</span>
+      <h3 style="margin:20px 0 12px;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:24px;line-height:1.15;letter-spacing:-.02em;color:#fdd5d3">Brand System</h3>
+      <p style="margin:0;font:400 14px/1.6 Manrope;color:rgba(253,213,211,.58)">Identidade, assinatura, grafismos, iconografia. A personalidade.</p>
+    </div>
+    <div style="background:#0d0225;padding:48px;border-left:2px solid #dff806">
+      <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">02 · você está aqui</span>
+      <h3 style="margin:20px 0 12px;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:24px;line-height:1.15;letter-spacing:-.02em;color:#fdd5d3">UI Design System</h3>
+      <p style="margin:0;font:400 14px/1.6 Manrope;color:rgba(253,213,211,.58)">Tokens, componentes, estados e regras de construção.</p>
+    </div>
+    <div style="background:#08011a;padding:48px" style-hover="background:#0d0225">
+      <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.4)">03</span>
+      <h3 style="margin:20px 0 12px;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:24px;line-height:1.15;letter-spacing:-.02em;color:#fdd5d3">Application Patterns</h3>
+      <p style="margin:0;font:400 14px/1.6 Manrope;color:rgba(253,213,211,.58)">Telas reais: dashboards, tabelas, financeiro, formulários.</p>
+    </div>
+  </div>
+
+  <section id="s01" data-screen-label="01 Cor" style="border-top:1px solid rgba(253,213,211,.10);padding:120px 48px">
+    <div style="max-width:1440px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:72px;max-width:70ch">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">01 — Foundations</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">Cor semântica</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">A paleta institucional continua intacta. O que muda é o acesso a ela: em produto ninguém escolhe “Roxo ELOI”, escolhe <em style="color:#fdd5d3;font-style:normal">accent.primary</em>. O nome carrega a função, então trocar um valor não exige revisar tela por tela.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:64px">
+
+        <div>
+          <div style="display:flex;align-items:baseline;gap:16px;padding-bottom:20px;border-bottom:1px solid rgba(253,213,211,.16)">
+            <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Background</h3>
+            <span style="font:400 13px/1.4 Manrope;color:rgba(253,213,211,.45)">o chão da página, nunca de um componente</span>
+          </div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#08011a;border:1px solid rgba(253,213,211,.16)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.background.primary</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#08011A</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Fundo de toda página e todo app. Ponto de partida único.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#0d0225;border:1px solid rgba(253,213,211,.16)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.background.secondary</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#0D0225</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Faixas e regiões estruturais: sidebar, topbar, rodapé de tabela.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#170b33;border:1px solid rgba(253,213,211,.16)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.background.elevated</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#170B33</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Modal, drawer, popover. Elevação é tom, nunca sombra.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#fdd5d3"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.background.inverse</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#FDD5D3</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Área clara: documento, proposta, contrato, impressão, e-mail.</span></div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:baseline;gap:16px;padding-bottom:20px;border-bottom:1px solid rgba(253,213,211,.16)">
+            <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Surface</h3>
+            <span style="font:400 13px/1.4 Manrope;color:rgba(253,213,211,.45)">o corpo de um componente e seus estados</span>
+          </div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#0d0225;border:1px solid rgba(253,213,211,.16)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.surface.default</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#0D0225</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Card, campo, painel em repouso.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#170b33;border:1px solid rgba(253,213,211,.16)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.surface.raised</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#170B33</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Card sobre região já escura, ou card em destaque no grid.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#20114a;border:1px solid rgba(253,213,211,.16)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.surface.hover</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#20114A</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Um passo mais claro. Linha de tabela, item de lista, card clicável.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:rgba(125,42,232,.22);border:1px solid rgba(125,42,232,.5)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.surface.selected</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">Roxo 22%</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Seleção real: linha marcada, aba ativa, dia escolhido no calendário.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:rgba(253,213,211,.06);border:1px solid rgba(253,213,211,.10)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.surface.disabled</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">Rosa 6%</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Indisponível. Sem borda de foco, sem cursor de ação.</span></div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:baseline;gap:16px;padding-bottom:20px;border-bottom:1px solid rgba(253,213,211,.16)">
+            <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Border</h3>
+            <span style="font:400 13px/1.4 Manrope;color:rgba(253,213,211,.45)">sempre 1px — a única espessura de estrutura</span>
+          </div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#0d0225;border:1px solid rgba(253,213,211,.08)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.border.subtle</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">Rosa 8%</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Divisor entre linhas de tabela e itens de lista.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#0d0225;border:1px solid rgba(253,213,211,.16)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.border.default</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">Rosa 16%</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Contorno de card, campo e painel.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#0d0225;border:1px solid rgba(253,213,211,.28)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.border.strong</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">Rosa 28%</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Botão secundário e qualquer contorno que precise ser lido como ação.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#0d0225;border:1px solid #9184d9"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.border.active</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#9184D9</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Campo com o cursor dentro, item sob o ponteiro.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#0d0225;outline:2px solid #dff806;outline-offset:2px"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.border.focus</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#DFF806</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Foco de teclado: contorno 2px com 2px de deslocamento. Nunca removido.</span></div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:baseline;gap:16px;padding-bottom:20px;border-bottom:1px solid rgba(253,213,211,.16)">
+            <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Text</h3>
+            <span style="font:400 13px/1.4 Manrope;color:rgba(253,213,211,.45)">três níveis de leitura, não cinco</span>
+          </div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:700 20px/1 Manrope;color:#fdd5d3">Aa</span><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.text.primary</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#FDD5D3</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Título, valor, nome, dado que importa.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:700 20px/1 Manrope;color:rgba(253,213,211,.68)">Aa</span><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.text.secondary</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">Rosa 68%</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Corpo, descrição, conteúdo de célula secundária.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:700 20px/1 Manrope;color:rgba(253,213,211,.45)">Aa</span><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.text.muted</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">Rosa 45%</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Etiqueta, cabeçalho de coluna, legenda. Mínimo 12px.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:700 20px/1 Manrope;color:#dff806">Aa</span><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.text.accent</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#DFF806</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Um por bloco. Link, kicker de seção, número em foco.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="display:flex;align-items:center;justify-content:center;height:32px;border-radius:6px;background:#fdd5d3;font:700 15px/1 Manrope;color:#1b0647">Aa</span><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.text.inverse</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#1B0647</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Texto sobre Rosa papel, Lima ou Lilás.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="display:flex;align-items:center;justify-content:center;height:32px;border-radius:6px;background:#7d2ae8;font:700 15px/1 Manrope;color:#fff">Aa</span><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.text.on-accent</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#FFFFFF</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Único uso do branco puro: texto sobre Roxo ELOI.</span></div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:baseline;gap:16px;padding-bottom:20px;border-bottom:1px solid rgba(253,213,211,.16)">
+            <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Accent</h3>
+            <span style="font:400 13px/1.4 Manrope;color:rgba(253,213,211,.45)">ação e ênfase</span>
+          </div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#7d2ae8"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.accent.primary</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#7D2AE8</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Botão primário, seleção, estado ativo de navegação.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#6a1fd0"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.accent.primary-hover</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#6A1FD0</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Ponteiro sobre o botão primário.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#5a17b0"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.accent.primary-active</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#5A17B0</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Botão pressionado.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#dff806"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.accent.signal</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#DFF806</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Lima. Sinal da marca — regras próprias na seção seguinte.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#eeb4e7"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.accent.soft</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#EEB4E7</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Lilás. Complemento da assinatura, série secundária em gráfico.</span></div>
+        </div>
+
+        <div>
+          <div style="display:flex;align-items:baseline;gap:16px;padding-bottom:20px;border-bottom:1px solid rgba(253,213,211,.16)">
+            <h3 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;letter-spacing:-.01em;color:#fdd5d3">Feedback</h3>
+            <span style="font:400 13px/1.4 Manrope;color:rgba(253,213,211,.45)">cor + ícone + texto, sempre os três</span>
+          </div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#dff806"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.feedback.success</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#DFF806</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Concluído, aprovado, pago. Fundo Lima com texto Tinta.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#f5a300"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.feedback.warning</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#F5A300</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Âmbar derivado entre Lima e Coral. Existe só como status, nunca como marca.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#fd4400"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.feedback.error</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#FD4400</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Erro, vencido, bloqueado. Como texto sobre escuro, só a partir de 24px.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:#5b7cfd"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.feedback.info</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">#5B7CFD</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Informação, em revisão, aguardando terceiro.</span></div>
+          <div style="display:grid;grid-template-columns:52px 1fr 120px 1.4fr;gap:20px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(253,213,211,.07)"><div style="height:32px;border-radius:6px;background:rgba(253,213,211,.14);border:1px solid rgba(253,213,211,.28)"></div><span style="font:600 13px/1.3 Manrope;color:#fdd5d3">color.feedback.neutral</span><span style="font:500 12px/1.3 Manrope;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:rgba(253,213,211,.5)">Rosa 14%</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Rascunho, novo, sem estado definido. Contorno, não preenchimento.</span></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(253,213,211,.14);margin-top:16px">
+          <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:16px">
+            <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Faça</span>
+            <ul style="margin:0;padding-left:18px;font:400 14px/1.75 Manrope;color:rgba(253,213,211,.66)">
+              <li>Elevar por tom: base → secondary → elevated.</li>
+              <li>Duas cores dominantes por tela; o resto é sinal pontual.</li>
+              <li>Status sempre com ícone e texto além da cor.</li>
+              <li>Branco puro só sobre Roxo ELOI.</li>
+            </ul>
+          </div>
+          <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:16px">
+            <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#fd4400">Não faça</span>
+            <ul style="margin:0;padding-left:18px;font:400 14px/1.75 Manrope;color:rgba(253,213,211,.66)">
+              <li>Sombra para separar camadas.</li>
+              <li>Degradê em qualquer superfície.</li>
+              <li>Lima sobre Roxo ELOI, em nenhum tamanho.</li>
+              <li>Texto rebaixado a 45% abaixo de 12px.</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="s02" data-screen-label="02 Lima" style="border-top:1px solid rgba(253,213,211,.10);background:#0d0225;padding:120px 48px">
+    <div style="max-width:1440px;margin:0 auto;display:grid;grid-template-columns:minmax(0,42ch) 1fr;gap:80px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:18px;position:sticky;top:100px">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">02 — Foundations</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">A regra do Lima</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">O Lima é a cor que faz alguém reconhecer o sistema. Ela só continua funcionando se aparecer pouco. A regra prática: <em style="color:#dff806;font-style:normal">no máximo um Lima por bloco visível</em>, e nunca como área grande atrás de leitura.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1px;background:rgba(253,213,211,.12)">
+        <div style="background:#08011a;padding:32px;display:grid;grid-template-columns:1fr 1.2fr;gap:32px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:10px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Ação principal</span><span style="font:400 13px/1.55 Manrope;color:rgba(253,213,211,.55)">Uma por tela, e só quando a ação é a razão da tela existir.</span></div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button style="border:0;border-radius:10px;background:#dff806;padding:12px 22px;font:700 14px/1 Manrope;color:#1b0647;cursor:pointer" style-hover="background:#c9e005">Emitir nota fiscal</button><button style="border:0;border-radius:10px;background:#7d2ae8;padding:12px 22px;font:600 14px/1 Manrope;color:#fff;cursor:pointer" style-hover="background:#6a1fd0">Salvar</button></div>
+        </div>
+        <div style="background:#08011a;padding:32px;display:grid;grid-template-columns:1fr 1.2fr;gap:32px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:10px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Indicador e sinal</span><span style="font:400 13px/1.55 Manrope;color:rgba(253,213,211,.55)">Ponto, contador, marcador de série em foco.</span></div>
+          <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap"><span style="display:inline-flex;align-items:center;gap:8px;font:600 13px/1 Manrope;color:#fdd5d3"><span style="width:7px;height:7px;border-radius:999px;background:#dff806"></span>Ao vivo</span><span style="display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#dff806;font:700 12px/1 Manrope;font-variant-numeric:tabular-nums;color:#1b0647">7</span><span style="display:inline-flex;align-items:baseline;gap:8px"><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:28px;font-variant-numeric:tabular-nums;color:#dff806">R$ 84.200</span><span style="font:600 12px/1 Manrope;color:rgba(253,213,211,.45)">mês</span></span></div>
+        </div>
+        <div style="background:#08011a;padding:32px;display:grid;grid-template-columns:1fr 1.2fr;gap:32px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:10px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Estado ativo</span><span style="font:400 13px/1.55 Manrope;color:rgba(253,213,211,.55)">Uma barra de 2px, nunca o fundo do item inteiro.</span></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><div style="display:flex;align-items:center;gap:14px;padding:11px 16px;border-left:2px solid #dff806;background:rgba(223,248,6,.06);font:600 14px/1 Manrope;color:#fdd5d3">Financeiro</div><div style="display:flex;align-items:center;gap:14px;padding:11px 16px;border-left:2px solid transparent;font:500 14px/1 Manrope;color:rgba(253,213,211,.55)" style-hover="background:#20114a;color:#fdd5d3">Orçamentos</div><div style="display:flex;align-items:center;gap:14px;padding:11px 16px;border-left:2px solid transparent;font:500 14px/1 Manrope;color:rgba(253,213,211,.55)" style-hover="background:#20114a;color:#fdd5d3">Relatórios</div></div>
+        </div>
+        <div style="background:#08011a;padding:32px;display:grid;grid-template-columns:1fr 1.2fr;gap:32px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:10px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Foco de teclado</span><span style="font:400 13px/1.55 Manrope;color:rgba(253,213,211,.55)">Contorno 2px, deslocamento 2px. Nunca desligado.</span></div>
+          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><div style="border-radius:10px;background:#0d0225;border:1px solid rgba(253,213,211,.16);outline:2px solid #dff806;outline-offset:2px;padding:12px 16px;font:400 14px/1 Manrope;color:#fdd5d3">Cliente</div><span style="font:400 12px/1.5 Manrope;color:rgba(253,213,211,.4)">o contorno não substitui a borda do campo</span></div>
+        </div>
+        <div style="background:rgba(253,68,0,.05);padding:32px;display:grid;grid-template-columns:1fr 1.2fr;gap:32px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:10px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#fd4400">Fora de uso</span><span style="font:400 13px/1.55 Manrope;color:rgba(253,213,211,.55)">Área grande, fundo de card, texto corrido e séries múltiplas de gráfico.</span></div>
+          <div style="display:flex;gap:12px;align-items:stretch"><div style="flex:1;border-radius:12px;background:#dff806;padding:20px;font:400 13px/1.5 Manrope;color:#1b0647;opacity:.55">Card inteiro em Lima com parágrafo dentro</div><div style="flex:1;border-radius:12px;background:#7d2ae8;padding:20px;font:600 13px/1.5 Manrope;color:#dff806;opacity:.55">Lima sobre Roxo ELOI</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s03" data-screen-label="03 Tipografia" style="border-top:1px solid rgba(253,213,211,.10);padding:120px 48px">
+    <div style="max-width:1440px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:72px;max-width:70ch">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">03 — Foundations</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">Escala tipográfica</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">Archivo desenha o que se anuncia: marca, título, número grande. Manrope carrega o que se lê e o que se opera: corpo, campo, tabela, botão. Quinze níveis, nenhum tamanho fora deles.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;padding-bottom:16px;border-bottom:1px solid rgba(253,213,211,.16)">
+        <span style="font:700 10px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">Token</span>
+        <span style="font:700 10px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">Amostra</span>
+        <span style="font:700 10px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">Especificação e uso</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.display-xl</span><span style="font-family:Archivo;font-variation-settings:'wght' 700,'wdth' 100;font-size:96px;line-height:1;letter-spacing:-.04em;color:#fdd5d3">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Archivo 700 · 96/1.00 · -.04em<br>Só camada Expressive: capa, hero, abertura de case.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.display</span><span style="font-family:Archivo;font-variation-settings:'wght' 700,'wdth' 100;font-size:72px;line-height:1.05;letter-spacing:-.03em;color:#fdd5d3">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Archivo 700 · 72/1.05 · -.03em<br>Abertura de página institucional e de seção longa.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.h1</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:44px;line-height:1.1;letter-spacing:-.02em;color:#fdd5d3">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Archivo 600 · 44/1.10 · -.02em<br>Título de página. Um por tela.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.h2</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:28px;line-height:1.2;letter-spacing:-.02em;color:#fdd5d3">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Archivo 600 · 28/1.20 · -.02em<br>Seção dentro da página, título de modal.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.h3</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;line-height:1.25;letter-spacing:-.01em;color:#fdd5d3">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Archivo 600 · 22/1.25 · -.01em<br>Bloco de conteúdo, cabeçalho de card grande.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.h4</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:18px;line-height:1.3;letter-spacing:-.01em;color:#fdd5d3">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Archivo 600 · 18/1.30 · -.01em<br>Agrupamento de formulário, cabeçalho de painel.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.title</span><span style="font:600 16px/1.35 Manrope;color:#fdd5d3">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Manrope 600 · 16/1.35<br>Título de card comum, nome em linha de tabela.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.subtitle</span><span style="font:500 20px/1.45 Manrope;color:rgba(253,213,211,.68)">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Manrope 500 · 20/1.45<br>Linha de apoio abaixo de h1 ou display.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.body-lg</span><span style="font:400 18px/1.6 Manrope;color:rgba(253,213,211,.68)">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Manrope 400 · 18/1.60<br>Texto de página institucional e de proposta.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.body</span><span style="font:400 16px/1.65 Manrope;color:rgba(253,213,211,.68)">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Manrope 400 · 16/1.65<br>Corpo padrão. Medida 60–75 caracteres, sempre à esquerda.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.body-sm</span><span style="font:400 14px/1.55 Manrope;color:rgba(253,213,211,.68)">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Manrope 400 · 14/1.55<br>Interface: célula de tabela, campo, botão, item de menu.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.caption</span><span style="font:400 13px/1.5 Manrope;color:rgba(253,213,211,.6)">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Manrope 400 · 13/1.50<br>Legenda, texto auxiliar de campo, nota de gráfico.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.label</span><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.55)">Aa</span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Manrope 700 · 11 · .20em · caixa-alta<br>Etiqueta curta. Nunca frase. Mínimo absoluto de texto no sistema.</span></div>
+      <div style="display:grid;grid-template-columns:170px 1fr 320px;gap:24px;align-items:center;padding:28px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">type.mark</span><span style="display:inline-flex;align-items:baseline;font-family:Archivo;font-size:32px;line-height:1.24"><span style="font-variation-settings:'wdth' 72,'wght' 700;color:#fdd5d3;letter-spacing:-.02em">ELOI</span><span style="font-variation-settings:'wdth' 72,'wght' 700;color:#eeb4e7">Studio</span></span><span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.6)">Archivo 700 · wdth 72 · 1.24<br>Exclusivo da assinatura. Nenhum outro texto usa wdth 72.</span></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(253,213,211,.14);margin-top:64px">
+        <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:14px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Mobile</span>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.66)">display-xl 56 · display 40 · h1 28 · h2 22 · h3 19 · subtitle 17 · body 15 · body-sm 14. Etiqueta e legenda não reduzem.</span>
+        </div>
+        <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:14px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#fd4400">Limites</span>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.66)">Nada abaixo de 11px, e 11px só em etiqueta. Nunca dois pesos altos na mesma linha. Distância entre título e apoio: 12–24px.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s04" data-screen-label="04 Números" style="border-top:1px solid rgba(253,213,211,.10);background:#0d0225;padding:120px 48px">
+    <div style="max-width:1440px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:64px;max-width:70ch">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">04 — Foundations</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">Números</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">Metade deste sistema é dinheiro, prazo e percentual. Número recebe tratamento próprio: figura tabular sempre ligada, para que colunas se alinhem e valores não dancem ao atualizar.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(253,213,211,.14);margin-bottom:56px">
+        <div style="background:#08011a;padding:32px 28px;display:flex;flex-direction:column;gap:14px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">data.xl</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:44px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:#fdd5d3">184.920</span><span style="font:400 12px/1.6 Manrope;color:rgba(253,213,211,.5)">Archivo 600 · 44 · tabular<br>KPI único de dashboard.</span></div>
+        <div style="background:#08011a;padding:32px 28px;display:flex;flex-direction:column;gap:14px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">data.lg</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:28px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:#fdd5d3">184.920</span><span style="font:400 12px/1.6 Manrope;color:rgba(253,213,211,.5)">Archivo 600 · 28 · tabular<br>Card de métrica em grid.</span></div>
+        <div style="background:#08011a;padding:32px 28px;display:flex;flex-direction:column;gap:14px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">data.md</span><span style="font:600 18px/1 Manrope;font-variant-numeric:tabular-nums;color:#fdd5d3">184.920</span><span style="font:400 12px/1.6 Manrope;color:rgba(253,213,211,.5)">Manrope 600 · 18 · tabular<br>Total de coluna, subtotal.</span></div>
+        <div style="background:#08011a;padding:32px 28px;display:flex;flex-direction:column;gap:14px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">data.sm</span><span style="font:500 14px/1 Manrope;font-variant-numeric:tabular-nums;color:#fdd5d3">184.920</span><span style="font:400 12px/1.6 Manrope;color:rgba(253,213,211,.5)">Manrope 500 · 14 · tabular<br>Célula de tabela, valor em linha.</span></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:rgba(253,213,211,.14)">
+        <div style="background:#08011a;padding:40px 32px;display:flex;flex-direction:column;gap:24px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Valor monetário</span>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px;padding-bottom:12px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Positivo · recebido</span><span style="font:600 18px/1 Manrope;font-variant-numeric:tabular-nums;color:#dff806">R$ 42.800,00</span></div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px;padding-bottom:12px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Negativo · despesa</span><span style="font:600 18px/1 Manrope;font-variant-numeric:tabular-nums;color:#fd4400">− R$ 12.140,00</span></div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px;padding-bottom:12px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Pendente</span><span style="font:600 18px/1 Manrope;font-variant-numeric:tabular-nums;color:#fdd5d3">R$ 8.600,00</span></div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px;padding-bottom:12px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Previsto</span><span style="font:600 18px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.45);border-bottom:1px dashed rgba(253,213,211,.3)">R$ 31.000,00</span></div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:24px"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Sem valor definido</span><span style="font:500 18px/1 Manrope;color:rgba(253,213,211,.35)">a definir</span></div>
+          </div>
+          <span style="font:400 13px/1.65 Manrope;color:rgba(253,213,211,.5)">Prefixo R$ sempre separado por espaço fino, milhar com ponto, decimal com vírgula. Em coluna de tabela, o valor alinha à direita; em card de métrica, à esquerda.</span>
+        </div>
+        <div style="background:#08011a;padding:40px 32px;display:flex;flex-direction:column;gap:24px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Percentual, prazo, data</span>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:12px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Variação positiva</span><span style="display:inline-flex;align-items:center;gap:7px;font:600 14px/1 Manrope;font-variant-numeric:tabular-nums;color:#dff806"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M12 20V5M5 12l7-7 7 7"/></svg>+12,4%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:12px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Variação negativa</span><span style="display:inline-flex;align-items:center;gap:7px;font:600 14px/1 Manrope;font-variant-numeric:tabular-nums;color:#fd4400"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" stroke-linejoin="miter"><path d="M12 4v15M19 12l-7 7-7-7"/></svg>−3,1%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:12px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Sem variação</span><span style="font:600 14px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.45)">0,0%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:12px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Data</span><span style="font:500 14px/1 Manrope;font-variant-numeric:tabular-nums;color:#fdd5d3">14 mar 2026</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:12px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Prazo no limite</span><span style="font:600 14px/1 Manrope;font-variant-numeric:tabular-nums;color:#f5a300">em 2 dias</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:24px"><span style="font:400 13px/1 Manrope;color:rgba(253,213,211,.55)">Prazo vencido</span><span style="font:600 14px/1 Manrope;font-variant-numeric:tabular-nums;color:#fd4400">4 dias atrás</span></div>
+          </div>
+          <span style="font:400 13px/1.65 Manrope;color:rgba(253,213,211,.5)">Seta e sinal andam juntos: a direção nunca depende só da cor. Data curta em lista, data longa em documento. Prazo relativo até 7 dias, absoluto depois disso.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s05" data-screen-label="05 Espaçamento" style="border-top:1px solid rgba(253,213,211,.10);padding:120px 48px">
+    <div style="max-width:1440px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:64px;max-width:70ch">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">05 — Foundations</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">Espaçamento</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">Doze passos, base 4. Nenhum valor intermediário: se a distância parece precisar de 18px, ou o passo é 16 ou é 24. Respiro é o que faz a densidade alta continuar legível.</p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:0;margin-bottom:56px">
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.01</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">4px</span><div style="height:10px;width:4px;background:#dff806"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.02</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">8px</span><div style="height:10px;width:8px;background:#dff806"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.03</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">12px</span><div style="height:10px;width:12px;background:#dff806"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.04</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">16px</span><div style="height:10px;width:16px;background:#dff806"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.05</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">24px</span><div style="height:10px;width:24px;background:#dff806"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.06</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">32px</span><div style="height:10px;width:32px;background:#dff806"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.07</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">40px</span><div style="height:10px;width:40px;background:#eeb4e7"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.08</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">48px</span><div style="height:10px;width:48px;background:#eeb4e7"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.09</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">64px</span><div style="height:10px;width:64px;background:#eeb4e7"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.10</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">80px</span><div style="height:10px;width:80px;background:#7d2ae8"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.11</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">96px</span><div style="height:10px;width:96px;background:#7d2ae8"></div></div>
+        <div style="display:grid;grid-template-columns:110px 68px 1fr;gap:24px;align-items:center;padding:11px 0;border-bottom:1px solid rgba(253,213,211,.07)"><span style="font:600 13px/1 Manrope;color:#fdd5d3">space.12</span><span style="font:500 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.5)">120px</span><div style="height:10px;width:120px;background:#7d2ae8"></div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(253,213,211,.14)">
+        <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:16px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Dentro do componente</span>
+          <span style="font:400 14px/1.75 Manrope;color:rgba(253,213,211,.62)">Controle: 12/16 · 16/22<br>Card: 24 ou 32<br>Painel: 32<br>Modal: 32 · rodapé 24<br>Célula de tabela: 12/16 (Default)<br>Gap entre rótulo e campo: 8</span>
+        </div>
+        <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:16px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Entre componentes</span>
+          <span style="font:400 14px/1.75 Manrope;color:rgba(253,213,211,.62)">Cards no grid: 24<br>Campos no formulário: 24<br>Grupos de formulário: 40<br>Blocos de dashboard: 32<br>Botões lado a lado: 12<br>Etiquetas em linha: 8</span>
+        </div>
+        <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:16px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Entre seções</span>
+          <span style="font:400 14px/1.75 Manrope;color:rgba(253,213,211,.62)">Página de produto: 64<br>Seção institucional: 120<br>Topo de página até h1: 48<br>h1 até conteúdo: 40<br>Título até apoio: 12–24<br>Rodapé de página: 96</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s06" data-screen-label="06 Grid" style="border-top:1px solid rgba(253,213,211,.10);background:#0d0225;padding:120px 48px">
+    <div style="max-width:1440px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:64px;max-width:70ch">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">06 — Foundations</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">Grid e layout</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">A grade de 24 que rege o ícone continua regendo a tela: toda largura, altura de barra e recuo é múltiplo de 4, e as estruturas maiores se apoiam em 12 colunas.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(253,213,211,.14);margin-bottom:56px">
+        <div style="background:#08011a;padding:36px 32px;display:flex;flex-direction:column;gap:20px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Desktop · ≥1280</span>
+          <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:4px;height:56px">
+            <div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div><div style="background:rgba(125,42,232,.45)"></div>
+          </div>
+          <span style="font:400 13px/1.75 Manrope;color:rgba(253,213,211,.6)">12 colunas · gutter 24 · margem 48<br>Conteúdo máx. 1440. Acima de 1600 a página não cresce: cresce a margem.</span>
+        </div>
+        <div style="background:#08011a;padding:36px 32px;display:flex;flex-direction:column;gap:20px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Tablet · 768–1279</span>
+          <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;height:56px">
+            <div style="background:rgba(238,180,231,.4)"></div><div style="background:rgba(238,180,231,.4)"></div><div style="background:rgba(238,180,231,.4)"></div><div style="background:rgba(238,180,231,.4)"></div><div style="background:rgba(238,180,231,.4)"></div><div style="background:rgba(238,180,231,.4)"></div><div style="background:rgba(238,180,231,.4)"></div><div style="background:rgba(238,180,231,.4)"></div>
+          </div>
+          <span style="font:400 13px/1.75 Manrope;color:rgba(253,213,211,.6)">8 colunas · gutter 20 · margem 32<br>Sidebar entra no modo compacto. Grid de 4 cards vira 2.</span>
+        </div>
+        <div style="background:#08011a;padding:36px 32px;display:flex;flex-direction:column;gap:20px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Mobile · &lt;768</span>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;height:56px">
+            <div style="background:rgba(223,248,6,.4)"></div><div style="background:rgba(223,248,6,.4)"></div><div style="background:rgba(223,248,6,.4)"></div><div style="background:rgba(223,248,6,.4)"></div>
+          </div>
+          <span style="font:400 13px/1.75 Manrope;color:rgba(253,213,211,.6)">4 colunas · gutter 16 · margem 20<br>Sidebar sai da tela e volta como folha. Tabela vira cartão.</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1px;background:rgba(253,213,211,.14)">
+        <div style="background:#08011a;padding:32px;display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font:600 15px/1.3 Manrope;color:#fdd5d3">Aplicação</span><span style="font:400 13px/1.6 Manrope;color:rgba(253,213,211,.55)">Sidebar 248 aberta / 72 compacta · topbar 64 · conteúdo livre.</span></div>
+          <div style="display:flex;height:120px;border:1px solid rgba(253,213,211,.14);border-radius:8px;overflow:hidden">
+            <div style="width:86px;background:#0d0225;border-right:1px solid rgba(253,213,211,.10);display:flex;flex-direction:column;gap:6px;padding:12px 10px"><div style="height:8px;background:#dff806;border-radius:2px"></div><div style="height:8px;background:rgba(253,213,211,.14);border-radius:2px"></div><div style="height:8px;background:rgba(253,213,211,.14);border-radius:2px"></div><div style="height:8px;background:rgba(253,213,211,.14);border-radius:2px"></div></div>
+            <div style="flex:1;display:flex;flex-direction:column"><div style="height:28px;background:#0d0225;border-bottom:1px solid rgba(253,213,211,.10)"></div><div style="flex:1;padding:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div style="background:#170b33;border-radius:4px"></div><div style="background:#170b33;border-radius:4px"></div><div style="background:#170b33;border-radius:4px"></div></div></div>
+          </div>
+        </div>
+        <div style="background:#08011a;padding:32px;display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font:600 15px/1.3 Manrope;color:#fdd5d3">Painel dividido</span><span style="font:400 13px/1.6 Manrope;color:rgba(253,213,211,.55)">Lista 38% / detalhe 62%. Cliente, projeto, lançamento financeiro.</span></div>
+          <div style="display:flex;height:120px;border:1px solid rgba(253,213,211,.14);border-radius:8px;overflow:hidden">
+            <div style="width:38%;background:#0d0225;border-right:1px solid rgba(253,213,211,.10);display:flex;flex-direction:column;gap:5px;padding:12px"><div style="height:14px;background:rgba(125,42,232,.4);border-radius:3px"></div><div style="height:14px;background:rgba(253,213,211,.10);border-radius:3px"></div><div style="height:14px;background:rgba(253,213,211,.10);border-radius:3px"></div><div style="height:14px;background:rgba(253,213,211,.10);border-radius:3px"></div></div>
+            <div style="flex:1;padding:14px;display:flex;flex-direction:column;gap:8px"><div style="height:16px;width:52%;background:rgba(253,213,211,.2);border-radius:3px"></div><div style="flex:1;background:#170b33;border-radius:4px"></div></div>
+          </div>
+        </div>
+        <div style="background:#08011a;padding:32px;display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font:600 15px/1.3 Manrope;color:#fdd5d3">Tabela larga</span><span style="font:400 13px/1.6 Manrope;color:rgba(253,213,211,.55)">Largura total, sem máximo. Cabeçalho fixo, primeira coluna fixa.</span></div>
+          <div style="height:120px;border:1px solid rgba(253,213,211,.14);border-radius:8px;overflow:hidden;display:flex;flex-direction:column"><div style="height:26px;background:#0d0225;border-bottom:1px solid rgba(253,213,211,.16)"></div><div style="flex:1;display:flex;flex-direction:column"><div style="flex:1;border-bottom:1px solid rgba(253,213,211,.07)"></div><div style="flex:1;border-bottom:1px solid rgba(253,213,211,.07);background:#20114a"></div><div style="flex:1;border-bottom:1px solid rgba(253,213,211,.07)"></div><div style="flex:1"></div></div></div>
+        </div>
+        <div style="background:#08011a;padding:32px;display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font:600 15px/1.3 Manrope;color:#fdd5d3">Formulário e documento</span><span style="font:400 13px/1.6 Manrope;color:rgba(253,213,211,.55)">Coluna única máx. 720. Orçamento, proposta, contrato, configuração.</span></div>
+          <div style="height:120px;border:1px solid rgba(253,213,211,.14);border-radius:8px;display:flex;justify-content:center"><div style="width:52%;padding:14px;display:flex;flex-direction:column;gap:8px"><div style="height:12px;background:rgba(253,213,211,.16);border-radius:3px"></div><div style="height:26px;background:#0d0225;border:1px solid rgba(253,213,211,.16);border-radius:4px"></div><div style="height:26px;background:#0d0225;border:1px solid rgba(253,213,211,.16);border-radius:4px"></div></div></div>
+        </div>
+        <div style="background:#08011a;padding:32px;display:grid;grid-template-columns:220px 1fr;gap:40px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:8px"><span style="font:600 15px/1.3 Manrope;color:#fdd5d3">Institucional</span><span style="font:400 13px/1.6 Manrope;color:rgba(253,213,211,.55)">Faixas de largura total, conteúdo em 1440. Camada Expressive.</span></div>
+          <div style="height:120px;border:1px solid rgba(253,213,211,.14);border-radius:8px;overflow:hidden;display:flex;flex-direction:column"><div style="flex:1.6;background:#170b33;display:flex;align-items:center;padding:0 16px"><div style="height:20px;width:44%;background:rgba(253,213,211,.28);border-radius:3px"></div></div><div style="flex:1;display:flex"><div style="flex:1;border-right:1px solid rgba(253,213,211,.10)"></div><div style="flex:1;border-right:1px solid rgba(253,213,211,.10)"></div><div style="flex:1"></div></div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:40px;display:flex;flex-wrap:wrap;gap:10px">
+        <span style="border:1px solid rgba(253,213,211,.16);border-radius:999px;padding:8px 16px;font:600 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.7)">sm 480</span>
+        <span style="border:1px solid rgba(253,213,211,.16);border-radius:999px;padding:8px 16px;font:600 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.7)">md 768</span>
+        <span style="border:1px solid rgba(253,213,211,.16);border-radius:999px;padding:8px 16px;font:600 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.7)">lg 1024</span>
+        <span style="border:1px solid rgba(253,213,211,.16);border-radius:999px;padding:8px 16px;font:600 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.7)">xl 1280</span>
+        <span style="border:1px solid rgba(253,213,211,.16);border-radius:999px;padding:8px 16px;font:600 12px/1 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.7)">2xl 1600</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="s07" data-screen-label="07 Raio" style="border-top:1px solid rgba(253,213,211,.10);padding:120px 48px">
+    <div style="max-width:1440px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:64px;max-width:70ch">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">07 — Foundations</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">Raio e geometria</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">Canto controlado, não canto redondo. O arco de um quarto continua sendo o gesto da marca, mas ele pertence à camada Expressive: em tabela, financeiro e formulário denso, a geometria é reta e a identidade vem do grid, da cor e da tipografia.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:rgba(253,213,211,.14);margin-bottom:56px">
+        <div style="background:#0d0225;padding:28px 24px;display:flex;flex-direction:column;gap:18px"><div style="height:64px;background:#170b33;border:1px solid rgba(253,213,211,.16);border-radius:6px"></div><div style="display:flex;flex-direction:column;gap:5px"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">radius.xs</span><span style="font:500 12px/1.2 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.45)">6px</span><span style="font:400 12px/1.5 Manrope;color:rgba(253,213,211,.55)">Etiqueta quadrada, checkbox, amostra de cor.</span></div></div>
+        <div style="background:#0d0225;padding:28px 24px;display:flex;flex-direction:column;gap:18px"><div style="height:64px;background:#170b33;border:1px solid rgba(253,213,211,.16);border-radius:10px"></div><div style="display:flex;flex-direction:column;gap:5px"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">radius.sm</span><span style="font:500 12px/1.2 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.45)">10px</span><span style="font:400 12px/1.5 Manrope;color:rgba(253,213,211,.55)">Todo controle: botão, campo, select, botão de ícone.</span></div></div>
+        <div style="background:#0d0225;padding:28px 24px;display:flex;flex-direction:column;gap:18px"><div style="height:64px;background:#170b33;border:1px solid rgba(253,213,211,.16);border-radius:14px"></div><div style="display:flex;flex-direction:column;gap:5px"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">radius.md</span><span style="font:500 12px/1.2 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.45)">14px</span><span style="font:400 12px/1.5 Manrope;color:rgba(253,213,211,.55)">Card. O raio mais usado do sistema.</span></div></div>
+        <div style="background:#0d0225;padding:28px 24px;display:flex;flex-direction:column;gap:18px"><div style="height:64px;background:#170b33;border:1px solid rgba(253,213,211,.16);border-radius:16px"></div><div style="display:flex;flex-direction:column;gap:5px"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">radius.lg</span><span style="font:500 12px/1.2 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.45)">16px</span><span style="font:400 12px/1.5 Manrope;color:rgba(253,213,211,.55)">Painel, modal, drawer.</span></div></div>
+        <div style="background:#0d0225;padding:28px 24px;display:flex;flex-direction:column;gap:18px"><div style="height:64px;background:#170b33;border:1px solid rgba(253,213,211,.16);border-radius:18px"></div><div style="display:flex;flex-direction:column;gap:5px"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">radius.xl</span><span style="font:500 12px/1.2 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.45)">18px</span><span style="font:400 12px/1.5 Manrope;color:rgba(253,213,211,.55)">Bloco de página institucional.</span></div></div>
+        <div style="background:#0d0225;padding:28px 24px;display:flex;flex-direction:column;gap:18px"><div style="height:64px;background:#170b33;border:1px solid rgba(253,213,211,.16);border-radius:999px"></div><div style="display:flex;flex-direction:column;gap:5px"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">radius.full</span><span style="font:500 12px/1.2 Manrope;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.45)">999px</span><span style="font:400 12px/1.5 Manrope;color:rgba(253,213,211,.55)">Tag de status, avatar, contador, ponto de sinal.</span></div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(253,213,211,.14)">
+        <div style="background:#0d0225;padding:44px 36px;display:flex;flex-direction:column;gap:28px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">O arco como assinatura</span>
+          <div style="display:flex;gap:28px;align-items:flex-end">
+            <div style="width:96px;height:96px;border-radius:100% 0 0 0;border-top:4px solid #dff806;border-left:4px solid #dff806"></div>
+            <div style="width:96px;height:96px;border-radius:100% 0 0 0;background:#7d2ae8"></div>
+            <div style="display:flex;flex-direction:column;gap:6px"><div style="width:120px;height:5px;background:#7d2ae8"></div><div style="width:88px;height:5px;background:#eeb4e7"></div><div style="width:52px;height:5px;background:#dff806"></div></div>
+          </div>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.6)">Onde ele aparece em produto: carregamento, estado vazio, marcador de gráfico, canto de faixa institucional, abertura de relatório. Nunca em card de métrica, célula, campo ou linha de tabela.</span>
+        </div>
+        <div style="background:#0d0225;padding:44px 36px;display:flex;flex-direction:column;gap:28px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#fd4400">O que descaracteriza</span>
+          <div style="display:flex;gap:20px;align-items:center;opacity:.5">
+            <div style="width:96px;height:96px;border-radius:48px;background:#170b33;border:1px solid rgba(253,213,211,.16)"></div>
+            <div style="display:flex;flex-direction:column;gap:8px"><div style="width:150px;height:26px;border-radius:999px;background:#170b33;border:1px solid rgba(253,213,211,.16)"></div><div style="width:150px;height:26px;border-radius:999px;background:#170b33;border:1px solid rgba(253,213,211,.16)"></div></div>
+          </div>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.6)">Card com raio de 24 ou mais, campo em cápsula, tudo arredondado por igual. O sistema perde o corte reto que o diferencia e passa a parecer produto genérico.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s08" data-screen-label="08 Movimento" style="border-top:1px solid rgba(253,213,211,.10);background:#0d0225;padding:120px 48px">
+    <div style="max-width:1440px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:64px;max-width:70ch">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">08 — Foundations</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">Movimento</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">Quatro durações. A mais lenta é a da assinatura e só aparece em apresentação; a interface trabalha nas três primeiras. O movimento existe para explicar de onde uma coisa veio, não para decorar.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(253,213,211,.14);margin-bottom:56px">
+        <div style="background:#08011a;padding:32px 28px;display:flex;flex-direction:column;gap:14px"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">motion.fast</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:32px;line-height:1;font-variant-numeric:tabular-nums;color:#dff806">140<span style="font-size:15px;color:rgba(253,213,211,.45)">ms</span></span><span style="font:400 12px/1.6 Manrope;color:rgba(253,213,211,.55)">Hover, foco, checkbox, troca de cor. Reação imediata.</span></div>
+        <div style="background:#08011a;padding:32px 28px;display:flex;flex-direction:column;gap:14px"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">motion.default</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:32px;line-height:1;font-variant-numeric:tabular-nums;color:#dff806">240<span style="font-size:15px;color:rgba(253,213,211,.45)">ms</span></span><span style="font:400 12px/1.6 Manrope;color:rgba(253,213,211,.55)">Dropdown, tooltip, tab, expansão de linha, toast.</span></div>
+        <div style="background:#08011a;padding:32px 28px;display:flex;flex-direction:column;gap:14px"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">motion.slow</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:32px;line-height:1;font-variant-numeric:tabular-nums;color:#dff806">420<span style="font-size:15px;color:rgba(253,213,211,.45)">ms</span></span><span style="font:400 12px/1.6 Manrope;color:rgba(253,213,211,.55)">Modal, drawer, sidebar, entrada de página, gráfico.</span></div>
+        <div style="background:#08011a;padding:32px 28px;display:flex;flex-direction:column;gap:14px;border-left:2px solid #dff806"><span style="font:600 13px/1.2 Manrope;color:#fdd5d3">motion.presentation</span><span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:32px;line-height:1;font-variant-numeric:tabular-nums;color:#dff806">670<span style="font-size:15px;color:rgba(253,213,211,.45)">ms</span></span><span style="font:400 12px/1.6 Manrope;color:rgba(253,213,211,.55)">A assinatura ELOI Studio ↔ Design, ciclo de 5,6s. Só marca.</span></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(253,213,211,.14);margin-bottom:56px">
+        <div style="background:#08011a;padding:36px 32px;display:flex;flex-direction:column;gap:18px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Curvas</span>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;gap:20px;padding-bottom:10px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">motion.ease.standard</span><span style="font:500 12px/1.4 Manrope;color:rgba(253,213,211,.55)">cubic-bezier(.3,0,.2,1)</span></div>
+            <div style="display:flex;justify-content:space-between;gap:20px;padding-bottom:10px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">motion.ease.enter</span><span style="font:500 12px/1.4 Manrope;color:rgba(253,213,211,.55)">cubic-bezier(.16,1,.3,1)</span></div>
+            <div style="display:flex;justify-content:space-between;gap:20px;padding-bottom:10px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">motion.ease.exit</span><span style="font:500 12px/1.4 Manrope;color:rgba(253,213,211,.55)">cubic-bezier(.5,0,.75,0)</span></div>
+            <div style="display:flex;justify-content:space-between;gap:20px"><span style="font:600 13px/1.4 Manrope;color:#dff806">motion.ease.signature</span><span style="font:500 12px/1.4 Manrope;color:rgba(253,213,211,.55)">cubic-bezier(.72,0,.16,1)</span></div>
+          </div>
+          <span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.55)">Entrada desacelera, saída acelera. Nada volta (sem overshoot), nada balança.</span>
+        </div>
+        <div style="background:#08011a;padding:36px 32px;display:flex;flex-direction:column;gap:18px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Deslocamento e sequência</span>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;gap:20px;padding-bottom:10px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">motion.shift.sm</span><span style="font:500 12px/1.4 Manrope;color:rgba(253,213,211,.55)">4px · hover de card</span></div>
+            <div style="display:flex;justify-content:space-between;gap:20px;padding-bottom:10px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">motion.shift.md</span><span style="font:500 12px/1.4 Manrope;color:rgba(253,213,211,.55)">12px · entrada de bloco</span></div>
+            <div style="display:flex;justify-content:space-between;gap:20px;padding-bottom:10px;border-bottom:1px solid rgba(253,213,211,.08)"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">motion.stagger</span><span style="font:500 12px/1.4 Manrope;color:rgba(253,213,211,.55)">40ms · máx. 6 itens</span></div>
+            <div style="display:flex;justify-content:space-between;gap:20px"><span style="font:600 13px/1.4 Manrope;color:#fdd5d3">motion.count</span><span style="font:500 12px/1.4 Manrope;color:rgba(253,213,211,.55)">420ms · número sobe, não gira</span></div>
+          </div>
+          <span style="font:400 13px/1.7 Manrope;color:rgba(253,213,211,.55)">Com <em style="font-style:normal;color:#fdd5d3">prefers-reduced-motion</em>: deslocamento vira 0, contagem vira valor final, opacidade permanece.</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(253,213,211,.14)">
+        <div style="background:#08011a;padding:28px;display:flex;flex-direction:column;gap:16px;cursor:pointer;transition:background 140ms cubic-bezier(.3,0,.2,1)" style-hover="background:#170b33"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">fast · hover</span><span style="font:400 13px/1.6 Manrope;color:rgba(253,213,211,.6)">Passe o ponteiro: a superfície troca de tom em 140ms, sem mover.</span></div>
+        <div style="background:#08011a;padding:28px;display:flex;flex-direction:column;gap:16px;cursor:pointer;transition:transform 240ms cubic-bezier(.16,1,.3,1),background 240ms" style-hover="transform:translateY(-4px);background:#170b33"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">default · card</span><span style="font:400 13px/1.6 Manrope;color:rgba(253,213,211,.6)">Sobe 4px na curva de entrada. É o único deslocamento de hover permitido.</span></div>
+        <div style="background:#08011a;padding:28px;display:flex;flex-direction:column;gap:16px;cursor:pointer" style-hover="background:#170b33"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">botão</span><button style="border:0;border-radius:10px;background:#7d2ae8;padding:12px 20px;font:600 14px/1 Manrope;color:#fff;cursor:pointer;transition:background 140ms cubic-bezier(.3,0,.2,1),transform 140ms" style-hover="background:#6a1fd0" style-active="transform:scale(.97);background:#5a17b0">Aprovar</button></div>
+        <div style="background:#08011a;padding:28px;display:flex;flex-direction:column;gap:16px"><span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">slow · barra</span><div style="height:6px;border-radius:999px;background:rgba(253,213,211,.10);overflow:hidden"><div style="height:100%;width:68%;background:#dff806;border-radius:999px"></div></div><span style="font:400 13px/1.6 Manrope;color:rgba(253,213,211,.6)">Progresso cresce da esquerda em 420ms, uma vez, ao entrar em tela.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s09" data-screen-label="09 Densidade" style="border-top:1px solid rgba(253,213,211,.10);padding:120px 48px">
+    <div style="max-width:1440px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:56px;max-width:70ch">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">09 — Foundations</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">Três densidades, um sistema</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">A mesma cor, a mesma tipografia e os mesmos tokens em três intensidades. É isso que impede o site de parecer uma marca e o painel de parecer outro produto: não muda a linguagem, muda o respiro.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(253,213,211,.14);margin-bottom:56px">
+        <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:16px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Expressive</span>
+          <span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;line-height:1.2;letter-spacing:-.01em;color:#fdd5d3">Site, portfólio, proposta, capa de relatório</span>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.6)">Display e display-xl liberados. Espaço entre seções 120. Arco, quadrante e barra visíveis. Uma ideia por tela.</span>
+        </div>
+        <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:16px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Standard</span>
+          <span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;line-height:1.2;letter-spacing:-.01em;color:#fdd5d3">Dashboard, cliente, projeto, configuração</span>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.6)">Teto em h1. Espaço entre blocos 32. Grafismo só em estado vazio e carregamento. Linha de 44px.</span>
+        </div>
+        <div style="background:#0d0225;padding:36px 32px;display:flex;flex-direction:column;gap:16px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Dense</span>
+          <span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:22px;line-height:1.2;letter-spacing:-.01em;color:#fdd5d3">Financeiro, tabela longa, conciliação, lote</span>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.6)">Teto em h2. Sem arco, sem quadrante, sem grafismo. Identidade vem do grid, da cor e do número tabular. Linha de 32px.</span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:20px">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">A mesma tabela nas três densidades</span>
+        <div style="display:flex;gap:8px">
+          <sc-for list="{{ densOptions }}" as="o" hint-placeholder-count="3">
+            <button onClick="{{ o.pick }}" style="border:1px solid {{ o.bd }};border-radius:999px;background:{{ o.bg }};color:{{ o.fg }};padding:9px 18px;font:600 12px/1 Manrope;letter-spacing:.04em;cursor:pointer;transition:all 140ms cubic-bezier(.3,0,.2,1)">{{ o.v }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border:1px solid rgba(253,213,211,.16);border-radius:14px;overflow:hidden;background:#0d0225">
+        <div style="display:grid;grid-template-columns:1.3fr 1.5fr 1fr 1fr .8fr;gap:20px;padding:{{ headPad }};background:#08011a;border-bottom:1px solid rgba(253,213,211,.16)">
+          <span style="font:700 10px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">Cliente</span>
+          <span style="font:700 10px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">Projeto</span>
+          <span style="font:700 10px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45);text-align:right">Valor</span>
+          <span style="font:700 10px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45)">Status</span>
+          <span style="font:700 10px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45);text-align:right">Prazo</span>
+        </div>
+        <sc-for list="{{ linhas }}" as="l" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:1.3fr 1.5fr 1fr 1fr .8fr;gap:20px;align-items:center;padding:{{ rowPad }};border-bottom:1px solid rgba(253,213,211,.07);transition:background 140ms cubic-bezier(.3,0,.2,1)" style-hover="background:#20114a">
+            <span style="font-weight:600;font-family:Manrope;font-size:{{ rowLabel }};line-height:1.35;color:#fdd5d3">{{ l.cliente }}</span>
+            <span style="font-weight:400;font-family:Manrope;font-size:{{ rowFs }};line-height:1.4;color:rgba(253,213,211,.62)">{{ l.projeto }}</span>
+            <span style="font-weight:500;font-family:Manrope;font-size:{{ rowFs }};line-height:1.4;font-variant-numeric:tabular-nums;color:#fdd5d3;text-align:right">{{ l.valor }}</span>
+            <span style="display:inline-flex;align-items:center;gap:8px;font-weight:600;font-family:Manrope;font-size:12px;line-height:1;color:rgba(253,213,211,.78)"><span style="width:7px;height:7px;border-radius:999px;flex:0 0 auto;background:{{ l.cor }}"></span>{{ l.status }}</span>
+            <span style="font-weight:400;font-family:Manrope;font-size:{{ rowFs }};line-height:1.4;font-variant-numeric:tabular-nums;color:rgba(253,213,211,.55);text-align:right">{{ l.prazo }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <span style="display:block;margin-top:18px;font:400 13px/1.7 Manrope;color:rgba(253,213,211,.5);max-width:70ch">O que muda entre elas: padding da célula, tamanho de corpo e altura de linha. O que nunca muda: a cor, a família tipográfica, o alinhamento do valor à direita, o ponto de status e a borda de 1px.</span>
+    </div>
+  </section>
+
+  <section id="s10" data-screen-label="10 Design Tokens" style="border-top:1px solid rgba(253,213,211,.10);background:#0d0225;padding:120px 48px 140px">
+    <div style="max-width:1440px;margin:0 auto">
+      <div style="display:flex;flex-direction:column;gap:18px;margin-bottom:64px;max-width:70ch">
+        <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">10 — Design Tokens</span>
+        <h2 style="margin:0;font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:52px;line-height:1.06;letter-spacing:-.03em;color:#fdd5d3">A nomenclatura</h2>
+        <p style="margin:0;font:400 17px/1.65 Manrope;color:rgba(253,213,211,.62);text-wrap:pretty">Todo token descreve função, nunca a tela onde nasceu. <em style="font-style:normal;color:#fdd5d3">color.surface.hover</em> serve à tabela, ao card e ao item de menu ao mesmo tempo; <em style="font-style:normal;color:#fd4400">cor-card-financeiro</em> não serve a nada além dele mesmo.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(253,213,211,.14);margin-bottom:56px">
+        <div style="background:#08011a;padding:36px 32px;display:flex;flex-direction:column;gap:14px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Estrutura</span>
+          <span style="font:600 15px/1.6 Manrope;color:#fdd5d3">categoria . grupo . função . estado</span>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.6)">Quatro segmentos no máximo. Estado só quando existe mais de um. Sem número de tela, sem nome de módulo, sem abreviação inventada.</span>
+        </div>
+        <div style="background:#08011a;padding:36px 32px;display:flex;flex-direction:column;gap:14px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#fd4400">Proibido</span>
+          <span style="font:600 15px/1.6 Manrope;color:rgba(253,213,211,.45);text-decoration:line-through">cor-card-financeiro · verde-tela-cliente · roxo2 · azulEscuroBotao</span>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.6)">Se um valor precisa de um token novo, ele é derivado dos Foundations. Nenhum componente inventa cor, raio, duração ou tamanho fora desta lista.</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45);padding-bottom:14px;border-bottom:1px solid rgba(253,213,211,.16)">color</span>
+          <span style="font:500 13px/2.1 Manrope;color:rgba(253,213,211,.7)">color.background.primary<br>color.background.secondary<br>color.background.elevated<br>color.background.inverse<br>color.surface.default<br>color.surface.raised<br>color.surface.hover<br>color.surface.selected<br>color.surface.disabled<br>color.border.subtle<br>color.border.default<br>color.border.strong<br>color.border.active<br>color.border.focus<br>color.text.primary<br>color.text.secondary<br>color.text.muted<br>color.text.accent<br>color.text.inverse<br>color.text.on-accent<br>color.accent.primary<br>color.accent.primary-hover<br>color.accent.primary-active<br>color.accent.signal<br>color.accent.soft<br>color.feedback.success<br>color.feedback.warning<br>color.feedback.error<br>color.feedback.info<br>color.feedback.neutral</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45);padding-bottom:14px;border-bottom:1px solid rgba(253,213,211,.16)">type · space · radius</span>
+          <span style="font:500 13px/2.1 Manrope;color:rgba(253,213,211,.7)">type.display-xl<br>type.display<br>type.h1 · h2 · h3 · h4<br>type.title<br>type.subtitle<br>type.body-lg · body · body-sm<br>type.caption<br>type.label<br>type.mark<br>type.data.xl · lg · md · sm<br><br>space.01 → space.12<br><br>radius.xs · sm · md · lg · xl<br>radius.full<br>radius.arc</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:rgba(253,213,211,.45);padding-bottom:14px;border-bottom:1px solid rgba(253,213,211,.16)">grid · motion · density</span>
+          <span style="font:500 13px/2.1 Manrope;color:rgba(253,213,211,.7)">grid.columns.desktop · tablet · mobile<br>grid.gutter.desktop · tablet · mobile<br>grid.margin.desktop · tablet · mobile<br>grid.max-width<br>grid.sidebar.open · compact<br>grid.topbar.height<br>breakpoint.sm → 2xl<br><br>motion.fast · default · slow<br>motion.presentation<br>motion.ease.standard · enter · exit<br>motion.ease.signature<br>motion.shift.sm · md<br>motion.stagger<br><br>density.expressive · standard · dense</span>
+        </div>
+      </div>
+
+      <sc-if value="{{ mostrarValores }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:56px;border:1px solid rgba(253,213,211,.16);border-radius:14px;background:#08011a;padding:36px 32px">
+          <span style="display:block;margin-bottom:24px;font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Referência de valores</span>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:32px">
+            <span style="font:500 13px/1.95 Manrope;color:rgba(253,213,211,.62)">background.primary <span style="color:#fdd5d3">#08011A</span><br>background.secondary <span style="color:#fdd5d3">#0D0225</span><br>background.elevated <span style="color:#fdd5d3">#170B33</span><br>background.inverse <span style="color:#fdd5d3">#FDD5D3</span><br>surface.hover <span style="color:#fdd5d3">#20114A</span></span>
+            <span style="font:500 13px/1.95 Manrope;color:rgba(253,213,211,.62)">accent.primary <span style="color:#fdd5d3">#7D2AE8</span><br>accent.signal <span style="color:#fdd5d3">#DFF806</span><br>accent.soft <span style="color:#fdd5d3">#EEB4E7</span><br>border.active <span style="color:#fdd5d3">#9184D9</span><br>text.primary <span style="color:#fdd5d3">#FDD5D3</span></span>
+            <span style="font:500 13px/1.95 Manrope;color:rgba(253,213,211,.62)">feedback.success <span style="color:#fdd5d3">#DFF806</span><br>feedback.warning <span style="color:#fdd5d3">#F5A300</span><br>feedback.error <span style="color:#fdd5d3">#FD4400</span><br>feedback.info <span style="color:#fdd5d3">#5B7CFD</span><br>text.inverse <span style="color:#fdd5d3">#1B0647</span></span>
+            <span style="font:500 13px/1.95 Manrope;color:rgba(253,213,211,.62)">radius.sm <span style="color:#fdd5d3">10px</span><br>radius.md <span style="color:#fdd5d3">14px</span><br>grid.max-width <span style="color:#fdd5d3">1440px</span><br>grid.sidebar.open <span style="color:#fdd5d3">248px</span><br>motion.default <span style="color:#fdd5d3">240ms</span></span>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="margin-top:64px;padding-top:48px;border-top:1px solid rgba(253,213,211,.16);display:flex;align-items:flex-end;justify-content:space-between;gap:40px;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:12px;max-width:60ch">
+          <span style="font:700 11px/1 Manrope;letter-spacing:.2em;text-transform:uppercase;color:#dff806">Próximo</span>
+          <span style="font-family:Archivo;font-variation-settings:'wght' 600,'wdth' 100;font-size:28px;line-height:1.2;letter-spacing:-.02em;color:#fdd5d3">Componentes, estados e tabelas</span>
+          <span style="font:400 14px/1.7 Manrope;color:rgba(253,213,211,.55)">Botões, campos, cards, status, feedback e navegação construídos exclusivamente a partir dos tokens acima.</span>
+        </div>
+        <span style="display:inline-flex;align-items:baseline;font-family:Archivo;font-size:22px;line-height:1;white-space:nowrap"><span style="font-variation-settings:'wdth' 72,'wght' 700;color:#fdd5d3;letter-spacing:-.02em">ELOI</span><span style="font-variation-settings:'wdth' 72,'wght' 700;color:#eeb4e7">Design</span></span>
+      </div>
+    </div>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440},&quot;mostrarValores&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Documento&quot;}}">
+class Component extends DCLogic {
+  state = { dens: 'Standard' };
+  renderVals() {
+    const map = {
+      Expressive: { pad: '22px 26px', fs: '16px', label: '18px', gapv: '10px', head: '18px 26px' },
+      Standard:   { pad: '14px 20px', fs: '14px', label: '15px', gapv: '6px',  head: '12px 20px' },
+      Dense:      { pad: '8px 14px',  fs: '13px', label: '13px', gapv: '3px',  head: '8px 14px'  }
+    };
+    const d = map[this.state.dens] || map.Standard;
+    const opt = (v) => ({
+      v,
+      bg: v === this.state.dens ? '#dff806' : 'transparent',
+      fg: v === this.state.dens ? '#1b0647' : 'rgba(253,213,211,.6)',
+      bd: v === this.state.dens ? '#dff806' : 'rgba(253,213,211,.18)',
+      pick: () => this.setState({ dens: v })
+    });
+    return {
+      mostrarValores: this.props.mostrarValores ?? true,
+      densOptions: ['Expressive', 'Standard', 'Dense'].map(opt),
+      densAtual: this.state.dens,
+      rowPad: d.pad, rowFs: d.fs, rowLabel: d.label, rowGap: d.gapv, headPad: d.head,
+      linhas: [
+        { cliente: 'Nexo Alimentos', projeto: 'Identidade completa', valor: 'R$ 48.000,00', status: 'Em andamento', cor: '#5b7cfd', prazo: '22 abr 2026' },
+        { cliente: 'Casa Vertical', projeto: 'Site institucional', valor: 'R$ 26.400,00', status: 'Aprovado', cor: '#dff806', prazo: '09 abr 2026' },
+        { cliente: 'Ribeira Café', projeto: 'Embalagem linha 2026', valor: 'R$ 18.900,00', status: 'Atrasado', cor: '#fd4400', prazo: '28 mar 2026' },
+        { cliente: 'Ateliê Norte', projeto: 'Catálogo digital', valor: 'a definir', status: 'Rascunho', cor: 'rgba(253,213,211,.4)', prazo: '—' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
