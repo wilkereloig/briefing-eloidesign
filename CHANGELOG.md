@@ -2,6 +2,56 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-11 — Home vira página de obra com as duas portas de entrada
+
+A vitrine (capa, clientes, serviços, processo, projetos, número) prometia um
+site que ainda não existe. A home agora diz o que é: obra em andamento, com o
+que já funciona à vista.
+
+- **Capa**: etiqueta "Site em construção", uma frase sobre o que vem, as duas
+  ações de contato e o grafismo do KV — barras desiguais como andaime, não
+  barra de progresso: ninguém mediu porcentagem nenhuma.
+- **Acessos**: dois cartões, `/portal/` e `/admin/`, cada um dizendo em texto
+  de quem é e o que pede na entrada (a cor não informa sozinha).
+- **Contato**: e-mail, WhatsApp e atendimento remoto, com o briefing como ação
+  primária — agora em Roxo nos dois lugares, que antes eram Roxo na capa e
+  Lima no rodapé pra mesma ação.
+
+Sai o CSS das seções que deixaram de existir (`.servicos`, `.projetos`,
+`.etapas`, `.clientes`, `.numero`, `.tags`, `.link-secao`). Ninguém no
+repositório linkava `/#projetos` ou `/#servicos` — conferido antes de cortar.
+O menu de âncoras sumiu junto: com três seções, rolar resolve.
+
+Também: `.topo .btn{gap:0}` — o `gap` do botão somava com o espaço do rótulo
+e abria um vão no meio de "Portal do cliente".
+
+## 2026-09-11 — Painel usável no celular: a linha da lista vira cartão
+
+Wilke abriu o painel no celular: "tudo quebrado". Três defeitos, todos nos
+primitivos — nenhum era de tela.
+
+- **`.lista-item` não tinha faixa de toque.** A lista é a tabela deste painel
+  (as telas usam `.lista`, não `<table>`), e `DESIGN_RULES` §6 já mandava
+  "<768 cada linha vira cartão". A regra existia na spec e nunca tinha sido
+  escrita no CSS: em 375 a linha de Projetos punha oito filhos lado a lado,
+  a página inteira ganhava 55px de rolagem horizontal e os botões de editar
+  e excluir ficavam fora da tela. Agora `flex-wrap` abaixo de 768: nome em
+  largura cheia no topo, valor / estado / ações na segunda linha, à direita.
+- **`.btn-icone` sem `flex:none`.** `width:44px` é base de flex, não largura:
+  numa linha apertada o botão encolhia para 18px — metade do alvo mínimo.
+- **`.btn-compacto` com 36px no toque**, contra os 44 da §14. Passa a ser
+  mobile-first: 44 no celular, 36 a partir de 768 (desktop inalterado).
+- **`.abas` rolava sem dizer.** Em Relatórios só 2 das 7 abas cabiam em 375 e
+  nada indicava as outras cinco. Máscara esmaece a última aba visível.
+- **Home, botão "Começar".** `.menu a` vencia `.btn-acento` por
+  especificidade e pintava o texto de rosa a 68% sobre Lima — ilegível, em
+  qualquer largura. `.menu a:not(.btn)` devolve Tinta sobre Lima.
+
+Medido em 375: das sete telas com defeito sobrou zero estouro de página e
+zero alvo abaixo de 44. Fora do escopo, fica anotado que `.btn-icone` mede
+40×44 no desktop em vez dos 40×40 da spec, porque o `min-height` do `.btn`
+vence o `height`.
+
 ## 2026-09-05 — Spec do design system entra no repositório
 
 A spec que guiou a migração (as "IMPLEMENTATION RULES" do handoff) só

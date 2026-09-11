@@ -43,10 +43,11 @@
 .btn-destrutivo{color:var(--cor-feedback-erro);border-color:rgba(253,68,0,.4)}
 .btn-destrutivo:hover{background:rgba(253,68,0,.10)}
 .btn-destrutivo:active{background:rgba(253,68,0,.18)}
-.btn-icone{width:var(--alvo-toque);height:var(--alvo-toque);padding:0;color:var(--cor-texto-secundario)}
+.btn-icone{flex:none;width:var(--alvo-toque);height:var(--alvo-toque);padding:0;color:var(--cor-texto-secundario)}
 .btn-icone:hover{background:var(--cor-superficie-hover);color:var(--cor-texto-primario)}
 .btn-icone:active{background:var(--cor-superficie-elevada)}
-.btn-compacto{min-height:36px;padding:8px 14px}
+.btn-compacto{min-height:var(--alvo-toque);padding:8px 14px}
+@media (min-width:768px){ .btn-compacto{min-height:36px} }
 .btn:disabled,.btn:disabled:hover{background:var(--cor-superficie-desabilitada);
   color:var(--cor-texto-fraco);border-color:transparent;cursor:default;transform:none}
 .btn[data-carregando='true']{pointer-events:none}
@@ -194,6 +195,17 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 .lista-item[data-cancelado='true']{opacity:.55}
 .lista-item[data-cancelado='true'] .dinheiro{text-decoration:line-through}
 
+/* Abaixo de 768 a linha vira cartao (secao 6): nome no topo em largura cheia,
+   valor / estado / acoes na segunda linha, a direita. A lista e a tabela deste
+   painel — as telas usam .lista, nao <table>, entao a regra de tabela mora aqui.
+   .celula com base de 60% quebra a linha quando o resto nao cabe, mas ainda
+   divide a primeira linha com um marcador estreito (passo, cor, icone) em vez
+   de empurrar esse marcador pra uma linha so dele. */
+@media (max-width:767px){
+  .lista-item{flex-wrap:wrap;justify-content:flex-end}
+  .lista-item>.celula{flex:1 1 60%}
+}
+
 /* ── Progresso ──────────────────────────────────────────────────────────── */
 .progresso{height:6px;background:var(--cor-fundo-primario);border-radius:0;overflow:hidden}
 .progresso>span{display:block;height:100%;background:var(--azul)}
@@ -311,6 +323,13 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   padding-bottom:var(--espaco-01);-webkit-overflow-scrolling:touch}
 .abas::-webkit-scrollbar{display:none}
 .abas>*{flex:none}
+/* A trilha rola, mas nada dizia isso: em 375 o usuario via 2 de 7 abas e
+   presumia que so existiam 2. A mascara esmaece a ultima aba visivel, que e a
+   pista de que a fila continua.
+   ponytail: o esmaecido e fixo; so some no fim da rolagem com
+   animation-timeline:scroll(), que o Safari do iPhone ainda nao tem. */
+.abas{--abas-fade:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+@media (max-width:767px){ .abas{mask-image:var(--abas-fade)} }
 
 .busca{display:flex;align-items:center;gap:var(--espaco-02);
   padding:0 var(--espaco-03);background:var(--cor-fundo-secundario);border:1px solid var(--cor-borda-padrao);
