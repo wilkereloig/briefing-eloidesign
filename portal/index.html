@@ -23,37 +23,94 @@
     .hidden{display:none!important}
     .wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 24px 80px}
 
-    .preview-banner{background:var(--warn-soft);border:1px solid var(--linha-forte);color:var(--texto-2);border-radius:var(--raio-card);padding:12px 18px;margin:18px 0 0;font-size:.86rem;line-height:1.45}
+    /* ---------- topo do portal ----------
+       Barra sangra de ponta a ponta (ela e o topo da pagina, nao um bloco
+       dentro da coluna) e o conteudo dela respeita a mesma coluna do resto. */
+    .topbar{padding:0}
+    .topbar-in{width:100%;max-width:1040px;margin:0 auto;padding:14px 24px;
+      display:flex;align-items:center;gap:16px}
+    .topbar .marca{font-size:18px;flex:none}
+    .topbar-risco{width:1px;align-self:stretch;background:var(--line);flex:none}
+    .topbar-txt{min-width:0;flex:1}
+    .topbar h1{font-family:var(--fonte-titulo);font-size:1rem;
+      font-variation-settings:'wght' 620;letter-spacing:-.01em;line-height:1.25}
+    .topbar .sub{font-size:.8rem;color:var(--muted);overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap}
+    .topbar .actions{flex:none}
+
+    .preview-banner{background:var(--warn-soft);border:1px solid var(--linha-forte);color:var(--texto-2);border-radius:var(--raio-card);padding:12px 18px;margin:0 0 4px;font-size:.86rem;line-height:1.45}
     .preview-banner strong{color:var(--coral);font-variation-settings:'wght' 700}
 
-    .topbar h1{font-size:1.05rem;font-variation-settings:'wght' 600}
-    .topbar .sub{font-size:.8rem;color:var(--muted)}
-
-    .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    /* ---------- coluna de conteudo ---------- */
+    .wrap{display:flex;flex-direction:column;gap:20px;
+      max-width:1040px;margin:0 auto;padding:24px 24px 80px}
+    /* a faixa de abas rola no toque sem cortar o pill do foco; a barra de
+       rolagem some porque o corte lateral ja diz que ha mais coisa */
+    .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+      align-self:flex-start;max-width:100%}
+    .tabs::-webkit-scrollbar{display:none}
     .tab-panel{display:none}
-    .tab-panel.active{display:block}
+    .tab-panel.active{display:flex;flex-direction:column;gap:12px}
 
+    /* ---------- linha de item ----------
+       Grade de tres faixas: identidade (cresce), estado, acao. No toque vira
+       coluna e a acao ocupa a largura, porque alvo de 44px encostado no canto
+       direito e o erro que mais irrita no celular. */
     .rows{display:flex;flex-direction:column;gap:10px}
-    .row{background:var(--surface);border:1px solid var(--line);border-radius:var(--raio-card);padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-    .row .grow{flex:1;min-width:180px}
-    .row .t{font-variation-settings:'wght' 600;font-size:.96rem}
-    .row .meta{font-size:.78rem;color:var(--muted)}
+    .row{background:var(--surface);border:1px solid var(--line);border-radius:var(--raio-card);
+      padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+      transition:border-color .16s,background .16s}
+    .row:hover{border-color:var(--cor-borda-ativa);background:var(--surface-2)}
+    .row .grow{flex:1;min-width:180px;display:flex;flex-direction:column;gap:3px}
+    .row .t{font-variation-settings:'wght' 620;font-size:.96rem;line-height:1.35}
+    .row .meta{font-size:.79rem;color:var(--muted);line-height:1.4}
+    /* dinheiro em Archivo tabular: coluna de valor nao "danca" entre linhas */
+    .row .meta b{font-family:var(--fonte-titulo);font-variation-settings:'wght' 620;
+      font-variant-numeric:tabular-nums;color:var(--texto-2);font-weight:400}
     .btn-sm{padding:7px 14px;font-size:.8rem}
 
-    .badge{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-variation-settings:'wght' 700;padding:3px 10px;border-radius:var(--raio-etiqueta);white-space:nowrap}
+    .badge{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;font-variation-settings:'wght' 700;padding:4px 11px;border-radius:var(--raio-etiqueta);white-space:nowrap}
     .badge.rascunho,.badge.pendente{background:var(--cor-feedback-neutro);color:var(--cor-texto-primario)}
     .badge.enviado{background:rgba(91,124,253,.14);color:var(--cor-feedback-info)}
     .badge.aprovado,.badge.pago,.badge.respondido{background:var(--cor-feedback-sucesso);color:var(--cor-texto-inverso)}
     /* Coral como texto so a partir de 24px: fundo Coral a 14%, texto Rosa */
     .badge.recusado,.badge.aberto{background:rgba(253,68,0,.14);color:var(--cor-texto-primario)}
 
-    .empty{text-align:center;padding:60px 24px;color:var(--muted)}
-    .empty .ic{font-size:2.4rem;opacity:.5;margin-bottom:14px}
+    /* ---------- vazio ----------
+       Caixa com a mesma borda dos itens: sem ela o texto solto no fundo
+       parecia tela quebrada, nao aba sem conteudo. */
+    .empty{display:flex;flex-direction:column;align-items:center;gap:6px;
+      text-align:center;padding:52px 24px;color:var(--muted);font-size:.9rem;
+      background:var(--surface);border:1px solid var(--line);border-radius:var(--raio-painel)}
+    .empty .ic{font-size:1.9rem;opacity:.45;margin-bottom:6px}
+    .empty b{display:block;color:var(--ink);font-family:var(--fonte-titulo);
+      font-size:1.05rem;font-variation-settings:'wght' 620;font-weight:400}
 
-    .marca-hero{padding:32px;border-radius:var(--raio-painel);text-align:center;margin-bottom:20px}
-    .marca-hero img{max-width:200px;margin:0 auto 14px;display:block}
-    .marca-hero .nm{font-variation-settings:'wght' 700;font-size:1.15rem}
-    .zip-cta{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--brand-soft);border:1px solid var(--line);border-radius:var(--raio-card);padding:14px 18px;margin-bottom:22px;flex-wrap:wrap}
+    /* ---------- aba Marca ----------
+       O hero mostra a marca do CLIENTE no fundo dela mesma; centralizar aqui
+       e sobre a arte dele, nao sobre a nossa assinatura. */
+    .marca-hero{padding:44px 32px;border-radius:var(--raio-painel);text-align:center;border:1px solid var(--line)}
+    .marca-hero img{max-width:190px;max-height:150px;margin:0 auto 18px;display:block}
+    .marca-hero .nm{font-family:var(--fonte-titulo);font-variation-settings:'wght' 620;
+      font-size:1.1rem;font-weight:400;letter-spacing:-.01em}
+    .zip-cta{display:flex;justify-content:space-between;align-items:center;gap:16px;
+      background:var(--brand-soft);border:1px solid var(--cor-borda-ativa);
+      border-radius:var(--raio-card);padding:18px 20px;flex-wrap:wrap}
+    .zip-cta strong{display:block;font-family:var(--fonte-titulo);font-size:1rem;
+      font-variation-settings:'wght' 620;font-weight:400}
+    .zip-cta .meta{font-size:.82rem;color:var(--texto-2);margin-top:2px}
+
+    @media (max-width:720px){
+      .topbar-in{padding:12px 16px;gap:12px}
+      .topbar .marca{font-size:16px}
+      .topbar-risco{display:none}
+      .wrap{padding:16px 16px 80px;gap:16px}
+      .row{padding:14px 16px}
+      /* acao de largura cheia: alvo de 44px no canto do polegar */
+      .row .btn,.row .btn-sm,.row a.btn{width:100%;justify-content:center}
+      .row .badge{align-self:flex-start}
+      .zip-cta .btn{width:100%;justify-content:center}
+    }
 
     .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--cor-acento-primario);color:var(--cor-texto-sobre-acento);padding:12px 22px;border-radius:var(--raio-controle);font-size:.88rem;opacity:0;transition:opacity .25s;pointer-events:none}
     .toast.show{opacity:1}
@@ -62,54 +119,165 @@
     .sug-input,.sug-obs{border:1px solid var(--line-field,var(--line));border-radius:var(--raio-controle);padding:8px 10px;font-family:var(--font);font-size:.86rem;background:var(--surface);color:var(--ink)}
     .sug-input{width:120px}
     .sug-obs{flex:1;min-width:160px}
+
+    /* ---------- entrada no portal (KV aprovado) ----------
+       Mesma composicao da tela de acesso do /admin (app/src/app.css, .acesso*):
+       no toque uma coluna com a assinatura em cima e o formulario perto do
+       topo, porque o teclado virtual come a metade de baixo; a partir de 900
+       a tela divide em identidade a esquerda e formulario a direita. Nao usa
+       as classes .login/.login-box do admin.css de proposito — aquela regra
+       e o card antigo com wordmark de degrade, que era justamente o que saiu
+       daqui. */
+    .acesso{display:grid;grid-template-columns:minmax(0,1fr);min-height:100dvh;
+      position:relative;z-index:1;background:var(--cor-fundo-primario)}
+    .acesso-identidade{display:none}
+    .acesso-painel{display:flex;align-items:flex-start;justify-content:center;
+      padding:40px 20px 64px}
+    .acesso-caixa{width:100%;max-width:400px}
+    .acesso-marca-toque{margin-bottom:40px}
+    .etiqueta-acento{display:block;font-size:11px;font-variation-settings:'wght' 700;
+      letter-spacing:.2em;text-transform:uppercase;color:var(--cor-texto-acento)}
+    .acesso-titulo{font-family:var(--fonte-titulo);font-size:clamp(26px,5vw,34px);
+      font-variation-settings:'wght' 620;letter-spacing:-.02em;line-height:1.1;
+      margin:8px 0}
+    .acesso-sub{font-size:.92rem;color:var(--cor-texto-secundario)}
+    .acesso-cliente{margin-top:10px;font-size:.92rem;font-variation-settings:'wght' 620;
+      color:var(--cor-texto-acento)}
+    .acesso-caixa form{margin-top:24px;display:flex;flex-direction:column;gap:16px}
+    .acesso-campo{display:flex;flex-direction:column;gap:8px}
+    .acesso-campo label{font-size:12px;font-variation-settings:'wght' 620;
+      letter-spacing:.08em;text-transform:uppercase;color:var(--cor-texto-fraco)}
+    .acesso-senha{position:relative;display:flex}
+    .acesso-senha input{width:100%;background:var(--cor-fundo-primario);
+      border:1px solid var(--line-field);border-radius:var(--raio-controle);
+      color:var(--ink);font-family:var(--font);font-size:16px;padding:14px 96px 14px 16px;
+      outline:none;transition:border-color .18s,box-shadow .18s}
+    .acesso-senha input::placeholder{color:var(--cor-texto-fraco)}
+    .acesso-senha input:focus{border-color:var(--cor-borda-ativa);box-shadow:0 0 0 3px var(--ring)}
+    /* rotulo escrito em vez de icone de olho: o sprite autoral nao tem o glifo,
+       e simbolo ambiguo e pior que a palavra */
+    .acesso-olho{position:absolute;right:4px;top:50%;translate:0 -50%;
+      display:flex;align-items:center;justify-content:center;min-width:76px;
+      height:44px;padding:0 12px;background:none;border:0;border-radius:var(--raio-controle);
+      font-family:var(--font);font-size:12px;font-variation-settings:'wght' 700;
+      letter-spacing:.08em;text-transform:uppercase;color:var(--cor-texto-fraco);
+      cursor:pointer;transition:color .16s}
+    .acesso-olho:hover,.acesso-olho[aria-pressed='true']{color:var(--cor-texto-acento)}
+    .acesso-enviar{width:100%;min-height:48px;font-size:.95rem}
+    /* erro: fundo Coral a 12% + texto, nunca a cor sozinha */
+    .acesso-erro{align-items:flex-start;gap:8px;padding:12px 16px;
+      border-radius:var(--raio-controle);background:var(--bad-soft);color:var(--coral);
+      font-size:13px;line-height:1.45;font-variation-settings:'wght' 620;display:none}
+    .acesso-erro:not(:empty){display:flex}
+    .acesso-ajuda{margin-top:24px;font-size:13px;line-height:1.55;color:var(--cor-texto-fraco)}
+    .acesso-ajuda a{color:var(--cor-texto-acento);font-variation-settings:'wght' 620}
+
+    @media (min-width:900px){
+      .acesso{grid-template-columns:1.05fr 1fr}
+      .acesso-identidade{position:relative;overflow:hidden;display:flex;
+        flex-direction:column;justify-content:space-between;padding:64px 64px 40px;
+        background:var(--cor-fundo-secundario);border-right:1px solid var(--cor-borda-padrao)}
+      .acesso-identidade .marca{font-size:clamp(34px,3.4vw,46px)}
+      .acesso-identidade-corpo{position:relative;z-index:1;max-width:26ch}
+      .acesso-conceito{margin-top:24px;font-size:19px;line-height:1.45;
+        color:var(--cor-texto-secundario)}
+      .acesso-rodape{position:relative;z-index:1;font-size:13px;color:var(--cor-texto-fraco)}
+      /* grafismo do KV: quatro blocos da paleta, canto reto, sem degrade */
+      .acesso-grafismo{position:absolute;right:-40px;top:12%;z-index:0;display:grid;
+        grid-template-columns:repeat(2,84px);gap:12px;transform:rotate(-8deg);opacity:.9}
+      .acesso-grafismo i{display:block;height:84px;border-radius:0}
+      .acesso-grafismo i:nth-child(1){background:var(--roxo)}
+      .acesso-grafismo i:nth-child(2){background:var(--lima);height:36px;align-self:end}
+      .acesso-grafismo i:nth-child(3){background:none;border:2px solid var(--lilas);height:36px}
+      .acesso-grafismo i:nth-child(4){background:var(--coral)}
+      .acesso-painel{align-items:center;padding:64px}
+      .acesso-marca-toque{display:none}
+      .acesso-caixa{max-width:380px}
+    }
+    @media (min-width:1280px){
+      .acesso-grafismo{grid-template-columns:repeat(2,120px);right:-30px}
+      .acesso-grafismo i{height:120px}
+      .acesso-grafismo i:nth-child(2),.acesso-grafismo i:nth-child(3){height:52px}
+    }
   </style>
 </head>
 <body>
-<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span></div>
-
 <!-- LOGIN -->
-<div class="login" id="loginView">
-  <div class="card-base login-box">
-    <div class="logo" id="logoSlot"></div>
-    <h1 id="loginTitulo">Portal do Cliente</h1>
-    <p class="sub" id="loginCliente" style="color:var(--brand);display:none"></p>
-    <input type="password" id="pw" placeholder="Cole sua senha (ex: HC2T-eloi-cliente-2026)" autocomplete="current-password">
-    <button onclick="entrar()">Entrar</button>
-    <div class="err" id="err"></div>
-  </div>
-</div>
+<main class="acesso" id="loginView">
+  <section class="acesso-identidade">
+    <span class="acesso-grafismo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <div class="acesso-identidade-corpo">
+      <span class="marca"><b>ELOI</b><i>Studio</i></span>
+      <p class="acesso-conceito">Seus arquivos, orçamentos e entregas
+        <br>no mesmo lugar.</p>
+    </div>
+    <p class="acesso-rodape">Acesso pessoal do cliente. A senha vem do estúdio.</p>
+  </section>
+
+  <section class="acesso-painel">
+    <div class="acesso-caixa">
+      <div class="acesso-marca-toque"><span class="marca"><b>ELOI</b><i>Studio</i></span></div>
+
+      <span class="etiqueta-acento">Portal do cliente</span>
+      <h1 class="acesso-titulo" id="loginTitulo">Entrar no portal</h1>
+      <p class="acesso-sub">Use a senha que você recebeu do estúdio.</p>
+      <p class="acesso-cliente" id="loginCliente" style="display:none"></p>
+
+      <form onsubmit="event.preventDefault();entrar()" novalidate>
+        <div class="acesso-campo">
+          <label for="pw">Senha</label>
+          <div class="acesso-senha">
+            <input type="password" id="pw" placeholder="HC2T-eloi-cliente-2026"
+              autocomplete="current-password" enterkeyhint="go" aria-describedby="err">
+            <button type="button" class="acesso-olho" id="verSenha" aria-pressed="false">Mostrar</button>
+          </div>
+        </div>
+        <p class="acesso-erro" id="err" role="alert"></p>
+        <button type="submit" class="btn acesso-enviar">Entrar</button>
+      </form>
+
+      <p class="acesso-ajuda">Sem senha? Fale com o estúdio:
+        <a href="https://wa.me/5584991150600" target="_blank" rel="noopener">WhatsApp</a>
+        ou <a href="mailto:contato@eloidesign.com.br">contato@eloidesign.com.br</a>.</p>
+    </div>
+  </section>
+</main>
 
 <!-- PORTAL -->
-<div class="wrap hidden" id="portalView">
-  <div class="preview-banner hidden" id="previewBanner">
-    👁 <strong>Modo preview</strong> — você está vendo este portal como <span id="previewNome"></span>. O cliente não vê esta faixa.
-  </div>
-  <div class="topbar">
-    <div style="display:flex;align-items:center;gap:14px">
-      <div class="logo" id="logoSlotTop"></div>
-      <div>
+<div class="hidden" id="portalView">
+  <header class="topbar">
+    <div class="topbar-in">
+      <span class="marca"><b>ELOI</b><i>Studio</i></span>
+      <span class="topbar-risco" aria-hidden="true"></span>
+      <div class="topbar-txt">
         <h1>Portal do cliente</h1>
         <div class="sub" id="clienteNome"></div>
       </div>
+      <div class="actions"><button class="btn-ghost" onclick="sair()">Sair</button></div>
     </div>
-    <div class="actions"><button class="btn-ghost" onclick="sair()">Sair</button></div>
-  </div>
+  </header>
 
-  <div class="tabs">
-    <button class="tab-btn tab active" data-tab="marca">Marca</button>
-    <button class="tab-btn tab" data-tab="arquivos">Arquivos</button>
-    <button class="tab-btn tab" data-tab="nf">Notas Fiscais</button>
-    <button class="tab-btn tab" data-tab="orc">Orçamentos</button>
-    <button class="tab-btn tab" data-tab="briefing">Briefing</button>
-    <button class="tab-btn tab" data-tab="pendencias">Pendências</button>
-  </div>
+  <div class="wrap">
+    <div class="preview-banner hidden" id="previewBanner">
+      👁 <strong>Modo preview</strong> — você está vendo este portal como <span id="previewNome"></span>. O cliente não vê esta faixa.
+    </div>
 
-  <div class="tab-panel active" id="tab-marca"></div>
-  <div class="tab-panel" id="tab-arquivos"></div>
-  <div class="tab-panel" id="tab-nf"></div>
-  <div class="tab-panel" id="tab-orc"></div>
-  <div class="tab-panel" id="tab-briefing"></div>
-  <div class="tab-panel" id="tab-pendencias"></div>
+    <div class="tabs" role="tablist" aria-label="Áreas do portal">
+      <button class="tab-btn tab active" data-tab="marca" role="tab" aria-selected="true">Marca</button>
+      <button class="tab-btn tab" data-tab="arquivos" role="tab" aria-selected="false">Arquivos</button>
+      <button class="tab-btn tab" data-tab="nf" role="tab" aria-selected="false">Notas fiscais</button>
+      <button class="tab-btn tab" data-tab="orc" role="tab" aria-selected="false">Orçamentos</button>
+      <button class="tab-btn tab" data-tab="briefing" role="tab" aria-selected="false">Briefing</button>
+      <button class="tab-btn tab" data-tab="pendencias" role="tab" aria-selected="false">Pendências</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-marca" role="tabpanel"></div>
+    <div class="tab-panel" id="tab-arquivos" role="tabpanel"></div>
+    <div class="tab-panel" id="tab-nf" role="tabpanel"></div>
+    <div class="tab-panel" id="tab-orc" role="tabpanel"></div>
+    <div class="tab-panel" id="tab-briefing" role="tabpanel"></div>
+    <div class="tab-panel" id="tab-pendencias" role="tabpanel"></div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -130,9 +298,17 @@ function brl(n){ return 'R$ ' + (Number(n)||0).toLocaleString('pt-BR',{minimumFr
 function fmtDate(s){ return s ? new Date(s).toLocaleDateString('pt-BR') : '—'; }
 function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 
-fetch('/assets/eloi-admin/wordmark.svg').then(r=>r.text()).then(svg=>{
-  document.getElementById('logoSlot').innerHTML = svg;
-  document.getElementById('logoSlotTop').innerHTML = svg;
+// mostrar/ocultar senha: a do portal e colada de um e-mail, longa demais pra
+// conferir no escuro. Rotulo escrito em vez de icone de olho — o sprite
+// autoral nao tem o glifo.
+const campoSenha = document.getElementById('pw');
+const botaoVerSenha = document.getElementById('verSenha');
+botaoVerSenha.addEventListener('click', () => {
+  const visivel = campoSenha.type === 'text';
+  campoSenha.type = visivel ? 'password' : 'text';
+  botaoVerSenha.textContent = visivel ? 'Mostrar' : 'Ocultar';
+  botaoVerSenha.setAttribute('aria-pressed', String(!visivel));
+  campoSenha.focus();
 });
 
 function mostrarLogin(){ document.getElementById('portalView').classList.add('hidden'); document.getElementById('loginView').classList.remove('hidden'); }
@@ -149,14 +325,18 @@ async function callPortal(action, payload){
 async function entrar(){
   const pw = document.getElementById('pw').value.trim();
   const err = document.getElementById('err');
-  if (!pw) { err.textContent = 'Cole sua senha.'; return; }
-  err.textContent = 'Verificando...';
+  const enviar = document.querySelector('.acesso-enviar');
+  if (!pw) { err.textContent = 'Cole sua senha.'; document.getElementById('pw').focus(); return; }
+  // "Verificando" vive no botão, não na caixa de erro: aquela caixa é Coral, e
+  // pintar espera de vermelho diz a coisa errada.
+  err.textContent = '';
+  enviar.disabled = true;
+  enviar.textContent = 'Verificando…';
   try {
     const r = await fetch(FN, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'login', senha: pw }) });
     const d = await r.json().catch(()=>({}));
     if (!r.ok || !d.token) throw new Error();
     sessionStorage.setItem(PT_KEY, d.token);
-    err.textContent = '';
     const nxt = nextParam();
     if (nxt) { location.href = nxt; return; }   // volta pra página que pediu login
     mostrarConteudo();
@@ -165,9 +345,12 @@ async function entrar(){
     // ponytail: erro genérico pra qualquer falha (senha errada, prefixo inexistente,
     // rate-limit, rede) — pedido explícito do contrato, não vaza qual caso é
     err.textContent = 'Senha incorreta.';
+    document.getElementById('pw').focus();
+  } finally {
+    enviar.disabled = false;
+    enviar.textContent = 'Entrar';
   }
 }
-document.getElementById('pw').addEventListener('keydown', e => { if (e.key === 'Enter') entrar(); });
 
 function sair(){
   callPortal('logout').catch(()=>{});
@@ -205,7 +388,7 @@ async function renderMarca(){
   const el = document.getElementById('tab-marca');
   const slug = CLIENTE.marca_slug;
   if (!slug || !CLIENTE.marca_publicada) {
-    el.innerHTML = '<div class="empty"><div class="ic">🎨</div>Seus arquivos de marca ainda não foram publicados.</div>';
+    el.innerHTML = '<div class="empty"><div class="ic">🎨</div><b>Marca em produção</b>Quando os arquivos forem publicados, eles aparecem aqui.</div>';
     return;
   }
   const base = `/entregas-marca/${encodeURIComponent(slug)}`;
@@ -242,7 +425,7 @@ async function renderArquivos(){
         <div class="grow"><div class="t">${esc(m.titulo)}</div><div class="meta">${esc(CAT_LABEL_PORTAL[m.categoria] || m.categoria)}</div></div>
         <button class="btn btn-sm" onclick="baixarEntrega('${esc(m.path)}')">Baixar</button>
       </div>`);
-    el.innerHTML = linhas.length ? '<div class="rows">' + linhas.join('') + '</div>' : '<div class="empty"><div class="ic">📁</div>Nenhum arquivo disponível ainda.</div>';
+    el.innerHTML = linhas.length ? '<div class="rows">' + linhas.join('') + '</div>' : '<div class="empty"><div class="ic">📁</div><b>Nenhum arquivo ainda</b>Projetos, apresentações e fontes entregues ficam nesta aba.</div>';
   } catch (e) {
     el.innerHTML = '<div class="empty"><div class="ic">📁</div>Nenhum arquivo disponível ainda.</div>';
   }
@@ -256,12 +439,12 @@ async function baixarEntrega(path){
 const NF_STATUS = { em_execucao:'Em execução', concluida:'Concluída' };
 function renderNF(){
   const el = document.getElementById('tab-nf');
-  if (!SERVICOS.length) { el.innerHTML = '<div class="empty"><div class="ic">🧾</div>Nenhum serviço registrado ainda.</div>'; return; }
+  if (!SERVICOS.length) { el.innerHTML = '<div class="empty"><div class="ic">🧾</div><b>Nenhum serviço registrado</b>Cada serviço entra aqui com valor, situação e nota fiscal.</div>'; return; }
   el.innerHTML = '<div class="rows">' + SERVICOS.map(s => `
     <div class="row">
       <div class="grow">
         <div class="t">${esc(s.descricao)}</div>
-        <div class="meta">${brl((s.valor_cents||0)/100)} · ${esc(NF_STATUS[s.status_execucao] || s.status_execucao)}${s.data_pagamento ? ' · ' + fmtDate(s.data_pagamento) : ''}</div>
+        <div class="meta"><b>${brl((s.valor_cents||0)/100)}</b> · ${esc(NF_STATUS[s.status_execucao] || s.status_execucao)}${s.data_pagamento ? ' · ' + fmtDate(s.data_pagamento) : ''}</div>
       </div>
       <span class="badge ${s.pago ? 'pago' : 'aberto'}">${s.pago ? 'Pago' : 'Em aberto'}</span>
       ${s.tem_nf ? `<button class="btn btn-sm" onclick="verNF('${s.id}')">Ver nota fiscal</button>` : ''}
@@ -278,12 +461,12 @@ async function verNF(servico_id){
 const ORC_STATUS = { rascunho:'Rascunho', enviado:'Enviado', aprovado:'Aprovado', recusado:'Recusado' };
 function renderOrc(){
   const el = document.getElementById('tab-orc');
-  if (!ORCAMENTOS.length) { el.innerHTML = '<div class="empty"><div class="ic">💰</div>Nenhum orçamento ainda.</div>'; return; }
+  if (!ORCAMENTOS.length) { el.innerHTML = '<div class="empty"><div class="ic">💰</div><b>Nenhum orçamento ainda</b>Toda proposta enviada pelo estúdio aparece nesta aba.</div>'; return; }
   el.innerHTML = '<div class="rows">' + ORCAMENTOS.map(o => `
     <div class="row">
       <div class="grow">
         <div class="t">${esc(o.titulo || 'Sem título')}</div>
-        <div class="meta">${brl(o.valor_total)} · ${fmtDate(o.created_at)}</div>
+        <div class="meta"><b>${brl(o.valor_total)}</b> · ${fmtDate(o.created_at)}</div>
       </div>
       <span class="badge ${o.status || 'rascunho'}">${esc(ORC_STATUS[o.status] || o.status || '—')}</span>
       <a class="btn btn-sm btn-ghost" href="/orcamento/?t=${encodeURIComponent(o.share_token)}" target="_blank" rel="noopener">Ver proposta completa</a>
@@ -295,7 +478,7 @@ const TIPO_LABEL = { 'briefing':'Identidade visual', 'briefing-ecommerce':'E-com
 const BR_STATUS = { pendente:'Pendente', respondido:'Respondido' };
 function renderBriefing(){
   const el = document.getElementById('tab-briefing');
-  if (!BRIEFINGS.length) { el.innerHTML = '<div class="empty"><div class="ic">📝</div>Nenhum briefing ainda.</div>'; return; }
+  if (!BRIEFINGS.length) { el.innerHTML = '<div class="empty"><div class="ic">📝</div><b>Nenhum briefing ainda</b>O formulário que você preencher fica registrado aqui.</div>'; return; }
   el.innerHTML = '<div class="rows">' + BRIEFINGS.map(b => `
     <div class="row">
       <div class="grow">
@@ -321,7 +504,7 @@ function parseReaisParaCents(str){
 function renderPendencias(){
   const el = document.getElementById('tab-pendencias');
   const pendentes = SERVICOS.filter(s => !s.pago);
-  if (!pendentes.length) { el.innerHTML = '<div class="empty"><div class="ic">✅</div>Nenhuma pendência no momento.</div>'; return; }
+  if (!pendentes.length) { el.innerHTML = '<div class="empty"><div class="ic">✅</div><b>Nada pendente</b>Todos os serviços estão quitados.</div>'; return; }
   el.innerHTML = '<div class="rows">' + pendentes.map(s => {
     // Editável mesmo com valor já definido: a F2 (quem define o valor de cada
     // serviço) pode corrigir. Vai pra valor_sugerido — o dono confere e
@@ -329,8 +512,8 @@ function renderPendencias(){
     const valorBase = s.valor_sugerido_cents ?? s.valor_cents ?? 0;
     const prefillValor = valorBase ? (valorBase / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
     const meta = s.valor_sugerido_cents
-      ? `Você sugeriu ${brl(s.valor_sugerido_cents / 100)} — aguardando confirmação`
-      : s.valor_cents > 0 ? `Valor atual: ${brl(s.valor_cents / 100)}` : 'Sem valor definido';
+      ? `Você sugeriu <b>${brl(s.valor_sugerido_cents / 100)}</b> — aguardando confirmação`
+      : s.valor_cents > 0 ? `Valor atual: <b>${brl(s.valor_cents / 100)}</b>` : 'Sem valor definido';
     return `
       <div class="row">
         <div class="grow"><div class="t">${esc(s.descricao)}</div><div class="meta">${meta}</div></div>
@@ -359,9 +542,13 @@ async function enviarSugestao(servico_id){
 // ── TABS ──
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.classList.remove('active');
+      b.setAttribute('aria-selected', 'false');
+    });
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
     document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
   });
 });
@@ -409,7 +596,7 @@ async function personalizarLogin(){
     const el = document.getElementById('loginCliente');
     el.textContent = nome;
     el.style.display = '';
-    document.getElementById('loginTitulo').textContent = 'Portal do Cliente';
+    document.getElementById('loginTitulo').textContent = 'Entrar no portal';
     // toque da marca do cliente no botão/foco, se a paleta existir
     const escura = (m.paleta || []).find(x => !x.claro);
     if (escura) document.documentElement.style.setProperty('--cliente-cor', escura.hex);

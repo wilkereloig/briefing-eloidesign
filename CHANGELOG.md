@@ -2,6 +2,40 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-09-17 — Entrada do portal do cliente no KV novo
+
+A tela de senha do `/portal/` era a última com o visual antigo: card mole no
+meio da tela e o `wordmark.svg` de degradê — que o sistema proíbe e que ainda
+letra “ELOI Design Studio”.
+
+- Mesma composição da tela de acesso do `/admin`: identidade à esquerda com o
+  grafismo de blocos do KV, formulário à direita; no toque vira uma coluna com
+  o formulário perto do topo, porque o teclado virtual come a metade de baixo.
+- Assinatura textual (`.marca`) em vez do wordmark desenhado — resolve o
+  degradê e o nome errado de uma vez, sem esperar re-letramento.
+- Campo de senha ganha **Mostrar/Ocultar** (a senha do portal é colada de um
+  e-mail e longa demais pra conferir no escuro) e “Verificando…” passa pro
+  botão: a caixa de erro é Coral, pintar espera de vermelho dizia a coisa errada.
+- Sem senha? A tela diz onde pedir (WhatsApp e e-mail do estúdio), em vez de
+  deixar o cliente sem saída.
+
+`.marca` sobe pro `assets/eloi-admin/admin.css` (espelho de `app/src/app.css`),
+compartilhada: é o caminho de saída do wordmark para `/gestao`, `/marca` e os
+`/painel-*`, que ainda o puxam.
+
+**Dentro do portal**, no mesmo dia:
+
+- Saem os dois círculos de fundo (`.aurora`): o sistema novo já é escuro e não
+  finge profundidade — as manchas só sujavam o conteúdo.
+- A barra do topo sangra de ponta a ponta (ela é o topo da página, não um bloco
+  dentro da coluna) e o conteúdo ganha coluna de 1040 px.
+- Linha de item: hover de borda, dinheiro em Archivo tabular e, no toque, ação
+  de largura cheia — alvo de 44 px encostado no canto direito era o que mais
+  irritava no celular.
+- Aba vazia virou cartão com título e o que esperar ali, em vez de uma frase
+  solta no fundo (parecia tela quebrada, não aba sem conteúdo).
+- Abas com `role=tablist`/`aria-selected`, que o leitor de tela não tinha.
+
 ## 2026-09-11 — Home vira página de obra com as duas portas de entrada
 
 A vitrine (capa, clientes, serviços, processo, projetos, número) prometia um

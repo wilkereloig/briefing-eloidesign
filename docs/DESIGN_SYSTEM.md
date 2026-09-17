@@ -48,7 +48,8 @@ marca, decisão explícita do Wilke.
 | Layout do shell, trilho, cabeçalho, acesso | `app/src/app.css` | — |
 | Ícones autorais | `app/public/eloi-icons.svg` (sprite) | `eloi-handoff/assets/icons/` (45 avulsos) |
 | Logos e assinaturas | `app/public/assinatura.svg`, `icone-app.svg` | `eloi-handoff/assets/logos/` |
-| Wordmark das páginas estáticas | `assets/eloi-admin/wordmark.svg` | — |
+| Wordmark das páginas estáticas | `assets/eloi-admin/wordmark.svg` — legado: só /gestao, /marca, /painel* ainda o puxam | — |
+| Assinatura textual das páginas estáticas | `.marca` em `assets/eloi-admin/admin.css` (espelho de `.marca` no `app/src/app.css`) | — |
 | Tokens e componentes das páginas estáticas (portal, gestão, briefings, painéis) | `assets/eloi-admin/admin.css` — `:root` repete o subconjunto de `tokens.css` com os MESMOS nomes; o resto do `:root` é alias antigo (`--brand`, `--ink`, `--texto-2`…) que 14 páginas ainda usam | — |
 | Tokens da home (`/index.html`) | `:root` inline na própria página (não carrega `admin.css`) | — |
 | Guias escritas | — | `eloi-handoff/*.md` |
@@ -99,9 +100,14 @@ lugares; alias antigo só existe no `admin.css` e não cresce.
 - No painel, a assinatura é o componente `<Marca />` — `ELOI` + `Studio` em duas
   cores, nunca as duas palavras na mesma cor. Sem parâmetro de configuração: um
   nome só, escrito de um jeito só.
+- Fora do painel, a mesma assinatura existe como classe `.marca` no
+  `admin.css` (`<span class="marca"><b>ELOI</b><i>Studio</i></span>`). É o que
+  `/portal/` e a home usam. Nunca centralizada.
 - ⚠️ **O wordmark desenhado (`assets/eloi-admin/wordmark.svg`) ainda letra
   "ELOI Design Studio".** O nome mudou em 2026-08-05; re-letrar são curvas, não
   código. Todo texto (`alt`, `aria-label`, títulos, manifest) já diz "ELOI Studio".
+  Quem ainda o exibe: `/gestao`, `/marca`, `/painel`, `/painel-*`. `/portal/`
+  saiu dele em 2026-09-17 e usa `.marca` — o caminho de saída para as outras.
 
 ## Tipografia
 

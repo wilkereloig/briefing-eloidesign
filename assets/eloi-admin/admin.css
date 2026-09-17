@@ -96,6 +96,19 @@ a{color:var(--brand)}
 
 .card-base{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg)}
 
+/* ---------- assinatura ----------
+   Espelho de .marca em app/src/app.css: ELOI + complemento na mesma largura
+   (wdth 72) e peso, cores diferentes, sem espaco entre as palavras. Existe
+   aqui porque as paginas estaticas nao passam pelo bundler e vinham puxando
+   o wordmark.svg de degrade — que o sistema novo proibe e que ainda letra
+   "ELOI Design Studio". NUNCA centralizada. */
+.marca{display:inline-flex;align-items:baseline;font-family:var(--fonte-titulo);
+  font-size:20px;line-height:1.24;user-select:none;white-space:nowrap;text-decoration:none}
+.marca b{font-variation-settings:'wdth' 72,'wght' 700;font-weight:400;
+  letter-spacing:-.02em;color:var(--cor-texto-primario)}
+.marca i{font-variation-settings:'wdth' 72,'wght' 700;font-weight:400;
+  font-style:normal;color:var(--cor-texto-acento)}
+
 /* ---------- login (estrutural) ----------
    A wordmark e blocada, empilhada e alinhada a esquerda. Um card mole e
    centrado contradiz o conteudo, entao: um unico eixo a esquerda, raio
