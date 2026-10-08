@@ -93,7 +93,7 @@ function FolhaMeta({ inicial, aoFechar, aoSalvar }: {
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
-  const { categorias } = useFinancas()
+  const { categoriasTodas } = useFinancas()
   const [especie, setEspecie] = useState<'meta' | 'orcamento'>(inicial?.especie ?? 'orcamento')
   const [nome, setNome] = useState(inicial?.nome ?? '')
   const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? 'pessoal')
@@ -167,7 +167,9 @@ function FolhaMeta({ inicial, aoFechar, aoSalvar }: {
           <select id="meta-cat" className="campo-caixa" value={categoriaId}
             onChange={(e) => setCategoriaId(e.target.value)}>
             <option value="">{especie === 'meta' ? 'Sem categoria' : 'Selecione…'}</option>
-            {categorias.filter((c) => c.contexto === contexto).map((c) => (
+            {/* A categoria atual entra mesmo desativada: editar não pode perdê-la calado. */}
+            {categoriasTodas.filter((c) => (c.ativa !== false || c.id === inicial?.categoria_id)
+              && c.contexto === contexto).map((c) => (
               <option key={c.id} value={c.id}>{c.nome}</option>
             ))}
           </select>

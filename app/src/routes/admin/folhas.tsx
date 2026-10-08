@@ -295,7 +295,7 @@ export function FolhaRecorrencia({ inicial, aoFechar, aoSalvar }: {
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
-  const { contas, categorias } = useFinancas()
+  const { contas, categoriasTodas } = useFinancas()
   const [nome, setNome] = useState(inicial?.nome ?? '')
   const [tipo, setTipo] = useState<TipoMov>(inicial?.tipo ?? 'saida')
   const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? 'empresa')
@@ -381,7 +381,9 @@ export function FolhaRecorrencia({ inicial, aoFechar, aoSalvar }: {
           <select id="cat-rec" className="campo-caixa" value={categoriaId}
             onChange={(e) => setCategoriaId(e.target.value)}>
             <option value="">Sem categoria</option>
-            {categorias.filter((c) => c.contexto === contexto && c.tipo === tipo)
+            {/* A categoria atual entra mesmo desativada: editar não pode perdê-la calado. */}
+            {categoriasTodas.filter((c) => (c.ativa !== false || c.id === inicial?.categoria_id)
+              && c.contexto === contexto && c.tipo === tipo)
               .map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </select>
         </div>
@@ -432,6 +434,8 @@ export function FolhaEmprestimo({ inicial, contextoInicial, aoFechar, aoSalvar }
   async function salvar() {
     const e: Record<string, string> = {}
     if (!nome.trim()) e.nome = 'Dê um nome ao empréstimo'
+    // Toda parcela precisa de conta (restrição do banco): sem ela não há o que debitar.
+    if (!contaId) e.conta = 'Escolha a conta que debita'
     if (recebido.trim() && centsDeBRL(recebido) <= 0) e.recebido = 'Valor inválido: deixe em branco se não souber'
     if (!inicial) {
       if (!totalOk) e.parcelas = 'Informe de 1 a 600 parcelas'
@@ -445,7 +449,7 @@ export function FolhaEmprestimo({ inicial, contextoInicial, aoFechar, aoSalvar }
     setSalvando(true)
     try {
       const editavel = {
-        nome: nome.trim(), instituicao: instituicao.trim() || null, conta_id: contaId || null,
+        nome: nome.trim(), instituicao: instituicao.trim() || null, conta_id: contaId,
         valor_recebido_cents: centsDeBRL(recebido),
       }
       // Na edição os campos estruturais nem vão: a edge recusa mudança neles (409).
@@ -488,9 +492,12 @@ export function FolhaEmprestimo({ inicial, contextoInicial, aoFechar, aoSalvar }
           <select id="conta-emp" className="campo-caixa" value={contaId}
             onChange={(e) => setContaId(e.target.value)}>
             <option value="">Selecione…</option>
-            {contas.filter((c) => c.ativa && c.contexto === contexto && c.tipo !== 'cartao_credito')
+            {/* A conta atual entra mesmo arquivada: editar o nome não pode obrigar a trocar de conta. */}
+            {contas.filter((c) => (c.ativa || c.id === inicial?.conta_id)
+              && c.contexto === contexto && c.tipo !== 'cartao_credito')
               .map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </select>
+          {erros.conta && <span className="campo-erro" role="alert">{erros.conta}</span>}
         </div>
 
         <Campo rotulo="Valor recebido" value={recebido} inputMode="decimal" erro={erros.recebido}

@@ -32,7 +32,7 @@ export function Onboarding() {
             </span>
             {!p.feito && (
               <Link className="btn btn-secundario btn-compacto"
-                to={p.chave === 'categorias' ? '/admin/config' : p.chave === 'lancamentos' ? '/admin/dinheiro/lancamentos' : '/admin/config'}>
+                to={p.chave === 'categorias' ? '/admin/dinheiro/planejamento?aba=categorias' : p.chave === 'lancamentos' ? '/admin/dinheiro/lancamentos' : '/admin/config'}>
                 {p.feito ? 'Feito' : p.chave === 'lancamentos' ? 'Lançar' : 'Abrir'}
               </Link>
             )}

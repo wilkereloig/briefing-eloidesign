@@ -538,6 +538,14 @@ describe('faturas do cartão', () => {
     expect(faturasDoCartao(visa, ts, '2026-10-10')[1].situacao).toBe('atrasada')
   })
 
+  it('linha sem vencimento nem competência cai no ciclo do dia do cadastro', () => {
+    const ts = [c({ id: 'semdata', data_vencimento: null, data_competencia: null,
+      created_at: '2026-10-05T14:00:00Z', valor_cents: 40_00 })] // depois do fechamento (2) → vence 09/11
+    const f = faturasDoCartao(visa, ts, '2026-10-08')
+    expect(f).toHaveLength(1)
+    expect(f[0]).toMatchObject({ vencimento: '2026-11-09', total_cents: 40_00, falta_cents: 40_00 })
+  })
+
   it('fatura atual = primeira com saldo; sem saldo, a próxima a vencer', () => {
     const ts = [
       c({ id: 'a', data_vencimento: '2026-09-09', status: 'realizado', recebido_cents: 100_00 }),

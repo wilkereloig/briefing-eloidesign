@@ -239,7 +239,19 @@ Deno.serve(async (req: Request) => {
     const valor = t.valor_cents as number;
     const recebido = t.recebido_cents != null ? t.recebido_cents as number : Number(anterior?.recebido_cents) || 0;
     if (recebido > valor) return json({ error: "recebido nao pode passar do valor" }, 400);
-    const vencimento = (t.data_vencimento !== undefined ? t.data_vencimento : anterior?.data_vencimento) as string | null ?? null;
+    let vencimento = (t.data_vencimento !== undefined ? t.data_vencimento : anterior?.data_vencimento) as string | null ?? null;
+    // Compra no cartao sem vencimento: vence com a FATURA do ciclo, igual a
+    // importacao. Sem isso o app agrupava a linha numa fatura e o planejador de
+    // pagamento (que le data_vencimento) em outra. Uma consulta, so quando falta.
+    let vencimentoDoCartao = false;
+    if (vencimento == null && t.tipo !== "transferencia" && ehUuid(t.conta_id)) {
+      const { data: conta } = await supabase.from("eloi_contas")
+        .select("tipo,dia_fechamento,dia_vencimento").eq("id", t.conta_id).maybeSingle();
+      if (conta?.tipo === "cartao_credito" && conta.dia_fechamento && conta.dia_vencimento) {
+        vencimento = vencimentoDaFatura(t.data_competencia ?? hoje, Number(conta.dia_fechamento), Number(conta.dia_vencimento));
+        vencimentoDoCartao = true;
+      }
+    }
 
     // Sem `...t`: so entra coluna da whitelist. status sempre derivado aqui.
     const linha: Record<string, unknown> = {
@@ -251,6 +263,7 @@ Deno.serve(async (req: Request) => {
       // competencia cai no vencimento quando a tela nao informa: sem nenhuma das
       // duas o lancamento nao teria mes ao qual pertencer no relatorio
       data_competencia: t.data_competencia ?? t.data_vencimento ?? null,
+      ...(vencimentoDoCartao ? { data_vencimento: vencimento } : {}),
       // Liquidacao acompanha o recebido: nada recebido, nada liquidado.
       data_liquidacao: recebido > 0 ? (t.data_liquidacao ?? anterior?.data_liquidacao ?? hoje) : null,
       // Cancelado so volta por transacoes.cancelar (reabrir:true) — editar
@@ -422,6 +435,9 @@ Deno.serve(async (req: Request) => {
     // Na criacao tudo que a regra exige tem de vir; na edicao so valida o que veio.
     if (criar) {
       if (!e.nome || !e.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
+      // Toda parcela precisa de conta (restricao do banco): sem ela o insert das
+      // parcelas falharia depois do cadastro ja gravado.
+      if (!e.conta_id) return json({ error: "conta_id e obrigatorio" }, 400);
       e.valor_recebido_cents ??= 0;
       e.parcelas_pagas_antes ??= 0;
       if (e.parcelas_total === undefined || e.valor_parcela_cents === undefined || e.primeiro_vencimento === undefined) {
@@ -451,6 +467,18 @@ Deno.serve(async (req: Request) => {
     for (const k of ["conta_id", "categoria_id"]) {
       if (e[k] != null && !ehUuid(e[k])) return json({ error: `${k} invalido` }, 400);
     }
+    if ("conta_id" in e && e.conta_id == null) return json({ error: "conta_id e obrigatorio" }, 400);
+    // Conta que debita: tem de existir, nao ser cartao (parcela de emprestimo nao
+    // entra em fatura) e ser do mesmo contexto do emprestimo.
+    const contaInvalida = async (contaId: unknown, ctx: unknown): Promise<Response | null> => {
+      const { data: c, error: eC } = await supabase.from("eloi_contas")
+        .select("tipo,contexto").eq("id", contaId).maybeSingle();
+      if (eC) return json({ error: eC.message }, 500);
+      if (!c) return json({ error: "conta nao encontrada" }, 400);
+      if (c.tipo === "cartao_credito") return json({ error: "emprestimo nao pode debitar em cartao de credito" }, 400);
+      if (c.contexto !== ctx) return json({ error: "conta de outro contexto" }, 400);
+      return null;
+    };
 
     if (!criar) {
       const { data: atual, error: eAtual } = await supabase.from("eloi_emprestimos")
@@ -464,12 +492,19 @@ Deno.serve(async (req: Request) => {
           error: "parcelas ja geradas: para mudar valor, quantidade, datas ou contexto, encerre este emprestimo e cadastre outro",
         }, 409);
       }
+      if ("conta_id" in e && e.conta_id !== atual.conta_id) {
+        const erroConta = await contaInvalida(e.conta_id, atual.contexto);
+        if (erroConta) return erroConta;
+      }
       const editavel = escolher(e, ["nome", "instituicao", "conta_id", "categoria_id", "valor_recebido_cents", "observacoes", "ativo"]);
       const { data, error } = await supabase.from("eloi_emprestimos")
         .update(editavel).eq("id", id).select().single();
       if (error) return json({ error: error.message }, 500);
       return json({ emprestimo: data });
     }
+
+    const erroConta = await contaInvalida(e.conta_id, e.contexto);
+    if (erroConta) return erroConta;
 
     // Categoria padrao: 'Emprestimos e dividas' (saida) do mesmo contexto, se existir.
     if (e.categoria_id == null) {

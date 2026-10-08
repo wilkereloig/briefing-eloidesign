@@ -21,7 +21,7 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
   aoFechar: () => void
   aoSalvar: (msg: string) => void
 }) {
-  const { contas, categorias, clientes, servicos } = useFinancas()
+  const { contas, categoriasTodas, clientes, servicos } = useFinancas()
   const editando = !!inicial?.id
   const [tipo, setTipo] = useState<TipoMov>(inicial?.tipo ?? 'saida')
   const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? 'empresa')
@@ -56,9 +56,13 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
       && (ehTransferencia || c.contexto === contexto)),
     [contas, contexto, ehTransferencia, inicial?.conta_id, inicial?.conta_destino_id])
 
+  // Mesma regra das contas: a categoria do próprio lançamento entra mesmo
+  // desativada, senão salvar a edição gravaria categoria_id nulo sem aviso.
   const categoriasDoTipo = useMemo(
-    () => categorias.filter((c) => c.contexto === contexto && c.tipo === tipo),
-    [categorias, contexto, tipo])
+    () => categoriasTodas.filter((c) =>
+      (c.ativa !== false || c.id === inicial?.categoria_id)
+      && c.contexto === contexto && c.tipo === tipo),
+    [categoriasTodas, contexto, tipo, inicial?.categoria_id])
 
   // Trocar tipo ou contexto troca as opções. O id escolhido antes que não está
   // mais na lista vale vazio — senão ia para o banco uma categoria de despesa

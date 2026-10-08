@@ -22,7 +22,7 @@ const chave = <K extends string>(r: Record<K, string>, v: string | null) =>
  *  filtros moram na URL: a página da conta linka `?conta=<id>` e o recorte
  *  sobrevive a recarregar e a voltar do navegador. */
 export default function Lancamentos() {
-  const { transacoes, contas, categorias, mes, contexto, recarregar } = useFinancas()
+  const { transacoes, contas, categoriasTodas, mes, contexto, recarregar } = useFinancas()
   const doMes = useTransacoesDoMes()
   const nomes = useNomes()
   const hoje = hojeISO()
@@ -50,7 +50,7 @@ export default function Lancamentos() {
   // A selecionada entra mesmo arquivada ou de outra lente: link velho não
   // pode virar um select dizendo "Todas" enquanto filtra por ela.
   const opContas = contas.filter((c) => c.id === conta || (c.ativa && (!contexto || c.contexto === contexto)))
-  const opCategorias = categorias.filter((c) => c.id === categoria || (c.ativa && (!contexto || c.contexto === contexto)))
+  const opCategorias = categoriasTodas.filter((c) => c.id === categoria || (c.ativa !== false && (!contexto || c.contexto === contexto)))
 
   const movimentos = useMemo(() => filtrarLancamentos(
     [...doMes].sort((a, b) => (b.data_vencimento || b.created_at).localeCompare(a.data_vencimento || a.created_at)),

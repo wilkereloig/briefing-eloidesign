@@ -15,6 +15,14 @@ Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente 
 - **Edge `eloi-financas`:** `bootstrap` devolve categorias inativas também;
   `categorias.upsert` valida a cor (`#rrggbb`) e recusa troca de contexto/tipo.
   Precisa de `npm run edges:deploy -- eloi-financas`.
+- **Revisão final:** editar lançamento, recorrência ou meta com categoria
+  desativada não apaga mais a categoria calado (a atual entra no seletor);
+  compra no cartão salva sem vencimento vence com a fatura do ciclo (edge);
+  linha de cartão sem data cai no ciclo do dia do cadastro; empréstimo exige
+  conta que debita (existente, não cartão, mesmo contexto — edge recusa com
+  400); links do onboarding (categorias) e da busca (lançamento) corrigidos;
+  página do cartão avisa quando o pagamento sugerido abate estornos de outras
+  faturas.
 
 ## 2026-10-08 — Empréstimos no Dinheiro (fase 3 de 4)
 

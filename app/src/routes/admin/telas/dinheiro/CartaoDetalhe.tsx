@@ -4,7 +4,7 @@ import { financas } from '../../../../lib/api'
 import { fmtBRL } from '../../../../lib/dinheiro'
 import { hojeISO, useFinancas, useNomes } from '../../../../lib/financas-store'
 import {
-  agrupar, cicloFatura, dividaDoCartao, faturasDoCartao, indiceFaturaAtual, limiteDisponivel,
+  agrupar, cicloFatura, dividaDoCartao, faturaAberta, faturasDoCartao, indiceFaturaAtual, limiteDisponivel,
   parceladoAberto, type Fatura,
 } from '../../../../domain/financeiro'
 import type { Transacao } from '../../../../lib/tipos'
@@ -72,6 +72,9 @@ function CartaoPagina({ id }: { id: string | undefined }) {
   const proximas = faturas.slice(indice + 1).filter((x) => x.falta_cents > 0)
   // O servidor quita da fatura mais antiga para a mais nova.
   const primeiraAberta = faturas.find((x) => x.falta_cents > 0)
+  // O que a folha de pagamento sugere (mesma conta da edge): estorno em aberto
+  // de outra fatura abate do total, então pode não bater com o "Falta" desta.
+  const sugerido = cartao ? faturaAberta(cartao, transacoes) : 0
 
   return (
     <Carga linhas={5}>
@@ -142,6 +145,11 @@ function CartaoPagina({ id }: { id: string | undefined }) {
                     </>
                   )}
                 </div>
+              )}
+              {f.falta_cents > 0 && primeiraAberta === f && sugerido !== f.falta_cents && (
+                <p className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>
+                  O pagamento sugerido abate estornos de outras faturas: {fmtBRL(sugerido)}
+                </p>
               )}
             </Painel>
           )}

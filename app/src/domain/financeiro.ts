@@ -473,8 +473,10 @@ export function faturasDoCartao(cartao: Conta, transacoes: Transacao[], hoje: st
   const grupos = new Map<string, Transacao[]>()
   for (const t of transacoes) {
     if (t.conta_id !== cartao.id || t.tipo === 'transferencia' || estaCancelada(t)) continue
+    // Sem vencimento nem competência, o dia do cadastro decide o ciclo: a linha
+    // não pode sumir da fatura (e do total a pagar) por falta de data.
     const venc = t.data_vencimento
-      ?? (t.data_competencia ? cicloFatura(cartao, t.data_competencia)?.vencimento : undefined)
+      ?? cicloFatura(cartao, t.data_competencia ?? t.created_at.slice(0, 10))?.vencimento
     if (!venc) continue
     grupos.set(venc, [...(grupos.get(venc) ?? []), t])
   }
