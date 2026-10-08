@@ -5,6 +5,7 @@ import {
   agrupar, consumoOrcamento, saldoAberto, valorLiquidado, competenciaDe,
   agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
   totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
+  faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, patrimonioLiquido,
 } from './financeiro'
 import type { Conta, Meta, Transacao } from '../lib/tipos'
 
@@ -467,5 +468,83 @@ describe('metas e orçamentos de gasto', () => {
       gasto('s', '2026-08-10'),
     ]
     expect(consumoDaMeta(meta({ especie: 'meta' }), ts)).toBe(7000)
+  })
+})
+
+describe('faturas do cartão', () => {
+  const visa = conta({ id: 'v', tipo: 'cartao_credito', limite_cents: 1000_00, dia_fechamento: 2, dia_vencimento: 9 })
+  const c = (p: Partial<Transacao> & { id: string }) =>
+    tx({ tipo: 'saida', conta_id: 'v', status: 'pendente', valor_cents: 100_00, ...p })
+
+  it('agrupa por vencimento e deriva a situação', () => {
+    const ts = [
+      c({ id: 'set', data_vencimento: '2026-09-09', status: 'realizado', recebido_cents: 100_00 }),
+      c({ id: 'out1', data_vencimento: '2026-10-09', valor_cents: 300_00, recebido_cents: 100_00, status: 'parcial' }),
+      c({ id: 'out2', data_vencimento: '2026-10-09', valor_cents: 50_00 }),
+      c({ id: 'est', tipo: 'entrada', data_vencimento: '2026-10-09', valor_cents: 20_00 }),
+      c({ id: 'nov', data_vencimento: '2026-11-09', valor_cents: 70_00 }),
+      c({ id: 'semvenc', data_competencia: '2026-10-05', valor_cents: 10_00 }), // depois do fechamento (2) → vence 09/11
+      tx({ id: 'outra', tipo: 'saida', conta_id: 'x', data_vencimento: '2026-10-09', valor_cents: 999_00 }),
+    ]
+    const f = faturasDoCartao(visa, ts, '2026-10-08')
+    expect(f.map((x) => x.vencimento)).toEqual(['2026-09-09', '2026-10-09', '2026-11-09'])
+    expect(f[0]).toMatchObject({ situacao: 'paga', total_cents: 100_00, falta_cents: 0, pago_cents: 100_00 })
+    expect(f[1]).toMatchObject({ situacao: 'fechada', fechamento: '2026-10-02', total_cents: 330_00, falta_cents: 230_00, pago_cents: 100_00 })
+    expect(f[2]).toMatchObject({ situacao: 'aberta', total_cents: 80_00 })
+    expect(f[2].linhas.map((t) => t.id).sort()).toEqual(['nov', 'semvenc'])
+    expect(faturasDoCartao(visa, ts, '2026-10-10')[1].situacao).toBe('atrasada')
+  })
+
+  it('fatura atual = primeira com saldo; sem saldo, a próxima a vencer', () => {
+    const ts = [
+      c({ id: 'a', data_vencimento: '2026-09-09', status: 'realizado', recebido_cents: 100_00 }),
+      c({ id: 'b', data_vencimento: '2026-10-09' }),
+      c({ id: 'n', data_vencimento: '2026-11-09' }),
+    ]
+    expect(indiceFaturaAtual(faturasDoCartao(visa, ts, '2026-10-08'), '2026-10-08')).toBe(1)
+    const pagas = ts.map((t) => ({ ...t, status: 'realizado' as const, recebido_cents: t.valor_cents }))
+    expect(indiceFaturaAtual(faturasDoCartao(visa, pagas, '2026-10-08'), '2026-10-08')).toBe(1)
+    expect(indiceFaturaAtual([], '2026-10-08')).toBe(-1)
+  })
+})
+
+describe('extrato da conta', () => {
+  it('saldo acumulado linha a linha, mais recente primeiro, terminando no saldo da conta', () => {
+    const cc = conta({ id: 'cc', saldo_inicial_cents: 100_00 })
+    const ts = [
+      tx({ id: 'e', tipo: 'entrada', conta_id: 'cc', valor_cents: 50_00, status: 'realizado', data_liquidacao: '2026-10-01' }),
+      tx({ id: 's', tipo: 'saida', conta_id: 'cc', valor_cents: 30_00, status: 'realizado', data_liquidacao: '2026-10-02' }),
+      tx({ id: 't', tipo: 'transferencia', conta_id: 'cc', conta_destino_id: 'cartao', valor_cents: 40_00, status: 'realizado', data_liquidacao: '2026-10-03' }),
+      tx({ id: 'in', tipo: 'transferencia', conta_id: 'outra', conta_destino_id: 'cc', valor_cents: 5_00, status: 'realizado', data_liquidacao: '2026-10-03' }),
+      tx({ id: 'aberta', tipo: 'saida', conta_id: 'cc', valor_cents: 99_00, status: 'pendente', data_vencimento: '2026-10-04' }),
+    ]
+    const ext = extratoDaConta(cc, ts)
+    expect(ext.map((l) => [l.t.id, l.valor_cents, l.saldo_cents])).toEqual([
+      ['in', 5_00, 85_00], ['t', -40_00, 80_00], ['s', -30_00, 120_00], ['e', 50_00, 150_00],
+    ])
+    expect(ext[0].saldo_cents).toBe(saldoConta(cc, ts))
+  })
+})
+
+describe('cobertura e patrimônio', () => {
+  const cc = conta({ id: 'cc', tipo: 'corrente', saldo_inicial_cents: -100_00, limite_cents: 300_00 })
+  const visa = conta({ id: 'v', tipo: 'cartao_credito', dia_fechamento: 2, dia_vencimento: 9, limite_cents: 1000_00 })
+  const ts = [
+    tx({ id: 'atrasada', tipo: 'saida', conta_id: 'cc', valor_cents: 50_00, status: 'vencido', data_vencimento: '2026-10-01' }),
+    tx({ id: 'semana', tipo: 'saida', conta_id: 'cc', valor_cents: 60_00, status: 'pendente', data_vencimento: '2026-10-14' }),
+    tx({ id: 'longe', tipo: 'saida', conta_id: 'cc', valor_cents: 70_00, status: 'pendente', data_vencimento: '2026-10-20' }),
+    tx({ id: 'receber', tipo: 'entrada', conta_id: 'cc', valor_cents: 500_00, status: 'pendente', data_vencimento: '2026-10-10' }),
+    tx({ id: 'fat', tipo: 'saida', conta_id: 'v', valor_cents: 400_00, status: 'pendente', data_vencimento: '2026-10-09' }),
+    tx({ id: 'fatnov', tipo: 'saida', conta_id: 'v', valor_cents: 80_00, status: 'pendente', data_vencimento: '2026-11-09' }),
+  ]
+  it('cobertura soma o que vence em 7 dias (com atrasadas e fatura) contra saldo + limite', () => {
+    expect(cobertura([cc, visa], ts, '2026-10-08')).toEqual({
+      a_pagar_cents: 510_00, disponivel_cents: 200_00, falta_cents: 310_00, itens: 3,
+    })
+  })
+  it('patrimônio = contas − dívida dos cartões − empréstimos', () => {
+    expect(patrimonioLiquido([cc, visa], ts, undefined, 1000_00)).toEqual({
+      contas_cents: -100_00, cartoes_cents: 480_00, emprestimos_cents: 1000_00, liquido_cents: -1580_00,
+    })
   })
 })

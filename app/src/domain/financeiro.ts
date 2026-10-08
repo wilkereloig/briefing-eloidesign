@@ -392,3 +392,130 @@ export function consumoOrcamento(alvo_cents: number, gasto_cents: number) {
     estourou: gasto_cents > alvo_cents,
   }
 }
+
+// ── Faturas do cartão ────────────────────────────────────────────────────────
+export type SituacaoFatura = 'aberta' | 'fechada' | 'paga' | 'atrasada'
+export interface Fatura {
+  vencimento: string
+  fechamento: string | null
+  linhas: Transacao[]
+  total_cents: number
+  falta_cents: number
+  pago_cents: number
+  situacao: SituacaoFatura
+}
+
+/** Fechamento do ciclo que vence em `vencimento` (vence antes do dia de
+ *  fechamento no calendário = fechou no mês anterior). */
+function fechamentoDoVencimento(cartao: Conta, vencimento: string): string | null {
+  if (!cartao.dia_fechamento || !cartao.dia_vencimento) return null
+  return dataDaParcela(`${vencimento.slice(0, 8)}${String(cartao.dia_fechamento).padStart(2, '0')}`,
+    cartao.dia_vencimento < cartao.dia_fechamento ? -1 : 0)
+}
+
+/**
+ * Faturas = compras do cartão agrupadas por vencimento. Compra sem vencimento
+ * cai no ciclo da data da compra (mesma regra de `cicloFatura` / edge
+ * `vencimentoDaFatura`). Estorno (entrada) abate.
+ */
+export function faturasDoCartao(cartao: Conta, transacoes: Transacao[], hoje: string): Fatura[] {
+  const grupos = new Map<string, Transacao[]>()
+  for (const t of transacoes) {
+    if (t.conta_id !== cartao.id || t.tipo === 'transferencia' || estaCancelada(t)) continue
+    const venc = t.data_vencimento
+      ?? (t.data_competencia ? cicloFatura(cartao, t.data_competencia)?.vencimento : undefined)
+    if (!venc) continue
+    grupos.set(venc, [...(grupos.get(venc) ?? []), t])
+  }
+  return [...grupos.entries()].sort(([a], [b]) => (a < b ? -1 : 1)).map(([vencimento, linhas]) => {
+    const sinal = (t: Transacao) => (t.tipo === 'saida' ? 1 : -1)
+    const total = linhas.reduce((s, t) => s + sinal(t) * t.valor_cents, 0)
+    const falta = Math.max(0, linhas.reduce((s, t) => s + sinal(t) * saldoAberto(t), 0))
+    const fechamento = fechamentoDoVencimento(cartao, vencimento)
+    const situacao: SituacaoFatura = falta === 0 ? 'paga'
+      : vencimento < hoje ? 'atrasada'
+      : fechamento && hoje > fechamento ? 'fechada' : 'aberta'
+    return { vencimento, fechamento, linhas, total_cents: total, falta_cents: falta,
+      pago_cents: Math.max(0, total - falta), situacao }
+  })
+}
+
+/** Qual fatura a página do cartão abre: a mais antiga com saldo; sem saldo, a
+ *  próxima a vencer; senão a última. */
+export function indiceFaturaAtual(faturas: Fatura[], hoje: string): number {
+  if (!faturas.length) return -1
+  const comSaldo = faturas.findIndex((f) => f.falta_cents > 0)
+  if (comSaldo >= 0) return comSaldo
+  const futura = faturas.findIndex((f) => f.vencimento >= hoje)
+  return futura >= 0 ? futura : faturas.length - 1
+}
+
+// ── Extrato ──────────────────────────────────────────────────────────────────
+export interface LinhaExtrato { t: Transacao; data: string; valor_cents: number; saldo_cents: number }
+
+/** O que já mexeu no saldo da conta, com saldo acumulado após cada linha.
+ *  Mesma regra de `saldoConta`: o último saldo é o saldo da conta. */
+export function extratoDaConta(conta: Conta, transacoes: Transacao[]): LinhaExtrato[] {
+  const linhas: Omit<LinhaExtrato, 'saldo_cents'>[] = []
+  for (const t of transacoes) {
+    const v = valorLiquidado(t)
+    if (v === 0) continue
+    let valor = 0
+    if (t.tipo === 'transferencia') {
+      if (t.conta_id === conta.id) valor -= v
+      if (t.conta_destino_id === conta.id) valor += v
+    } else if (t.conta_id === conta.id) {
+      valor = t.tipo === 'entrada' ? v : -v
+    }
+    if (valor === 0) continue
+    linhas.push({ t, data: t.data_liquidacao ?? t.data_competencia ?? t.created_at.slice(0, 10), valor_cents: valor })
+  }
+  linhas.sort((a, b) => a.data.localeCompare(b.data) || a.t.created_at.localeCompare(b.t.created_at))
+  let saldo = conta.saldo_inicial_cents
+  return linhas.map((l) => ({ ...l, saldo_cents: (saldo += l.valor_cents) })).reverse()
+}
+
+// ── Visão geral ──────────────────────────────────────────────────────────────
+export interface Cobertura { a_pagar_cents: number; disponivel_cents: number; falta_cents: number; itens: number }
+
+const somaDias = (iso: string, dias: number) =>
+  new Date(Date.parse(iso) + dias * 86_400_000).toISOString().slice(0, 10)
+
+/**
+ * Dá para pagar o que vence nos próximos `dias`? A pagar = saídas em aberto
+ * das contas (atrasadas incluídas) + faturas de cartão com saldo que vencem
+ * até lá. Disponível = saldo + limite (cheque especial) das contas. A receber
+ * não entra: cobertura é conservadora.
+ */
+export function cobertura(contas: Conta[], transacoes: Transacao[], hoje: string, dias = 7, contexto?: Contexto): Cobertura {
+  const ate = somaDias(hoje, dias)
+  const ativas = contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto))
+  const ids = new Set(ativas.filter((c) => c.tipo !== 'cartao_credito').map((c) => c.id))
+  let aPagar = 0
+  let itens = 0
+  for (const t of transacoes) {
+    if (t.tipo !== 'saida' || !t.conta_id || !ids.has(t.conta_id) || !estaEmAberto(t)) continue
+    if (!t.data_vencimento || t.data_vencimento > ate) continue
+    aPagar += saldoAberto(t); itens++
+  }
+  for (const cartao of ativas.filter((c) => c.tipo === 'cartao_credito')) {
+    for (const f of faturasDoCartao(cartao, transacoes, hoje)) {
+      if (f.falta_cents > 0 && f.vencimento <= ate) { aPagar += f.falta_cents; itens++ }
+    }
+  }
+  const disponivel = ativas.filter((c) => c.tipo !== 'cartao_credito')
+    .reduce((s, c) => s + saldoConta(c, transacoes) + (c.limite_cents ?? 0), 0)
+  return { a_pagar_cents: aPagar, disponivel_cents: disponivel, falta_cents: Math.max(0, aPagar - disponivel), itens }
+}
+
+export interface Patrimonio { contas_cents: number; cartoes_cents: number; emprestimos_cents: number; liquido_cents: number }
+
+/** Quanto se tem menos quanto se deve. `emprestimos_cents` = saldo devedor
+ *  dos empréstimos (vem de `resumoEmprestimo`). */
+export function patrimonioLiquido(contas: Conta[], transacoes: Transacao[], contexto?: Contexto, emprestimos_cents = 0): Patrimonio {
+  const ativas = contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto))
+  const contasCents = ativas.filter((c) => c.tipo !== 'cartao_credito').reduce((s, c) => s + saldoConta(c, transacoes), 0)
+  const cartoes = ativas.filter((c) => c.tipo === 'cartao_credito').reduce((s, c) => s + dividaDoCartao(c, transacoes), 0)
+  return { contas_cents: contasCents, cartoes_cents: cartoes, emprestimos_cents,
+    liquido_cents: contasCents - cartoes - emprestimos_cents }
+}
