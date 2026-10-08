@@ -20,12 +20,14 @@ export default function Cartoes() {
   // `?novo=1` abre a folha direto e sai do endereço (mesmo padrão de Contas).
   const [novo, setNovo] = useState(params.get('novo') === '1')
   useEffect(() => { if (params.has('novo')) setParams({}, { replace: true }) }, [params, setParams])
+  const [verArquivados, setVerArquivados] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
   const apos = async (msg: string) => { setAviso(msg); await recarregar() }
   const hoje = hojeISO()
 
-  const cartoes = contas.filter((c) =>
-    c.tipo === 'cartao_credito' && c.ativa && (!contexto || c.contexto === contexto))
+  const doContexto = contas.filter((c) => c.tipo === 'cartao_credito' && (!contexto || c.contexto === contexto))
+  const cartoes = doContexto.filter((c) => c.ativa)
+  const arquivados = doContexto.filter((c) => !c.ativa)
 
   return (
     <Carga linhas={4}>
@@ -43,6 +45,19 @@ export default function Cartoes() {
           </div>
         )}
       </Painel>
+
+      {arquivados.length > 0 && (
+        <Painel titulo={`Arquivados (${arquivados.length})`}
+          acao={<Botao compacto aria-expanded={verArquivados} onClick={() => setVerArquivados((v) => !v)}>
+            {verArquivados ? 'Ocultar' : 'Mostrar'}
+          </Botao>}>
+          {verArquivados
+            ? <div className="grade-indicadores">
+              {arquivados.map((c) => <CardCartao key={c.id} c={c} transacoes={transacoes} hoje={hoje} />)}
+            </div>
+            : <p className="t-sec">Fora do limite e das listas de lançamento. As faturas continuam disponíveis.</p>}
+        </Painel>
+      )}
 
       {novo && (
         <FolhaConta contextoInicial={contexto} tipoInicial="cartao_credito"

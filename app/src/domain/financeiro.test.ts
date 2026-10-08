@@ -234,6 +234,17 @@ describe('cartão de crédito', () => {
     expect(faturaAberta(cartao, v.slice(1))).toBe(250_00)
   })
 
+  it('fatura aberta concorda com faturasDoCartao quando a linha só tem data da compra', () => {
+    const c = conta({ id: 'card', tipo: 'cartao_credito', dia_fechamento: 2, dia_vencimento: 9 })
+    const v = [
+      tx({ id: 'a', tipo: 'saida', conta_id: 'card', valor_cents: 100_00, status: 'pendente', data_vencimento: '2026-10-09' }),
+      // 05/10 passou do fechamento (dia 2): cai na fatura de 09/11
+      tx({ id: 'b', tipo: 'saida', conta_id: 'card', valor_cents: 50_00, status: 'pendente', data_competencia: '2026-10-05' }),
+    ]
+    expect(faturaAberta(c, v)).toBe(100_00)
+    expect(faturaAberta(c, v)).toBe(faturasDoCartao(c, v, '2026-10-08').find((f) => f.falta_cents > 0)!.falta_cents)
+  })
+
   it('conta sem limite não finge ter um', () => {
     expect(limiteDisponivel(conta({ id: 'x' }), ts)).toBeNull()
   })

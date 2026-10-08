@@ -229,10 +229,14 @@ export function faturaAberta(cartao: Conta, transacoes: Transacao[]): number {
   // Só a PRÓXIMA fatura: parcela que vence no mês que vem não se paga agora.
   // Somar tudo sugeria pagar o parcelamento inteiro de uma vez. A edge quita
   // na mesma ordem (por vencimento), então o valor sugerido fecha certinho.
-  const abertas = linhasAbertasDoCartao(cartao, transacoes)
-  const proxima = abertas.reduce<string | null>((m, t) =>
-    t.data_vencimento && (!m || t.data_vencimento < m) ? t.data_vencimento : m, null)
-  return somaComEstorno(abertas.filter((t) => !proxima || !t.data_vencimento || t.data_vencimento <= proxima))
+  // Mesmo vencimento efetivo de `faturasDoCartao` (compra sem vencimento cai no
+  // ciclo da data da compra); sem nenhum dos dois, entra sempre.
+  const abertas = linhasAbertasDoCartao(cartao, transacoes).map((t) => ({
+    t, venc: t.data_vencimento
+      ?? (t.data_competencia ? cicloFatura(cartao, t.data_competencia)?.vencimento : undefined) ?? null,
+  }))
+  const proxima = abertas.reduce<string | null>((m, x) => (x.venc && (!m || x.venc < m) ? x.venc : m), null)
+  return somaComEstorno(abertas.filter((x) => !proxima || !x.venc || x.venc <= proxima).map((x) => x.t))
 }
 
 /** Tudo o que o cartão ainda deve, em qualquer fatura. É o que ocupa limite. */

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import { financas } from '../../../../lib/api'
 import { fmtBRL } from '../../../../lib/dinheiro'
 import { hojeISO, useFinancas, useNomes } from '../../../../lib/financas-store'
 import {
@@ -23,6 +24,11 @@ const porCompraDesc = (a: Transacao, b: Transacao) =>
  *  categoria e compra a compra, e ao lado o limite e as faturas seguintes. */
 export default function CartaoDetalhe() {
   const { id } = useParams()
+  // key: trocar de cartão pela URL zera a fatura escolhida com ← →.
+  return <CartaoPagina key={id} id={id} />
+}
+
+function CartaoPagina({ id }: { id: string | undefined }) {
   const { contas, transacoes, recarregar } = useFinancas()
   const nomes = useNomes()
   const hoje = hojeISO()
@@ -46,6 +52,14 @@ export default function CartaoDetalhe() {
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
   const fechar = () => setFolha(null)
   const apos = async (texto: string, tipo?: 'ok' | 'erro') => { setAviso({ texto, tipo }); await recarregar() }
+  // Mesma chamada de ContaDetalhe; nome/contexto vão porque a edge exige os dois.
+  const reativar = async () => {
+    if (!cartao) return
+    try {
+      await financas.salvarConta({ id: cartao.id, nome: cartao.nome, contexto: cartao.contexto, ativa: true })
+      await apos('Cartão reativado')
+    } catch (e) { await apos((e as Error).message, 'erro') }
+  }
 
   // Conta que não é cartão tem extrato, não fatura.
   if (cartao && cartao.tipo !== 'cartao_credito') return <Navigate to={`/admin/dinheiro/contas/${cartao.id}`} replace />
@@ -55,8 +69,7 @@ export default function CartaoDetalhe() {
   const disponivel = cartao ? limiteDisponivel(cartao, transacoes) : null
   const parcelado = cartao ? parceladoAberto(cartao, transacoes) : { qtd: 0, cents: 0 }
   const proximas = faturas.slice(indice + 1).filter((x) => x.falta_cents > 0)
-  // O servidor quita da fatura mais antiga para a mais nova: pagar olhando uma
-  // fatura posterior abate antes a que vence primeiro.
+  // O servidor quita da fatura mais antiga para a mais nova.
   const primeiraAberta = faturas.find((x) => x.falta_cents > 0)
 
   return (
@@ -76,6 +89,7 @@ export default function CartaoDetalhe() {
             {cartao.instituicao && <p className="t-legenda">{cartao.instituicao}</p>}
             <div className="linha" style={{ marginTop: 'var(--espaco-04)' }}>
               <Botao onClick={() => setFolha('editar')}>Editar cartão</Botao>
+              {!cartao.ativa && <Botao onClick={() => void reativar()}>Reativar</Botao>}
             </div>
           </Painel>
 
@@ -110,14 +124,21 @@ export default function CartaoDetalhe() {
               {f.falta_cents > 0 && (
                 <div className="linha" style={{ marginTop: 'var(--espaco-04)' }}>
                   {/* Pagar fatura é TRANSFERÊNCIA (conta → cartão), nunca despesa
-                      nova: a despesa já foi lançada em cada compra. */}
-                  <Botao variante="primario" onClick={() => setFolha('pagar')}>
-                    <Icone nome="pagamento" tamanho={16} />Pagar fatura
-                  </Botao>
-                  {primeiraAberta && primeiraAberta.vencimento !== f.vencimento && (
-                    <span className="t-legenda">
-                      O pagamento abate primeiro a fatura que vence {diaMes(primeiraAberta.vencimento)}.
-                    </span>
+                      nova: a despesa já foi lançada em cada compra. O servidor
+                      quita a mais antiga primeiro: só ela leva o botão. */}
+                  {primeiraAberta === f ? (
+                    <Botao variante="primario" onClick={() => setFolha('pagar')}>
+                      <Icone nome="pagamento" tamanho={16} />Pagar fatura
+                    </Botao>
+                  ) : primeiraAberta && (
+                    <>
+                      <span className="t-legenda">
+                        Pague antes a fatura de {mesPorExtenso(primeiraAberta.vencimento)}.
+                      </span>
+                      <Botao onClick={() => setEscolhido(faturas.indexOf(primeiraAberta))}>
+                        Ver essa fatura
+                      </Botao>
+                    </>
                   )}
                 </div>
               )}
