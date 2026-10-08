@@ -4,8 +4,9 @@ import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { hojeISO, rotuloMes, useFinancas, useNomes, useTransacoesDoMes } from '../../../lib/financas-store'
 import {
   agruparPorPrazo, cicloFatura, diasDeAtraso, estaEmAberto, faturaAberta, limiteDisponivel,
-  parceladoAberto, resultado, ROTULO_FAIXA, saldoConta, saldoAberto,
+  parceladoAberto, resultado, ROTULO_FAIXA, saldoConta, saldoAberto, totalEmAberto,
 } from '../../../domain/financeiro'
+import { semNotaFiscal } from '../../../domain/decisoes'
 import type { Conferencia, Conta, Recorrencia, ServicoRow, Transacao } from '../../../lib/tipos'
 import {
   Aviso, Botao, Campo, Card, Etiqueta, Folha, Icone, Indicador, Painel, Pilula, Vazio,
@@ -71,7 +72,7 @@ export default function DinheiroTela() {
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
 
   const fechar = () => setFolha(null)
-  const apos = async (msg: string) => { setAviso({ texto: msg }); await recarregar() }
+  const apos = async (msg: string, tipo?: 'ok' | 'erro') => { setAviso({ texto: msg, tipo }); await recarregar() }
   const erro = (e: unknown) => setAviso({ texto: (e as Error).message, tipo: 'erro' })
 
   // Estorno em um passo: cancelar preserva a linha no histórico e zera o efeito
@@ -110,10 +111,14 @@ export default function DinheiroTela() {
   const emAberto = useMemo(() => transacoes.filter((t) =>
     t.tipo !== 'transferencia' && estaEmAberto(t) && (!contexto || t.contexto === contexto)),
     [transacoes, contexto])
-  const aReceber = useMemo(
-    () => filtrar(emAberto.filter((t) => t.tipo === 'entrada').sort(porVencimento)), [emAberto, filtrar])
-  const aPagar = useMemo(
-    () => filtrar(emAberto.filter((t) => t.tipo === 'saida').sort(porVencimento)), [emAberto, filtrar])
+  const receberTudo = useMemo(
+    () => emAberto.filter((t) => t.tipo === 'entrada').sort(porVencimento), [emAberto])
+  const pagarTudo = useMemo(
+    () => emAberto.filter((t) => t.tipo === 'saida').sort(porVencimento), [emAberto])
+  // A busca filtra a lista, não os indicadores: o total a receber não muda
+  // enquanto se digita.
+  const aReceber = useMemo(() => filtrar(receberTudo), [receberTudo, filtrar])
+  const aPagar = useMemo(() => filtrar(pagarTudo), [pagarTudo, filtrar])
 
   // Recorte aplicado sobre a lista da aba, depois agrupado por prazo.
   const listaAtual = aba === 'receber' ? aReceber : aPagar
@@ -123,7 +128,7 @@ export default function DinheiroTela() {
     if (recorte === 'recorrentes') return !!t.recorrencia_id
     if (recorte === 'sem_nf') {
       const sv = t.servico_id ? servicoPorId.get(t.servico_id) : null
-      return !sv || !sv.nota_fiscal_id
+      return !sv || semNotaFiscal(sv)
     }
     return true
   }), [listaAtual, recorte, hoje, servicoPorId])
@@ -133,6 +138,8 @@ export default function DinheiroTela() {
   const r = useMemo(() => resultado(transacoes, contexto, mes), [transacoes, contexto, mes])
   const contasVisiveis = contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto))
   const recVisiveis = recorrencias.filter((x) => !contexto || x.contexto === contexto)
+  // Pausada não gera cobrança: não é custo do mês enquanto estiver parada.
+  const recAtivas = recVisiveis.filter((x) => !x.pausada_em)
 
   return (
     <div className="tela pilha" data-density="dense">
@@ -152,14 +159,14 @@ export default function DinheiroTela() {
         <div className="grade-indicadores">
           <Indicador dominante rotulo="Resultado do mês" valor={fmtBRL(r.lucro_cents)}
             nota={`${fmtBRL(r.receita_cents)} recebido · ${fmtBRL(r.despesa_cents)} gasto`} />
-          <Indicador rotulo="A receber" valor={fmtBRL(somaAberto(aReceber))} cor="acento"
-            nota={`${aReceber.length} em aberto`} />
-          <Indicador rotulo="A pagar" valor={fmtBRL(somaAberto(aPagar))}
-            nota={`${aPagar.length} em aberto`} />
+          <Indicador rotulo="A receber" valor={fmtBRL(totalEmAberto(receberTudo))} cor="acento"
+            nota={`${receberTudo.length} em aberto`} />
+          <Indicador rotulo="A pagar" valor={fmtBRL(totalEmAberto(pagarTudo))}
+            nota={`${pagarTudo.length} em aberto`} />
           <Indicador rotulo="Custo recorrente"
-            valor={fmtBRL(recVisiveis.reduce((s, x) =>
+            valor={fmtBRL(recAtivas.reduce((s, x) =>
               s + (x.tipo === 'saida' ? custoMensal(x.valor_cents, x.periodicidade) : 0), 0))}
-            nota={`${recVisiveis.length} ativas · por mês`} />
+            nota={`${recAtivas.length} ativas · por mês`} />
         </div>
 
         <div className="abas" role="tablist" aria-label="Seções do financeiro">
@@ -365,8 +372,6 @@ export default function DinheiroTela() {
 const porVencimento = (a: Transacao, b: Transacao) =>
   (a.data_vencimento ?? '9999').localeCompare(b.data_vencimento ?? '9999')
 
-const somaAberto = (ts: Transacao[]) => ts.reduce((s, t) => s + saldoAberto(t), 0)
-
 /** Uma árvore só para toque e desktop: as colunas extras entram por CSS
  *  (.col-desktop) em vez de existir uma tabela e uma lista em paralelo. */
 function LinhaMov({
@@ -402,7 +407,7 @@ function LinhaMov({
       cliente,
       servico?.sub_cliente,
       servico?.descricao,
-      t.tipo === 'entrada' && servico ? (servico.nota_fiscal_id ? 'NF ok' : 'sem NF') : null,
+      t.tipo === 'entrada' && servico ? (semNotaFiscal(servico) ? 'sem NF' : 'NF ok') : null,
       !servico ? categoria : null,
       conta,
     ].filter(Boolean).join(' · ')
@@ -528,12 +533,14 @@ function CartaoConta({ c, transacoes, hoje, conferencia, aoEditar, aoConferir, a
   )
 }
 
-/** Pagamento de fatura: uma transferência da conta escolhida para o cartão,
- *  já liquidada. Neutra no resultado, abate a fatura e baixa o saldo da conta. */
+/** Pagamento de fatura: o servidor cria a transferência conta → cartão (neutra
+ *  no resultado, baixa o saldo da conta) e liquida as compras em aberto do
+ *  cartão — é isso que zera a `faturaAberta`. Só a transferência deixava a
+ *  fatura cheia para sempre. */
 function FolhaPagarFatura({ cartao, aoFechar, aoSalvar }: {
   cartao: Conta
   aoFechar: () => void
-  aoSalvar: (msg: string) => void
+  aoSalvar: (msg: string, tipo?: 'ok' | 'erro') => void
 }) {
   const { contas, transacoes } = useFinancas()
   const fatura = faturaAberta(cartao, transacoes)
@@ -552,14 +559,12 @@ function FolhaPagarFatura({ cartao, aoFechar, aoSalvar }: {
     if (cents > fatura) return setErro(`A fatura aberta é ${fmtBRL(fatura)}`)
     setSalvando(true)
     try {
-      await financas.salvar({
-        tipo: 'transferencia', contexto: cartao.contexto,
-        descricao: `Pagamento da fatura — ${cartao.nome}`,
-        valor_cents: cents, recebido_cents: cents,
-        conta_id: contaId, conta_destino_id: cartao.id,
-        data_vencimento: data, data_competencia: data, data_liquidacao: data,
-      })
-      aoSalvar('Fatura paga')
+      const r = await financas.pagarFatura({ cartao_id: cartao.id, conta_id: contaId, valor_cents: cents, data })
+      const compras = `${r.liquidadas} ${r.liquidadas === 1 ? 'compra liquidada' : 'compras liquidadas'}`
+      // Sobra = pagou mais do que havia em aberto no servidor. O dinheiro saiu
+      // da conta; o excedente fica de crédito no cartão e merece conferência.
+      if (r.sobra_cents > 0) aoSalvar(`Fatura paga · ${compras} · sobraram ${fmtBRL(r.sobra_cents)} sem compra para abater`, 'erro')
+      else aoSalvar(`Fatura paga · ${compras}`)
       aoFechar()
     } catch (err) {
       setErro((err as Error).message)
@@ -602,8 +607,8 @@ function FolhaPagarFatura({ cartao, aoFechar, aoSalvar }: {
         </div>
 
         <p className="t-legenda">
-          O pagamento entra como transferência: abate a fatura e sai do saldo da conta,
-          sem contar como despesa nova — a despesa já foi lançada em cada compra.
+          O pagamento entra como transferência e liquida as compras em aberto do cartão:
+          sai do saldo da conta sem contar como despesa nova — a despesa já foi lançada em cada compra.
         </p>
       </div>
     </Folha>

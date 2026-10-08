@@ -191,6 +191,11 @@ const FOCAVEIS = 'a[href],button:not([disabled]),input:not([disabled]),select:no
 export function Folha({ titulo, aoFechar, children, rodape, modo = 'modal' }:
   { titulo: string; aoFechar: () => void; children: ReactNode; rodape?: ReactNode; modo?: 'modal' | 'pagina' }) {
   const caixa = useRef<HTMLDivElement>(null)
+  // Mesmo motivo do Aviso: `aoFechar` chega como arrow nova a cada render do
+  // pai. Na lista de dependências, qualquer re-render rodava o efeito de novo e
+  // jogava o foco no primeiro campo no meio da digitação. Efeito só na montagem.
+  const fecharRef = useRef(aoFechar)
+  fecharRef.current = aoFechar
 
   useEffect(() => {
     // Quem abriu recebe o foco de volta ao fechar — senão o teclado volta pro
@@ -200,7 +205,7 @@ export function Folha({ titulo, aoFechar, children, rodape, modo = 'modal' }:
     primeiro?.focus()
 
     const tecla = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { aoFechar(); return }
+      if (e.key === 'Escape') { fecharRef.current(); return }
       // Armadilha de foco: sem ela o Tab sai do diálogo e caminha pela tela de
       // trás, que está inerte para o mouse mas não para o teclado.
       if (e.key !== 'Tab' || !caixa.current) return
@@ -218,7 +223,7 @@ export function Folha({ titulo, aoFechar, children, rodape, modo = 'modal' }:
       document.body.style.overflow = antes
       veioDe?.focus?.()
     }
-  }, [aoFechar])
+  }, [])
 
   if (modo === 'pagina') {
     return (

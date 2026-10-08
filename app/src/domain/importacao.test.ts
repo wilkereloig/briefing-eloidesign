@@ -89,7 +89,8 @@ describe('classificar', () => {
       { conta_id: 'c', importacao_chave: null,
         data_liquidacao: '2026-09-04', data_vencimento: null, valor_cents: 1250, tipo: 'saida', status: 'pendente' },
     ], 'c')
-    expect(r).toEqual(['duplicada', 'provavel', 'nova', 'duplicada'])
+    // A 4ª linha repete a 1ª no arquivo: é outra compra (chave '#2'), não duplicada.
+    expect(r).toEqual(['duplicada', 'provavel', 'nova', 'nova'])
   })
 
   it('outra conta não interfere', () => {
@@ -100,7 +101,31 @@ describe('classificar', () => {
     expect(r[0]).toBe('nova')
   })
 
-  it('repetida dentro do próprio arquivo é duplicada', () => {
-    expect(classificar(linhas, [], 'c')[3]).toBe('duplicada')
+  it('repetida dentro do próprio arquivo ganha sufixo e entra como nova', () => {
+    expect(linhas[0].chave).toBe(chaveImportacao('2026-09-03', 150000, 'Pix recebido F2'))
+    expect(linhas[3].chave).toBe(linhas[0].chave + '#2')
+    expect(classificar(linhas, [], 'c')[3]).toBe('nova')
+  })
+
+  it('três iguais: #2 e #3; reimportar o mesmo arquivo dá tudo duplicada', () => {
+    const tt = lerCsv('Data;Descrição;Valor\n05/09/2026;Café;-8,00\n05/09/2026;Café;-8,00\n05/09/2026;Café;-8,00')
+    const ls = interpretar(tt, detectarColunas(tt))
+    const base = chaveImportacao('2026-09-05', -800, 'Café')
+    expect(ls.map((l) => l.chave)).toEqual([base, `${base}#2`, `${base}#3`])
+    const ja = ls.map((l) => ({
+      conta_id: 'c', importacao_chave: l.chave, data_liquidacao: '2026-09-05', data_vencimento: null,
+      valor_cents: 800, tipo: 'saida' as const, status: 'realizado' as const,
+    }))
+    expect(classificar(ls, ja, 'c')).toEqual(['duplicada', 'duplicada', 'duplicada'])
+    // Só a primeira já existia: as outras duas entram.
+    expect(classificar(ls, ja.slice(0, 1), 'c')).toEqual(['duplicada', 'nova', 'nova'])
+  })
+
+  it('um lançamento à mão casa com uma linha só', () => {
+    const tt = lerCsv('Data;Descrição;Valor\n05/09/2026;Café;-8,00\n05/09/2026;Café;-8,00')
+    const ls = interpretar(tt, detectarColunas(tt))
+    const manual = { conta_id: 'c', importacao_chave: null, data_liquidacao: '2026-09-05', data_vencimento: null,
+      valor_cents: 800, tipo: 'saida' as const, status: 'realizado' as const }
+    expect(classificar(ls, [manual], 'c')).toEqual(['provavel', 'nova'])
   })
 })

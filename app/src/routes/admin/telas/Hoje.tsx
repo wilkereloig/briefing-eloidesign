@@ -1,19 +1,21 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   hojeISO, deslocarMes, rotuloMes, useFinancas, useNomes, useTransacoesDoMes,
 } from '../../../lib/financas-store'
 import {
   resultado, saldoDisponivel, saldoConta, faturaAberta, vencidas, proximosVencimentos,
-  valorLiquidado,
+  saldoAberto, valorLiquidado,
 } from '../../../domain/financeiro'
 import { ACAO, decisoesDoDia, pendenciasDeServicos } from '../../../domain/decisoes'
-import { Etiqueta, Icone, Indicador, Painel } from '../../../ui/componentes'
+import { Botao, Etiqueta, Icone, Indicador, Painel } from '../../../ui/componentes'
 import { Onboarding } from '../Onboarding'
 import { PainelTarefas } from '../Tarefas'
 import { Cabecalho, Carga, ChipMovimento, Dinheiro, SeletorLente, SeletorMes } from '../../../ui/painel'
 import { dataCurta, rotuloConta, variacao } from '../../../ui/formato'
 import { fmtBRL } from '../../../lib/dinheiro'
+
+const LIMITE_DECISOES = 8
 
 export default function Hoje() {
   const est = useFinancas()
@@ -39,8 +41,11 @@ export default function Hoje() {
   // `setup:contas` sai daqui: sem conta o <Onboarding> já está na tela dizendo isso.
   const decisoes = useMemo(() => decisoesDoDia({
     servicos, orcamentos, transacoes, notas, briefings, contas,
-  }).filter((d) => d.id !== 'setup:contas').slice(0, 8),
+  }).filter((d) => d.id !== 'setup:contas'),
   [servicos, orcamentos, transacoes, notas, briefings, contas])
+  // O cabeçalho conta a fila inteira; a lista mostra 8 e abre no lugar.
+  const [verTodas, setVerTodas] = useState(false)
+  const decisoesVisiveis = verTodas ? decisoes : decisoes.slice(0, LIMITE_DECISOES)
   const pend = useMemo(() => pendenciasDeServicos(servicos), [servicos])
 
   const ultimas = useMemo(() => [...doMes]
@@ -87,7 +92,7 @@ export default function Hoje() {
             <p className="t-sec">Nada atrasado e nada pendente de decisão. O mês está em dia.</p>
           ) : (
             <ul className="lista">
-              {decisoes.map((d) => (
+              {decisoesVisiveis.map((d) => (
                 <li key={d.id} className="lista-item">
                   <span className="marca-cor" aria-hidden style={{
                     background: d.urgencia === 'atrasado' ? 'var(--coral)' : 'var(--azul)',
@@ -111,6 +116,12 @@ export default function Hoje() {
                 </li>
               ))}
             </ul>
+          )}
+          {decisoes.length > LIMITE_DECISOES && (
+            <Botao compacto onClick={() => setVerTodas((v) => !v)} aria-expanded={verTodas}
+              style={{ marginTop: 'var(--espaco-03)' }}>
+              {verTodas ? 'Mostrar menos' : `Ver todas (${decisoes.length})`}
+            </Botao>
           )}
         </Painel>
 
@@ -181,7 +192,7 @@ export default function Hoje() {
                           <span className="t-ui espremer">{t.descricao}</span>
                           <span className="t-legenda">vence em {dataCurta(t.data_vencimento!)}</span>
                         </span>
-                        <Dinheiro cents={t.valor_cents - t.recebido_cents} className="t-valor" />
+                        <Dinheiro cents={saldoAberto(t)} className="t-valor" />
                       </li>
                     ))}
                   </ul>}

@@ -4,12 +4,14 @@ import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { baixarCsv } from '../../../lib/exportar'
 import { deslocarMes, hojeISO, useFinancas, useNomes } from '../../../lib/financas-store'
 import {
-  agrupar, consumoOrcamento, previsaoCaixa, resultado, valorLiquidado,
+  agrupar, consumoDaMeta, consumoOrcamento, estaEmAberto, previsaoCaixa, saldoAberto, serieResultado,
+  ticketMedio, valorLiquidado,
 } from '../../../domain/financeiro'
 import {
   aging, aplicarFiltro, porCliente, reaisCsv, resumoFiscal, resumoProjetos, type Filtro,
 } from '../../../domain/relatorios'
 import { juntarProjetos } from '../../../domain/projeto'
+import { semNotaFiscal } from '../../../domain/decisoes'
 import type { Contexto, Meta } from '../../../lib/tipos'
 import {
   Aviso, Botao, Campo, Etiqueta, Folha, Icone, Indicador, Painel, Pilula, Progresso, Vazio,
@@ -81,11 +83,11 @@ export default function Relatorios() {
         [porMarca ? 'Marca' : 'Cliente', 'Recebido', 'A receber', 'Projetos', 'Ticket médio'],
         linhasCliente.map((l) => [nomeChave(l.chave), reaisCsv(l.recebido_cents), reaisCsv(l.a_receber_cents), l.projetos, reaisCsv(l.ticket_cents)]))
     } else if (aba === 'recebiveis') {
-      const abertas = base.filter((t) => t.tipo === 'entrada' && t.status !== 'cancelado' && t.status !== 'realizado')
+      const abertas = base.filter((t) => t.tipo === 'entrada' && estaEmAberto(t))
       baixarCsv(`recebiveis${sufixo}`,
         ['Vencimento', 'Descrição', 'Cliente', 'Combinado', 'Recebido', 'Restante', 'Status'],
         abertas.map((t) => [t.data_vencimento, t.descricao, t.cliente_id ? nomes.cliente.get(t.cliente_id)?.nome : '',
-          reaisCsv(t.valor_cents), reaisCsv(t.recebido_cents), reaisCsv(t.valor_cents - t.recebido_cents), t.status]))
+          reaisCsv(t.valor_cents), reaisCsv(t.recebido_cents), reaisCsv(saldoAberto(t)), t.status]))
     } else if (aba === 'categorias') {
       baixarCsv(`despesas-por-categoria${sufixo}`, ['Categoria', 'Total', 'Lançamentos'],
         porCategoria.map((f) => [nomes.categoria.get(f.chave)?.nome ?? 'Sem categoria', reaisCsv(f.total_cents), f.qtd]))
@@ -115,21 +117,15 @@ export default function Relatorios() {
     }
   }
 
-  // Doze meses terminando no mês em foco. A janela do store cobre exatamente
-  // isso, então nenhuma coluna aparece truncada por falta de dado carregado.
+  // Doze meses terminando no mês em foco. O store tem o histórico inteiro,
+  // então nenhuma coluna aparece truncada por falta de dado carregado.
   const meses = useMemo(
     () => Array.from({ length: 12 }, (_, i) => deslocarMes(mes, i - 11)), [mes])
 
-  const serie = useMemo(() => meses.map((m) => {
-    const r = resultado(baseSemPeriodo, contexto, m)
-    return { mes: m, ...r }
-  }), [meses, baseSemPeriodo, contexto])
+  const { serie, total: totalAno } = useMemo(
+    () => serieResultado(baseSemPeriodo, meses, contexto), [meses, baseSemPeriodo, contexto])
 
   const teto = Math.max(...serie.map((s) => Math.max(s.receita_cents, s.despesa_cents)), 1)
-  const totalAno = serie.reduce((acc, s) => ({
-    receita: acc.receita + s.receita_cents,
-    despesa: acc.despesa + s.despesa_cents,
-  }), { receita: 0, despesa: 0 })
 
   const porCategoria = useMemo(() => agrupar(base, (t) => t.categoria_id, 'saida'), [base])
 
@@ -202,13 +198,13 @@ export default function Relatorios() {
         {aba === 'resultado' && (
           <>
             <div className="grade-indicadores">
-              <Indicador dominante rotulo="Receita em 12 meses" valor={fmtBRL(totalAno.receita)}
+              <Indicador dominante rotulo="Receita em 12 meses" valor={fmtBRL(totalAno.receita_cents)}
                 nota="Só o que foi efetivamente recebido" />
-              <Indicador rotulo="Despesa em 12 meses" valor={fmtBRL(totalAno.despesa)} nota="Liquidado" />
-              <Indicador rotulo="Resultado" valor={fmtBRL(totalAno.receita - totalAno.despesa)}
-                cor={totalAno.receita - totalAno.despesa < 0 ? 'coral' : 'acento'}
-                nota={totalAno.receita > 0
-                  ? `Margem de ${(((totalAno.receita - totalAno.despesa) / totalAno.receita) * 100).toFixed(0)}%`
+              <Indicador rotulo="Despesa em 12 meses" valor={fmtBRL(totalAno.despesa_cents)} nota="Liquidado" />
+              <Indicador rotulo="Resultado" valor={fmtBRL(totalAno.lucro_cents)}
+                cor={totalAno.lucro_cents < 0 ? 'coral' : 'acento'}
+                nota={totalAno.receita_cents > 0
+                  ? `Margem de ${(totalAno.margem * 100).toFixed(0)}%`
                   : 'Sem receita no período'} />
               <Indicador rotulo="Ticket médio"
                 valor={fmtBRL(ticketMedio(base))}
@@ -220,7 +216,7 @@ export default function Relatorios() {
               {/* Gráfico em CSS puro: nenhuma dependência nova só para desenhar
                   12 barras. Sem eixo Y e sem grade, como manda o KV. */}
               <div className="grafico" role="img"
-                aria-label={`Receita e despesa mês a mês. Total recebido ${fmtBRL(totalAno.receita)}, total gasto ${fmtBRL(totalAno.despesa)}.`}>
+                aria-label={`Receita e despesa mês a mês. Total recebido ${fmtBRL(totalAno.receita_cents)}, total gasto ${fmtBRL(totalAno.despesa_cents)}.`}>
                 {serie.map((s) => (
                   <div key={s.mes} className="grafico-col">
                     <span className="grafico-valor">
@@ -342,7 +338,7 @@ export default function Relatorios() {
             <Indicador rotulo="Pendentes" valor={String(fiscal.pendentes)}
               cor={fiscal.pendentes ? 'coral' : undefined} nota={fmtBRL(fiscal.pendente_cents)} />
             <Indicador rotulo="Serviços sem nota"
-              valor={String(servicosFiltrados.filter((sv) => sv.status_execucao === 'concluida' && !sv.nota_fiscal_id).length)}
+              valor={String(servicosFiltrados.filter((sv) => sv.status_execucao === 'concluida' && semNotaFiscal(sv)).length)}
               nota="Concluídos sem NF vinculada" />
           </div>
         )}
@@ -399,7 +395,7 @@ export default function Relatorios() {
             ) : (
               <ul className="lista">
                 {metasVisiveis.map((m) => {
-                  const gasto = gastoDaMeta(m, transacoes)
+                  const gasto = consumoDaMeta(m, transacoes)
                   const c = consumoOrcamento(m.alvo_cents, gasto)
                   return (
                     <li key={m.id} className="lista-item meta-item">
@@ -486,7 +482,8 @@ function FolhaMeta({ inicial, aoFechar, aoSalvar }: {
   const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? 'pessoal')
   const [categoriaId, setCategoriaId] = useState(inicial?.categoria_id ?? '')
   const [alvo, setAlvo] = useState(inicial ? fmtBRL(inicial.alvo_cents) : '')
-  const [inicio, setInicio] = useState(inicial?.inicio ?? new Date().toISOString().slice(0, 8) + '01')
+  const [inicio, setInicio] = useState(inicial?.inicio ?? hojeISO().slice(0, 8) + '01')
+  const [fim, setFim] = useState(inicial?.fim ?? '')
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
 
@@ -495,6 +492,7 @@ function FolhaMeta({ inicial, aoFechar, aoSalvar }: {
     if (!nome.trim()) e.nome = 'Dê um nome'
     if (centsDeBRL(alvo) <= 0) e.alvo = 'Informe o valor alvo'
     if (especie === 'orcamento' && !categoriaId) e.categoria = 'Orçamento precisa de uma categoria'
+    if (fim && fim < inicio) e.fim = 'O fim vem depois do início'
     setErros(e)
     if (Object.keys(e).length) return
 
@@ -502,7 +500,7 @@ function FolhaMeta({ inicial, aoFechar, aoSalvar }: {
     try {
       await financas.salvarMeta({
         id: inicial?.id, especie, nome: nome.trim(), contexto,
-        categoria_id: categoriaId || null, alvo_cents: centsDeBRL(alvo), inicio,
+        categoria_id: categoriaId || null, alvo_cents: centsDeBRL(alvo), inicio, fim: fim || null,
       })
       aoSalvar(inicial ? 'Meta atualizada' : 'Meta criada')
       aoFechar()
@@ -568,33 +566,26 @@ function FolhaMeta({ inicial, aoFechar, aoSalvar }: {
             onChange={(e) => setInicio(e.target.value)} />
         </div>
 
+        <div className="campo" data-erro={erros.fim ? 'true' : undefined}>
+          <label htmlFor="meta-fim">Fim do período</label>
+          <input id="meta-fim" type="date" className="campo-caixa" value={fim}
+            onChange={(e) => setFim(e.target.value)} />
+          {erros.fim
+            ? <span className="campo-erro" role="alert">{erros.fim}</span>
+            : <span className="t-legenda">
+              {especie === 'orcamento'
+                ? 'Vazio: o limite vale só para o mês do início.'
+                : 'Vazio: a meta acumula sem data para acabar.'}
+            </span>}
+        </div>
+
         {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
       </div>
     </Folha>
   )
 }
 
-// ── cálculos de apresentação ─────────────────────────────────────────────────
-
-/** Orçamento mede saída da categoria; meta mede entrada acumulada. */
-function gastoDaMeta(m: Meta, transacoes: Parameters<typeof agrupar>[0]): number {
-  return transacoes
-    .filter((t) => {
-      if (t.contexto !== m.contexto) return false
-      if (m.categoria_id && t.categoria_id !== m.categoria_id) return false
-      if (t.tipo !== (m.especie === 'orcamento' ? 'saida' : 'entrada')) return false
-      const d = t.data_competencia || t.data_liquidacao
-      if (!d || d < m.inicio) return false
-      return !m.fim || d <= m.fim
-    })
-    .reduce((s, t) => s + valorLiquidado(t), 0)
-}
-
-function ticketMedio(transacoes: Parameters<typeof agrupar>[0]): number {
-  const entradas = transacoes.filter((t) => t.tipo === 'entrada' && valorLiquidado(t) > 0)
-  if (!entradas.length) return 0
-  return Math.round(entradas.reduce((s, t) => s + valorLiquidado(t), 0) / entradas.length)
-}
+// ── formatação de apresentação ───────────────────────────────────────────────
 
 /** Valor curto para o topo da coluna do gráfico: 12,4 mil. */
 function fmtCompacto(cents: number): string {

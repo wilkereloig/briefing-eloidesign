@@ -4,8 +4,9 @@ import {
   faturaAberta, limiteDisponivel, dividirParcelas, dataDaParcela, previsaoCaixa,
   agrupar, consumoOrcamento, saldoAberto, valorLiquidado, competenciaDe,
   agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
+  totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
 } from './financeiro'
-import type { Conta, Transacao } from '../lib/tipos'
+import type { Conta, Meta, Transacao } from '../lib/tipos'
 
 const conta = (p: Partial<Conta> & { id: string }): Conta => ({
   nome: 'c', tipo: 'corrente', contexto: 'empresa', instituicao: null, cor: null,
@@ -208,6 +209,13 @@ describe('cartão de crédito', () => {
     expect(faturaAberta(cartao, ts)).toBe(500_00)
   })
 
+  it('estorno em aberto abate a fatura, sem ficar negativa', () => {
+    const estorno = tx({ id: 'e', tipo: 'entrada', conta_id: 'card', valor_cents: 120_00, status: 'pendente' })
+    expect(faturaAberta(cartao, [...ts, estorno])).toBe(380_00)
+    const grande = tx({ id: 'g', tipo: 'entrada', conta_id: 'card', valor_cents: 900_00, status: 'pendente' })
+    expect(faturaAberta(cartao, [...ts, grande])).toBe(0)
+  })
+
   it('limite disponível desconta a fatura aberta', () => {
     expect(limiteDisponivel(cartao, ts)).toBe(500_00)
   })
@@ -376,5 +384,76 @@ describe('saldo numa data', () => {
     ]
     expect(saldoContaEm(c, ts, '2026-09-05')).toBe(1500)
     expect(saldoContaEm(c, ts, '2026-09-10')).toBe(1300)
+  })
+})
+
+describe('helpers que saíram das telas', () => {
+  it('totalEmAberto soma só o que falta, inclusive parcial', () => {
+    expect(totalEmAberto([
+      tx({ id: '1', tipo: 'entrada', valor_cents: 5000, recebido_cents: 2000, status: 'parcial' }),
+      tx({ id: '2', tipo: 'entrada', valor_cents: 1000, status: 'pendente' }),
+      tx({ id: '3', tipo: 'entrada', valor_cents: 9000, status: 'cancelado' }),
+    ])).toBe(4000)
+  })
+
+  it('próximos vencimentos ignoram transferência', () => {
+    const ts = [
+      tx({ id: 'conta', tipo: 'saida', valor_cents: 100, status: 'pendente', data_vencimento: '2026-08-12' }),
+      tx({ id: 'transf', tipo: 'transferencia', valor_cents: 100, status: 'pendente', data_vencimento: '2026-08-12' }),
+    ]
+    expect(proximosVencimentos(ts, '2026-08-10').map((t) => t.id)).toEqual(['conta'])
+  })
+
+  it('serieResultado: total é a soma dos meses, margem sobre o total', () => {
+    const ts = [
+      tx({ id: 'a', tipo: 'entrada', valor_cents: 10000, data_competencia: '2026-07-05' }),
+      tx({ id: 'b', tipo: 'entrada', valor_cents: 10000, data_competencia: '2026-08-05' }),
+      tx({ id: 'c', tipo: 'saida', valor_cents: 5000, data_competencia: '2026-08-10' }),
+      tx({ id: 'fora', tipo: 'entrada', valor_cents: 99999, data_competencia: '2026-09-01' }),
+    ]
+    const { serie, total } = serieResultado(ts, ['2026-07', '2026-08'])
+    expect(serie.map((m) => m.lucro_cents)).toEqual([10000, 5000])
+    expect(total).toEqual({ receita_cents: 20000, despesa_cents: 5000, lucro_cents: 15000, margem: 0.75 })
+  })
+
+  it('ticketMedio só conta recebimento liquidado', () => {
+    expect(ticketMedio([
+      tx({ id: '1', tipo: 'entrada', valor_cents: 1000 }),
+      tx({ id: '2', tipo: 'entrada', valor_cents: 2001 }),
+      tx({ id: '3', tipo: 'entrada', valor_cents: 5000, status: 'pendente' }),
+      tx({ id: '4', tipo: 'saida', valor_cents: 7000 }),
+    ])).toBe(1501)
+    expect(ticketMedio([])).toBe(0)
+  })
+})
+
+describe('metas e orçamentos de gasto', () => {
+  const meta = (p: Partial<Meta>): Meta => ({
+    id: 'm', especie: 'orcamento', nome: 'Alimentação', contexto: 'empresa', categoria_id: 'cat',
+    conta_id: null, alvo_cents: 50000, inicio: '2026-08-01', fim: null, ativa: true, ...p,
+  })
+  const gasto = (id: string, data: string, v = 10000) =>
+    tx({ id, tipo: 'saida', categoria_id: 'cat', valor_cents: v, data_competencia: data })
+
+  it('orçamento sem fim vale só o mês do início (não soma para sempre)', () => {
+    expect(periodoDaMeta(meta({}))).toEqual({ de: '2026-08-01', ate: '2026-08-31' })
+    expect(periodoDaMeta(meta({ inicio: '2026-02-01' })).ate).toBe('2026-02-28')
+    const ts = [gasto('jul', '2026-07-31'), gasto('ago1', '2026-08-01'), gasto('ago2', '2026-08-31'), gasto('set', '2026-09-01')]
+    expect(consumoDaMeta(meta({}), ts)).toBe(20000)
+  })
+
+  it('com fim, vale o período informado', () => {
+    const ts = [gasto('ago', '2026-08-15'), gasto('set', '2026-09-15'), gasto('out', '2026-10-15')]
+    expect(consumoDaMeta(meta({ fim: '2026-09-30' }), ts)).toBe(20000)
+  })
+
+  it('meta de acúmulo sem fim não termina e mede entrada', () => {
+    expect(periodoDaMeta(meta({ especie: 'meta' })).ate).toBeNull()
+    const ts = [
+      tx({ id: 'e1', tipo: 'entrada', categoria_id: 'cat', valor_cents: 3000, data_competencia: '2026-08-10' }),
+      tx({ id: 'e2', tipo: 'entrada', categoria_id: 'cat', valor_cents: 4000, data_competencia: '2027-03-10' }),
+      gasto('s', '2026-08-10'),
+    ]
+    expect(consumoDaMeta(meta({ especie: 'meta' }), ts)).toBe(7000)
   })
 })

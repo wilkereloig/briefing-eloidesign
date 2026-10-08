@@ -4,6 +4,8 @@ import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { useFinancas, useNomes } from '../../../lib/financas-store'
 import type { NotaFiscal, ServicoRow, StatusNF } from '../../../lib/tipos'
+import { semNotaFiscal } from '../../../domain/decisoes'
+import { hojeISO } from '../../../domain/datas'
 import {
   Aviso, Botao, Campo, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
@@ -35,7 +37,7 @@ export default function Notas() {
   // A fonte é `nota_fiscal_id` (D-22) — `nf_numero` é espelho e o vínculo 1:1
   // antigo (`nota.servico_id`) está sempre nulo desde a migração de 09-03.
   const semNota = useMemo(() => servicos.filter((s) =>
-    s.status_execucao === 'concluida' && !s.nota_fiscal_id), [servicos])
+    s.status_execucao === 'concluida' && semNotaFiscal(s)), [servicos])
 
   // Lista da tela é filtrada por mês/cliente no servidor: `notas` (acima) vem
   // sem corte de data, com limit(500) — filtrar em memória esconderia notas
@@ -241,7 +243,7 @@ export function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
   // inteira de 59; o que já está nesta nota nunca some do filtro.
   const candidatos = useMemo(() => servicos.filter((s: ServicoRow) =>
     s.cliente_id === clienteId &&
-    (!soSemNota || !s.nota_fiscal_id || escolhidos.includes(s.id))),
+    (!soSemNota || semNotaFiscal(s) || escolhidos.includes(s.id))),
   [servicos, clienteId, soSemNota, escolhidos])
   const somaEscolhidos = useMemo(() => servicos
     .filter((s) => escolhidos.includes(s.id))
@@ -285,7 +287,7 @@ export function FolhaNota({ inicial, servicoId, aoFechar, aoSalvar }: {
         imposto_cents: centsDeBRL(imposto),
         competencia: competencia || null,
         emitida_em: status === 'emitida' || status === 'enviada'
-          ? inicial?.emitida_em ?? new Date().toISOString().slice(0, 10)
+          ? inicial?.emitida_em ?? hojeISO()
           : null,
       })
       aoSalvar(inicial ? 'Nota atualizada' : 'Nota registrada')

@@ -1197,20 +1197,33 @@ export function FolhaOrcamento({ inicial, duplicar, catalogo, aoFechar, aoSalvar
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
 
+  // Valor do item em digitação: o texto cru fica aqui e só vira número pelo
+  // parser único (lib/dinheiro.ts). Converter a cada tecla com
+  // `replace(',', '.')` lia "10,5" como 105 e "1.500" como 1,50 — e esse é o
+  // total que vai para o cliente.
+  const [digitando, setDigitando] = useState<{ i: number; texto: string } | null>(null)
+  const reaisDe = (texto: string) => centsDeBRL(texto) / 100
+  const itensVivos = digitando
+    ? itens.map((it, j) => (j === digitando.i ? { ...it, valor: reaisDe(digitando.texto) } : it))
+    : itens
+  const confirmarValor = () => {
+    if (!digitando) return
+    setItens(itensVivos)
+    setDigitando(null)
+  }
+
   // Recalcula a cada tecla: o total é o número que decide a conversa com o
   // cliente, e vê-lo mudar enquanto se ajusta o desconto é o ponto da tela.
-  const conta = calcular({ itens, complexidade, urgencia, desconto_pct: Number(desconto) || 0 })
+  const conta = calcular({ itens: itensVivos, complexidade, urgencia, desconto_pct: Number(desconto) || 0 })
   const emReais = (v: number) => fmtBRL(Math.round(v * 100))
 
-  const mudarItem = (i: number, campo: 'nome' | 'valor', valor: string) =>
-    setItens((atual) => atual.map((it, j) => j === i
-      ? { ...it, [campo]: campo === 'valor' ? Number(valor.replace(',', '.')) || 0 : valor }
-      : it))
+  const mudarNome = (i: number, nome: string) =>
+    setItens((atual) => atual.map((it, j) => (j === i ? { ...it, nome } : it)))
 
   async function salvar() {
     const e: Record<string, string> = {}
     if (!titulo.trim()) e.titulo = 'Dê um título à proposta'
-    if (!itens.length) e.itens = 'Adicione ao menos um item'
+    if (!itensVivos.length) e.itens = 'Adicione ao menos um item'
     if (!clienteId && !clienteTexto.trim()) e.cliente = 'Escolha um cliente ou escreva o nome'
     setErros(e)
     if (Object.keys(e).length) return
@@ -1221,7 +1234,8 @@ export function FolhaOrcamento({ inicial, duplicar, catalogo, aoFechar, aoSalvar
         cliente: clienteId ? clientes.find((c) => c.id === clienteId)?.nome ?? null : clienteTexto.trim() || null,
         cliente_id: clienteId || null,
         titulo: titulo.trim(),
-        itens,
+        // itensVivos: um valor ainda em digitação entra pelo mesmo parser.
+        itens: itensVivos,
         // valor_total é REAIS (exceção herdada), e é o total já ajustado —
         // é o número que a página do cliente exibe sem recalcular.
         valor_total: conta.total,
@@ -1288,12 +1302,15 @@ export function FolhaOrcamento({ inicial, duplicar, catalogo, aoFechar, aoSalvar
               <li key={i} className="lista-item">
                 <input className="campo-caixa" style={{ flex: 1 }} value={it.nome}
                   aria-label={`Nome do item ${i + 1}`} placeholder="Descrição"
-                  onChange={(e) => mudarItem(i, 'nome', e.target.value)} />
+                  onChange={(e) => mudarNome(i, e.target.value)} />
                 <input className="campo-caixa valor-linha" inputMode="decimal"
-                  aria-label={`Valor do item ${i + 1}`} value={String(it.valor)}
-                  onChange={(e) => mudarItem(i, 'valor', e.target.value)} />
+                  aria-label={`Valor do item ${i + 1}`}
+                  value={digitando?.i === i ? digitando.texto : emReais(it.valor)}
+                  onFocus={(e) => { confirmarValor(); setDigitando({ i, texto: e.target.value }) }}
+                  onChange={(e) => setDigitando({ i, texto: e.target.value })}
+                  onBlur={confirmarValor} />
                 <Botao variante="icone" aria-label={`Remover item ${i + 1}`}
-                  onClick={() => setItens((a) => a.filter((_, j) => j !== i))}>
+                  onClick={() => { confirmarValor(); setItens((a) => a.filter((_, j) => j !== i)) }}>
                   <Icone nome="excluir" tamanho={16} />
                 </Botao>
               </li>

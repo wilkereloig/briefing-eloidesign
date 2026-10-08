@@ -27,9 +27,9 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
   const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? 'empresa')
   const [descricao, setDescricao] = useState(inicial?.descricao ?? '')
   const [valor, setValor] = useState(inicial?.valor_cents ? fmtBRL(inicial.valor_cents) : '')
-  const [contaId, setContaId] = useState(inicial?.conta_id ?? '')
-  const [contaDestinoId, setContaDestinoId] = useState(inicial?.conta_destino_id ?? '')
-  const [categoriaId, setCategoriaId] = useState(inicial?.categoria_id ?? '')
+  const [contaEscolhida, setContaId] = useState(inicial?.conta_id ?? '')
+  const [destinoEscolhido, setContaDestinoId] = useState(inicial?.conta_destino_id ?? '')
+  const [categoriaEscolhida, setCategoriaId] = useState(inicial?.categoria_id ?? '')
   const [clienteId, setClienteId] = useState(inicial?.cliente_id ?? '')
   const [servicoId, setServicoId] = useState(inicial?.servico_id ?? '')
   const [fornecedor, setFornecedor] = useState(inicial?.fornecedor ?? '')
@@ -49,12 +49,25 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
   const contasDoContexto = useMemo(
     // Transferência é o único caso que enxerga as duas caixas: é assim que
     // pró-labore e aporte são lançados sem virar receita.
-    () => contas.filter((c) => c.ativa && (ehTransferencia || c.contexto === contexto)),
-    [contas, contexto, ehTransferencia])
+    // A conta do próprio lançamento entra mesmo desativada: editar a descrição
+    // não pode obrigar a trocar de conta.
+    () => contas.filter((c) =>
+      (c.ativa || c.id === inicial?.conta_id || c.id === inicial?.conta_destino_id)
+      && (ehTransferencia || c.contexto === contexto)),
+    [contas, contexto, ehTransferencia, inicial?.conta_id, inicial?.conta_destino_id])
 
   const categoriasDoTipo = useMemo(
     () => categorias.filter((c) => c.contexto === contexto && c.tipo === tipo),
     [categorias, contexto, tipo])
+
+  // Trocar tipo ou contexto troca as opções. O id escolhido antes que não está
+  // mais na lista vale vazio — senão ia para o banco uma categoria de despesa
+  // numa receita, ou a conta pessoal num lançamento da empresa, sem a pessoa ver.
+  // Derivado em vez de resetado: voltar ao tipo anterior devolve a escolha.
+  const contaId = contasDoContexto.some((c) => c.id === contaEscolhida) ? contaEscolhida : ''
+  const contaDestinoId = ehTransferencia && contasDoContexto.some((c) => c.id === destinoEscolhido)
+    ? destinoEscolhido : ''
+  const categoriaId = categoriasDoTipo.some((c) => c.id === categoriaEscolhida) ? categoriaEscolhida : ''
 
   const servicosDoCliente = useMemo(
     () => (clienteId ? servicos.filter((s) => s.cliente_id === clienteId) : []),
@@ -90,7 +103,13 @@ export function FolhaTransacao({ inicial, aoFechar, aoSalvar }: {
         servico_id: ehTransferencia ? null : servicoId || null,
         fornecedor: tipo === 'saida' ? fornecedor.trim() || null : null,
         data_vencimento: vencimento || null,
-        data_competencia: vencimento || null,
+        // Competência só nasce do vencimento na criação. Editando, vai a que já
+        // vale (explícita ou, sem ela, o vencimento ANTIGO — a mesma cascata de
+        // competenciaDe): mudar o vencimento não pode mudar o mês da receita.
+        // Omitir não serve: a edge cai no vencimento novo quando falta.
+        data_competencia: (editando
+          ? inicial?.data_competencia ?? inicial?.data_vencimento ?? inicial?.data_liquidacao
+          : inicial?.data_competencia) ?? (vencimento || null),
         observacoes: observacoes.trim() || null,
       }
       if (parcelas > 1) {

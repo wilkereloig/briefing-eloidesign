@@ -6,6 +6,7 @@ import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { hojeISO, mesAtual, rotuloMes, useFinancas, useNomes } from '../../../lib/financas-store'
 import { dataCurta } from '../../../ui/formato'
 import { juntarProjetos, mesDoProjeto, type Etapa, type Projeto } from '../../../domain/projeto'
+import { semNotaFiscal } from '../../../domain/decisoes'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
 import { Cabecalho, Carga, Dinheiro, SeletorMes } from '../../../ui/painel'
 import type { EstadoChip } from '../../../ui/tokens'
@@ -28,7 +29,7 @@ const ETAPA_INFO = new Map(ETAPAS.map((e) => [e.chave, e]))
 type Pendencia = 'sem_valor' | 'sem_nota' | 'entregue_nao_pago'
 const PENDENCIAS: { chave: Pendencia; label: string; casa: (p: Projeto) => boolean }[] = [
   { chave: 'sem_valor', label: 'Sem valor', casa: (p) => p.valorCents === 0 },
-  { chave: 'sem_nota', label: 'Sem nota', casa: (p) => !!p.servico && !p.servico.nf_numero },
+  { chave: 'sem_nota', label: 'Sem nota', casa: (p) => !!p.servico && semNotaFiscal(p.servico) },
   { chave: 'entregue_nao_pago', label: 'Entregue e não pago', casa: (p) => p.etapa === 'entregue' },
 ]
 
@@ -312,7 +313,8 @@ export default function Projetos() {
                     <ul className="lista">
                       {m.itens.map((p) => {
                         const info = ETAPA_INFO.get(p.etapa)!
-                        const semNota = !p.servico?.nf_numero && (p.etapa === 'pago' || p.etapa === 'entregue')
+                        const semNota = !!p.servico && semNotaFiscal(p.servico) && (p.etapa === 'pago' || p.etapa === 'entregue')
+                        const temNota = !!p.servico && !semNotaFiscal(p.servico)
                         const editandoValor = p.servico && !p.servico.pago
                         return (
                           <li key={p.id} className="lista-item"
@@ -321,7 +323,7 @@ export default function Projetos() {
                               <span className="t-ui espremer">{p.titulo}</span>
                               <span className="t-legenda espremer">
                                 {[
-                                  p.servico?.nf_numero ? `NF ${p.servico.nf_numero}` : semNota ? 'Sem nota fiscal' : null,
+                                  temNota ? (p.servico?.nf_numero ? `NF ${p.servico.nf_numero}` : 'Nota vinculada') : semNota ? 'Sem nota fiscal' : null,
                                   p.servico?.data_competencia ? dataCurta(p.servico.data_competencia)
                                     : p.servico?.data_pagamento ? `pago ${dataCurta(p.servico.data_pagamento)}` : null,
                                   p.servico?.prazo && p.servico.status_execucao !== 'concluida'
@@ -347,7 +349,7 @@ export default function Projetos() {
                             ) : (
                               <span className="col-desktop" style={{ color: 'var(--acento)' }}>
                                 <Icone nome="nota-fiscal" tamanho={16}
-                                  rotulo={p.servico?.nf_numero ? 'Nota anexada' : 'Sem nota fiscal'} />
+                                  rotulo={temNota ? 'Nota anexada' : 'Sem nota fiscal'} />
                               </span>
                             )}
                             {editandoValor ? (

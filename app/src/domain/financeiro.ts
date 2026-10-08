@@ -12,7 +12,7 @@
 //    Pagamento parcial é normal, não exceção;
 //  · competência (a que mês pertence) ≠ liquidação (quando o dinheiro andou).
 //    Resultado usa competência; saldo usa liquidação.
-import type { Transacao, Conta, Contexto, StatusMov } from '../lib/tipos'
+import type { Transacao, Conta, Contexto, Meta, StatusMov } from '../lib/tipos'
 
 /** Status em que a transação ainda não liquidou e continua devida. */
 const EM_ABERTO: StatusMov[] = ['previsto', 'pendente', 'parcial', 'vencido']
@@ -28,6 +28,10 @@ export function saldoAberto(t: Transacao): number {
   // zerado DUAS vezes: inteiro em receita e inteiro em "a receber".
   return Math.max(0, t.valor_cents - valorLiquidado(t))
 }
+
+/** Soma do que falta entrar/sair numa lista — os indicadores "a receber" e
+ *  "a pagar" das telas. */
+export const totalEmAberto = (ts: Transacao[]) => ts.reduce((s, t) => s + saldoAberto(t), 0)
 
 /** Quanto já andou de dinheiro nesta transação. */
 export function valorLiquidado(t: Transacao): number {
@@ -113,6 +117,26 @@ export function resultado(transacoes: Transacao[], contexto?: Contexto, mes?: st
   }
 }
 
+/** Resultado mês a mês e o acumulado da série — o gráfico de 12 meses.
+ *  O total é a soma dos meses, não um segundo cálculo com regra própria. */
+export function serieResultado(transacoes: Transacao[], meses: string[], contexto?: Contexto) {
+  const serie = meses.map((mes) => ({ mes, ...resultado(transacoes, contexto, mes) }))
+  const receita = serie.reduce((s, m) => s + m.receita_cents, 0)
+  const despesa = serie.reduce((s, m) => s + m.despesa_cents, 0)
+  const lucro = receita - despesa
+  return {
+    serie,
+    total: { receita_cents: receita, despesa_cents: despesa, lucro_cents: lucro, margem: receita > 0 ? lucro / receita : 0 },
+  }
+}
+
+/** Ticket médio por recebimento liquidado (entradas com dinheiro que andou). */
+export function ticketMedio(transacoes: Transacao[]): number {
+  const entradas = transacoes.filter((t) => t.tipo === 'entrada' && valorLiquidado(t) > 0)
+  if (!entradas.length) return 0
+  return Math.round(entradas.reduce((s, t) => s + valorLiquidado(t), 0) / entradas.length)
+}
+
 /** Competência da transação, com fallback pro vencimento e depois liquidação —
  *  lançamento sem competência explícita não pode sumir do relatório. */
 export function competenciaDe(t: Transacao): string | null {
@@ -142,7 +166,8 @@ export function diasDeAtraso(t: Transacao, hoje: string): number {
 export function proximosVencimentos(transacoes: Transacao[], hoje: string, dias = 30): Transacao[] {
   const limite = new Date(Date.parse(hoje) + dias * 86_400_000).toISOString().slice(0, 10)
   return transacoes
-    .filter((t) => estaEmAberto(t) && !!t.data_vencimento && t.data_vencimento >= hoje && t.data_vencimento <= limite)
+    .filter((t) => t.tipo !== 'transferencia' && estaEmAberto(t) && !!t.data_vencimento &&
+      t.data_vencimento >= hoje && t.data_vencimento <= limite)
     .sort((a, b) => (a.data_vencimento! < b.data_vencimento! ? -1 : 1))
 }
 
@@ -201,9 +226,13 @@ export function agruparPorPrazo(
  * não aparece de novo como despesa — a despesa já foi lançada na compra.
  */
 export function faturaAberta(cartao: Conta, transacoes: Transacao[]): number {
-  return transacoes
-    .filter((t) => t.conta_id === cartao.id && t.tipo === 'saida' && !estaCancelada(t))
-    .reduce((s, t) => s + saldoAberto(t), 0)
+  // Estorno (entrada no cartão) em aberto abate a fatura — mesmo critério de
+  // planejarPagamentoFatura na edge, senão a tela sugere pagar o bruto e o
+  // servidor devolve o estorno como sobra.
+  const total = transacoes
+    .filter((t) => t.conta_id === cartao.id && t.tipo !== 'transferencia' && !estaCancelada(t))
+    .reduce((s, t) => s + (t.tipo === 'saida' ? saldoAberto(t) : -saldoAberto(t)), 0)
+  return Math.max(0, total)
 }
 
 /**
@@ -309,6 +338,35 @@ export function agrupar(
     mapa.set(k, atual)
   }
   return [...mapa.values()].filter((f) => f.total_cents > 0).sort((a, b) => b.total_cents - a.total_cents)
+}
+
+/**
+ * Período de uma meta, datas inclusivas. Com `fim`, vale o `fim`. Sem ele, o
+ * limite de gasto é MENSAL — o mês do `inicio` — e a meta de acúmulo não
+ * termina. Antes, orçamento sem fim somava do início para sempre e todo
+ * limite "estourava" depois de alguns meses.
+ */
+export function periodoDaMeta(m: Pick<Meta, 'especie' | 'inicio' | 'fim'>): { de: string; ate: string | null } {
+  if (m.fim) return { de: m.inicio, ate: m.fim }
+  if (m.especie === 'meta') return { de: m.inicio, ate: null }
+  const [a, mm] = m.inicio.split('-').map(Number)
+  return { de: m.inicio, ate: new Date(Date.UTC(a, mm, 0)).toISOString().slice(0, 10) }
+}
+
+/** Quanto já foi usado da meta: orçamento mede saída da categoria; meta de
+ *  acúmulo mede entrada. Data de referência é a competência (com a mesma
+ *  cascata de `competenciaDe`) — é resultado, não saldo. */
+export function consumoDaMeta(m: Meta, transacoes: Transacao[]): number {
+  const { de, ate } = periodoDaMeta(m)
+  const tipo = m.especie === 'orcamento' ? 'saida' : 'entrada'
+  return transacoes
+    .filter((t) => {
+      if (t.tipo !== tipo || t.contexto !== m.contexto) return false
+      if (m.categoria_id && t.categoria_id !== m.categoria_id) return false
+      const d = t.data_competencia || t.data_vencimento || t.data_liquidacao
+      return !!d && d >= de && (!ate || d <= ate)
+    })
+    .reduce((s, t) => s + valorLiquidado(t), 0)
 }
 
 /** Consumo de um orçamento de gasto: quanto do limite já foi usado. */

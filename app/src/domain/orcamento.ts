@@ -4,9 +4,12 @@
 // exatamente como estavam. Reescrever a regra mudaria valor de proposta já
 // enviada; mover não muda.
 //
-// Enquanto `/painel-orcamentos` existir, os dois arquivos convivem e precisam
-// concordar — `orcamento.test.ts` repete os casos de `orcamento.test.js`.
-// Condição de saída do arquivo antigo: o painel estático sair do ar.
+// O painel estático `/painel-orcamentos` saiu do ar (redireciona para
+// `/admin/orcamentos`), mas `assets/eloi-admin/orcamento.js` segue em uso pela
+// página pública `/orcamento`. Enquanto ela o importar, os dois arquivos
+// precisam concordar — `orcamento.test.ts` repete os casos de `orcamento.test.js`.
+
+import { centsDeReais } from '../lib/dinheiro'
 
 export interface ItemOrcamento {
   nome: string
@@ -119,3 +122,11 @@ export function estaExpirado(
   const enviado = new Date(o.updated_at).getTime()
   return Number.isFinite(enviado) && agora - enviado > VALIDADE_DIAS * 86_400_000
 }
+
+/** Valor da proposta em cents. `valor_total` é o único campo em REAIS do
+ *  sistema: converte item a item (mesma conta do trigger SQL) antes de somar —
+ *  somar reais em float e multiplicar no fim acumula erro de arredondamento. */
+export const centsDoOrcamento = (o: { valor_total: number | null }) => centsDeReais(Number(o.valor_total || 0))
+
+export const totalOrcamentosCents = (os: { valor_total: number | null }[]) =>
+  os.reduce((s, o) => s + centsDoOrcamento(o), 0)

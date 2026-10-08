@@ -90,6 +90,22 @@ export function itensAgenda(
     || a.titulo.localeCompare(b.titulo))
 }
 
+/** Indicadores da agenda. Recorrência prevista só entra em "a pagar" quando
+ *  é saída: recorrência de entrada (ou transferência) não é conta a pagar. */
+export function totaisAgenda(itens: ItemAgenda[]) {
+  const abertos = itens.filter((i) => i.aberto)
+  const receber = abertos.filter((i) => i.tipo === 'recebimento')
+  const lancados = abertos.filter((i) => i.tipo === 'pagamento')
+  const previstos = abertos.filter((i) =>
+    i.tipo === 'recorrencia' && 'recorrencia' in i.ref && i.ref.recorrencia.tipo === 'saida')
+  const soma = (l: ItemAgenda[]) => l.reduce((s, i) => s + (i.cents ?? 0), 0)
+  return {
+    receber_cents: soma(receber), receber_qtd: receber.length,
+    pagar_cents: soma(lancados) + soma(previstos),
+    pagar_lancados: lancados.length, pagar_previstos: previstos.length,
+  }
+}
+
 /** Indexa por dia para a grade. */
 export function porDia(itens: ItemAgenda[]): Map<string, ItemAgenda[]> {
   const m = new Map<string, ItemAgenda[]>()

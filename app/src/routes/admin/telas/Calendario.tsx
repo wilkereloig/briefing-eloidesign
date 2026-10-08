@@ -4,7 +4,7 @@ import { tarefas as tarefasApi } from '../../../lib/api'
 import { fmtBRL } from '../../../lib/dinheiro'
 import { hojeISO, rotuloMes, useFinancas, useNomes } from '../../../lib/financas-store'
 import {
-  FORMA_AGENDA, itensAgenda, ORDEM_AGENDA, porDia, type ItemAgenda, type TipoAgenda,
+  FORMA_AGENDA, itensAgenda, ORDEM_AGENDA, porDia, totaisAgenda, type ItemAgenda, type TipoAgenda,
 } from '../../../domain/agenda'
 import type { Transacao } from '../../../lib/tipos'
 import { Aviso, Botao, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
@@ -32,8 +32,7 @@ export default function Calendario() {
   const mapa = useMemo(() => porDia(itens), [itens])
   const celulas = useMemo(() => montarGrade(mes), [mes])
 
-  const soma = (tipo: TipoAgenda) => todos.filter((i) => i.tipo === tipo && i.aberto)
-    .reduce((s, i) => s + (i.cents ?? 0), 0)
+  const totais = useMemo(() => totaisAgenda(todos), [todos])
   const conta = (tipo: TipoAgenda) => todos.filter((i) => i.tipo === tipo && i.aberto).length
   const selecionados = diaAberto ? mapa.get(diaAberto) ?? [] : []
 
@@ -62,10 +61,10 @@ export default function Calendario() {
         <div className="grade-indicadores">
           <Indicador dominante rotulo="No mês" valor={String(todos.length)}
             nota={`${porDia(todos).size} dias com compromisso`} />
-          <Indicador rotulo="A receber" valor={fmtBRL(soma('recebimento'))} cor="acento"
-            nota={`${conta('recebimento')} em aberto`} />
-          <Indicador rotulo="A pagar" valor={fmtBRL(soma('pagamento') + soma('recorrencia'))}
-            nota={`${conta('pagamento')} lançados · ${conta('recorrencia')} previstos`} />
+          <Indicador rotulo="A receber" valor={fmtBRL(totais.receber_cents)} cor="acento"
+            nota={`${totais.receber_qtd} em aberto`} />
+          <Indicador rotulo="A pagar" valor={fmtBRL(totais.pagar_cents)}
+            nota={`${totais.pagar_lancados} lançados · ${totais.pagar_previstos} previstos`} />
           <Indicador rotulo="Tarefas e entregas" valor={String(conta('tarefa') + conta('prazo'))}
             cor={todos.some((i) => (i.tipo === 'tarefa' || i.tipo === 'prazo') && i.aberto && i.data < hoje) ? 'coral' : undefined}
             nota={`${conta('prazo')} ${conta('prazo') === 1 ? 'entrega' : 'entregas'} de projeto`} />

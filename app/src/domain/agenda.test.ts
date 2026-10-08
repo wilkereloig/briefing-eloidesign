@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { itensAgenda, porDia } from './agenda'
+import { itensAgenda, porDia, totaisAgenda } from './agenda'
 import type { Recorrencia, ServicoRow, TarefaRow, Transacao } from '../lib/tipos'
 
 const tx = (p: Partial<Transacao> & { id: string }): Transacao => ({
@@ -81,5 +81,25 @@ describe('agenda integrada', () => {
     }, '2026-09')
     expect(itens.every((i) => !i.aberto)).toBe(true)
     expect(porDia(itens).get('2026-09-10')).toHaveLength(3)
+  })
+})
+
+describe('totaisAgenda', () => {
+  it('a pagar soma recorrência de saída, nunca de entrada', () => {
+    const itens = itensAgenda({
+      transacoes: [
+        tx({ id: 'r', tipo: 'entrada', valor_cents: 1000 }),
+        tx({ id: 'p', tipo: 'saida', valor_cents: 300 }),
+      ],
+      tarefas: [], servicos: [],
+      recorrencias: [
+        rec({ id: 'adobe', tipo: 'saida', valor_cents: 8990 }),
+        rec({ id: 'mensalidade', tipo: 'entrada', valor_cents: 50000 }),
+      ],
+    }, '2026-09')
+    expect(totaisAgenda(itens)).toEqual({
+      receber_cents: 1000, receber_qtd: 1,
+      pagar_cents: 300 + 8990, pagar_lancados: 1, pagar_previstos: 1,
+    })
   })
 })

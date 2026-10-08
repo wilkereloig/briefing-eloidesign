@@ -4,7 +4,9 @@ import { orcamentos as orcamentosApi, type CatalogoItem } from '../../../lib/api
 import { fmtBRL } from '../../../lib/dinheiro'
 import { useAbrirNovo } from '../../../lib/abrir-novo'
 import { useFinancas } from '../../../lib/financas-store'
-import { estaExpirado, linkPublico, VALIDADE_DIAS } from '../../../domain/orcamento'
+import {
+  centsDoOrcamento, estaExpirado, linkPublico, totalOrcamentosCents, VALIDADE_DIAS,
+} from '../../../domain/orcamento'
 import {
   Aviso, Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
@@ -116,9 +118,9 @@ export default function Orcamentos() {
           <>
             <div className="grade-indicadores">
               <Indicador dominante rotulo="Aguardando resposta" valor={String(emAberto.length)}
-                nota={fmtBRL(Math.round(emAberto.reduce((s, o) => s + Number(o.valor_total || 0), 0) * 100))} />
+                nota={fmtBRL(totalOrcamentosCents(emAberto))} />
               <Indicador rotulo="Aprovadas" valor={String(aprovados.length)} cor="acento"
-                nota={fmtBRL(Math.round(aprovados.reduce((s, o) => s + Number(o.valor_total || 0), 0) * 100))} />
+                nota={fmtBRL(totalOrcamentosCents(aprovados))} />
               <Indicador rotulo="Vencidas" valor={String(expirados)}
                 cor={expirados ? 'coral' : undefined}
                 nota={`Enviadas há mais de ${VALIDADE_DIAS} dias`} />
@@ -197,7 +199,7 @@ export default function Orcamentos() {
                         </span>
 
                         <span className="t-valor">
-                          {fmtBRL(Math.round(Number(o.valor_total || 0) * 100))}
+                          {fmtBRL(centsDoOrcamento(o))}
                         </span>
                         <Chip estado={vencida ? 'atrasado' : ESTADO[o.status]}>
                           {vencida ? 'Vencida' : ROTULO[o.status]}

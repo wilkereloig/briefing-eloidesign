@@ -3,7 +3,7 @@
 // a biblioteca visual continuar reutilizável fora do painel.
 import type { ReactNode } from 'react'
 import { fmtBRL } from '../lib/dinheiro'
-import { deslocarMes, rotuloMes, useFinancas, type Lente } from '../lib/financas-store'
+import { deslocarMes, ROTULO_PARTE, rotuloMes, useFinancas, type Lente, type Parte } from '../lib/financas-store'
 import type { StatusMov, StatusNF } from '../lib/tipos'
 import { Botao, Chip, Erro, Esqueleto, Etiqueta, Icone, Pilula } from './componentes'
 import type { EstadoChip } from './tokens'
@@ -141,5 +141,18 @@ export function Carga({ children, linhas = 4 }: { children: ReactNode; linhas?: 
   const { carregando, erro, recarregar } = useFinancas()
   if (carregando) return <Esqueleto linhas={linhas} altura={64} />
   if (erro) return <Erro causa={erro} aoTentar={() => void recarregar()} offline={/fetch|network/i.test(erro)} />
-  return <>{children}</>
+  return <><FalhasParciais />{children}</>
+}
+
+/** Parte do painel que não carregou (orçamentos, convites, tarefas, marcas)
+ *  ou veio incompleta. Sem isto a tela mostrava lista vazia como se não
+ *  houvesse nada — o pior tipo de erro, o que parece dado. */
+export function FalhasParciais({ so }: { so?: Parte }) {
+  const { falhas, recarregar } = useFinancas()
+  const itens = (Object.entries(falhas) as [Parte, string][]).filter(([p]) => !so || p === so)
+  if (!itens.length) return null
+  return (
+    <Erro causa={`Não carregou: ${itens.map(([p, msg]) => `${ROTULO_PARTE[p]} (${msg})`).join(' · ')}`}
+      aoTentar={() => void recarregar()} />
+  )
 }

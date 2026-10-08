@@ -99,7 +99,7 @@ export const api = {
 // não com admin-app/src/lib/api.ts (que vaza os bugs de campo do domain.ts antigo).
 import type {
   TarefaRow,
-  ClienteRow, ClienteDetalhe, ContatoRow, ServicoRow, SubClienteRow, OrcamentoRow, MovimentoRow,
+  ClienteRow, ClienteDetalhe, ContatoRow, ServicoRow, SubClienteRow, OrcamentoRow,
   MaterialRow, BriefingLinkRow, BriefingLegadoRow,
 } from './tipos'
 
@@ -107,8 +107,7 @@ export const clientes = {
   list: () => call<{ clientes: ClienteRow[] }>('eloi-gestao', 'clientes.list').then((r) => r.clientes),
   detail: (cliente_id: string) => call<{
     cliente: ClienteDetalhe; orcamentos: OrcamentoRow[]; servicos: ServicoRow[]
-    briefings: unknown[]; movimentos: MovimentoRow[]; materiais: MaterialRow[]
-    resumo: { faturado_cents: number; recebido_cents: number; a_receber_cents: number }
+    briefings: unknown[]; materiais: MaterialRow[]
   }>('eloi-gestao', 'clientes.detail', { cliente_id }),
   upsert: (cliente: Partial<ClienteRow> & { id?: string; arquivado?: boolean }) =>
     call<{ cliente: ClienteRow }>('eloi-gestao', 'clientes.upsert', { cliente }).then((r) => r.cliente),
@@ -217,7 +216,8 @@ export interface FiltroTransacao {
   tipo?: Transacao['tipo']
   status?: Transacao['status']
   em_aberto?: boolean
-  /** Janela por competência — sem ela o painel puxaria o histórico inteiro. */
+  /** Janela por competência. O store NÃO usa: saldo precisa do histórico
+   *  inteiro (ver lib/financas-store.tsx). Fica para consulta pontual. */
   de?: string
   ate?: string
   limite?: number
@@ -262,6 +262,13 @@ export const financas = {
   parcelar: (transacao: Partial<Transacao>, parcelas: number) =>
     call<{ transacoes: Transacao[]; grupo_id: string }>('eloi-financas', 'transacoes.parcelar',
       { transacao, parcelas }),
+  /** Pagamento de fatura numa operação só no servidor: cria a transferência
+   *  conta → cartão (neutra no resultado) E liquida as compras em aberto do
+   *  cartão até `valor_cents`. `sobra_cents` > 0 = pagou mais do que havia
+   *  em aberto. */
+  pagarFatura: (dados: { cartao_id: string; conta_id: string; valor_cents: number; data: string }) =>
+    call<{ transferencia: Transacao; liquidadas: number; sobra_cents: number }>(
+      'eloi-financas', 'transacoes.pagar_fatura', dados),
   remover: (alvo: { id?: string; grupo_id?: string }) =>
     call<{ ok: true }>('eloi-financas', 'transacoes.remover', alvo),
   /** Estorno: preserva o lançamento no histórico e zera o efeito financeiro. */

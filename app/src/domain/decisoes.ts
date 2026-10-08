@@ -1,8 +1,9 @@
 import type {
-  ServicoRow, MovimentoRow, OrcamentoRow, Transacao, NotaFiscal, BriefingLinkRow, Conta,
+  ServicoRow, OrcamentoRow, Transacao, NotaFiscal, BriefingLinkRow, Conta,
 } from '../lib/tipos'
 import { centsDeReais } from '../lib/dinheiro'
-import { diasDeAtraso, estaEmAberto } from './financeiro'
+import { diasDeAtraso, estaEmAberto, saldoAberto } from './financeiro'
+import { diasEntre, hojeISO } from './datas'
 
 export type Urgencia = 'normal' | 'atrasado'
 export type AcaoDecisao = 'lancar_nf' | 'cobrar_pagamento' | 'conferir_recebimento'
@@ -46,8 +47,12 @@ function vencimentoServico(s: Pick<ServicoRow, 'data_vencimento' | 'data_compete
 /** Sem vencimento nem competência, não há atraso. Vence no fim do dia. */
 function servicoVencido(s: Pick<ServicoRow, 'data_vencimento' | 'data_competencia'>, agora: number): boolean {
   const v = vencimentoServico(s)
-  return v ? v < new Date(agora).toISOString().slice(0, 10) : false
+  return v ? v < hojeISO(agora) : false
 }
+
+/** Critério único de "sem nota": o vínculo real é `nota_fiscal_id` (1 nota :
+ *  N serviços, D-22). `nf_numero` é texto legado e pode existir sem nota. */
+export const semNotaFiscal = (s: Pick<ServicoRow, 'nota_fiscal_id'>) => !s.nota_fiscal_id
 
 export interface PendenciasServicos {
   a_receber_cents: number; a_receber_qtd: number
@@ -64,7 +69,7 @@ export function pendenciasDeServicos(servicos: ServicoRow[], agora = Date.now())
   const concluidos = servicos.filter((s) => s.status_execucao === 'concluida')
   const aReceber = concluidos.filter((s) => !s.pago)
   const atrasados = aReceber.filter((s) => servicoVencido(s, agora))
-  const semNf = concluidos.filter((s) => !s.nota_fiscal_id)
+  const semNf = concluidos.filter(semNotaFiscal)
   const soma = (l: ServicoRow[]) => l.reduce((t, s) => t + s.valor_cents, 0)
   return {
     a_receber_cents: soma(aReceber), a_receber_qtd: aReceber.length,
@@ -76,8 +81,6 @@ export function pendenciasDeServicos(servicos: ServicoRow[], agora = Date.now())
 export function decisoesDoDia(input: {
   servicos: ServicoRow[]
   orcamentos: OrcamentoRow[]
-  /** Caixa/movimento do painel legado (/gestao). O `/admin` não usa mais. */
-  movimentos?: MovimentoRow[]
   /** Núcleo financeiro novo. Opcional: as chamadas antigas seguem válidas. */
   transacoes?: Transacao[]
   notas?: NotaFiscal[]
@@ -90,7 +93,7 @@ export function decisoesDoDia(input: {
 
   for (const s of input.servicos) {
     if (s.status_execucao !== 'concluida') continue
-    if (!s.nota_fiscal_id) {
+    if (semNotaFiscal(s)) {
       decisoes.push({
         id: `nf:${s.id}`, titulo: s.descricao, detalhe: 'Concluído sem nota fiscal',
         clienteId: s.cliente_id, marca: s.sub_cliente, valorCents: s.valor_cents,
@@ -112,10 +115,10 @@ export function decisoesDoDia(input: {
 
   // Prazo de entrega passou e o serviço não foi concluído. Só existe se
   // alguém combinou prazo — serviço sem prazo não fica "atrasado" por chute.
-  const hojeISO = new Date(agora).toISOString().slice(0, 10)
+  const hoje = hojeISO(agora)
   for (const s of input.servicos) {
-    if (s.status_execucao === 'concluida' || !s.prazo || s.prazo >= hojeISO) continue
-    const dias = Math.floor((agora - new Date(s.prazo).getTime()) / DIA_MS)
+    if (s.status_execucao === 'concluida' || !s.prazo || s.prazo >= hoje) continue
+    const dias = diasEntre(s.prazo, hoje)
     decisoes.push({
       id: `prazo:${s.id}`, titulo: s.descricao,
       detalhe: `Entrega combinada para ${s.prazo.slice(8, 10)}/${s.prazo.slice(5, 7)} · ${dias} ${dias === 1 ? 'dia' : 'dias'} de atraso`,
@@ -140,16 +143,6 @@ export function decisoesDoDia(input: {
     })
   }
 
-  for (const m of input.movimentos ?? []) {
-    if (m.status !== 'previsto' || !m.data_movimento) continue
-    if (new Date(m.data_movimento).getTime() < agora) {
-      decisoes.push({
-        id: `mov:${m.id}`, titulo: m.descricao, detalhe: 'Previsto não confirmado',
-        clienteId: m.cliente_id, valorCents: m.valor_cents, acao: 'conferir_recebimento', urgencia: 'atrasado',
-      })
-    }
-  }
-
   for (const o of input.orcamentos) {
     if (o.status !== 'enviado') continue
     // orcamentos não guarda "enviado_em" — updated_at aproxima "desde quando
@@ -165,7 +158,6 @@ export function decisoesDoDia(input: {
   }
 
   // Núcleo financeiro: o que venceu e continua em aberto vira fila de trabalho.
-  const hoje = new Date(agora).toISOString().slice(0, 10)
   for (const t of input.transacoes ?? []) {
     if (t.tipo === 'transferencia' || !estaEmAberto(t)) continue
     const atraso = diasDeAtraso(t, hoje)
@@ -176,7 +168,7 @@ export function decisoesDoDia(input: {
       titulo: t.descricao,
       detalhe: `${receber ? 'Recebimento' : 'Pagamento'} atrasado há ${atraso} ${atraso === 1 ? 'dia' : 'dias'}`,
       clienteId: t.cliente_id,
-      valorCents: t.valor_cents - t.recebido_cents,
+      valorCents: saldoAberto(t),
       acao: receber ? 'cobrar_pagamento' : 'pagar_conta',
       urgencia: 'atrasado',
     })
@@ -238,15 +230,16 @@ export interface Prazo {
 }
 
 export function prazos(input: { servicos: ServicoRow[]; agora?: number }): Prazo[] {
-  const agora = input.agora ?? Date.now()
+  const hoje = hojeISO(input.agora ?? Date.now())
   // Prazo combinado; competência é "a que mês pertence", não "quando entrega".
+  // Conta em dias de calendário de Brasília: prazo de hoje é 0, não -1 às 22h.
   return input.servicos
     .filter((s) => s.status_execucao !== 'concluida' && s.prazo)
     .map((s) => ({
       id: s.id,
       titulo: s.descricao,
       clienteId: s.cliente_id,
-      dias: Math.round((new Date(s.prazo as string).getTime() - agora) / DIA_MS),
+      dias: diasEntre(hoje, s.prazo as string),
     }))
     .sort((a, b) => a.dias - b.dias)
 }

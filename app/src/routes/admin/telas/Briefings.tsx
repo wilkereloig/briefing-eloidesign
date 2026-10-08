@@ -6,7 +6,7 @@ import type { BriefingLegadoRow, BriefingLinkRow } from '../../../lib/tipos'
 import {
   Aviso, Botao, Campo, Chip, Erro, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
-import { Cabecalho } from '../../../ui/painel'
+import { Cabecalho, FalhasParciais } from '../../../ui/painel'
 import { dataCurta } from '../../../ui/formato'
 import {
   caminhoTipo, lerResposta, rotuloTipo, TIPOS_BRIEFING,
@@ -40,14 +40,21 @@ export default function Briefings() {
   const carregar = useCallback(async () => {
     setErro(null)
     try {
-      const [vis, ec] = await Promise.all([
-        briefingsApi.legadoVisual().catch(() => [] as BriefingLegadoRow[]),
-        briefingsApi.legadoEcommerce().catch(() => [] as BriefingLegadoRow[]),
+      // Uma origem fora do ar não esconde a outra, mas também não vira lista
+      // vazia calada: a falha aparece no <Erro> da tela.
+      const [vis, ec] = await Promise.allSettled([
+        briefingsApi.legadoVisual(), briefingsApi.legadoEcommerce(),
       ])
+      const lista = (r: PromiseSettledResult<BriefingLegadoRow[]>) => (r.status === 'fulfilled' ? r.value : [])
       setLegado([
-        ...vis.map((b) => ({ ...b, origem: 'visual' as const })),
-        ...ec.map((b) => ({ ...b, origem: 'ecommerce' as const })),
+        ...lista(vis).map((b) => ({ ...b, origem: 'visual' as const })),
+        ...lista(ec).map((b) => ({ ...b, origem: 'ecommerce' as const })),
       ].sort((a, b) => b.created_at.localeCompare(a.created_at)))
+      const falhas = [
+        vis.status === 'rejected' ? `respostas antigas (visual): ${(vis.reason as Error).message}` : null,
+        ec.status === 'rejected' ? `respostas antigas (e-commerce): ${(ec.reason as Error).message}` : null,
+      ].filter(Boolean)
+      if (falhas.length) setErro(`Não carregou: ${falhas.join(' · ')}`)
     } catch (e) {
       setErro((e as Error).message)
     } finally {
@@ -123,6 +130,8 @@ export default function Briefings() {
           </div>
 
           {erro && <Erro causa={erro} aoTentar={() => void carregar()} />}
+          {/* Convites vêm do store: falha lá aparece aqui, não como "0 convites". */}
+          <FalhasParciais so="briefings" />
 
           <div className="abas" role="tablist" aria-label="Origem do briefing">
             <Pilula ativa={aba === 'convites'} role="tab" aria-selected={aba === 'convites'}

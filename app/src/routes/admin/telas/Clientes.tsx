@@ -73,7 +73,7 @@ export default function Clientes() {
         ) : (
           <>
             <div className="grade-indicadores">
-              <Indicador dominante rotulo="Clientes ativos" valor={String(clientes.length)}
+              <Indicador dominante rotulo="Clientes ativos" valor={String(clientes.length - arquivados)}
                 nota={`${servicos.length} serviços registrados`} />
               <Indicador rotulo="Total faturado" valor={fmtBRL(totalFaturado)}
                 nota="Soma dos serviços" />

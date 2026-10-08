@@ -5,6 +5,7 @@ import { centsDeReais, fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas } from '../../../lib/financas-store'
 import { estaEmAberto, saldoAberto, valorLiquidado } from '../../../domain/financeiro'
 import { juntarProjetos } from '../../../domain/projeto'
+import { semNotaFiscal } from '../../../domain/decisoes'
 import { ROTULO_EVENTO, timeline } from '../../../domain/timeline'
 import { PainelTarefas } from '../Tarefas'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Vazio } from '../../../ui/componentes'
@@ -98,7 +99,7 @@ export default function ClienteFicha() {
             id: m.id, nome: m.nome, ativo: m.ativo, itens: itens.length,
             total: itens.reduce((acc, sv) => acc + sv.valor_cents, 0),
             semValor: itens.filter((sv) => sv.valor_cents === 0).length,
-            semNota: itens.filter((sv) => !sv.nf_numero).length,
+            semNota: itens.filter(semNotaFiscal).length,
           }
         })
         const direto = meus.filter((sv) => !sv.sub_cliente_id)
@@ -107,7 +108,7 @@ export default function ClienteFicha() {
             id: 'direto', nome: 'Trabalho direto', ativo: true, itens: direto.length,
             total: direto.reduce((acc, sv) => acc + sv.valor_cents, 0),
             semValor: direto.filter((sv) => sv.valor_cents === 0).length,
-            semNota: direto.filter((sv) => !sv.nf_numero).length,
+            semNota: direto.filter(semNotaFiscal).length,
           }]
           : linhas
       })(),
@@ -390,7 +391,8 @@ export default function ClienteFicha() {
                           {p.servico?.sub_cliente_id
                             ? <span className="sub-cliente">{p.servico.sub_cliente}</span>
                             : null}
-                          {p.servico?.nf_numero ? `NF ${p.servico.nf_numero}` : 'Sem nota fiscal'}
+                          {!p.servico || semNotaFiscal(p.servico) ? 'Sem nota fiscal'
+                            : p.servico.nf_numero ? `NF ${p.servico.nf_numero}` : 'Nota vinculada'}
                         </span>
                       </span>
                       <Dinheiro cents={p.valorCents} className="t-valor" />

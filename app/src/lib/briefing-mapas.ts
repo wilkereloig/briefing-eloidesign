@@ -3,8 +3,8 @@
 // renomear "Nº produtos" para outra coisa só criaria dúvida sobre se é o
 // mesmo campo.
 //
-// Enquanto `/painel-briefings` existir, os dois arquivos convivem. Condição
-// de saída do HTML: o painel estático sair do ar.
+// O painel estático `/painel-briefings` saiu do ar e redireciona para
+// `/admin/briefings`: este arquivo é a fonte única dos rótulos.
 
 /** campo → { valor cru → rótulo legível }. Multi-escolha vem separada por vírgula. */
 export type MapaValores = Record<string, Record<string, string>>

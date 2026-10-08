@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcular, estaExpirado, linkPublico, VALIDADE_DIAS } from './orcamento'
+import { calcular, estaExpirado, linkPublico, totalOrcamentosCents, VALIDADE_DIAS } from './orcamento'
 
 // Os oito primeiros casos são os mesmos de `assets/eloi-admin/orcamento.test.js`,
 // de propósito: enquanto os dois arquivos existirem, um cálculo que divergir
@@ -91,5 +91,13 @@ describe('linkPublico', () => {
   it('sem link e sem token, devolve vazio em vez de endereço quebrado', () => {
     expect(linkPublico({}, O)).toBe('')
     expect(linkPublico({ share_token: null }, O)).toBe('')
+  })
+})
+
+describe('totalOrcamentosCents', () => {
+  it('converte reais→cents item a item antes de somar', () => {
+    // 0,1 + 0,2 em float dá 0,30000000000000004; somado em cents fica exato.
+    expect(totalOrcamentosCents([{ valor_total: 0.1 }, { valor_total: 0.2 }])).toBe(30)
+    expect(totalOrcamentosCents([{ valor_total: 11650 }, { valor_total: null }])).toBe(1165000)
   })
 })

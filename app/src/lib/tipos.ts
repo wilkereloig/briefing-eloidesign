@@ -127,25 +127,6 @@ export interface OrcamentoRow {
   servico_id?: string | null
 }
 
-export type MovimentoStatus = 'previsto' | 'realizado' | 'cancelado'
-export type MovimentoTipo = 'entrada' | 'saida'
-
-export interface MovimentoRow {
-  id: string
-  caixa_id: string
-  tipo: MovimentoTipo
-  status: MovimentoStatus
-  descricao: string
-  valor_cents: number
-  cliente_id: string | null
-  servico_id: string | null
-  orcamento_id: string | null
-  data_competencia: string | null
-  data_movimento: string | null
-  forma_pagamento: string | null
-  observacoes: string | null
-}
-
 export type MaterialStatus = 'rascunho' | 'publicado' | 'arquivado'
 export type MaterialCategoria = 'arquivo' | 'apresentacao' | 'fonte' | 'nota_fiscal' | 'outro'
 
