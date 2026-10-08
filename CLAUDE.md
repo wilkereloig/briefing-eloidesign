@@ -95,6 +95,11 @@ comentário dizendo por quê e qual a condição de saída — hoje isso vale pa
   andamento; commit só o que é da tarefa.
 - **Ações destrutivas** (apagar arquivo, reset/force-push, mexer em segredo,
   deploy) só com confirmação.
+- **MCP do Supabase trava em `drop`.** Qualquer `drop` (até `drop … if exists`) em
+  `execute_sql`/`apply_migration` espera uma confirmação e morre em 60 s sem aplicar.
+  Objeto novo: aplique sem o `drop` (`create or replace trigger`). Conferência do deploy
+  de edge: o `get_edge_function` grande cai num arquivo em `tool-results/` — compare
+  esse arquivo com o repo por script, nunca a olho.
 
 ## Financeiro do dono (lançar fatura, extrato, conta)
 
@@ -114,7 +119,7 @@ O painel também guarda o financeiro **pessoal** do Wilker (lente "pessoal").
   antes ("Fatura … — parcial") sai quando os itens entram.
 - **Pagamento de fatura** é transferência conta → cartão com baixa das compras:
   RPC `eloi_pagar_fatura` (mesma regra da edge `transacoes.pagar_fatura`).
-- **Liquidação** *(depois da migração 2026-10-09)*: cada pagamento é uma linha em
+- **Liquidação** *(no ar desde 2026-10-09)*: cada pagamento é uma linha em
   `eloi_liquidacoes` via RPC `eloi_liquidar` (nunca `UPDATE recebido_cents` à mão — o
   trigger de espelho cobre, mas perde forma/conta/chave). Resultado de verdade é por
   competência e natureza (`docs/EVOLUCAO-FINANCEIRO.md`).

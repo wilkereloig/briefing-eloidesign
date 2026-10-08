@@ -1,8 +1,15 @@
 # Evolução do sistema ELOI — financeiro, gestão e visual
 
 Plano de 10 etapas (briefing do dono, 2026-10-09). Branch de trabalho:
-`evolucao/financeiro-integrado`. **Nada daqui está em produção** até autorização
-escrita: nem migração, nem edge, nem `app/dist`.
+`evolucao/financeiro-integrado`.
+
+**Publicado em 2026-10-09** com autorização escrita do dono ("pode publicar"):
+migrações de liquidações, natureza/perspectivas e rotina diária; edge `eloi-financas`
+v14 (conferida byte a byte, smoke 401); `app/dist` pela `master`. Antes, backup
+interno no schema `eloi_backup_20261009` (cópia das tabelas `eloi_*` financeiras, sem
+acesso de `anon`/`authenticated`). Verificado depois: soma(liquidações) = recebido em
+todas as linhas; nenhuma linha antiga mudou além das colunas novas; impressão digital
+do schema idêntica à da homologação; saldos por conta coerentes com o baseline.
 
 Produto principal: **Studio** (este repositório). Confirmado pelo inventário
 (`docs/INVENTARIO-2026-10.md` §2): é a única aplicação com lançamentos; o app
@@ -12,9 +19,9 @@ Financeiro separado está vazio.
 
 | Etapa | Estado | Entrega nesta branch |
 |---|---|---|
-| 1. Inventário e proteção | ✅ (com limitação) | `INVENTARIO-2026-10.md`; schema de homologação idêntico ao de produção; baseline privado; **backup de dados não feito** — sem credencial (ver inventário §7) |
-| 2. Confiabilidade | ✅ código + testes · ⏳ publicação | RPCs atômicas, idempotência, unicidade de recorrência, completude, saldo no servidor, travas de conta, guarda de ambiente |
-| 3. Obrigações × liquidações × resultados | ✅ núcleo · ⏳ telas | `eloi_liquidacoes`, natureza das categorias, 3 perspectivas no banco, `resultadoPorCompetencia` no domínio, relatório de diferenças |
+| 1. Inventário e proteção | ✅ (com limitação) | `INVENTARIO-2026-10.md`; schema de homologação idêntico ao de produção; baseline privado; backup interno `eloi_backup_20261009` no próprio banco — **backup externo restaurável ainda não** (adiado pelo dono; ver inventário §7) |
+| 2. Confiabilidade | ✅ publicado | RPCs atômicas, idempotência, unicidade de recorrência, completude, saldo no servidor, travas de conta, guarda de ambiente |
+| 3. Obrigações × liquidações × resultados | ✅ núcleo publicado · ⏳ telas | `eloi_liquidacoes`, natureza das categorias, 3 perspectivas no banco, `resultadoPorCompetencia` no domínio, relatório de diferenças |
 | 4. Revisão de dados e consolidação | ✅ no essencial | não há dado a migrar do app Financeiro (desligado); "Outros"/"Outras entradas" revisados com decisão delegada pelo dono (24 lançamentos, reversível); natureza das categorias confirmada |
 | 5. Contas, cartões, dívidas, conciliação | ⏳ parcial | saldo inicial com data e arquivamento preservando saldo; bloqueios de fatura; **empréstimo: taxa efetiva ao mês e valor para quitar hoje** (parcelas em aberto ≠ saldo devedor), cartões ordenados do juro mais caro; **importação OFX com FITID** (reimportar nunca duplica). Pendente: ciclos de fatura identificáveis, estorno de pagamento de fatura, lote/reversão de importação |
 | 6. Gestão integrada | ⏳ parcial | **Dinheiro › Análise de gastos** (pedido do dono): saídas × renda, pagando o passado, comprometido por mês, categorias mês a mês, onde mais se gasta |
@@ -111,7 +118,15 @@ de impacto:
 
 ## Publicação — ordem, verificação e reversão
 
-**Pré-requisito: backup restaurável** (procedimento no inventário §7). Sem ele, não aplicar.
+**Pré-requisito: backup restaurável** (procedimento no inventário §7). Em 2026-10-09 o
+dono adiou o backup externo e autorizou publicar com o backup interno.
+
+**Pelo MCP do Supabase:** comando com `drop` (inclusive `drop … if exists`) pede uma
+confirmação que a sessão não consegue dar e a chamada morre por timeout sem aplicar
+nada. Em objeto que ainda não existe, aplicar sem o `drop`; trigger com
+`create or replace trigger`. Em 2026-10-09 as migrações foram aplicadas em partes por
+`execute_sql`, e o `apply_migration` registrou o bloco final de permissões com o nome
+de cada migração.
 
 1. **Migrações**, nesta ordem (todas aditivas, testadas em homologação):
    `2026-07-15-servicos-sub-cliente-legado.sql` (no-op), `2026-10-09-reconcilia-schema-producao.sql`
@@ -144,7 +159,8 @@ Preserva transações e projeções; perde o detalhe por pagamento e a trilha (e
 
 ## Limitações registradas
 
-- Sem backup de dados nesta sessão. Nenhuma transformação foi feita no banco real.
+- Backup só interno (`eloi_backup_20261009`, mesmo banco): protege contra erro de
+  migração, não contra perda do projeto. Apagar o schema quando houver backup externo.
 - As telas ainda mostram o critério legado de resultado. Trocar é Etapa 6/7, junto do
   novo visual, para não mudar o número na frente do dono sem a explicação na tela.
 - O estorno de pagamento de fatura não existe. Por enquanto, apagar e cancelar estão bloqueados.

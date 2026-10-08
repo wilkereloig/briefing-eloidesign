@@ -2,7 +2,18 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
-## 2026-10-09 — Empréstimos com custo real; importação OFX (branch, não publicada)
+## 2026-10-09 — Publicação do financeiro integrado (etapas 1–3, gastos, empréstimos, OFX)
+
+- **No ar:** migrações `liquidacoes_e_operacoes_atomicas`, `natureza_e_perspectivas` e
+  `rotina_diaria_cron` no banco; edge `eloi-financas` v14; painel pela `master`.
+- Cada pagamento agora é um registro próprio (data, conta, forma, chave contra clique
+  duplo). O histórico entrou como 214 liquidações "legado acumulado"; nenhum lançamento
+  antigo mudou de valor, data ou status.
+- Rotina diária às 06:05 (Brasília) gera as contas fixas e marca o que venceu, sem
+  depender de alguém abrir o painel.
+- Backup interno antes da publicação no schema `eloi_backup_20261009`.
+
+## 2026-10-09 — Empréstimos com custo real; importação OFX
 
 - **Empréstimos:** cada cartão mostra a taxa efetiva ao mês (quando o valor recebido
   foi informado) e quanto custa quitar hoje, com a economia de juros futuros. "Falta"
@@ -11,7 +22,7 @@ Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente 
 - **Importar extrato aceita OFX:** cada lançamento usa o código do banco (FITID) como
   chave — dois lançamentos iguais no mesmo dia nunca colidem e reimportar não duplica.
 
-## 2026-10-09 — Dinheiro › Análise de gastos (branch `evolucao/financeiro-integrado`, não publicada)
+## 2026-10-09 — Dinheiro › Análise de gastos
 
 - **Nova tela Análise de gastos** (`/admin/dinheiro/gastos`, item na barra de Dinheiro):
   períodos de 3, 6 ou 12 meses; o que saiu pelo valor original (pago ou não, pelo mês da
@@ -26,7 +37,7 @@ Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente 
 - Dados: duas categorias novas no pessoal ("Dinheiro de outras contas", "Estornos e
   devoluções") e 24 lançamentos de "Outros"/"Outras entradas" recategorizados.
 
-## 2026-10-09 — Evolução do financeiro, etapas 1–3 (branch `evolucao/financeiro-integrado`, não publicada)
+## 2026-10-09 — Evolução do financeiro, etapas 1–3
 
 - **Inventário real** (`docs/INVENTARIO-2026-10.md`): matriz de propriedade dos dados
   (só o Studio tem lançamentos; app Financeiro vazio), schema de produção × migrações
@@ -34,7 +45,7 @@ Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente 
 - **Homologação local** (`database/homologacao/`): recria o schema idêntico ao de
   produção, testes de banco com dados sintéticos (53 afirmações + concorrência) e
   reversão testada.
-- **Migrações novas (pendentes de autorização):** liquidações por pagamento
+- **Migrações novas (publicadas em 2026-10-09):** liquidações por pagamento
   (`eloi_liquidacoes`), auditoria, RPCs atômicas (liquidar, reverter, pagar fatura v2,
   empréstimo, conferência, recorrências, vencidos), saldo oficial no banco, natureza
   das categorias e perspectivas (caixa, competência, obrigações), rotina diária no pg_cron.

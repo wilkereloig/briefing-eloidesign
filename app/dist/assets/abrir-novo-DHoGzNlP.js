@@ -1,1 +1,0 @@
-import{B as e,V as t,z as n}from"./index-X__H3zED.js";var r=t(e(),1);function i(e){let[t,i]=n(),a=t.get(`novo`);(0,r.useEffect)(()=>{if(!a)return;e();let n=new URLSearchParams(t);n.delete(`novo`),i(n,{replace:!0})},[a])}export{i as t};
