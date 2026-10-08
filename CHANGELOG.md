@@ -14,7 +14,12 @@ Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente 
   arquivar/reativar.
 - **Página do cartão:** fatura por mês (← →), compras por categoria, limite,
   parcelado, pagar fatura e arquivar/reativar.
-- Lançamentos, Agenda e Planejamento ainda abrem a tela antiga (fases 2 e 4).
+- **Fase 2:** Lançamentos, Agenda e Planejamento viram páginas próprias e a tela
+  antiga (`telas/Dinheiro.tsx`) sai. Lançamentos filtra por conta, categoria,
+  status e tipo, com o filtro no endereço (a página da conta ganhou "Ver todos
+  os lançamentos"). Agenda abre em A receber com `?aba=receber` — "Ver
+  cobrança", "Conferir" e "Ver contas a receber" na busca levam direto para lá.
+  Planejamento traz, por ora, só as recorrências e o custo recorrente.
 - Alertas e atalhos (Precisa de você, busca, calendário, onboarding) apontam
   para a sub-página certa.
 - Correções: `faturaAberta` pega a primeira fatura que de fato deve (estorno que

@@ -60,7 +60,7 @@ export function Busca({ aberta, aoFechar, aoCriar }: {
     { id: 'cmd:entrada', titulo: 'Lançar receita', detalhe: 'Dinheiro entrando' },
     { id: 'cmd:saida', titulo: 'Lançar despesa', detalhe: 'Dinheiro saindo' },
     { id: 'cmd:tarefa', titulo: 'Nova tarefa', detalhe: 'Lembrete com prazo' },
-    { id: 'cmd:receber', titulo: 'Ver contas a receber', destino: '/admin/dinheiro/agenda' },
+    { id: 'cmd:receber', titulo: 'Ver contas a receber', destino: '/admin/dinheiro/agenda?aba=receber' },
     { id: 'cmd:relatorios', titulo: 'Ver relatórios', destino: '/admin/relatorios' },
   ], [])
 

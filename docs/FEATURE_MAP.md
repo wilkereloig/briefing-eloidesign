@@ -26,8 +26,8 @@ Atualizado: 2026-10-08.
 
 ### Dinheiro
 - **Objetivo:** lançar, liquidar, parcelar, estornar e acompanhar todo movimento.
-- **Estado:** Em andamento — fase 1 de 4 entregue (estrutura, visão geral, contas, cartões); lançamentos/agenda, empréstimos e planejamento seguem o plano
-- **Telas:** `telas/dinheiro/` (Layout, VisaoGeral, Contas, ContaDetalhe, Cartoes, CartaoDetalhe — fase 1), `telas/Dinheiro.tsx` (tela antiga, ainda atrás de `/lancamentos`, `/agenda` e `/planejamento`), `FolhaTransacao.tsx`, `folhas.tsx`
+- **Estado:** Em andamento — fases 1 e 2 entregues (estrutura, visão geral, contas, cartões, lançamentos com filtros, agenda); empréstimos e planejamento completo seguem o plano
+- **Telas:** `telas/dinheiro/` (Layout, VisaoGeral, Contas, ContaDetalhe, Cartoes, CartaoDetalhe, Lancamentos, Agenda, Planejamento — só recorrências por ora; peças comuns em `compartilhado.tsx`), `FolhaTransacao.tsx`, `folhas.tsx`
 - **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar/pagar_fatura`, `conferencias.registrar`, `contas.*`, `recorrencias.*`
 - **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_conferencias`
 - **Permissão:** admin

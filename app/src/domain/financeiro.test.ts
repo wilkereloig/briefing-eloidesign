@@ -6,7 +6,7 @@ import {
   agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
   totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
   faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, saidasDaCobertura, patrimonioLiquido,
-  chequeEspecialUsado,
+  chequeEspecialUsado, filtrarLancamentos,
 } from './financeiro'
 import type { Conta, Meta, Transacao } from '../lib/tipos'
 
@@ -606,5 +606,44 @@ describe('cheque especial', () => {
     expect(chequeEspecialUsado(-1637_74)).toBe(1637_74)
     expect(chequeEspecialUsado(0)).toBe(0)
     expect(chequeEspecialUsado(500_00)).toBe(0)
+  })
+})
+
+describe('filtrarLancamentos', () => {
+  const ts = [
+    tx({ id: 'e', tipo: 'entrada', conta_id: 'cc', categoria_id: 'cat1', status: 'pendente', descricao: 'Projeto site', cliente_id: 'cli' }),
+    tx({ id: 's', tipo: 'saida', conta_id: 'cc', categoria_id: 'cat2', status: 'realizado', descricao: 'Aluguel', fornecedor: 'Imobiliária' }),
+    tx({ id: 't', tipo: 'transferencia', conta_id: 'pp', conta_destino_id: 'cc', status: 'realizado', descricao: 'Reserva' }),
+    tx({ id: 'x', tipo: 'saida', conta_id: 'pp', status: 'cancelado', descricao: 'Estornada' }),
+  ]
+  const ids = (r: Transacao[]) => r.map((t) => t.id)
+
+  it('sem filtro devolve tudo', () => {
+    expect(ids(filtrarLancamentos(ts, {}))).toEqual(['e', 's', 't', 'x'])
+  })
+  it('conta casa origem e destino da transferência', () => {
+    expect(ids(filtrarLancamentos(ts, { conta: 'cc' }))).toEqual(['e', 's', 't'])
+    expect(ids(filtrarLancamentos(ts, { conta: 'pp' }))).toEqual(['t', 'x'])
+  })
+  it('categoria', () => {
+    expect(ids(filtrarLancamentos(ts, { categoria: 'cat2' }))).toEqual(['s'])
+  })
+  it('status: em aberto junta os status ainda devidos', () => {
+    expect(ids(filtrarLancamentos(ts, { status: 'aberto' }))).toEqual(['e'])
+    expect(ids(filtrarLancamentos(ts, { status: 'realizado' }))).toEqual(['s', 't'])
+    expect(ids(filtrarLancamentos(ts, { status: 'cancelado' }))).toEqual(['x'])
+  })
+  it('tipo', () => {
+    expect(ids(filtrarLancamentos(ts, { tipo: 'transferencia' }))).toEqual(['t'])
+  })
+  it('busca por descrição, fornecedor e nome do cliente', () => {
+    const nome = (id: string) => (id === 'cli' ? 'Vibra' : undefined)
+    expect(ids(filtrarLancamentos(ts, { busca: 'aluguel' }))).toEqual(['s'])
+    expect(ids(filtrarLancamentos(ts, { busca: 'imobili' }))).toEqual(['s'])
+    expect(ids(filtrarLancamentos(ts, { busca: 'vibra' }, nome))).toEqual(['e'])
+    expect(ids(filtrarLancamentos(ts, { busca: '   ' }))).toHaveLength(4)
+  })
+  it('filtros combinam (E)', () => {
+    expect(ids(filtrarLancamentos(ts, { conta: 'cc', tipo: 'saida', status: 'realizado' }))).toEqual(['s'])
   })
 })

@@ -12,7 +12,7 @@
 //    Pagamento parcial é normal, não exceção;
 //  · competência (a que mês pertence) ≠ liquidação (quando o dinheiro andou).
 //    Resultado usa competência; saldo usa liquidação.
-import type { Transacao, Conta, Contexto, Meta, StatusMov } from '../lib/tipos'
+import type { Transacao, Conta, Contexto, Meta, StatusMov, TipoMov } from '../lib/tipos'
 
 /** Status em que a transação ainda não liquidou e continua devida. */
 const EM_ABERTO: StatusMov[] = ['previsto', 'pendente', 'parcial', 'vencido']
@@ -216,6 +216,40 @@ export function agruparPorPrazo(
         (a.data_vencimento ?? '9999').localeCompare(b.data_vencimento ?? '9999'))
       return { faixa: f, itens, total_cents: itens.reduce((s, t) => s + saldoAberto(t), 0) }
     })
+}
+
+// ── filtros da lista de lançamentos ─────────────────────────────────────────
+
+/** "Em aberto" junta previsto/pendente/parcial/vencido: para quem filtra, a
+ *  pergunta é "já andou ou não?", não qual dos quatro status ainda devidos. */
+export type StatusFiltro = 'aberto' | 'realizado' | 'cancelado'
+export interface FiltrosLancamento {
+  conta?: string
+  categoria?: string
+  status?: StatusFiltro
+  tipo?: TipoMov
+  /** Texto livre: descrição, fornecedor ou nome do cliente. */
+  busca?: string
+}
+
+/**
+ * Recorte de uma lista de lançamentos. Filtro ausente ou vazio não restringe.
+ * Conta casa nos DOIS lados da transferência: o dinheiro que chega na conta
+ * também passou por ela. `nomeCliente` resolve o id para a busca por cliente.
+ */
+export function filtrarLancamentos(
+  transacoes: Transacao[], f: FiltrosLancamento, nomeCliente?: (id: string) => string | undefined,
+): Transacao[] {
+  const q = f.busca?.trim().toLowerCase()
+  return transacoes.filter((t) =>
+    (!f.conta || t.conta_id === f.conta || t.conta_destino_id === f.conta) &&
+    (!f.categoria || t.categoria_id === f.categoria) &&
+    (!f.tipo || t.tipo === f.tipo) &&
+    (!f.status || (f.status === 'aberto' ? estaEmAberto(t) : t.status === f.status)) &&
+    (!q ||
+      t.descricao.toLowerCase().includes(q) ||
+      (t.fornecedor ?? '').toLowerCase().includes(q) ||
+      (!!t.cliente_id && !!nomeCliente?.(t.cliente_id)?.toLowerCase().includes(q))))
 }
 
 // ── cartão de crédito ────────────────────────────────────────────────────────

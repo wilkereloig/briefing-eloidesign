@@ -1,12 +1,13 @@
 import { Suspense } from 'react'
-import { Navigate, NavLink, Outlet, useSearchParams } from 'react-router-dom'
+import { Navigate, NavLink, Outlet, useMatch, useSearchParams } from 'react-router-dom'
 import { NAV_DINHEIRO } from '../../nav'
 import { Esqueleto, Vazio } from '../../../../ui/componentes'
 import { Cabecalho, SeletorLente } from '../../../../ui/painel'
 
 // Links antigos `/admin/dinheiro?aba=<x>` (favoritos, histórico) → sub-página.
+// receber/pagar levam a aba junto: a Agenda lê o mesmo `?aba=`.
 const ABA_ANTIGA = new Map([
-  ['movimentos', 'lancamentos'], ['receber', 'agenda'], ['pagar', 'agenda'],
+  ['movimentos', 'lancamentos'], ['receber', 'agenda?aba=receber'], ['pagar', 'agenda?aba=pagar'],
   ['contas', 'contas'], ['recorrencias', 'planejamento'],
 ])
 
@@ -14,7 +15,9 @@ const ABA_ANTIGA = new Map([
  *  mora no store (useFinancas), então vale em todas as sub-páginas. */
 export default function DinheiroLayout() {
   const [params] = useSearchParams()
-  const antiga = ABA_ANTIGA.get(params.get('aba') ?? '')
+  // Só no índice: em /agenda o `?aba=` é da própria Agenda e não pode sumir.
+  const noIndice = !!useMatch('/admin/dinheiro')
+  const antiga = noIndice ? ABA_ANTIGA.get(params.get('aba') ?? '') : undefined
   if (antiga) return <Navigate to={`/admin/dinheiro/${antiga}`} replace />
 
   return (

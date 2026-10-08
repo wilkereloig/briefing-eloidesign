@@ -22,6 +22,7 @@ Uma linha por remoção, com a prova. Busca feita em todo o repositório, fora
 | Tabelas `eloi_caixas`, `eloi_movimentos_financeiros` | 0 linhas, alvo só da edge acima — `DROP` feito por outro agente |
 | Ações só do `/gestao` em `edge-functions/eloi-gestao.ts` | Único chamador era `gestao/index.html` — feito por outro agente |
 | Código de movimentos em `app/src/` | Lia o modelo antigo, sem tela que o usasse — feito por outro agente |
+| `app/src/routes/admin/telas/Dinheiro.tsx` | Separada em `dinheiro/Lancamentos.tsx`, `Agenda.tsx` e `Planejamento.tsx`; o único import (lazy em `router.tsx`) foi trocado. Grep em todo o repositório (código, CSS, `vercel.json`, `manifest.json`, páginas estáticas) só acha menções em docs e no CHANGELOG |
 | Worktree `.claude/worktrees/apague-esse-5e518d`, branches `claude/apague-esse-5e518d` e `painel-interno-fase-a` | `git worktree list` e `git branch -a` não os mostram mais |
 
 **Mantido:** `assets/eloi-admin/auth.js` e `nav.js` (só `/marca/` usa — links

@@ -117,6 +117,8 @@ export default function ContaDetalhe() {
             <Pilula ativa={aba === 'agendado'} role="tab" aria-selected={aba === 'agendado'}
               onClick={() => setAba('agendado')}>Agendado ({agendado.length})</Pilula>
           </div>
+          <Link className="btn btn-secundario btn-compacto" style={{ alignSelf: 'flex-start' }}
+            to={`/admin/dinheiro/lancamentos?conta=${conta.id}`}>Ver todos os lançamentos</Link>
 
           {aba === 'extrato' && (
             <>

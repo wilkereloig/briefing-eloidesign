@@ -15,8 +15,8 @@ import { FolhaTransacao } from '../../FolhaTransacao'
 import { FolhaExcluir, FolhaLiquidar, FolhaReagendar } from '../../folhas'
 
 // Linha de lançamento e as folhas que as ações dela abrem. Compartilhado entre
-// a tela antiga de Dinheiro (lançamentos/agenda) e a página da conta — uma
-// linha só, para as duas não divergirem em ação nem em rótulo.
+// Lançamentos, Agenda e a página da conta — uma linha só, para as telas não
+// divergirem em ação nem em rótulo.
 
 /** Folha aberta a partir de uma `LinhaMov`. */
 export type FolhaMov = { tipo: 'editar' | 'liquidar' | 'reagendar' | 'excluir'; t: Transacao }
@@ -52,6 +52,22 @@ export function LegendaCheque({ saldo, limite }: { saldo: number; limite: number
     <span className="t-legenda">
       Cheque especial: {fmtBRL(chequeEspecialUsado(saldo))} usado de {fmtBRL(limite)}
     </span>
+  )
+}
+
+/** Busca livre das listas de lançamento. Filtra a lista, nunca os indicadores. */
+export function CampoBusca({ valor, aoMudar }: { valor: string; aoMudar: (v: string) => void }) {
+  return (
+    <div className="busca">
+      <Icone nome="pesquisa" tamanho={17} />
+      <input className="campo-caixa" value={valor} onChange={(e) => aoMudar(e.target.value)}
+        placeholder="Buscar por descrição, cliente ou fornecedor" aria-label="Buscar" />
+      {valor && (
+        <Botao variante="icone" onClick={() => aoMudar('')} aria-label="Limpar busca">
+          <Icone nome="fechar" tamanho={14} />
+        </Botao>
+      )}
+    </div>
   )
 }
 

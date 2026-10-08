@@ -15,9 +15,9 @@ export type AcaoDecisao = 'lancar_nf' | 'cobrar_pagamento' | 'conferir_recebimen
 export const ACAO: Record<AcaoDecisao, { rotulo: string; destino: string }> = {
   lancar_nf: { rotulo: 'Registrar nota', destino: '/admin/notas?novo=1' },
   emitir_nf: { rotulo: 'Ver nota', destino: '/admin/notas' },
-  cobrar_pagamento: { rotulo: 'Ver cobrança', destino: '/admin/dinheiro/agenda' },
-  pagar_conta: { rotulo: 'Ver conta', destino: '/admin/dinheiro/agenda' },
-  conferir_recebimento: { rotulo: 'Conferir', destino: '/admin/dinheiro/agenda' },
+  cobrar_pagamento: { rotulo: 'Ver cobrança', destino: '/admin/dinheiro/agenda?aba=receber' },
+  pagar_conta: { rotulo: 'Ver conta', destino: '/admin/dinheiro/agenda?aba=pagar' },
+  conferir_recebimento: { rotulo: 'Conferir', destino: '/admin/dinheiro/agenda?aba=receber' },
   cobrar_decisao: { rotulo: 'Ver proposta', destino: '/admin/orcamentos' },
   aprovar_valor: { rotulo: 'Aprovar valor', destino: '/admin/projetos' },
   ler_briefing: { rotulo: 'Ler resposta', destino: '/admin/briefings' },

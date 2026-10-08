@@ -20,7 +20,6 @@ const Projetos = lazy(() => import('./routes/admin/telas/Projetos'))
 const Orcamentos = lazy(() => import('./routes/admin/telas/Orcamentos'))
 const Clientes = lazy(() => import('./routes/admin/telas/Clientes'))
 const ClienteFicha = lazy(() => import('./routes/admin/telas/ClienteFicha'))
-const Dinheiro = lazy(() => import('./routes/admin/telas/Dinheiro'))
 const DinheiroLayout = lazy(() => import('./routes/admin/telas/dinheiro/Layout'))
 const EmBreve = lazy(() => import('./routes/admin/telas/dinheiro/Layout').then((m) => ({ default: m.EmBreve })))
 const VisaoGeral = lazy(() => import('./routes/admin/telas/dinheiro/VisaoGeral'))
@@ -28,6 +27,9 @@ const Contas = lazy(() => import('./routes/admin/telas/dinheiro/Contas'))
 const ContaDetalhe = lazy(() => import('./routes/admin/telas/dinheiro/ContaDetalhe'))
 const Cartoes = lazy(() => import('./routes/admin/telas/dinheiro/Cartoes'))
 const CartaoDetalhe = lazy(() => import('./routes/admin/telas/dinheiro/CartaoDetalhe'))
+const Lancamentos = lazy(() => import('./routes/admin/telas/dinheiro/Lancamentos'))
+const Agenda = lazy(() => import('./routes/admin/telas/dinheiro/Agenda'))
+const Planejamento = lazy(() => import('./routes/admin/telas/dinheiro/Planejamento'))
 const Briefings = lazy(() => import('./routes/admin/telas/Briefings'))
 const Entregas = lazy(() => import('./routes/admin/telas/Entregas'))
 const Notas = lazy(() => import('./routes/admin/telas/Notas'))
@@ -58,19 +60,17 @@ export const router = createBrowserRouter([
       { path: 'orcamentos', element: <Orcamentos /> },
       { path: 'clientes', element: <Clientes /> },
       { path: 'clientes/:id', element: <ClienteFicha /> },
-      // Dinheiro tem sub-páginas (nav.ts NAV_DINHEIRO). A tela antiga segue
-      // montada nas que ainda não foram separadas; `key` força remontar ao
-      // trocar de sub-página, senão a aba inicial (lida do path) não muda.
+      // Dinheiro tem sub-páginas (nav.ts NAV_DINHEIRO), uma tela cada.
       { path: 'dinheiro', element: <DinheiroLayout />, children: [
         { index: true, element: <VisaoGeral /> },
         { path: 'contas', element: <Contas /> },
         { path: 'contas/:id', element: <ContaDetalhe /> },
         { path: 'cartoes', element: <Cartoes /> },
         { path: 'cartoes/:id', element: <CartaoDetalhe /> },
-        { path: 'lancamentos', element: <Dinheiro key="lancamentos" /> },
-        { path: 'agenda', element: <Dinheiro key="agenda" /> },
+        { path: 'lancamentos', element: <Lancamentos /> },
+        { path: 'agenda', element: <Agenda /> },
         { path: 'emprestimos', element: <EmBreve titulo="Empréstimos" /> },
-        { path: 'planejamento', element: <Dinheiro key="planejamento" /> },
+        { path: 'planejamento', element: <Planejamento /> },
       ] },
       { path: 'briefings', element: <Briefings /> },
       { path: 'entregas', element: <Entregas /> },
