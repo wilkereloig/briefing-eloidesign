@@ -156,26 +156,30 @@ export default function Hoje() {
 
             <div className="grade-dupla">
               <Painel titulo="Contas e cartões"
-                acao={<Link to="/admin/config" className="t-legenda">Gerenciar</Link>}>
+                acao={<Link to="/admin/dinheiro/contas" className="t-legenda">Gerenciar</Link>}>
                 {contasVisiveis.length === 0
                   ? <p className="t-sec">Nenhuma conta neste contexto.</p>
                   : <ul className="lista">
                     {contasVisiveis.map((c) => (
-                      <li key={c.id} className="lista-item">
-                        <span className="marca-cor" aria-hidden style={{ background: c.cor || 'var(--roxo)' }} />
-                        <span className="celula">
-                          <span className="t-ui espremer">{c.nome}</span>
-                          <span className="t-legenda">
-                            {rotuloConta(c.tipo)} · {c.contexto}
-                            {c.tipo === 'cartao_credito' ? ' · fatura aberta' : ''}
+                      <li key={c.id}>
+                        <Link className="lista-item lista-link"
+                          to={`/admin/dinheiro/${c.tipo === 'cartao_credito' ? 'cartoes' : 'contas'}/${c.id}`}>
+                          <span className="marca-cor" aria-hidden style={{ background: c.cor || 'var(--roxo)' }} />
+                          <span className="celula">
+                            <span className="t-ui espremer">{c.nome}</span>
+                            <span className="t-legenda">
+                              {rotuloConta(c.tipo)} · {c.contexto}
+                              {c.tipo === 'cartao_credito' ? ' · fatura aberta' : ''}
+                            </span>
                           </span>
-                        </span>
-                        {/* Cartão mostra fatura, não saldo: a dívida é o número
-                            que importa, e é o mesmo critério de Dinheiro e Config. */}
-                        <Dinheiro className="t-valor"
-                          cents={c.tipo === 'cartao_credito'
-                            ? faturaAberta(c, transacoes)
-                            : saldoConta(c, transacoes)} />
+                          {/* Cartão mostra fatura, não saldo: a dívida é o número
+                              que importa, e é o mesmo critério das páginas de Dinheiro. */}
+                          <Dinheiro className="t-valor"
+                            cents={c.tipo === 'cartao_credito'
+                              ? faturaAberta(c, transacoes)
+                              : saldoConta(c, transacoes)} />
+                          <Icone nome="avancar" tamanho={16} />
+                        </Link>
                       </li>
                     ))}
                   </ul>}
@@ -200,7 +204,7 @@ export default function Hoje() {
             </div>
 
             <Painel titulo="Últimas movimentações"
-              acao={<Link to="/admin/dinheiro" className="t-legenda">Ver todas</Link>}>
+              acao={<Link to="/admin/dinheiro/lancamentos" className="t-legenda">Ver todas</Link>}>
               {ultimas.length === 0
                 ? <p className="t-sec">Nenhuma movimentação liquidada neste mês.</p>
                 : <ul className="lista">

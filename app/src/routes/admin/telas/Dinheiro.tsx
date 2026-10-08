@@ -5,20 +5,21 @@ import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { hojeISO, useFinancas, useNomes, useTransacoesDoMes } from '../../../lib/financas-store'
 import {
   agruparPorPrazo, cicloFatura, diasDeAtraso, estaEmAberto, faturaAberta, limiteDisponivel,
-  parceladoAberto, resultado, ROTULO_FAIXA, saldoConta, saldoAberto, totalEmAberto,
+  parceladoAberto, resultado, ROTULO_FAIXA, saldoConta, totalEmAberto,
 } from '../../../domain/financeiro'
 import { semNotaFiscal } from '../../../domain/decisoes'
-import type { Conferencia, Conta, Recorrencia, ServicoRow, Transacao } from '../../../lib/tipos'
+import type { Conferencia, Conta, Recorrencia, Transacao } from '../../../lib/tipos'
 import {
   Aviso, Botao, Campo, Card, Etiqueta, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
-import { Carga, ChipMovimento, Dinheiro, Paginacao, SeletorMes } from '../../../ui/painel'
+import { Carga, Dinheiro, Paginacao, SeletorMes } from '../../../ui/painel'
 import { usePaginacao } from '../../../ui/paginacao'
 import { custoAnual, custoMensal, dataCurta, rotuloConta, rotuloPeriodo } from '../../../ui/formato'
 import { FolhaTransacao } from '../FolhaTransacao'
-import { FolhaConta, FolhaExcluir, FolhaLiquidar, FolhaReagendar, FolhaRecorrencia } from '../folhas'
+import { FolhaConta, FolhaRecorrencia } from '../folhas'
 import { Onboarding } from '../Onboarding'
 import { FolhaConferencia, FolhaImportar } from '../FolhasExtrato'
+import { alternarCancelamento, FolhasMov, LinhaMov, type FolhaMov } from './dinheiro/compartilhado'
 
 type Aba = 'movimentos' | 'receber' | 'pagar' | 'contas' | 'recorrencias'
 /** Recortes da fila de cobrança. São perguntas, não status: "o que está sem
@@ -47,12 +48,12 @@ const ABAS: { chave: Aba; label: string }[] = [
 ]
 
 /** Aba inicial pela sub-página em que a tela está montada (router.tsx).
- *  Contas virou página própria e saiu da barra de abas; /contas e /cartoes
- *  ainda caem aqui até as páginas próprias existirem. */
+ *  Contas virou página própria (dinheiro/Contas.tsx); /cartoes ainda cai
+ *  aqui, na aba Contas, até a página própria dele existir. */
 function abaDoPath(pathname: string): Aba {
   if (pathname.endsWith('/agenda')) return 'pagar'
   if (pathname.endsWith('/planejamento')) return 'recorrencias'
-  if (pathname.endsWith('/contas') || pathname.endsWith('/cartoes')) return 'contas'
+  if (pathname.endsWith('/cartoes')) return 'contas'
   return 'movimentos'
 }
 
@@ -70,10 +71,7 @@ export default function DinheiroTela() {
   const [recorte, setRecorte] = useState<Recorte>('todos')
   const [folha, setFolha] = useState<
     | { tipo: 'nova' }
-    | { tipo: 'editar'; t: Transacao }
-    | { tipo: 'liquidar'; t: Transacao }
-    | { tipo: 'reagendar'; t: Transacao }
-    | { tipo: 'excluir'; t: Transacao }
+    | FolhaMov
     | { tipo: 'conta'; c?: Conta }
     | { tipo: 'fatura'; c: Conta }
     | { tipo: 'conferir'; c: Conta }
@@ -85,16 +83,6 @@ export default function DinheiroTela() {
   const fechar = () => setFolha(null)
   const apos = async (msg: string, tipo?: 'ok' | 'erro') => { setAviso({ texto: msg, tipo }); await recarregar() }
   const erro = (e: unknown) => setAviso({ texto: (e as Error).message, tipo: 'erro' })
-
-  // Estorno em um passo: cancelar preserva a linha no histórico e zera o efeito
-  // em saldo e resultado. Reabrir devolve o status derivado do que já entrou.
-  const alternarCancelamento = async (t: Transacao) => {
-    const cancelando = t.status !== 'cancelado'
-    try {
-      await financas.cancelar(t.id, !cancelando)
-      await apos(cancelando ? 'Lançamento cancelado' : 'Lançamento reaberto')
-    } catch (e) { erro(e) }
-  }
 
   const mudarRecorrencia = async (r: Recorrencia, estado: 'pausar' | 'retomar' | 'encerrar') => {
     try {
@@ -214,7 +202,7 @@ export default function DinheiroTela() {
                   {pagMov.visiveis.map((t) => (
                     <LinhaMov key={t.id} t={t} nomes={nomes} hoje={hoje}
                       aoEditar={() => setFolha({ tipo: 'editar', t })}
-                      aoCancelar={() => void alternarCancelamento(t)}
+                      aoCancelar={() => void alternarCancelamento(t, apos, erro)}
                       aoLiquidar={() => setFolha({ tipo: 'liquidar', t })}
                       aoExcluir={() => setFolha({ tipo: 'excluir', t })} />
                   ))}
@@ -253,7 +241,7 @@ export default function DinheiroTela() {
                     <LinhaMov key={t.id} t={t} nomes={nomes} hoje={hoje} modoCobranca
                       servico={t.servico_id ? servicoPorId.get(t.servico_id) : undefined}
                       aoEditar={() => setFolha({ tipo: 'editar', t })}
-                      aoCancelar={() => void alternarCancelamento(t)}
+                      aoCancelar={() => void alternarCancelamento(t, apos, erro)}
                       aoLiquidar={() => setFolha({ tipo: 'liquidar', t })}
                       aoReagendar={() => setFolha({ tipo: 'reagendar', t })}
                       aoRecorrencia={t.recorrencia_id ? () => setAba('recorrencias') : undefined}
@@ -348,11 +336,7 @@ export default function DinheiroTela() {
       </Carga>
 
       {folha?.tipo === 'nova' && <FolhaTransacao aoFechar={fechar} aoSalvar={apos} />}
-      {folha?.tipo === 'editar' && (
-        <FolhaTransacao inicial={folha.t} aoFechar={fechar} aoSalvar={apos} />
-      )}
-      {folha?.tipo === 'liquidar' && <FolhaLiquidar transacao={folha.t} aoFechar={fechar} aoSalvar={apos} />}
-      {folha?.tipo === 'reagendar' && <FolhaReagendar transacao={folha.t} aoFechar={fechar} aoSalvar={apos} />}
+      {folha && 't' in folha && <FolhasMov folha={folha} aoFechar={fechar} aoSalvar={apos} />}
       {folha?.tipo === 'conta' && <FolhaConta inicial={folha.c} aoFechar={fechar} aoSalvar={apos} />}
       {folha?.tipo === 'fatura' && (
         <FolhaPagarFatura cartao={folha.c} aoFechar={fechar} aoSalvar={apos} />
@@ -360,18 +344,6 @@ export default function DinheiroTela() {
       {folha?.tipo === 'recorrencia' && <FolhaRecorrencia inicial={folha.r} aoFechar={fechar} aoSalvar={apos} />}
       {folha?.tipo === 'conferir' && <FolhaConferencia conta={folha.c} aoFechar={fechar} aoSalvar={apos} />}
       {folha?.tipo === 'importar' && <FolhaImportar aoFechar={fechar} aoSalvar={apos} />}
-      {folha?.tipo === 'excluir' && (
-        <FolhaExcluir
-          titulo={`Excluir "${folha.t.descricao}"?`}
-          consequencia={folha.t.grupo_id
-            ? 'Todas as parcelas deste parcelamento saem junto — uma parcela sozinha deixaria as outras órfãs.'
-            : 'O lançamento sai do mês e deixa de contar no saldo e no resultado.'}
-          aoFechar={fechar}
-          aoConfirmar={async () => {
-            await financas.remover(folha.t.grupo_id ? { grupo_id: folha.t.grupo_id } : { id: folha.t.id })
-            await apos('Lançamento excluído')
-          }} />
-      )}
 
       {aviso && <Aviso texto={aviso.texto} tipo={aviso.tipo} aoSumir={() => setAviso(null)} />}
     </div>
@@ -382,98 +354,6 @@ export default function DinheiroTela() {
 
 const porVencimento = (a: Transacao, b: Transacao) =>
   (a.data_vencimento ?? '9999').localeCompare(b.data_vencimento ?? '9999')
-
-/** Uma árvore só para toque e desktop: as colunas extras entram por CSS
- *  (.col-desktop) em vez de existir uma tabela e uma lista em paralelo. */
-function LinhaMov({
-  t, nomes, hoje, modoCobranca, servico, aoEditar, aoCancelar, aoLiquidar, aoReagendar, aoRecorrencia, aoExcluir,
-}: {
-  t: Transacao
-  nomes: ReturnType<typeof useNomes>
-  hoje: string
-  /** Serviço ligado ao lançamento: dá marca e situação da NF na linha. */
-  servico?: ServicoRow
-  /** Abas A receber / A pagar: o número que importa é quanto FALTA, e o atraso
-   *  aparece. No extrato de movimentações vale o valor do lançamento. */
-  modoCobranca?: boolean
-  aoEditar: () => void
-  aoCancelar: () => void
-  aoLiquidar: () => void
-  aoReagendar?: () => void
-  /** Presente quando a linha nasceu de uma recorrência. */
-  aoRecorrencia?: () => void
-  aoExcluir: () => void
-}) {
-  const cancelado = t.status === 'cancelado'
-  const atraso = modoCobranca && !cancelado ? diasDeAtraso(t, hoje) : 0
-  const cliente = t.cliente_id ? nomes.cliente.get(t.cliente_id)?.nome : null
-  const conta = t.conta_id ? nomes.conta.get(t.conta_id)?.nome : null
-  const categoria = t.categoria_id ? nomes.categoria.get(t.categoria_id)?.nome : null
-  const valor = modoCobranca ? saldoAberto(t) : t.valor_cents
-  const parcial = !modoCobranca && t.recebido_cents > 0 && t.recebido_cents < t.valor_cents
-  // Na fila de cobrança a linha responde "de quem, por quê e tem nota?" sem
-  // abrir nada. Só entrada com serviço tem NF a mostrar.
-  const apoio = modoCobranca
-    ? [
-      cliente,
-      servico?.sub_cliente,
-      servico?.descricao,
-      t.tipo === 'entrada' && servico ? (semNotaFiscal(servico) ? 'sem NF' : 'NF ok') : null,
-      !servico ? categoria : null,
-      conta,
-    ].filter(Boolean).join(' · ')
-    : [cliente, categoria, conta].filter(Boolean).join(' · ')
-
-  return (
-    <li className="lista-item" data-cancelado={cancelado ? 'true' : undefined}>
-      <span className="mov-icone" data-tipo={t.tipo} aria-hidden>
-        <Icone nome={t.tipo === 'entrada' ? 'avancar' : t.tipo === 'saida' ? 'voltar' : 'compartilhar'} tamanho={16} />
-      </span>
-      <span className="celula">
-        <span className="t-ui espremer">{t.descricao}</span>
-        <span className="t-legenda espremer">
-          {apoio || 'Sem classificação'}
-          {t.data_vencimento ? ` · ${dataCurta(t.data_vencimento)}` : ''}
-          {atraso > 0 ? ` · ${atraso} ${atraso === 1 ? 'dia' : 'dias'} de atraso` : ''}
-          {parcial ? ` · faltam ${fmtBRL(saldoAberto(t))}` : ''}
-          {modoCobranca && t.recebido_cents > 0
-            ? ` · ${fmtBRL(t.recebido_cents)} de ${fmtBRL(t.valor_cents)} já ${t.tipo === 'entrada' ? 'recebido' : 'pago'}` : ''}
-          {t.origem === 'importacao' ? ' · importado' : t.origem === 'ajuste' ? ' · ajuste de conferência' : ''}
-        </span>
-      </span>
-      {t.parcela_de && <span className="col-desktop t-legenda">{t.parcela_num}/{t.parcela_de}</span>}
-      <Dinheiro cents={t.tipo === 'saida' ? -valor : valor} className="t-valor" />
-      <ChipMovimento status={t.status} />
-      {estaEmAberto(t) && t.tipo !== 'transferencia' && (
-        <Botao variante="icone" onClick={aoLiquidar}
-          aria-label={`Registrar ${t.tipo === 'entrada' ? 'recebimento' : 'pagamento'} de ${t.descricao}`}>
-          <Icone nome="ok" tamanho={16} />
-        </Botao>
-      )}
-      {aoReagendar && estaEmAberto(t) && (
-        <Botao variante="icone" onClick={aoReagendar} aria-label={`Reagendar ${t.descricao}`}>
-          <Icone nome="calendario" tamanho={16} />
-        </Botao>
-      )}
-      {aoRecorrencia && (
-        <Botao variante="icone" onClick={aoRecorrencia} aria-label={`Ver recorrência de ${t.descricao}`}>
-          <Icone nome="iteracao" tamanho={16} />
-        </Botao>
-      )}
-      <Botao variante="icone" onClick={aoEditar} aria-label={`Editar ${t.descricao}`}>
-        <Icone nome="editar" tamanho={16} />
-      </Botao>
-      {/* Estorno antes da exclusão: cancelar mantém o rastro, excluir apaga. */}
-      <Botao variante="icone" onClick={aoCancelar}
-        aria-label={cancelado ? `Reabrir ${t.descricao}` : `Cancelar ${t.descricao}`}>
-        <Icone nome={cancelado ? 'iteracao' : 'fechar'} tamanho={16} />
-      </Botao>
-      <Botao variante="icone" onClick={aoExcluir} aria-label={`Excluir ${t.descricao}`}>
-        <Icone nome="excluir" tamanho={16} />
-      </Botao>
-    </li>
-  )
-}
 
 function CartaoConta({ c, transacoes, hoje, conferencia, aoEditar, aoConferir, aoPagarFatura }: {
   c: Conta

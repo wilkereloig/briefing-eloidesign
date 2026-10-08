@@ -6,6 +6,7 @@ import {
   agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
   totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
   faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, patrimonioLiquido,
+  chequeEspecialUsado,
 } from './financeiro'
 import type { Conta, Meta, Transacao } from '../lib/tipos'
 
@@ -546,5 +547,13 @@ describe('cobertura e patrimônio', () => {
     expect(patrimonioLiquido([cc, visa], ts, undefined, 1000_00)).toEqual({
       contas_cents: -100_00, cartoes_cents: 480_00, emprestimos_cents: 1000_00, liquido_cents: -1580_00,
     })
+  })
+})
+
+describe('cheque especial', () => {
+  it('usado é o saldo abaixo de zero; saldo positivo não usa nada', () => {
+    expect(chequeEspecialUsado(-1637_74)).toBe(1637_74)
+    expect(chequeEspecialUsado(0)).toBe(0)
+    expect(chequeEspecialUsado(500_00)).toBe(0)
   })
 })

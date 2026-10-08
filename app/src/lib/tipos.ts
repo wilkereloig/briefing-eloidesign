@@ -196,7 +196,7 @@ export interface Conta {
   instituicao: string | null
   cor: string | null
   saldo_inicial_cents: number
-  /** Só cartão de crédito. */
+  /** Cartão: limite de crédito. Corrente/digital: cheque especial. */
   limite_cents: number | null
   dia_fechamento: number | null
   dia_vencimento: number | null

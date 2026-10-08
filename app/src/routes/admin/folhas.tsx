@@ -50,6 +50,9 @@ export function FolhaConta({ inicial, contextoInicial, aoFechar, aoSalvar }: {
   const [salvando, setSalvando] = useState(false)
 
   const ehCartao = tipo === 'cartao_credito'
+  // Conta corrente/digital pode ter cheque especial: o limite é quanto o saldo
+  // pode ficar negativo. Os outros tipos não têm limite (salvar zera).
+  const temLimite = ehCartao || tipo === 'corrente' || tipo === 'digital'
 
   async function salvar() {
     const e: Record<string, string> = {}
@@ -68,7 +71,7 @@ export function FolhaConta({ inicial, contextoInicial, aoFechar, aoSalvar }: {
         id: inicial?.id, nome: nome.trim(), tipo, contexto,
         instituicao: instituicao.trim() || null,
         saldo_inicial_cents: centsDeBRL(saldoInicial),
-        limite_cents: ehCartao ? centsDeBRL(limite) : null,
+        limite_cents: temLimite ? centsDeBRL(limite) : null,
         dia_fechamento: ehCartao ? Number(fechamento) : null,
         dia_vencimento: ehCartao ? Number(vencimento) : null,
         cor,
@@ -115,10 +118,14 @@ export function FolhaConta({ inicial, contextoInicial, aoFechar, aoSalvar }: {
         <Campo rotulo={ehCartao ? 'Saldo inicial da fatura' : 'Saldo inicial'} value={saldoInicial}
           inputMode="decimal" onChange={(e) => setSaldoInicial(e.target.value)} placeholder="R$ 0,00" />
 
+        {temLimite && (
+          <Campo rotulo={ehCartao ? 'Limite do cartão' : 'Limite da conta (cheque especial)'}
+            value={limite} inputMode="decimal"
+            onChange={(e) => setLimite(e.target.value)} placeholder="R$ 0,00" />
+        )}
+
         {ehCartao && (
           <>
-            <Campo rotulo="Limite" value={limite} inputMode="decimal"
-              onChange={(e) => setLimite(e.target.value)} placeholder="R$ 0,00" />
             <div className="grade-dois">
               <Campo rotulo="Dia de fechamento" value={fechamento} inputMode="numeric"
                 erro={erros.fechamento} onChange={(e) => setFechamento(e.target.value)} placeholder="20" />

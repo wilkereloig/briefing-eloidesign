@@ -475,6 +475,9 @@ export function extratoDaConta(conta: Conta, transacoes: Transacao[]): LinhaExtr
   return linhas.map((l) => ({ ...l, saldo_cents: (saldo += l.valor_cents) })).reverse()
 }
 
+/** Cheque especial em uso: quanto o saldo da conta está abaixo de zero. */
+export const chequeEspecialUsado = (saldo_cents: number) => Math.max(0, -saldo_cents)
+
 // ── Visão geral ──────────────────────────────────────────────────────────────
 export interface Cobertura { a_pagar_cents: number; disponivel_cents: number; falta_cents: number; itens: number }
 

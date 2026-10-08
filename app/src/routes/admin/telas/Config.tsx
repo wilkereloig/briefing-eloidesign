@@ -1,96 +1,34 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { financas } from '../../../lib/api'
-import { fmtBRL } from '../../../lib/dinheiro'
 import { useFinancas } from '../../../lib/financas-store'
-import { faturaAberta, saldoConta } from '../../../domain/financeiro'
-import type { Categoria, Conta, Contexto, TipoMov } from '../../../lib/tipos'
+import type { Categoria, Contexto, TipoMov } from '../../../lib/tipos'
 import {
-  Aviso, Botao, Campo, Etiqueta, Folha, Icone, Painel, Pilula, Vazio,
+  Aviso, Botao, Campo, Etiqueta, Folha, Icone, Painel, Pilula,
 } from '../../../ui/componentes'
-import { Cabecalho, Carga, Dinheiro } from '../../../ui/painel'
-import { rotuloConta } from '../../../ui/formato'
-import { FolhaConta } from '../folhas'
+import { Cabecalho, Carga } from '../../../ui/painel'
 
 export default function Config() {
-  const { contas, categorias, transacoes, recarregar } = useFinancas()
+  const { categorias, recarregar } = useFinancas()
   const [folha, setFolha] = useState<
-    | { tipo: 'conta'; c?: Conta; contexto?: Contexto }
     | { tipo: 'categoria'; contexto: Contexto }
     | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
   const apos = async (msg: string) => { setAviso({ texto: msg }); await recarregar() }
-
-  const porContexto = (ctx: Contexto) => contas.filter((c) => c.contexto === ctx)
-
-  // Desativar em vez de excluir: conta com histórico não pode sumir sem levar
-  // junto os lançamentos que apontam pra ela (a FK é `on delete restrict`).
-  const alternarConta = async (c: Conta) => {
-    try {
-      // nome/contexto vão junto porque a edge exige os dois em contas.upsert.
-      await financas.salvarConta({ id: c.id, nome: c.nome, contexto: c.contexto, ativa: !c.ativa })
-      await apos(c.ativa ? 'Conta desativada' : 'Conta reativada')
-    } catch (e) {
-      setAviso({ texto: (e as Error).message, tipo: 'erro' })
-    }
-  }
 
   return (
     <div className="tela pilha">
       <Cabecalho secao="Sistema" titulo="Configurações" />
 
       <Carga linhas={4}>
-        {(['empresa', 'pessoal'] as Contexto[]).map((ctx) => (
-          <Painel key={ctx}
-            titulo={ctx === 'empresa' ? 'Contas da empresa' : 'Contas pessoais'}
-            acao={<Botao compacto onClick={() => setFolha({ tipo: 'conta', contexto: ctx })}>
-              <Icone nome="adicionar" tamanho={14} />Nova
-            </Botao>}>
-            {porContexto(ctx).length === 0 ? (
-              <Vazio icone="caixa" titulo={`Nenhuma conta ${ctx === 'empresa' ? 'da empresa' : 'pessoal'}`}
-                instrucao="Cadastre contas, carteiras e cartões para o painel somar saldo."
-                acao={<Botao variante="primario" onClick={() => setFolha({ tipo: 'conta', contexto: ctx })}>
-                  Cadastrar conta
-                </Botao>} />
-            ) : (
-              <ul className="lista">
-                {porContexto(ctx).map((c) => (
-                  <li key={c.id} className="lista-item" data-cancelado={!c.ativa ? 'true' : undefined}>
-                    <span className="marca-cor" aria-hidden style={{ background: c.cor || 'var(--roxo)' }} />
-                    <span className="celula">
-                      <span className="t-ui espremer">
-                        {c.nome}
-                        {!c.ativa && <span className="t-legenda"> · inativa</span>}
-                      </span>
-                      <span className="t-legenda espremer">
-                        {rotuloConta(c.tipo)}
-                        {c.instituicao ? ` · ${c.instituicao}` : ''}
-                        {c.tipo === 'cartao_credito'
-                          ? ` · fecha dia ${c.dia_fechamento}, vence dia ${c.dia_vencimento}`
-                          : ''}
-                      </span>
-                    </span>
-                    {c.tipo === 'cartao_credito' && c.limite_cents != null && (
-                      <span className="col-desktop t-legenda">limite {fmtBRL(c.limite_cents)}</span>
-                    )}
-                    <Dinheiro className="t-valor"
-                      cents={c.tipo === 'cartao_credito'
-                        ? faturaAberta(c, transacoes)
-                        : saldoConta(c, transacoes)} />
-                    <Botao variante="icone" aria-label={`Editar ${c.nome}`}
-                      onClick={() => setFolha({ tipo: 'conta', c })}>
-                      <Icone nome="editar" tamanho={16} />
-                    </Botao>
-                    <Botao variante="icone"
-                      aria-label={c.ativa ? `Desativar ${c.nome}` : `Reativar ${c.nome}`}
-                      onClick={() => void alternarConta(c)}>
-                      <Icone nome={c.ativa ? 'fechar' : 'iteracao'} tamanho={16} />
-                    </Botao>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Painel>
-        ))}
+        {/* Contas moram em Dinheiro → Contas (página por conta, extrato,
+            arquivar). Aqui fica só o atalho, para não haver dois cadastros. */}
+        <Painel titulo="Contas e cartões">
+          <p className="t-sec" style={{ marginBottom: 'var(--espaco-04)' }}>
+            Cadastro, edição, limite e arquivamento de contas e cartões ficam na área Dinheiro.
+          </p>
+          <Link className="btn btn-secundario" to="/admin/dinheiro/contas">Gerenciar contas e cartões</Link>
+        </Painel>
 
         <Painel titulo="Categorias"
           acao={<Botao compacto onClick={() => setFolha({ tipo: 'categoria', contexto: 'empresa' })}>
@@ -170,10 +108,6 @@ export default function Config() {
         </Painel>
       </Carga>
 
-      {folha?.tipo === 'conta' && (
-        <FolhaConta inicial={folha.c} contextoInicial={folha.contexto}
-          aoFechar={() => setFolha(null)} aoSalvar={apos} />
-      )}
       {folha?.tipo === 'categoria' && (
         <FolhaCategoria contextoInicial={folha.contexto}
           aoFechar={() => setFolha(null)} aoSalvar={apos} />
