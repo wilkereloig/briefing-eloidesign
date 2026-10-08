@@ -156,3 +156,29 @@ export function FalhasParciais({ so }: { so?: Parte }) {
       aoTentar={() => void recarregar()} />
   )
 }
+
+/** Ranking com barra proporcional ao maior item. Percentual nunca sem o valor
+ *  absoluto ao lado. Relatórios e Dinheiro › Análise de gastos. */
+export function Ranking({ itens }: { itens: { chave: string; total: number; qtd: number }[] }) {
+  const teto = Math.max(...itens.map((i) => i.total), 1)
+  return (
+    <ul className="lista">
+      {itens.map((i) => (
+        <li key={i.chave} className="lista-item meta-item">
+          <span className="celula">
+            <span className="linha" style={{ justifyContent: 'space-between' }}>
+              <span className="t-ui espremer">{i.chave}</span>
+              <span className="t-legenda">
+                <Dinheiro cents={i.total} /> · {((i.total / teto) * 100).toFixed(0)}%
+              </span>
+            </span>
+            <span className="barra-ranking" aria-hidden>
+              <span style={{ width: `${(i.total / teto) * 100}%` }} />
+            </span>
+            <span className="t-legenda">{i.qtd} {i.qtd === 1 ? 'lançamento' : 'lançamentos'}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}

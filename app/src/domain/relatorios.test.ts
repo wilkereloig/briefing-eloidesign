@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { aging, analiseGastos, aplicarFiltro, CARTAO_SEM_DETALHE, lugarDoGasto, montarCsv, porCliente, reaisCsv, resumoFiscal, resumoProjetos } from './relatorios'
-import type { Categoria, NotaFiscal, ServicoRow, Transacao } from '../lib/tipos'
+import { aging, analiseGastos, compromissoMensal, aplicarFiltro, CARTAO_SEM_DETALHE, lugarDoGasto, montarCsv, porCliente, reaisCsv, resumoFiscal, resumoProjetos } from './relatorios'
+import type { Categoria, Emprestimo, NotaFiscal, Recorrencia, ServicoRow, Transacao } from '../lib/tipos'
 import type { Projeto } from './projeto'
 
 const tx = (p: Partial<Transacao> & { id: string }): Transacao => ({
@@ -141,6 +141,7 @@ describe('análise de gastos', () => {
   it('separa o que paga o passado (dívida + juros) e o cartão sem detalhe', () => {
     expect(a.porGrupo).toEqual({ dia_a_dia: 5000, divida: 10000, juros: 500, cartao_sem_detalhe: 7000 })
     expect(a.passado_cents).toBe(10500)
+    expect(a.qtdPorGrupo).toEqual({ dia_a_dia: 2, divida: 1, juros: 1, cartao_sem_detalhe: 1 })
     expect(a.porCategoria.find((c) => c.categoria_id === CARTAO_SEM_DETALHE)?.total_cents).toBe(7000)
     expect(a.porCategoria.find((c) => c.categoria_id === 'out')).toBeUndefined()
   })
@@ -152,5 +153,27 @@ describe('análise de gastos', () => {
     expect(a.lugares).toEqual([{ nome: 'Padaria Central', total_cents: 5000, qtd: 2 }])
     expect(lugarDoGasto({ descricao: '99 — corrida', fornecedor: null })).toBe('99')
     expect(lugarDoGasto({ descricao: 'PIX para Fulano', fornecedor: null })).toBe('PIX para pessoas')
+  })
+})
+
+describe('compromisso mensal', () => {
+  const rec = (p: Partial<Recorrencia> & { id: string }): Recorrencia => ({
+    nome: p.id, tipo: 'saida', contexto: 'pessoal', valor_cents: 1000, periodicidade: 'mensal', dia_cobranca: 10,
+    conta_id: null, categoria_id: null, fornecedor: null, inicio: '2026-01-01', fim: null, proxima_cobranca: null,
+    ativa: true, pausada_em: null, encerrada_em: null, observacoes: null, ...p,
+  })
+  const emp = (p: Partial<Emprestimo> & { id: string }): Emprestimo => ({
+    nome: p.id, instituicao: null, contexto: 'pessoal', conta_id: null, categoria_id: null, valor_recebido_cents: 0,
+    parcelas_total: 2, valor_parcela_cents: 5000, primeiro_vencimento: '2026-10-01', parcelas_pagas_antes: 0,
+    ativo: true, observacoes: null, created_at: '2026-01-01', ...p,
+  } as Emprestimo)
+  it('soma contas fixas pelo mês e parcelas de empréstimo com saldo devedor', () => {
+    const recs = [rec({ id: 'luz' }), rec({ id: 'seguro', valor_cents: 12000, periodicidade: 'anual' }),
+      rec({ id: 'pausada', pausada_em: '2026-09-01' }), rec({ id: 'entrada', tipo: 'entrada' })]
+    const parcela = tx({ id: 'p1', tipo: 'saida', emprestimo_id: 'e1', valor_cents: 5000, data_vencimento: '2026-11-01' })
+    const c = compromissoMensal(recs, [emp({ id: 'e1' }), emp({ id: 'quitado' })], [parcela])
+    expect(c.fixas_cents).toBe(1000 + 1000)
+    expect(c.dividas_cents).toBe(5000)
+    expect(c.itens.map((i) => i.nome)).toEqual(['e1', 'luz', 'seguro'])
   })
 })

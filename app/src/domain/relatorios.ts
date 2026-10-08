@@ -3,8 +3,8 @@
 // cliente e marca entra uma vez (`aplicarFiltro`) e vale para todas as abas —
 // duas telas filtrando de jeitos diferentes dariam dois números para a
 // mesma pergunta.
-import type { Categoria, Contexto, NotaFiscal, ServicoRow, Transacao } from '../lib/tipos'
-import { competenciaDe, diasDeAtraso, estaCancelada, estaEmAberto, naturezaDaCategoria, saldoAberto, valorLiquidado } from './financeiro'
+import type { Categoria, Contexto, Emprestimo, NotaFiscal, Recorrencia, ServicoRow, Transacao } from '../lib/tipos'
+import { competenciaDe, diasDeAtraso, estaCancelada, estaEmAberto, naturezaDaCategoria, resumoEmprestimo, saldoAberto, valorLiquidado } from './financeiro'
 import type { Projeto } from './projeto'
 
 export interface Filtro {
@@ -220,6 +220,8 @@ export interface AnaliseGastos {
   /** Dívida + juros: o que se paga pelo passado. */
   passado_cents: number
   porGrupo: Record<GrupoGasto, number>
+  /** Lançamentos em cada grupo. */
+  qtdPorGrupo: Record<GrupoGasto, number>
   porMes: { mes: string; saidas_cents: number; renda_cents: number }[]
   porCategoria: { categoria_id: string | null; total_cents: number; qtd: number; porMes: number[] }[]
   lugares: { nome: string; total_cents: number; qtd: number }[]
@@ -231,6 +233,7 @@ export function analiseGastos(
   const cat = new Map(categorias.map((c) => [c.id, c]))
   const idx = new Map(meses.map((m, i) => [m, i]))
   const porGrupo: Record<GrupoGasto, number> = { dia_a_dia: 0, divida: 0, juros: 0, cartao_sem_detalhe: 0 }
+  const qtdPorGrupo: Record<GrupoGasto, number> = { dia_a_dia: 0, divida: 0, juros: 0, cartao_sem_detalhe: 0 }
   const porMes = meses.map((mes) => ({ mes, saidas_cents: 0, renda_cents: 0 }))
   const porCat = new Map<string, AnaliseGastos['porCategoria'][number]>()
   const lugares = new Map<string, { nome: string; total_cents: number; qtd: number }>()
@@ -252,6 +255,7 @@ export function analiseGastos(
     const grupo: GrupoGasto = ehFaturaSemDetalhe(t) ? 'cartao_sem_detalhe'
       : nat === 'divida' ? 'divida' : nat === 'financeira' ? 'juros' : 'dia_a_dia'
     porGrupo[grupo] += t.valor_cents
+    qtdPorGrupo[grupo] += 1
     // Fatura provisória fica numa linha própria: somá-la em "Outros" esconderia
     // que o gasto existe mas ainda não se sabe em quê.
     const k = grupo === 'cartao_sem_detalhe' ? CARTAO_SEM_DETALHE : t.categoria_id ?? ''
@@ -269,8 +273,45 @@ export function analiseGastos(
   return {
     meses, total_cents: total, media_mensal_cents: Math.round(total / n),
     renda_cents: renda, renda_media_cents: Math.round(renda / n),
-    passado_cents: porGrupo.divida + porGrupo.juros, porGrupo, porMes,
+    passado_cents: porGrupo.divida + porGrupo.juros, porGrupo, qtdPorGrupo, porMes,
     porCategoria: [...porCat.values()].sort((a, b) => b.total_cents - a.total_cents),
     lugares: [...lugares.values()].sort((a, b) => b.total_cents - a.total_cents).slice(0, 10),
   }
+}
+
+// ── compromisso mensal ───────────────────────────────────────────────────────
+
+/** Quantas vezes por mês cada periodicidade cobra (média do ano). */
+const VEZES_POR_MES: Record<string, number> = {
+  semanal: 52 / 12, quinzenal: 26 / 12, mensal: 1, bimestral: 1 / 2, trimestral: 1 / 3, semestral: 1 / 6, anual: 1 / 12,
+}
+
+export interface CompromissoMensal {
+  /** Contas fixas (recorrências de saída ativas), normalizadas para o mês. */
+  fixas_cents: number
+  /** Parcelas mensais dos empréstimos que ainda têm saldo devedor. */
+  dividas_cents: number
+  total_cents: number
+  itens: { nome: string; valor_cents: number; tipo: 'fixa' | 'divida' }[]
+}
+
+/** O que já está comprometido todo mês antes de qualquer gasto do dia a dia. */
+export function compromissoMensal(
+  recorrencias: Recorrencia[], emprestimos: Emprestimo[], transacoes: Transacao[], contexto?: Contexto,
+): CompromissoMensal {
+  const itens: CompromissoMensal['itens'] = []
+  for (const r of recorrencias) {
+    if (r.tipo !== 'saida' || !r.ativa || r.pausada_em || r.encerrada_em) continue
+    if (contexto && r.contexto !== contexto) continue
+    itens.push({ nome: r.nome, valor_cents: Math.round(r.valor_cents * (VEZES_POR_MES[r.periodicidade] ?? 1)), tipo: 'fixa' })
+  }
+  for (const e of emprestimos) {
+    if (!e.ativo || (contexto && e.contexto !== contexto)) continue
+    if (resumoEmprestimo(e, transacoes).falta_cents <= 0) continue
+    itens.push({ nome: e.nome, valor_cents: e.valor_parcela_cents, tipo: 'divida' })
+  }
+  itens.sort((a, b) => b.valor_cents - a.valor_cents)
+  const fixas = itens.filter((i) => i.tipo === 'fixa').reduce((s, i) => s + i.valor_cents, 0)
+  const dividas = itens.filter((i) => i.tipo === 'divida').reduce((s, i) => s + i.valor_cents, 0)
+  return { fixas_cents: fixas, dividas_cents: dividas, total_cents: fixas + dividas, itens }
 }

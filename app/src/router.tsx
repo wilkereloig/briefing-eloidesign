@@ -30,6 +30,7 @@ const Lancamentos = lazy(() => import('./routes/admin/telas/dinheiro/Lancamentos
 const Agenda = lazy(() => import('./routes/admin/telas/dinheiro/Agenda'))
 const Emprestimos = lazy(() => import('./routes/admin/telas/dinheiro/Emprestimos'))
 const Planejamento = lazy(() => import('./routes/admin/telas/dinheiro/Planejamento'))
+const Gastos = lazy(() => import('./routes/admin/telas/dinheiro/Gastos'))
 const Briefings = lazy(() => import('./routes/admin/telas/Briefings'))
 const Entregas = lazy(() => import('./routes/admin/telas/Entregas'))
 const Notas = lazy(() => import('./routes/admin/telas/Notas'))
@@ -63,6 +64,7 @@ export const router = createBrowserRouter([
       // Dinheiro tem sub-páginas (nav.ts NAV_DINHEIRO), uma tela cada.
       { path: 'dinheiro', element: <DinheiroLayout />, children: [
         { index: true, element: <VisaoGeral /> },
+        { path: 'gastos', element: <Gastos /> },
         { path: 'contas', element: <Contas /> },
         { path: 'contas/:id', element: <ContaDetalhe /> },
         { path: 'cartoes', element: <Cartoes /> },

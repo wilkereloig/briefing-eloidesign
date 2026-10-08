@@ -46,6 +46,7 @@ export type ChaveCriar = (typeof CRIAR)[number]['chave']
 /** Sub-páginas de Dinheiro. Barra própria dentro da área; a primária segue com 7. */
 export const NAV_DINHEIRO: { path: string; label: string; fim?: boolean }[] = [
   { path: '/admin/dinheiro', label: 'Visão geral', fim: true },
+  { path: '/admin/dinheiro/gastos', label: 'Análise de gastos' },
   { path: '/admin/dinheiro/contas', label: 'Contas' },
   { path: '/admin/dinheiro/cartoes', label: 'Cartões' },
   { path: '/admin/dinheiro/lancamentos', label: 'Lançamentos' },

@@ -47,3 +47,16 @@ export function variacao(atual: number, anterior: number): string {
   const pct = ((atual - anterior) / anterior) * 100
   return `${pct >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(0)}% vs. mês anterior`
 }
+
+/** 'AAAA-MM' → 'set/26'. */
+export function rotuloMesCurto(mes: string): string {
+  return new Date(Date.UTC(+mes.slice(0, 4), +mes.slice(5, 7) - 1, 1))
+    .toLocaleDateString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' }).replace('. de ', '/').replace('.', '')
+}
+
+/** Valor curto para o topo da coluna do gráfico: 12,4 mil. */
+export function fmtCompacto(cents: number): string {
+  const reais = cents / 100
+  if (reais >= 1000) return `${(reais / 1000).toFixed(reais >= 10000 ? 0 : 1)} mil`
+  return reais.toFixed(0)
+}

@@ -130,7 +130,7 @@ Atualizado: 2026-10-08.
 - **Objetivo:** responder "quem fatura, onde ganho, o que está atrasado, qual a previsão" — e levar o número para fora.
 - **Estado:** Concluído
 - **Tela:** `telas/Relatorios.tsx` · domínio `domain/relatorios.ts` (testado)
-- **Gastos** (2026-10-09): `analiseGastos` — saídas pelo valor original na competência (pago ou não), renda só operacional (sem empréstimo, dinheiro de outra conta, estorno ou ajuste), grupos dia a dia / dívida / juros / cartão sem detalhe, ranking de lugares. Natureza via `naturezaDaCategoria` (coluna `natureza` ou regra de nome das categorias-padrão).
+- **Análise de gastos** (2026-10-09, tela `/admin/dinheiro/gastos`): `analiseGastos` + `compromissoMensal` — saídas pelo valor original na competência (pago ou não), renda só operacional (sem empréstimo, dinheiro de outra conta, estorno ou ajuste), grupos dia a dia / dívida / juros / cartão sem detalhe, ranking de lugares. Natureza via `naturezaDaCategoria` (coluna `natureza` ou regra de nome das categorias-padrão).
 - **Abas:** Resultado (12 meses) · Clientes / Marcas · Projetos · Recebíveis (aging) · Fiscal · Por categoria · Previsão (metas e orçamentos foram para Dinheiro › Planejamento)
 - **Recorte:** período por competência, cliente, marca (`aplicarFiltro`) + lente pessoal/empresa
 - **Saída:** CSV por aba (`lib/exportar.ts`, `montarCsv`) e impressão (`@media print`)

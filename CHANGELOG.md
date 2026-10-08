@@ -2,12 +2,16 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
-## 2026-10-09 — Relatórios › Gastos (branch `evolucao/financeiro-integrado`, não publicada)
+## 2026-10-09 — Dinheiro › Análise de gastos (branch `evolucao/financeiro-integrado`, não publicada)
 
-- **Nova aba Gastos** (abre por padrão em Relatórios): quanto saiu nos últimos 3 meses
-  (ou no período filtrado) pelo valor original, pago ou não; renda real; quanto é
-  pagamento do passado; saídas × renda; categorias mês a mês com total e %; faturas
-  lançadas só pelo total destacadas; onde mais se gasta no dia a dia. CSV da aba.
+- **Nova tela Análise de gastos** (`/admin/dinheiro/gastos`, item na barra de Dinheiro):
+  períodos de 3, 6 ou 12 meses; o que saiu pelo valor original (pago ou não, pelo mês da
+  compra); renda real; quanto é pagamento do passado; saídas × renda; gráfico renda ×
+  saídas por mês; para onde vai (dia a dia, dívidas, juros, cartão sem detalhe); quanto
+  já está comprometido todo mês (contas fixas + parcelas de empréstimo); categorias mês a
+  mês; onde mais se gasta; CSV. Relatórios ganha um link para ela.
+- Legenda "Gasto/Saídas" dos gráficos agora usa o mesmo estilo da barra (dizia coral; a
+  barra é contorno).
 - **Correção visual:** tabelas em cartões no celular ficavam com a altura de uma linha
   e o conteúdo vazava sobre o cartão seguinte (especificidade de `.tabela tbody tr`).
 - Dados: duas categorias novas no pessoal ("Dinheiro de outras contas", "Estornos e
