@@ -30,7 +30,9 @@ update public.eloi_categorias set natureza = v.natureza, natureza_definida_por =
     ('Distribuição de lucro',     'entrada', 'patrimonial'),
     ('Rendimentos',               'entrada', 'financeira'),
     ('Juros, tarifas e encargos', 'saida',   'financeira'),
-    ('Empréstimos e dívidas',     'saida',   'divida')
+    ('Empréstimos e dívidas',     'saida',   'divida'),
+    -- criadas em 2026-10-09 na revisão dos lançamentos (decisão delegada pelo dono)
+    ('Dinheiro de outras contas', 'entrada', 'patrimonial')
   ) as v(nome, tipo, natureza)
  where eloi_categorias.nome = v.nome and eloi_categorias.tipo::text = v.tipo
    and eloi_categorias.natureza_definida_por is null;
@@ -41,7 +43,7 @@ update public.eloi_categorias set natureza = v.natureza, natureza_definida_por =
 -- lançamento.
 update public.eloi_categorias set natureza = 'operacional', natureza_definida_por = 'dono'
  where nome in ('Alimentação', 'Moradia', 'Saúde', 'Transporte', 'Lazer', 'Assinaturas', 'Viagens',
-                'Cuidados pessoais', 'Compras', 'Projetos', 'Rateio da casa')
+                'Cuidados pessoais', 'Compras', 'Projetos', 'Rateio da casa', 'Estornos e devoluções')
    and natureza_definida_por is null;
 
 -- Categorias que o dono ainda não confirmou, com uso — fila de revisão.
