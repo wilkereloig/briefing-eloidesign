@@ -82,7 +82,7 @@ pendente de autorização quando indicado).
 | 7 | A | Arquivar conta/cartão com saldo ou dívida tirava o valor do patrimônio e da cobertura | domínio | ✅ `pesaNosTotais` |
 | 8 | A | Pagar conta "com o cartão" na folha de baixa marcava a conta paga dentro do cartão — não entrava em fatura, a dívida sumia | folha + edge | ✅ bloqueado com orientação; modelagem completa na Etapa 5 |
 | 9 | A | `vercel.json` publica o repositório inteiro (`outputDirectory: "."`), inclusive ZIP/PDF de entrega de cliente em `entregas-marca/` — o "gate" é só no navegador | hospedagem | ⏸ dono decidiu manter como está (2026-10-09) |
-| 10 | A | Briefing sem token grava direto em `/rest/v1/` com a chave pública — existe política de INSERT anônimo em produção (não estava em migração nenhuma) | páginas estáticas | ⏳ Etapa 9; agora registrada em migração |
+| 10 | A | Briefing sem token grava direto em `/rest/v1/` com a chave pública — existe política de INSERT anônimo em produção (não estava em migração nenhuma) | páginas estáticas | ✅ Etapa 9: páginas passam pela edge `briefing-submit` (limite por IP); INSERT anônimo fechado (`2026-10-09-briefing-sem-insert-anonimo.sql`) |
 | 11 | A | Edges do app Financeiro (`categorize`, `reminders`, `recurrences`) sem checagem de chamador; `categorize` usa chave de IA | app Financeiro | ✅ desativadas (410), cron desligado, site pausado — 2026-10-09 |
 | 12 | M | `pagar_fatura` não idempotente (duplo envio debitava de novo) | edge | ✅ chave + recusa sem compra em aberto |
 | 13 | M | Apagar/cancelar pagamento de fatura deixava compras quitadas sem saída de dinheiro | edge | ✅ bloqueado (409); estorno de pagamento de fatura na Etapa 5 |

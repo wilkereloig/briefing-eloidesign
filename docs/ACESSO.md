@@ -9,8 +9,8 @@ o que vê, o que fica registrado e o que roda sozinho. Nada de credencial aqui.
 |---|---|---|---|
 | Painel `/admin` | o dono (uma senha só) | edge `admin-auth` › `login` com `ADMIN_PASSWORD` (variável do projeto Supabase) | `admin_sessions`: desliza 12 h a cada uso, teto absoluto de 30 dias; 5 erros travam 15 min **por rede** (`admin_login_ip_attempts`), com um teto global contra ataque distribuído; `logout_all` derruba todas |
 | Portal `/portal` | cada cliente | edge `portal-cliente` › `login` com a senha do cliente | `portal_sessions` — **tabela separada**: token de cliente nunca vale como admin (por schema) |
-| Briefing público | qualquer pessoa com o link | edge `briefing-submit` (token do link quando houver) + backup Formspree | sem sessão; limite por IP (`briefing_submit_ip_attempts`) |
-| Banco direto (REST/anon) | ninguém | RLS nega `anon`/`authenticated` em toda tabela `eloi_*`; RPCs financeiras só `service_role` | — |
+| Briefing público | qualquer pessoa com o link | edge `briefing-submit` — com token grava no link (`briefing_links`); sem token (`formulario`) grava em `briefings`/`ecommerce_briefings` — + backup Formspree | sem sessão; limite por IP (`briefing_submit_ip_attempts`) nos dois caminhos |
+| Banco direto (REST/anon) | ninguém | RLS nega `anon`/`authenticated` em toda tabela `eloi_*`; RPCs financeiras só `service_role`. `briefings`/`ecommerce_briefings`: sem privilégio para `anon`/`authenticated` e políticas de insert com `check (false)` desde 2026-10-09 (antes as páginas gravavam direto pelo REST, sem limite) | — |
 
 Autorização é **na edge**: toda ação de `eloi-financas`, `eloi-gestao`, `orcamentos`,
 `get-briefings` etc. chama `requireAdmin` (`edge-functions/_shared/auth.ts`) antes de

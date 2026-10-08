@@ -191,10 +191,10 @@ Atualizado: 2026-10-08.
 ## Cliente
 
 ### Briefing de identidade visual — `/briefing/`
-Concluído. Grava em `briefings` + e-mail Formspree. Público.
+Concluído. Grava em `briefings` pela edge `briefing-submit` (limite por IP) + e-mail Formspree. Público.
 
 ### Briefing de e-commerce — `/briefing-ecommerce/`
-Concluído. Base genérica de 5 etapas, grava em `ecommerce_briefings`. Público.
+Concluído. Base genérica de 5 etapas, grava em `ecommerce_briefings` pela edge `briefing-submit`. Público.
 
 ### Briefings direcionados — `/briefing-solarium/`, `/briefing-guia-viver-bem/`
 Concluído. Token `?t=` → `briefing-submit` → `briefing_links`; backup Formspree.

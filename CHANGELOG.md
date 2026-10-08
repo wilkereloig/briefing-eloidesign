@@ -2,6 +2,17 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Etapa 9: site e briefing pela edge
+
+- **Home** (`/`): diz o que o estúdio faz — serviços do catálogo (identidade visual,
+  sites, social, motion, campanha), como o trabalho anda (briefing, orçamento,
+  produção, entrega) e contato. Sem portfólio, depoimento ou número inventado; o
+  acesso ao portal fica no rodapé. URLs e sitemap iguais.
+- **Briefing sem link** (`/briefing/`, `/briefing-ecommerce/`, `/briefing-solarium/`)
+  agora envia pela edge `briefing-submit`, com o mesmo limite por IP do briefing por
+  link. O banco deixou de aceitar gravação direta com a chave pública. Backup
+  Formspree continua em todos.
+
 ## 2026-10-09 — Etapa 8: acesso, auditoria e automação documentados
 
 - `docs/ACESSO.md`: quem entra e como, matriz de acesso para identidades individuais

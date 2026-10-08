@@ -8,11 +8,11 @@ Repositório único do **site completo** (GitHub: `wilkereloig/briefing-eloidesi
 
 | Rota | Arquivo | Descrição |
 |------|---------|-----------|
-| `/` | `index.html` | **Site do estúdio** — vitrine, projetos, processo e contato (2026-08-07) |
+| `/` | `index.html` | **Site do estúdio** — apresentação, serviços (catálogo real: identidade, web, social, motion, campanha), processo (briefing → orçamento → produção → entrega) e contato. Sem portfólio até haver projeto autorizado para divulgação; acesso ao portal só no rodapé (2026-10-09) |
 | `/robots.txt` | `robots.txt` | Vitrine liberada; painéis, portal e entregas bloqueados |
 | `/sitemap.xml` | `sitemap.xml` | Só as três páginas de vitrine |
-| `/briefing/` | `briefing/index.html` | Formulário de briefing de identidade visual (cliente preenche) |
-| `/briefing-ecommerce/` | `briefing-ecommerce/index.html` | Formulário de briefing de e-commerce GENÉRICO — 5 etapas (contato, negócio, loja atual, integrações, visual/verba). Base reutilizável. Grava em `ecommerce_briefings` + email Formspree (`_subject` "[E-COMMERCE]"). |
+| `/briefing/` | `briefing/index.html` | Formulário de briefing de identidade visual (cliente preenche). Edge `briefing-submit`: com `?t=` → `{token, raw}` em `briefing_links`; sem token → `{formulario:'briefing', raw}` em `briefings` (desde 2026-10-09; antes era REST anônimo). Backup Formspree sempre |
+| `/briefing-ecommerce/` | `briefing-ecommerce/index.html` | Formulário de briefing de e-commerce GENÉRICO — 5 etapas (contato, negócio, loja atual, integrações, visual/verba). Base reutilizável. Grava em `ecommerce_briefings` pela edge `briefing-submit` (`{formulario:'ecommerce', raw, empresa}`; com `?t=`, no link) + email Formspree (`_subject` "[E-COMMERCE]"). |
 | `/briefing-solarium/` | `briefing-solarium/index.html` | Briefing DIRECIONADO p/ cliente Solarium Cosméticos — pré-preenchido com análise do site; foco em posicionamento B2B, decisão de plataforma e gaps de operação. Mesma tabela/painel (campos `ec_*`). |
 | `/briefing-guia-viver-bem/` | `briefing-guia-viver-bem/index.html` | Briefing DIRECIONADO p/ cliente Guia Viver Bem (reestruturação do portal de saúde RN) — wizard 9 etapas, identidade própria de saúde (não a marca ELOI). Token → edge `briefing-submit` (`{token, raw}`) na `briefing_links` + email Formspree (`xpqeraow`, `_subject` "[REESTRUTURAÇÃO]"). Tipo registrado no painel-briefings. |
 | `/admin` e `/admin/*` | `app/dist/` (rewrite no `vercel.json`) | **ELOI Studio — o painel interno** (2026-08-05). Vite+React 19+TS em `app/`, dist COMMITADO (Vercel não builda). Sistema visual do KV aplicado (tokens, ícones autorais, trilho→barra inferior). Sessão compartilhada com os legados (mesmo `eloi_admin_token`). Rotas abaixo. O hub estático antigo (`admin/index.html`) foi aposentado — no Vercel, arquivo estático ganha de rewrite, então PRECISOU sair do repo. |

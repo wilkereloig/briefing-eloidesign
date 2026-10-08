@@ -27,7 +27,7 @@ Financeiro separado está vazio.
 | 6. Gestão integrada | ✅ código + testes | **Dinheiro › Análise de gastos**; **Visão geral** com resultado do mês por competência e natureza (dia a dia × dívida × juros × patrimonial × ajustes), dinheiro entre empresa e pessoal (neutro no consolidado), caixa previsto em 7/30/90 dias e fila "precisa de revisão" com links; natureza editável na categoria (decisão do dono). Os números de caixa (recebido − pago) foram renomeados para "Sobra" no Hoje, Lançamentos e Relatórios — "Resultado" agora é um só |
 | 7. Novo visual | ✅ código + capturas | tema claro/escuro/sistema por tokens (contraste AA nos pares de texto), navegação por tarefa (`NAV_GRUPOS`) com sub-páginas de Dinheiro no trilho, menu "Mais" no celular, ocultar valores. Não refeito: formulários, tabelas configuráveis, ações em lote — o sistema anterior (KV aprovado) foi mantido nos componentes |
 | 8. Acesso e automação | ✅ documentado e conferido | `docs/ACESSO.md`: como é hoje (senha única, sessões, limitador, portal separado), matriz de acesso alvo (5 papéis; pessoal só do proprietário, filtrado no servidor), plano de identidades/MFA/recuperação/revogação (não implementado), auditoria, rotina diária idempotente e comportamento em falha. Conferido em produção: todas as edges sem token → 401/410; crons do app antigo desligados; conteúdo de cliente escapado nas páginas públicas |
-| 9. Site e portal | ⏳ | política de INSERT anônimo em `briefings` documentada |
+| 9. Site e portal | ✅ | Home reescrita com o que o estúdio de fato faz: apresentação, serviços do catálogo real, processo e contato; **portfólio omitido** (não há projeto autorizado para divulgação — nada inventado, sem depoimento nem número); acesso ao portal discreto no rodapé. Briefing sem token passa pela edge `briefing-submit` (mesmo limite por IP do link) e o INSERT anônimo pelo REST foi fechado. Preservados: tokens, backup Formspree, orçamento, portal, entregas, URLs e sitemap |
 | 10. Homologação e publicação | ⏳ parcial | testes de banco em Postgres local; reversão testada |
 
 ## Contratos de cálculo
@@ -135,7 +135,9 @@ de cada migração.
    (no-op), `2026-10-09-liquidacoes-e-operacoes-atomicas.sql`,
    `2026-10-09-natureza-e-perspectivas.sql`, `2026-10-09-rotina-diaria-cron.sql`;
    etapa 5: `2026-10-09-estorno-fatura-e-lotes-importacao.sql` (reversão própria:
-   `database/homologacao/reverter-2026-10-09-etapa5.sql`).
+   `database/homologacao/reverter-2026-10-09-etapa5.sql`); etapa 9:
+   `2026-10-09-briefing-sem-insert-anonimo.sql` **só depois** de a edge `briefing-submit`
+   nova e as páginas de briefing estarem no ar (reversão: `reverter-2026-10-09-etapa9.sql`).
    Antes, rodar no banco real: duplicidade de `(recorrencia_id, data_competencia)` = 0
    (era 0 em 2026-10-09).
 2. **Verificar:** invariante soma(liquidações) = `recebido_cents` para todas as linhas;
@@ -156,7 +158,7 @@ Preserva transações e projeções; perde o detalhe por pagamento e a trilha (e
   compara com produção.
 - `database/homologacao/testar.sh` semeia dados **sintéticos** no formato legado, aplica a
   migração de liquidações (testa o backfill) e roda as afirmações de
-  `testes/10`, `20` e `30` (etapa 5: estorno e lotes) + 2 cenários de concorrência (baixas simultâneas, três gerações de recorrência simultâneas).
+  `testes/10`, `20`, `30` (etapa 5: estorno e lotes) e `40` (etapa 9: briefing só pela edge) + 2 cenários de concorrência (baixas simultâneas, três gerações de recorrência simultâneas).
 - O painel em `localhost` ou em preview da Vercel **não grava em produção**: escrita
   bloqueada no cliente, a menos que `VITE_FUNCTIONS_URL` aponte para outro backend
   ou `VITE_PERMITIR_ESCRITA_PRODUCAO=1`.
