@@ -37,13 +37,19 @@ export function FolhaConferencia({ conta, aoFechar, aoSalvar }: {
 
   async function salvar() {
     if (informadoCents == null) return setErro('Informe o saldo que o extrato mostra')
+    // Ajuste sem motivo é o que esconde diferença não investigada.
+    if (criarAjuste && diferenca !== 0 && !observacoes.trim()) {
+      return setErro('Para criar ajuste, explique a diferença nas observações')
+    }
     setSalvando(true)
     try {
       const r = await financas.registrarConferencia({
         conta_id: conta.id, data, saldo_informado_cents: informadoCents, saldo_sistema_cents: sistema,
         observacoes: observacoes.trim() || undefined, criar_ajuste: criarAjuste && diferenca !== 0,
       })
-      aoSalvar(r.ajuste ? 'Conferência registrada com ajuste' : diferenca === 0 ? 'Saldo bateu' : 'Conferência registrada')
+      // O servidor recalcula o saldo do sistema; se a tela estava velha, avisa.
+      const aviso = r.tela_desatualizada ? ' · o painel estava desatualizado, valores recarregados' : ''
+      aoSalvar((r.ajuste ? 'Conferência registrada com ajuste' : diferenca === 0 ? 'Saldo bateu' : 'Conferência registrada') + aviso)
       aoFechar()
     } catch (err) {
       setErro((err as Error).message)

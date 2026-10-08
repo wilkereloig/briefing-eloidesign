@@ -202,7 +202,59 @@ export interface Conta {
   dia_vencimento: number | null
   ativa: boolean
   created_at: string
+  /** Data de referência do saldo inicial (migração 2026-10-09). Nulo = desde o primeiro lançamento. */
+  saldo_inicial_em?: string | null
+  /** Quando foi arquivada. Arquivada com saldo/dívida continua nos totais. */
+  arquivada_em?: string | null
 }
+
+/** Um pagamento/recebimento de uma transação (eloi_liquidacoes). A soma por
+ *  transação é `recebido_cents`. Negativa = reversão de outra. */
+export interface Liquidacao {
+  id: string
+  transacao_id: string
+  valor_cents: number
+  data: string
+  conta_id: string | null
+  forma_pagamento: string | null
+  origem: 'manual' | 'fatura' | 'importacao' | 'recorrencia' | 'ajuste' | 'legado' | 'espelho' | 'reversao'
+  chave_idempotencia: string | null
+  reverte_id: string | null
+  /** exata | legado_acumulado (soma anterior à tabela) | espelho (gravada por caminho antigo) */
+  precisao: 'exata' | 'legado_acumulado' | 'espelho'
+  observacoes: string | null
+  criado_em: string
+}
+
+/** Saldo oficial por conta, calculado no banco sobre o histórico inteiro. */
+export interface SaldoServidor {
+  conta_id: string
+  saldo_cents: number
+  aberto_saida_cents: number
+  aberto_entrada_cents: number
+  lancamentos: number
+}
+
+/** Natureza da categoria: só `operacional` entra no resultado do negócio/da vida.
+ *  Ver database/migrations/2026-10-09-natureza-e-perspectivas.sql. */
+export type Natureza = 'operacional' | 'financeira' | 'divida' | 'patrimonial'
+
+export interface LinhaCaixa {
+  mes: string; contexto: Contexto; natureza: Natureza | 'ajuste' | 'entre_contextos'
+  entradas_cents: number; saidas_cents: number
+  /** Parte que é legado acumulado (data aproximada pela última liquidação). */
+  aproximado_cents: number
+}
+export interface LinhaCompetencia {
+  mes: string; contexto: Contexto; natureza: Natureza | 'ajuste'
+  receitas_cents: number; despesas_cents: number; em_aberto_cents: number
+}
+export interface LinhaObrigacao {
+  contexto: Contexto; tipo: 'entrada' | 'saida'
+  situacao: 'atrasado' | 'ate_7_dias' | 'ate_30_dias' | 'depois' | 'sem_vencimento'
+  quantidade: number; falta_cents: number
+}
+export interface Perspectivas { caixa: LinhaCaixa[]; competencia: LinhaCompetencia[]; obrigacoes: LinhaObrigacao[]; hoje: string }
 
 export interface Categoria {
   id: string
@@ -213,6 +265,10 @@ export interface Categoria {
   cor: string | null
   icone: string | null
   ativa: boolean
+  /** Ausente até a migração 2026-10-09 = operacional (comportamento antigo). */
+  natureza?: Natureza
+  /** 'dono' = confirmada na tela; 'regra_nome_padrao' = migração; null = padrão. */
+  natureza_definida_por?: string | null
 }
 
 export interface Transacao {

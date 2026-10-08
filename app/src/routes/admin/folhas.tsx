@@ -168,8 +168,13 @@ export function FolhaLiquidar({ transacao, aoFechar, aoSalvar }: {
   const [observacoes, setObservacoes] = useState('')
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
+  // Uma chave por abertura da folha: clique duplo ou retry de rede não
+  // registram o mesmo pagamento duas vezes (eloi_liquidar é idempotente por ela).
+  const [chave] = useState(() => crypto.randomUUID())
+  // Cartão de crédito não é conta de onde o dinheiro sai: pagar com cartão é
+  // uma compra no cartão (entra na fatura). Ver docs/EVOLUCAO-FINANCEIRO.md.
   const contasPossiveis = contas.filter((c) => c.ativa && c.contexto === transacao.contexto
-    && (transacao.tipo === 'saida' || c.tipo !== 'cartao_credito'))
+    && c.tipo !== 'cartao_credito')
 
   const cents = centsDeBRL(valor)
 
@@ -182,6 +187,7 @@ export function FolhaLiquidar({ transacao, aoFechar, aoSalvar }: {
         valor_cents: cents, data_liquidacao: data, forma_pagamento: forma.trim() || undefined,
         conta_id: contaId && contaId !== transacao.conta_id ? contaId : undefined,
         observacoes: observacoes.trim() || undefined,
+        chave,
       })
       aoSalvar(cents === aberto ? 'Baixa registrada' : 'Pagamento parcial registrado')
       aoFechar()

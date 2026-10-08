@@ -6,9 +6,9 @@ import {
   agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
   totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
   faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, saidasDaCobertura, patrimonioLiquido,
-  chequeEspecialUsado, filtrarLancamentos, resumoEmprestimo,
+  chequeEspecialUsado, filtrarLancamentos, resumoEmprestimo, pesaNosTotais, resultadoPorCompetencia, resultadoLiquidadoPorCompetencia,
 } from './financeiro'
-import type { Conta, Emprestimo, Meta, Transacao } from '../lib/tipos'
+import type { Categoria, Conta, Emprestimo, Meta, Transacao } from '../lib/tipos'
 
 const conta = (p: Partial<Conta> & { id: string }): Conta => ({
   nome: 'c', tipo: 'corrente', contexto: 'empresa', instituicao: null, cor: null,
@@ -593,14 +593,16 @@ describe('cobertura e patrimônio', () => {
       a_pagar_cents: 510_00, disponivel_cents: 200_00, falta_cents: 310_00, itens: 3,
     })
   })
-  it('saidasDaCobertura lista só o que a cobertura soma: saída aberta em conta ativa não-cartão', () => {
+  // Mudou em 2026-10-09: conta arquivada que ainda deve continua na cobertura
+  // (arquivar não apaga obrigação). Antes, 'inativa' ficava de fora.
+  it('saidasDaCobertura lista só o que a cobertura soma: saída aberta em conta não-cartão, arquivada inclusive', () => {
     const inativa = conta({ id: 'x', tipo: 'corrente', ativa: false })
     const extra = [
       tx({ id: 'inativa', tipo: 'saida', conta_id: 'x', valor_cents: 9_00, status: 'pendente', data_vencimento: '2026-10-10' }),
       tx({ id: 'sem-conta', tipo: 'saida', valor_cents: 9_00, status: 'pendente', data_vencimento: '2026-10-10' }),
     ]
     expect(saidasDaCobertura([cc, visa, inativa], [...ts, ...extra], '2026-10-08').map((t) => t.id))
-      .toEqual(['atrasada', 'semana'])
+      .toEqual(['atrasada', 'semana', 'inativa'])
   })
   it('patrimônio = contas − dívida dos cartões − empréstimos', () => {
     expect(patrimonioLiquido([cc, visa], ts, undefined, 1000_00)).toEqual({
@@ -691,5 +693,64 @@ describe('resumo do empréstimo', () => {
 
   it('valor recebido não informado → juros null', () => {
     expect(resumoEmprestimo({ ...itau, valor_recebido_cents: 0 }, abertas).juros_cents).toBeNull()
+  })
+})
+
+describe('conta arquivada nos totais (2026-10-09)', () => {
+  const arquivada = conta({ id: 'arq', ativa: false, saldo_inicial_cents: 5000 })
+  const vazia = conta({ id: 'vaz', ativa: false })
+  const cartaoArq = conta({ id: 'car', tipo: 'cartao_credito', ativa: false, dia_fechamento: 2, dia_vencimento: 9 })
+  const compra = tx({ id: 'k1', tipo: 'saida', conta_id: 'car', status: 'pendente', valor_cents: 3000, data_vencimento: '2026-10-09' })
+
+  it('arquivar com saldo não tira o dinheiro do saldo disponível nem do patrimônio', () => {
+    expect(pesaNosTotais(arquivada, [])).toBe(true)
+    expect(saldoDisponivel([arquivada], [])).toBe(5000)
+    expect(patrimonioLiquido([arquivada], []).contas_cents).toBe(5000)
+  })
+  it('arquivar cartão com fatura em aberto não apaga a dívida', () => {
+    expect(pesaNosTotais(cartaoArq, [compra])).toBe(true)
+    expect(patrimonioLiquido([cartaoArq], [compra]).cartoes_cents).toBe(3000)
+  })
+  it('arquivada zerada sai dos totais', () => {
+    expect(pesaNosTotais(vazia, [])).toBe(false)
+    expect(saldoDisponivel([vazia], [])).toBe(0)
+  })
+  it('conta a pagar de conta arquivada continua na cobertura', () => {
+    const conta7 = tx({ id: 'p1', tipo: 'saida', conta_id: 'vaz', status: 'pendente', valor_cents: 800, data_vencimento: '2026-10-10' })
+    expect(saidasDaCobertura([vazia], [conta7], '2026-10-09').map((t) => t.id)).toEqual(['p1'])
+  })
+})
+
+describe('resultado por competência × critério legado (2026-10-09)', () => {
+  const cat = (id: string, natureza: Categoria['natureza'], tipo: Categoria['tipo'] = 'saida'): Categoria =>
+    ({ id, nome: id, contexto: 'empresa', tipo, pai_id: null, cor: null, icone: null, ativa: true, natureza })
+  const cats = [cat('mercado', 'operacional'), cat('div', 'divida'), cat('juros', 'financeira'),
+    cat('emp', 'patrimonial', 'entrada'), cat('venda', 'operacional', 'entrada')]
+  const ts = [
+    tx({ id: 'v', tipo: 'entrada', categoria_id: 'venda', valor_cents: 1000, recebido_cents: 1000, data_competencia: '2026-10-05' }),
+    // compra no cartão ainda não paga: despesa do mês na competência; zero no legado
+    tx({ id: 'c', tipo: 'saida', categoria_id: 'mercado', status: 'pendente', valor_cents: 300, data_competencia: '2026-10-06' }),
+    tx({ id: 'p', tipo: 'saida', categoria_id: 'div', status: 'pendente', valor_cents: 500, data_competencia: '2026-10-13' }),
+    tx({ id: 'j', tipo: 'saida', categoria_id: 'juros', valor_cents: 40, recebido_cents: 40, data_competencia: '2026-10-09' }),
+    tx({ id: 'e', tipo: 'entrada', categoria_id: 'emp', valor_cents: 2000, recebido_cents: 2000, data_competencia: '2026-10-08' }),
+    tx({ id: 'a', tipo: 'entrada', origem: 'ajuste', valor_cents: 1, recebido_cents: 1, data_competencia: '2026-10-08' }),
+    tx({ id: 'x', tipo: 'saida', categoria_id: 'mercado', status: 'cancelado', valor_cents: 999, data_competencia: '2026-10-08' }),
+  ]
+  it('conta o valor original pela natureza; patrimonial, dívida, juros e ajuste ficam fora do operacional', () => {
+    const r = resultadoPorCompetencia(ts, cats, 'empresa', '2026-10')
+    expect(r).toMatchObject({
+      receita_cents: 1000, despesa_cents: 300, resultado_cents: 700, divida_cents: 500, financeiro_liquido_cents: 40,
+      patrimonial_entradas_cents: 2000, ajustes_cents: 1, a_pagar_cents: 800,
+    })
+  })
+  it('o critério legado mistura tudo e ignora o que não foi pago (é por isso que foi renomeado)', () => {
+    const l = resultadoLiquidadoPorCompetencia(ts, 'empresa', '2026-10')
+    expect(l.receita_cents).toBe(3001) // venda + empréstimo + ajuste
+    expect(l.despesa_cents).toBe(40) // compra e parcela em aberto não aparecem
+  })
+  it('categoria sem natureza (antes da migração) conta como operacional', () => {
+    const r = resultadoPorCompetencia([tx({ id: 'z', tipo: 'saida', categoria_id: 'nova', valor_cents: 5, data_competencia: '2026-10-01' })],
+      [{ ...cat('nova', undefined) }], undefined, '2026-10')
+    expect(r.despesa_cents).toBe(5)
   })
 })

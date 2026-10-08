@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { api, ErroAcesso, TOKEN_KEY, onSessaoExpirada } from './api'
+import { api, ErroAcesso, TOKEN_KEY, onSessaoExpirada, acaoSoLeitura, ambienteDoHost, escritaBloqueada, limparDadosLocais } from './api'
 
 const store: Record<string, string> = {}
 const sessao: Record<string, string> = {}
@@ -65,5 +65,41 @@ describe('api', () => {
     await expect(api.call('eloi-gestao', 'x')).rejects.toThrow()
     expect(avisado).toBe(true)
     off()
+  })
+})
+
+describe('ambiente: preview e local não gravam em produção', () => {
+  it('reconhece produção, preview da Vercel e local', () => {
+    expect(ambienteDoHost('briefing-eloidesign.vercel.app')).toBe('producao')
+    expect(ambienteDoHost('briefing-eloidesign-git-evolucao-wilkereloig.vercel.app')).toBe('preview')
+    expect(ambienteDoHost('localhost')).toBe('local')
+    expect(ambienteDoHost(undefined)).toBe('producao')
+  })
+  it('separa leitura de escrita', () => {
+    for (const a of ['bootstrap', 'transacoes.list', 'clientes.detail', 'arquivos.url', 'nf.view_url', 'list', 'transacoes.liquidacoes'])
+      expect(acaoSoLeitura(a)).toBe(true)
+    for (const a of ['transacoes.liquidar', 'recorrencias.gerar', 'transacoes.upsert', 'contas.upsert', 'transacoes.pagar_fatura'])
+      expect(acaoSoLeitura(a)).toBe(false)
+  })
+  it('bloqueia escrita em preview/local contra produção; libera com backend próprio ou liberação explícita', () => {
+    expect(escritaBloqueada('transacoes.liquidar', 'localhost')).toBe(true)
+    expect(escritaBloqueada('recorrencias.gerar', 'x-git-y.vercel.app')).toBe(true)
+    expect(escritaBloqueada('transacoes.list', 'localhost')).toBe(false)
+    expect(escritaBloqueada('transacoes.liquidar', 'briefing-eloidesign.vercel.app')).toBe(false)
+    expect(escritaBloqueada('transacoes.liquidar', 'localhost', 'http://127.0.0.1:54321/functions/v1/')).toBe(false)
+    expect(escritaBloqueada('transacoes.liquidar', 'localhost', undefined, true)).toBe(false)
+  })
+})
+
+describe('logout limpa rastros locais', () => {
+  it('remove buscas recentes e paginação; mantém o resto', () => {
+    const m = new Map<string, string>([['eloi_busca_recentes', '[...]'], ['pag:lancamentos', '2'], ['tema', 'escuro']])
+    const a = {
+      get length() { return m.size }, key: (i: number) => [...m.keys()][i] ?? null,
+      getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => { m.set(k, v) },
+      removeItem: (k: string) => { m.delete(k) }, clear: () => m.clear(),
+    } as Storage
+    limparDadosLocais([a])
+    expect([...m.keys()]).toEqual(['tema'])
   })
 })

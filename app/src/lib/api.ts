@@ -1,4 +1,32 @@
-const BASE = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/'
+const PRODUCAO = 'https://nlamznxoocmygfvnqcns.supabase.co/functions/v1/'
+/** Homologação: `VITE_FUNCTIONS_URL` aponta para outro backend (Supabase de
+ *  homologação ou local). Sem ela, o painel fala com produção. */
+const BASE = (import.meta.env.VITE_FUNCTIONS_URL as string | undefined) || PRODUCAO
+export const HOST_PRODUCAO = 'briefing-eloidesign.vercel.app'
+
+export type Ambiente = 'producao' | 'preview' | 'local'
+/** Onde o painel está rodando, pelo host. Preview da Vercel (qualquer outro
+ *  *.vercel.app) e localhost NÃO são produção. Sem `location` (testes) = produção. */
+export function ambienteDoHost(host: string | undefined): Ambiente {
+  if (!host) return 'producao'
+  if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')) return 'local'
+  if (host.endsWith('.vercel.app') && host !== HOST_PRODUCAO) return 'preview'
+  return 'producao'
+}
+
+/** Ações que só leem. Em preview/local apontando para produção, só estas passam:
+ *  rodar o painel fora de produção não pode gravar no banco real por acidente
+ *  (inclui `recorrencias.gerar`, que escreve ao abrir o painel). */
+export function acaoSoLeitura(action: string): boolean {
+  return /^(bootstrap|list|login|logout|catalog_list)$|\.(list|detail|url|liquidacoes)$|view_url$/.test(action)
+}
+
+/** Bloqueio de escrita fora de produção, a menos que o backend seja outro
+ *  (VITE_FUNCTIONS_URL) ou a liberação seja explícita (VITE_PERMITIR_ESCRITA_PRODUCAO=1). */
+export function escritaBloqueada(action: string, host: string | undefined, base = BASE,
+  liberado = import.meta.env.VITE_PERMITIR_ESCRITA_PRODUCAO === '1'): boolean {
+  return base === PRODUCAO && !liberado && ambienteDoHost(host) !== 'producao' && !acaoSoLeitura(action)
+}
 export const TOKEN_KEY = 'eloi_admin_token' // mesmo do painel legado — sessão compartilhada
 
 // ALLOWLIST: este client só fala com estas functions. Tabelas do app
@@ -25,6 +53,17 @@ export function onSessaoExpirada(cb: Cb): () => void {
 export function lerToken(): string {
   return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY) || ''
 }
+/** Rastros do painel no navegador que carregam dado de cliente/dinheiro
+ *  (buscas recentes, página das listas). Saem no logout. */
+export function limparDadosLocais(armazens: Storage[] = [localStorage, sessionStorage]) {
+  for (const a of armazens) {
+    try {
+      const chaves: string[] = []
+      for (let i = 0; i < a.length; i++) { const k = a.key(i); if (k) chaves.push(k) }
+      for (const k of chaves) if (k === 'eloi_busca_recentes' || k.startsWith('pag:')) a.removeItem(k)
+    } catch { /* armazenamento bloqueado (modo privado): nada a limpar */ }
+  }
+}
 function limparToken() {
   sessionStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(TOKEN_KEY)
@@ -43,6 +82,9 @@ export class ErroAcesso extends Error {
 }
 
 async function call<T = unknown>(fn: Fn, action: string, payload: Record<string, unknown> = {}): Promise<T> {
+  if (escritaBloqueada(action, globalThis.location?.hostname)) {
+    throw new Error(`ambiente ${ambienteDoHost(globalThis.location?.hostname)} apontando para produção: gravação bloqueada (${action})`)
+  }
   const token = lerToken()
   const res = await fetch(BASE + fn, {
     method: 'POST',
@@ -87,6 +129,7 @@ export const api = {
   logout() {
     const t = lerToken()
     limparToken()
+    limparDadosLocais()
     if (t) fetch(BASE + 'admin-auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -206,6 +249,7 @@ export const briefingsApi = {
 // operações que o servidor precisa arbitrar (ver edge-functions/eloi-financas.ts).
 import type {
   Conta, Categoria, Conferencia, Transacao, Recorrencia, NotaFiscal, Meta, Arquivo, Contexto, Emprestimo,
+  Liquidacao, Perspectivas, SaldoServidor,
 } from './tipos'
 
 export interface FiltroTransacao {
@@ -231,11 +275,28 @@ export const financas = {
     conferencias?: Conferencia[]
     /** Idem: ausente até a edge com empréstimos ser publicada. */
     emprestimos?: Emprestimo[]
+    /** Saldo oficial por conta (RPC eloi_saldos_contas). Ausente/null = edge
+     *  ou migração antigas; `saldos_erro` diz por quê. */
+    saldos?: SaldoServidor[] | null
+    saldos_erro?: string | null
   }>('eloi-financas', 'bootstrap'),
 
+  /** `completo` vem do servidor (contagem com os mesmos filtros). Edge antiga
+   *  não manda: aí `completo` é undefined e a tela não afirma nada. */
   transacoes: (filtro?: FiltroTransacao) =>
-    call<{ transacoes: Transacao[] }>('eloi-financas', 'transacoes.list', filtro ? { filtro } : {})
-      .then((r) => r.transacoes),
+    call<{ transacoes: Transacao[]; total?: number | null; completo?: boolean; limite?: number }>(
+      'eloi-financas', 'transacoes.list', filtro ? { filtro } : {}),
+  /** Caixa realizado, resultado por competência e obrigações em aberto,
+   *  calculados no banco sobre o histórico inteiro. */
+  perspectivas: (de: string, ate: string, contexto?: Contexto) =>
+    call<Perspectivas>('eloi-financas', 'relatorios.perspectivas', { de, ate, ...(contexto ? { contexto } : {}) }),
+  /** Pagamentos/recebimentos de uma transação, mais antigo primeiro. */
+  liquidacoes: (id: string) =>
+    call<{ liquidacoes: Liquidacao[] }>('eloi-financas', 'transacoes.liquidacoes', { id }).then((r) => r.liquidacoes),
+  /** Desfaz uma liquidação sem apagar: grava a negativa ligada a ela. */
+  reverterLiquidacao: (liquidacao_id: string, motivo: string) =>
+    call<{ transacao: Transacao }>('eloi-financas', 'transacoes.reverter_liquidacao', { liquidacao_id, motivo })
+      .then((r) => r.transacao),
   salvar: (transacao: Partial<Transacao>) =>
     call<{ transacao: Transacao }>('eloi-financas', 'transacoes.upsert', { transacao }).then((r) => r.transacao),
   /** Baixa total ou parcial. `conta_id` quando o dinheiro caiu noutra conta;
@@ -243,6 +304,8 @@ export const financas = {
   liquidar: (id: string, dados: {
     valor_cents: number; data_liquidacao?: string; forma_pagamento?: string
     conta_id?: string; observacoes?: string
+    /** Idempotência: mesma chave = mesmo pagamento (clique duplo, retry). */
+    chave?: string
   }) =>
     call<{ transacao: Transacao }>('eloi-financas', 'transacoes.liquidar', { id, ...dados })
       .then((r) => r.transacao),
@@ -252,11 +315,14 @@ export const financas = {
     conta_id: string; contexto?: Contexto
     linhas: { data: string; descricao: string; valor_cents: number; chave: string }[]
   }) => call<{ importadas: number; ignoradas: number }>('eloi-financas', 'transacoes.importar', dados),
-  /** Fotografia sistema × extrato. `criar_ajuste` grava transação própria com origem=ajuste. */
+  /** Fotografia sistema × extrato. O saldo do sistema é recalculado no servidor
+   *  (`saldo_sistema_cents` da tela só serve para detectar tela desatualizada).
+   *  `criar_ajuste` exige justificativa em `observacoes`. */
   registrarConferencia: (dados: {
     conta_id: string; data: string; saldo_informado_cents: number; saldo_sistema_cents: number
     observacoes?: string; criar_ajuste?: boolean
-  }) => call<{ conferencia: Conferencia; ajuste: Transacao | null }>('eloi-financas', 'conferencias.registrar', dados),
+  }) => call<{ conferencia: Conferencia; ajuste: Transacao | null; saldo_sistema_cents?: number; tela_desatualizada?: boolean }>(
+    'eloi-financas', 'conferencias.registrar', dados),
   /** Só o vencimento muda; o status volta a ser derivado no servidor. */
   reagendar: (id: string, data_vencimento: string) =>
     call<{ transacao: Transacao }>('eloi-financas', 'transacoes.reagendar', { id, data_vencimento })
@@ -268,7 +334,13 @@ export const financas = {
    *  conta → cartão (neutra no resultado) E liquida as compras em aberto do
    *  cartão até `valor_cents`. `sobra_cents` > 0 = pagou mais do que havia
    *  em aberto. */
-  pagarFatura: (dados: { cartao_id: string; conta_id: string; valor_cents: number; data: string }) =>
+  pagarFatura: (dados: {
+    cartao_id: string; conta_id: string; valor_cents: number; data: string
+    /** Idempotência: o mesmo envio repetido não debita a conta duas vezes. */
+    chave?: string
+    /** Pagar sem compra em aberto (crédito antecipado) precisa ser explícito. */
+    antecipado?: boolean
+  }) =>
     call<{ transferencia: Transacao; liquidadas: number; sobra_cents: number }>(
       'eloi-financas', 'transacoes.pagar_fatura', dados),
   remover: (alvo: { id?: string; grupo_id?: string }) =>
@@ -278,8 +350,9 @@ export const financas = {
     call<{ transacao: Transacao }>('eloi-financas', 'transacoes.cancelar', { id, reabrir })
       .then((r) => r.transacao),
 
-  salvarConta: (conta: Partial<Conta>) =>
-    call<{ conta: Conta }>('eloi-financas', 'contas.upsert', { conta }).then((r) => r.conta),
+  /** `motivo` é obrigatório para mudar o saldo inicial de conta com lançamentos. */
+  salvarConta: (conta: Partial<Conta>, motivo?: string) =>
+    call<{ conta: Conta }>('eloi-financas', 'contas.upsert', { conta, ...(motivo ? { motivo } : {}) }).then((r) => r.conta),
   salvarCategoria: (categoria: Partial<Categoria>) =>
     call<{ categoria: Categoria }>('eloi-financas', 'categorias.upsert', { categoria }).then((r) => r.categoria),
 
@@ -291,9 +364,11 @@ export const financas = {
   estadoRecorrencia: (id: string, estado: 'pausar' | 'retomar' | 'encerrar') =>
     call<{ recorrencia: Recorrencia }>('eloi-financas', 'recorrencias.estado', { id, estado })
       .then((r) => r.recorrencia),
-  /** Materializa as cobranças devidas. Idempotente por vencimento. */
+  /** Materializa as cobranças devidas. Idempotente por ocorrência no banco.
+   *  `erros` lista recorrências que não geraram (ex.: sem conta). */
   gerarRecorrencias: () =>
-    call<{ criadas: number; transacoes: Transacao[] }>('eloi-financas', 'recorrencias.gerar'),
+    call<{ criadas: number; erros?: { recorrencia_id: string; vencimento: string; erro: string }[]; ocupado?: boolean }>(
+      'eloi-financas', 'recorrencias.gerar'),
 
   notas: (filtro?: { status?: NotaFiscal['status']; cliente_id?: string; mes?: string }) =>
     call<{ notas: NotaFiscal[] }>('eloi-financas', 'nf.list', filtro ? { filtro } : {}).then((r) => r.notas),

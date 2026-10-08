@@ -20,6 +20,34 @@ export function statusPorValor(valor: number, recebido: number, vencimento: stri
   return "pendente";
 }
 
+/** Situação pela data, sem gravar: abrir a tela não escreve no banco. A rotina
+ *  diária (eloi_rotina_diaria) persiste a mesma regra. */
+export function comSituacaoDoDia<T extends { status: string; recebido_cents: number; data_vencimento: string | null }>(
+  t: T, hoje: string,
+): T {
+  if ((t.status === "pendente" || t.status === "previsto") && Number(t.recebido_cents) === 0
+    && t.data_vencimento && t.data_vencimento < hoje) {
+    return { ...t, status: "vencido" };
+  }
+  if (t.status === "vencido" && (!t.data_vencimento || t.data_vencimento >= hoje)) return { ...t, status: "pendente" };
+  return t;
+}
+
+/** Próxima ocorrência de uma recorrência. Espelha eloi_proxima_ocorrencia (SQL,
+ *  migração 2026-10-09): mensal em diante usa o dia de cobrança — 31 vira 28 em
+ *  fevereiro e volta a 31 em março, em vez de "encolher" para sempre. */
+export function proximaOcorrencia(data: string, periodicidade: string, dia: number | null): string {
+  const somaDias = (n: number) => new Date(Date.parse(data) + n * 86_400_000).toISOString().slice(0, 10);
+  if (periodicidade === "semanal") return somaDias(7);
+  if (periodicidade === "quinzenal") return somaDias(15);
+  const meses = ({ mensal: 1, bimestral: 2, trimestral: 3, semestral: 6, anual: 12 } as Record<string, number>)[periodicidade] ?? 1;
+  const [a, m, d] = data.split("-").map(Number);
+  const alvo = new Date(Date.UTC(a, m - 1 + meses, 1));
+  const ultimo = new Date(Date.UTC(alvo.getUTCFullYear(), alvo.getUTCMonth() + 1, 0)).getUTCDate();
+  alvo.setUTCDate(Math.min(dia ?? d, ultimo));
+  return alvo.toISOString().slice(0, 10);
+}
+
 /** Espelha dataDaParcela(): dia 31 em mes de 30 cai no ultimo dia do mes. */
 export function dataDaParcela(inicio: string, i: number): string {
   const [a, m, d] = inicio.split("-").map(Number);

@@ -214,6 +214,8 @@ export function FolhaPagarFatura({ cartao, aoFechar, aoSalvar }: {
   const [data, setData] = useState(hojeISO())
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
+  // Mesmo envio repetido (clique duplo, retry) = um pagamento só no servidor.
+  const [chave] = useState(() => crypto.randomUUID())
   const cents = centsDeBRL(valor)
 
   async function salvar() {
@@ -222,7 +224,7 @@ export function FolhaPagarFatura({ cartao, aoFechar, aoSalvar }: {
     if (cents > fatura) return setErro(`A fatura aberta é ${fmtBRL(fatura)}`)
     setSalvando(true)
     try {
-      const r = await financas.pagarFatura({ cartao_id: cartao.id, conta_id: contaId, valor_cents: cents, data })
+      const r = await financas.pagarFatura({ cartao_id: cartao.id, conta_id: contaId, valor_cents: cents, data, chave })
       const compras = `${r.liquidadas} ${r.liquidadas === 1 ? 'compra liquidada' : 'compras liquidadas'}`
       // Sobra = pagou mais do que havia em aberto no servidor. O dinheiro saiu
       // da conta; o excedente fica de crédito no cartão e merece conferência.

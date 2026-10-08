@@ -2,6 +2,33 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Evolução do financeiro, etapas 1–3 (branch `evolucao/financeiro-integrado`, não publicada)
+
+- **Inventário real** (`docs/INVENTARIO-2026-10.md`): matriz de propriedade dos dados
+  (só o Studio tem lançamentos; app Financeiro vazio), schema de produção × migrações
+  reconciliado, diagnóstico priorizado, procedimento de backup.
+- **Homologação local** (`database/homologacao/`): recria o schema idêntico ao de
+  produção, testes de banco com dados sintéticos (53 afirmações + concorrência) e
+  reversão testada.
+- **Migrações novas (pendentes de autorização):** liquidações por pagamento
+  (`eloi_liquidacoes`), auditoria, RPCs atômicas (liquidar, reverter, pagar fatura v2,
+  empréstimo, conferência, recorrências, vencidos), saldo oficial no banco, natureza
+  das categorias e perspectivas (caixa, competência, obrigações), rotina diária no pg_cron.
+- **Edge `eloi-financas`:** usa as RPCs; `transacoes.list` diz se veio tudo
+  (`total`/`completo`) e devolve a situação do dia sem gravar; `bootstrap` traz
+  `saldos`; novas `transacoes.liquidacoes`, `transacoes.reverter_liquidacao`,
+  `relatorios.perspectivas`. Validações novas: tipo/contexto, categoria do mesmo
+  contexto e tipo, recorrência exige conta, saldo inicial de conta com histórico exige
+  motivo, pagamento de fatura não se apaga nem se cancela, conferência recalcula o saldo
+  no servidor e exige justificativa para ajuste. Precisa das migrações antes do deploy.
+- **Painel:** aviso de lançamentos incompletos vem do servidor (o antigo disparava à
+  toa); recorrências geradas uma vez por sessão, com erro visível; aviso se o saldo da
+  tela divergir do servidor; conta/cartão arquivado com saldo ou dívida continua nos
+  totais; baixa e pagamento de fatura idempotentes; cartão não aparece como conta de
+  origem de uma baixa; `localhost`/preview não gravam em produção; logout limpa as
+  buscas recentes. `resultado()` ganhou o nome preciso `resultadoLiquidadoPorCompetencia`
+  e o domínio ganhou `resultadoPorCompetencia` (telas ainda no critério antigo).
+
 ## 2026-10-08 — Planejamento completo no Dinheiro (fase 4 de 4)
 
 - **Planejamento** (`/admin/dinheiro/planejamento`) ganha abas na URL:

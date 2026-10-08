@@ -36,9 +36,18 @@ investimento, reserva, outro.
 - Cartão sem `dia_fechamento`/`dia_vencimento` é barrado por constraint: sem ciclo não existe fatura.
 - Cartão **não entra no saldo disponível** — fatura é dívida, não caixa.
 - Não se exclui conta: a FK de `eloi_transacoes` é `RESTRICT`. Desative.
+- *(2026-10-09, migração de liquidações — aplicar com autorização)* `saldo_inicial_em`
+  (data de referência), `arquivada_em`. Conta com lançamentos **não muda de tipo nem
+  de contexto** (trigger `trg_eloi_conta_guarda_estrutura`); saldo inicial só muda com
+  motivo, gravado em `eloi_auditoria`. Arquivada com saldo ou dívida **continua nos
+  totais** (`pesaNosTotais` no domínio; `eloi_saldos_contas` inclui todas).
 
 ### `eloi_categorias`
 Árvore rasa (`pai_id` → ela mesma, `SET NULL`). 36 linhas de seed. Tem `contexto`.
+*(2026-10-09)* `natureza` (`operacional` · `financeira` · `divida` · `patrimonial`) e
+`natureza_definida_por` (`regra_nome_padrao` · `dono` · nulo). Só `operacional` entra no
+resultado. A migração classifica só as seis categorias-padrão cujo nome declara a
+natureza; o resto fica operacional e aparece em `eloi_revisao_natureza`.
 
 ### `eloi_transacoes`
 **Toda** movimentação: receita, despesa, transferência, parcela e compra no cartão
@@ -72,6 +81,43 @@ o estorno não estornar).
 
 **Invariante:** liquidado + em aberto sempre fecha em `valor_cents`.
 
+*(2026-10-09)* `ocorrencia` (data prevista pela recorrência; única com
+`recorrencia_id` — `eloi_transacoes_recorrencia_ocorrencia`). Reagendar mexe no
+vencimento, não na ocorrência.
+
+### `eloi_liquidacoes` *(2026-10-09 — migração pendente de autorização)*
+Cada pagamento/recebimento de uma transação: `valor_cents` (negativo = reversão,
+`reverte_id`), `data`, `conta_id`, `forma_pagamento`, `origem` (`manual` · `fatura` ·
+`importacao` · `recorrencia` · `ajuste` · `legado` · `espelho` · `reversao`),
+`chave_idempotencia` (única), `precisao` (`exata` · `legado_acumulado` · `espelho`),
+`autor`, `criado_em`.
+- **Invariante:** `soma(liquidações da transação) = eloi_transacoes.recebido_cents`.
+  `recebido_cents`, `data_liquidacao` e `status` viram **projeção de compatibilidade**.
+- Backfill: uma linha `legado_acumulado` por transação com recebido > 0 (o valor
+  acumulado na data da última liquidação). Pagamentos intermediários que nunca foram
+  guardados não são inventados.
+- Trigger `trg_eloi_transacao_espelha_liquidacao`: qualquer caminho que ainda grave
+  `recebido_cents` direto ganha a liquidação equivalente (`precisao=espelho`).
+- Escrita só por RPC (`eloi_liquidar`, `eloi_reverter_liquidacao`, `eloi_pagar_fatura`).
+
+### `eloi_auditoria` *(2026-10-09)*
+Trilha imutável: `acao`, `tabela`, `registro_id`, `antes`, `depois`, `motivo`, `autor`.
+Grava liquidação, reversão, pagamento de fatura, empréstimo, conferência, remoção de
+lançamento e mudança estrutural de conta.
+
+### RPCs do núcleo *(2026-10-09; só `service_role`)*
+| Função | O que garante |
+|---|---|
+| `eloi_liquidar(p)` | trava a linha, valida excesso, grava liquidação + projeção, idempotente por `chave` |
+| `eloi_reverter_liquidacao(id, motivo)` | grava a negativa, recalcula; não apaga |
+| `eloi_pagar_fatura(transf, baixas)` *(v2)* | transferência + baixas + liquidações; trava otimista; idempotente por `chave` |
+| `eloi_criar_emprestimo(e, parcelas)` | cadastro e parcelas juntos |
+| `eloi_registrar_conferencia(p)` | conferência e ajuste juntos; ajuste exige justificativa |
+| `eloi_gerar_recorrencias(dias, hoje)` | único por ocorrência, trava consultiva, erro em `ultimo_erro` |
+| `eloi_atualizar_vencidos(hoje)` · `eloi_rotina_diaria()` | situação pela data, sem edição manual (pg_cron) |
+| `eloi_saldos_contas(ate)` | saldo oficial por conta sobre o histórico inteiro |
+| `eloi_caixa_realizado` · `eloi_resultado_competencia` · `eloi_obrigacoes_abertas` | as perspectivas financeiras (ver `docs/EVOLUCAO-FINANCEIRO.md`) |
+
 ### `eloi_tarefas`
 Tarefa manual do dono: `titulo`, `prazo`, `status` (aberta · em_andamento ·
 concluida · cancelada), `prioridade` (baixa · normal · alta), `cliente_id` /
@@ -87,6 +133,11 @@ Nunca se edita lançamento para bater saldo.
 ### `eloi_recorrencias`
 Molde que gera transações. Materializado ao abrir o painel, **idempotente por
 vencimento**. Pausar ou encerrar não apaga o que já foi gerado.
+*(2026-10-09)* Gerada no banco (`eloi_gerar_recorrencias`), única por
+`(recorrencia_id, ocorrencia)`, pela rotina diária do pg_cron e uma vez por sessão do
+painel. Exige `conta_id`. Mensal em diante respeita `dia_cobranca` (31 volta a 31
+depois de fevereiro). Falha fica em `ultimo_erro`. Retomar uma pausada não cobra o
+período pausado.
 
 ### `eloi_notas_fiscais` *(42 linhas após o backfill de 2026-09-03)*
 **Fonte única da nota fiscal** (D-22). Ligada a Cliente e Transação
