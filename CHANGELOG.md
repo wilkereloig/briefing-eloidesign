@@ -2,6 +2,15 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Etapa 8: acesso, auditoria e automação documentados
+
+- `docs/ACESSO.md`: quem entra e como, matriz de acesso para identidades individuais
+  (proprietário, administrador, operador, contador, visualizador — pessoal só do
+  proprietário), plano de MFA/recuperação/revogação, o que a auditoria registra, o
+  que roda sozinho e o que acontece quando falha.
+- Conferido em produção: todas as funções sem login respondem 401 (ou 410, as
+  desligadas); crons do app Financeiro antigo continuam desligados.
+
 ## 2026-10-09 — Etapa 7: tema claro, navegação por tarefa, ocultar valores
 
 - **Tema claro, escuro ou do sistema** (Configurações › Aparência). Sem piscar no
