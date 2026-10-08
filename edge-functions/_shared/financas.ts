@@ -132,3 +132,15 @@ export function planejarPagamentoFatura(
   }
   return { baixas, sobra_cents: disponivel };
 }
+
+/** Parcelas que o sistema gera para um empréstimo: as que faltam depois das
+ *  pagas fora do sistema. Vencimento mensal a partir do primeiro. */
+export function planoDeParcelasEmprestimo(e: {
+  parcelas_total: number; parcelas_pagas_antes: number; valor_parcela_cents: number; primeiro_vencimento: string;
+}): { parcela_num: number; vencimento: string; valor_cents: number }[] {
+  const out = [];
+  for (let n = e.parcelas_pagas_antes + 1; n <= e.parcelas_total; n++) {
+    out.push({ parcela_num: n, vencimento: dataDaParcela(e.primeiro_vencimento, n - 1), valor_cents: e.valor_parcela_cents });
+  }
+  return out;
+}

@@ -2,7 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { requireAdmin } from "./_shared/auth.ts";
 import {
-  chavesComSequencia, dataDaParcela, hojeEmSaoPaulo, planejarPagamentoFatura, statusPorValor, vencimentoDaFatura,
+  chavesComSequencia, dataDaParcela, hojeEmSaoPaulo, planejarPagamentoFatura, planoDeParcelasEmprestimo, statusPorValor,
+  vencimentoDaFatura,
 } from "./_shared/financas.ts";
 
 // Gestao ELOI — nucleo financeiro (eloi_contas, eloi_categorias, eloi_transacoes,
@@ -100,6 +101,13 @@ const NOTA_CAMPOS = [
   "id", "cliente_id", "servico_id", "transacao_id", "numero", "status", "valor_cents",
   "imposto_cents", "competencia", "emitida_em", "enviada_em", "arquivo_path", "observacoes",
 ] as const;
+// Cadastro do emprestimo. id e created_at ficam de fora: id vem a parte (decide
+// entre inserir e atualizar).
+const EMPRESTIMO_CAMPOS = [
+  "nome", "instituicao", "contexto", "conta_id", "categoria_id", "valor_recebido_cents",
+  "parcelas_total", "valor_parcela_cents", "primeiro_vencimento", "parcelas_pagas_antes",
+  "ativo", "observacoes",
+] as const;
 const ARQUIVO_CAMPOS = [
   "id", "titulo", "path", "mime", "tamanho_bytes", "categoria",
   "cliente_id", "servico_id", "transacao_id", "nota_fiscal_id",
@@ -130,20 +138,22 @@ Deno.serve(async (req: Request) => {
   // ── BOOTSTRAP ──────────────────────────────────────────────────────────────
   // Dados de referencia numa chamada so: sao tabelas pequenas e toda tela usa.
   if (action === "bootstrap") {
-    const [contas, categorias, recorrencias, metas, conferencias] = await Promise.all([
+    const [contas, categorias, recorrencias, metas, conferencias, emprestimos] = await Promise.all([
       supabase.from("eloi_contas").select("*").order("contexto").order("nome"),
       supabase.from("eloi_categorias").select("*").eq("ativa", true).order("nome"),
       supabase.from("eloi_recorrencias").select("*").eq("ativa", true).order("proxima_cobranca"),
       supabase.from("eloi_metas").select("*").eq("ativa", true).order("inicio", { ascending: false }),
       // Ultimas conferencias: o card da conta mostra a mais recente.
       supabase.from("eloi_conferencias").select("*").order("data", { ascending: false }).limit(100),
+      supabase.from("eloi_emprestimos").select("*").order("created_at"),
     ]);
-    const erro = contas.error || categorias.error || recorrencias.error || metas.error || conferencias.error;
+    const erro = contas.error || categorias.error || recorrencias.error || metas.error || conferencias.error
+      || emprestimos.error;
     if (erro) return json({ error: erro.message }, 500);
     return json({
       contas: contas.data ?? [], categorias: categorias.data ?? [],
       recorrencias: recorrencias.data ?? [], metas: metas.data ?? [],
-      conferencias: conferencias.data ?? [],
+      conferencias: conferencias.data ?? [], emprestimos: emprestimos.data ?? [],
     });
   }
 
@@ -384,6 +394,110 @@ Deno.serve(async (req: Request) => {
     const { error } = await q;
     if (error) return json({ error: error.message }, 500);
     return json({ ok: true });
+  }
+
+  // ── EMPRESTIMOS ────────────────────────────────────────────────────────────
+  // Sem id: cadastra E gera as parcelas que faltam (as pagas antes de entrar no
+  // sistema nao viram transacao). Com id: so o cadastro — nunca regenera parcela,
+  // senao editar uma observacao duplicaria ou apagaria lancamentos ja liquidados.
+  if (action === "emprestimos.upsert") {
+    const b = body?.emprestimo ?? {};
+    const e = escolher(b, EMPRESTIMO_CAMPOS);
+    const id = b.id;
+    if (id != null && !ehUuid(id)) return json({ error: "id invalido" }, 400);
+    const criar = id == null;
+    // Na criacao tudo que a regra exige tem de vir; na edicao so valida o que veio.
+    if (criar) {
+      if (!e.nome || !e.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
+      e.valor_recebido_cents ??= 0;
+      e.parcelas_pagas_antes ??= 0;
+      if (e.parcelas_total === undefined || e.valor_parcela_cents === undefined || e.primeiro_vencimento === undefined) {
+        return json({ error: "parcelas_total, valor_parcela_cents e primeiro_vencimento sao obrigatorios" }, 400);
+      }
+    } else if ("nome" in e && !e.nome) return json({ error: "nome nao pode ficar vazio" }, 400);
+    if ("valor_recebido_cents" in e && !ehCents(e.valor_recebido_cents)) {
+      return json({ error: "valor_recebido_cents deve ser inteiro nao negativo" }, 400);
+    }
+    if ("valor_parcela_cents" in e && !ehCents(e.valor_parcela_cents, 1)) {
+      return json({ error: "valor_parcela_cents deve ser inteiro maior que zero" }, 400);
+    }
+    // Teto de 600: parcelas viram linhas num insert so; 1e9 por engano travaria a function.
+    if ("parcelas_total" in e && !(ehCents(e.parcelas_total, 1) && (e.parcelas_total as number) <= 600)) {
+      return json({ error: "parcelas_total deve ser inteiro entre 1 e 600" }, 400);
+    }
+    if ("parcelas_pagas_antes" in e && !ehCents(e.parcelas_pagas_antes)) {
+      return json({ error: "parcelas_pagas_antes deve ser inteiro nao negativo" }, 400);
+    }
+    if (e.parcelas_total !== undefined && e.parcelas_pagas_antes !== undefined
+      && (e.parcelas_pagas_antes as number) > (e.parcelas_total as number)) {
+      return json({ error: "parcelas_pagas_antes nao pode passar de parcelas_total" }, 400);
+    }
+    if ("primeiro_vencimento" in e && !ehData(e.primeiro_vencimento)) {
+      return json({ error: "primeiro_vencimento invalido" }, 400);
+    }
+    for (const k of ["conta_id", "categoria_id"]) {
+      if (e[k] != null && !ehUuid(e[k])) return json({ error: `${k} invalido` }, 400);
+    }
+
+    if (!criar) {
+      const { data, error } = await supabase.from("eloi_emprestimos")
+        .update(e).eq("id", id).select().single();
+      if (error) return json({ error: error.message }, 500);
+      return json({ emprestimo: data });
+    }
+
+    // Categoria padrao: 'Emprestimos e dividas' (saida) do mesmo contexto, se existir.
+    if (e.categoria_id == null) {
+      const { data: cat, error: eCat } = await supabase.from("eloi_categorias").select("id")
+        .eq("nome", "Empréstimos e dívidas").eq("contexto", e.contexto).eq("tipo", "saida").limit(1);
+      if (eCat) return json({ error: eCat.message }, 500);
+      e.categoria_id = cat?.[0]?.id ?? null;
+    }
+
+    const { data: emp, error: eEmp } = await supabase.from("eloi_emprestimos").insert(e).select().single();
+    if (eEmp) return json({ error: eEmp.message }, 500);
+
+    const plano = planoDeParcelasEmprestimo(emp);
+    const linhas = plano.map((p) => ({
+      tipo: "saida",
+      contexto: emp.contexto,
+      descricao: `${emp.nome} (${p.parcela_num}/${emp.parcelas_total})`,
+      valor_cents: p.valor_cents,
+      recebido_cents: 0,
+      status: statusPorValor(p.valor_cents, 0, p.vencimento, hoje),
+      conta_id: emp.conta_id,
+      categoria_id: emp.categoria_id,
+      fornecedor: emp.instituicao,
+      data_competencia: p.vencimento,
+      data_vencimento: p.vencimento,
+      parcela_num: p.parcela_num,
+      parcela_de: emp.parcelas_total,
+      origem: "parcelamento",
+      emprestimo_id: emp.id,
+    }));
+    let transacoes: unknown[] = [];
+    if (linhas.length) {
+      const { data, error } = await supabase.from("eloi_transacoes").insert(linhas).select();
+      if (error) {
+        // Sem orfao: cadastro sem parcelas e pior que nenhum cadastro.
+        const { error: eDel } = await supabase.from("eloi_emprestimos").delete().eq("id", emp.id);
+        return json({
+          error: eDel ? `${error.message} (e o cadastro ${emp.id} nao pode ser desfeito: ${eDel.message})` : error.message,
+        }, 500);
+      }
+      transacoes = data ?? [];
+    }
+    return json({ emprestimo: emp, transacoes });
+  }
+
+  // Encerrar sai do uso (ativo=false) sem apagar nem mexer nas parcelas lancadas.
+  if (action === "emprestimos.encerrar") {
+    const { id } = body ?? {};
+    if (!ehUuid(id)) return json({ error: "id obrigatorio" }, 400);
+    const { data, error } = await supabase.from("eloi_emprestimos")
+      .update({ ativo: false }).eq("id", id).select().single();
+    if (error) return json({ error: error.message }, 500);
+    return json({ emprestimo: data });
   }
 
   // ── RECORRENCIAS ───────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import { assertEquals } from "jsr:@std/assert";
 import {
-  chavesComSequencia, hojeEmSaoPaulo, type LinhaAberta, planejarPagamentoFatura, vencimentoDaFatura,
+  chavesComSequencia, hojeEmSaoPaulo, type LinhaAberta, planejarPagamentoFatura, planoDeParcelasEmprestimo,
+  vencimentoDaFatura,
 } from "../_shared/financas.ts";
 
 // ── hoje no fuso do estúdio ──
@@ -84,4 +85,25 @@ Deno.test("dinheiro acaba: as compras seguintes não são tocadas", () => {
     L("b", "saida", 500, 0, "2026-10-02"),
   ], 500, "2026-10-08", HOJE);
   assertEquals(baixas.map((b) => b.id), ["a"]);
+});
+
+// ── empréstimos ──
+Deno.test("empréstimo 12x com 8 pagas antes gera as 4 restantes (9..12)", () => {
+  const p = planoDeParcelasEmprestimo({
+    parcelas_total: 12, parcelas_pagas_antes: 8, valor_parcela_cents: 171146, primeiro_vencimento: "2026-02-13",
+  });
+  assertEquals(p.map((x) => x.parcela_num), [9, 10, 11, 12]);
+  assertEquals(p.map((x) => x.vencimento), ["2026-10-13", "2026-11-13", "2026-12-13", "2027-01-13"]);
+  assertEquals(p.every((x) => x.valor_cents === 171146), true);
+});
+Deno.test("empréstimo todo pago antes não gera parcela", () => {
+  assertEquals(planoDeParcelasEmprestimo({
+    parcelas_total: 3, parcelas_pagas_antes: 3, valor_parcela_cents: 100, primeiro_vencimento: "2026-01-10",
+  }), []);
+});
+Deno.test("empréstimo com vencimento no dia 31 cai no último dia do mês curto", () => {
+  const p = planoDeParcelasEmprestimo({
+    parcelas_total: 3, parcelas_pagas_antes: 0, valor_parcela_cents: 100, primeiro_vencimento: "2026-01-31",
+  });
+  assertEquals(p.map((x) => x.vencimento), ["2026-01-31", "2026-02-28", "2026-03-31"]);
 });
