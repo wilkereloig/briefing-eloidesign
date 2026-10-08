@@ -68,10 +68,15 @@ Deno.serve(async (req: Request) => {
   if (action === "login") {
     const ip = ipDaRequisicao(req.headers);
     const since = new Date(Date.now() - 15 * 60_000).toISOString();
-    const { count } = await supabase.from("portal_login_ip_attempts")
+    const { count, error: eConta } = await supabase.from("portal_login_ip_attempts")
       .select("id", { count: "exact", head: true }).eq("ip", ip).gte("attempted_at", since);
-    if ((count ?? 0) >= 20) return json({ error: "muitas tentativas, aguarde" }, 429); // limite alto: so pega scan de prefixo
-    await supabase.from("portal_login_ip_attempts").insert({ ip }); // conta antes de validar, sem branch pra burlar
+    // Falha FECHADA: sem contagem nao ha como saber se esse IP ja estourou.
+    // `count ?? 0` deixava qualquer erro de leitura virar "zero tentativas".
+    if (eConta || count == null) return json({ error: "tente novamente em instantes" }, 503);
+    if (count >= 20) return json({ error: "muitas tentativas, aguarde" }, 429); // limite alto: so pega scan de prefixo
+    // conta antes de validar, sem branch pra burlar — e se nao contou, nao tenta
+    const { error: eRegistro } = await supabase.from("portal_login_ip_attempts").insert({ ip });
+    if (eRegistro) return json({ error: "tente novamente em instantes" }, 503);
 
     const { prefix, secret } = normalizarSenha(body?.senha);
 
@@ -175,8 +180,13 @@ Deno.serve(async (req: Request) => {
   if (action === "servicos.sugerir_valor") {
     if (!body?.servico_id) return json({ error: "servico_id obrigatório" }, 400);
     const valorCents = body?.valor_cents;
-    if (!Number.isInteger(valorCents) || valorCents <= 0) {
+    // Teto de R$ 1.000.000,00: sugestao vem do cliente, campo aberto da
+    // internet — sem teto um numero absurdo ia parar no painel do dono.
+    if (!Number.isInteger(valorCents) || valorCents <= 0 || valorCents > 100_000_000) {
       return json({ error: "valor_cents inválido" }, 400);
+    }
+    if (body?.observacao != null && (typeof body.observacao !== "string" || body.observacao.length > 1000)) {
+      return json({ error: "observação longa demais (máx. 1000 caracteres)" }, 400);
     }
     const { data: s } = await supabase.from("eloi_servicos")
       .select("id,cliente_id,pago").eq("id", body?.servico_id).maybeSingle();
@@ -203,9 +213,13 @@ Deno.serve(async (req: Request) => {
     // deixaria o cliente adivinhar id alheio. Aqui ele so alcanca a nota que
     // esta ligada a um servico dele.
     if (!s || s.cliente_id !== clienteId || !s.nota_fiscal_id) return json({ error: "não encontrado" }, 404);
+    // E a NOTA tambem tem que ser dele: um vinculo errado servico->nota de
+    // outro cliente (o admin escolhe a nota numa lista) entregaria o PDF
+    // alheio. eloi-gestao/servicos.upsert ja recusa esse vinculo; isto cobre o
+    // que foi gravado antes.
     const { data: nota } = await supabase.from("eloi_notas_fiscais")
-      .select("arquivo_path").eq("id", s.nota_fiscal_id).maybeSingle();
-    if (!nota?.arquivo_path) return json({ error: "não encontrado" }, 404);
+      .select("arquivo_path,cliente_id").eq("id", s.nota_fiscal_id).maybeSingle();
+    if (!nota?.arquivo_path || nota.cliente_id !== clienteId) return json({ error: "não encontrado" }, 404);
     const { data, error } = await supabase.storage.from(NF_BUCKET).createSignedUrl(nota.arquivo_path, 120);
     if (error) return json({ error: error.message }, 500);
     return json({ url: data.signedUrl });
@@ -248,10 +262,21 @@ Deno.serve(async (req: Request) => {
   // entregas.list saiu daqui: listava o Storage cru (storage.list()), sem
   // filtro de publicação — rascunho virava baixável. Quem lista pro cliente
   // agora é sempre materiais.list, que filtra status = 'publicado'. Bug 0.2
-  // de docs/ROTEIRO-SISTEMA-2026-08-28.md.
+  // de docs/historico/ROTEIRO-SISTEMA-2026-08-28.md.
+  //
+  // Assina SO path de material PUBLICADO deste cliente. Antes bastava o path
+  // comecar com `${clienteId}/`: rascunho, arquivo despublicado ou qualquer
+  // binario solto na pasta do cliente era baixavel por quem chutasse o nome.
+  // O portal so chama isto com m.path vindo de materiais.list (ja filtrado por
+  // publicado); a marca usa marca.manifest, com assinatura propria. Nao ha
+  // consumidor de arquivo fora de eloi_materiais — nada de legado a manter.
   if (action === "entregas.view_url") {
     const p = body?.path;
     if (!p || typeof p !== "string" || !p.startsWith(`${clienteId}/`)) return json({ error: "acesso negado" }, 403);
+    const { data: mat, error: eMat } = await supabase.from("eloi_materiais")
+      .select("id").eq("cliente_id", clienteId).eq("status", "publicado").eq("path", p).limit(1);
+    if (eMat) return json({ error: eMat.message }, 500);
+    if (!mat?.length) return json({ error: "acesso negado" }, 403);
     const { data, error } = await supabase.storage.from(ENTREGAS_BUCKET).createSignedUrl(p, 120);
     if (error) return json({ error: error.message }, 500);
     return json({ url: data.signedUrl });

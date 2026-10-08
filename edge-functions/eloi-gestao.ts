@@ -8,7 +8,6 @@ import { requireAdmin } from "./_shared/auth.ts";
 // senha da Georgia concluir "secret irrecuperavel" — o codigo daqui mentia
 // sobre o que rodava la. Este arquivo agora E a fonte da verdade de novo.
 
-const BUCKET = "eloi-notas";
 const ENTREGAS_BUCKET = "eloi-entregas";
 const ENTREGA_CATEGORIAS = ["arquivo", "apresentacao", "fonte"];
 const PORTAL_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // Crockford base32, sem I L O U
@@ -160,27 +159,21 @@ Deno.serve(async (req: Request) => {
       .select("id,nome,cor,contato,created_at,marca_slug,marca_publicada,arquivado_em,portal_ativo,portal_senha_prefix,portal_senha_gerada_em")
       .eq("id", id).maybeSingle(); // sem hash — hash nunca sai do banco
     if (cErr || !cliente) return json({ error: "cliente não encontrado" }, 404);
-    const [orcs, servs, briefs, movs, mats] = await Promise.all([
+    // Sem eloi_movimentos_financeiros (2026-10-08): caixa legado, vazio, e o
+    // painel nao lia `movimentos` nem `resumo` desta resposta. Dinheiro do
+    // cliente vem de eloi-financas (transacoes por cliente_id).
+    const [orcs, servs, briefs, mats] = await Promise.all([
       supabase.from("orcamentos").select("id,numero,titulo,status,valor_total,created_at,share_token").eq("cliente_id", id).order("created_at", { ascending: false }),
       supabase.from("eloi_servicos").select("*").eq("cliente_id", id).order("created_at", { ascending: false }),
       supabase.from("briefing_links").select("id,token,tipo,status,created_at,responded_at,nome,empresa").eq("cliente_id", id).order("created_at", { ascending: false }),
-      supabase.from("eloi_movimentos_financeiros").select("*").eq("cliente_id", id).order("created_at", { ascending: false }),
       supabase.from("eloi_materiais").select("*").eq("cliente_id", id).order("created_at", { ascending: false }),
     ]);
-    // Resumo financeiro: faturado = serviços; recebido = entradas realizadas; a receber = diferença.
-    let faturado = 0, recebido = 0;
-    for (const s of servs.data ?? []) faturado += Number(s.valor_cents) || 0;
-    for (const m of movs.data ?? []) {
-      if (m.tipo === "entrada" && m.status === "realizado") recebido += Number(m.valor_cents) || 0;
-    }
     return json({
       cliente,
       orcamentos: orcs.data ?? [],
       servicos: servs.data ?? [],
       briefings: briefs.data ?? [],
-      movimentos: movs.data ?? [],
       materiais: mats.data ?? [],
-      resumo: { faturado_cents: faturado, recebido_cents: recebido, a_receber_cents: Math.max(0, faturado - recebido) },
     });
   }
 
@@ -211,8 +204,12 @@ Deno.serve(async (req: Request) => {
     if (s.status_execucao && !statusValido.includes(s.status_execucao)) {
       return json({ error: `status_execucao inválido — use um de: ${statusValido.join(", ")}` }, 400);
     }
-    const valorCents = Number(s.valor_cents) || 0;
-    if (valorCents < 0) return json({ error: "valor_cents não pode ser negativo" }, 400);
+    // Ausente = 0 (servico ainda sem preco). Presente tem que ser centavo
+    // inteiro: Number("12.5") passava e gravava fracao de centavo.
+    const valorCents = s.valor_cents == null ? 0 : s.valor_cents;
+    if (!Number.isSafeInteger(valorCents) || valorCents < 0) {
+      return json({ error: "valor_cents tem que ser inteiro não negativo (centavos)" }, 400);
+    }
     const row: any = {
       cliente_id: s.cliente_id,
       // sub_cliente e nf_numero NAO entram aqui: sao espelhos mantidos por
@@ -229,6 +226,28 @@ Deno.serve(async (req: Request) => {
     // null e escolha explicita ("trabalho direto"); undefined e "nao mexe".
     if (s.sub_cliente_id !== undefined) row.sub_cliente_id = s.sub_cliente_id || null;
     if (s.nota_fiscal_id !== undefined) row.nota_fiscal_id = s.nota_fiscal_id || null;
+    // Marca e nota tem que ser do MESMO cliente do servico — mesma regra de
+    // contatos/tarefas e de nf.upsert. Sem isso o servico de um cliente podia
+    // apontar para a nota de outro, e o portal entregava o PDF alheio.
+    // Campo nao enviado numa edicao vale o que esta gravado: trocar so o
+    // cliente nao pode deixar a marca/nota do cliente anterior penduradas.
+    let subId = row.sub_cliente_id, notaId = row.nota_fiscal_id;
+    if (s.id && (subId === undefined || notaId === undefined)) {
+      const { data: atual } = await supabase.from("eloi_servicos")
+        .select("sub_cliente_id,nota_fiscal_id").eq("id", s.id).maybeSingle();
+      if (subId === undefined) subId = atual?.sub_cliente_id ?? null;
+      if (notaId === undefined) notaId = atual?.nota_fiscal_id ?? null;
+    }
+    if (subId) {
+      const { data: m } = await supabase.from("eloi_sub_clientes")
+        .select("cliente_id").eq("id", subId).maybeSingle();
+      if (!m || m.cliente_id !== row.cliente_id) return json({ error: "marca não pertence a este cliente" }, 400);
+    }
+    if (notaId) {
+      const { data: n } = await supabase.from("eloi_notas_fiscais")
+        .select("cliente_id").eq("id", notaId).maybeSingle();
+      if (!n || n.cliente_id !== row.cliente_id) return json({ error: "nota fiscal não pertence a este cliente" }, 400);
+    }
     // Valor gravado a mao encerra a sugestao pendente do portal: sem isso o
     // servico fica marcado como "cliente sugeriu" para sempre.
     if (valorCents > 0) { row.valor_sugerido_cents = null; row.valor_sugerido_em = null; row.valor_sugerido_observacao = null; }
@@ -509,22 +528,10 @@ Deno.serve(async (req: Request) => {
     return json({ servicos: atualizados, ignorados: itens.length - atualizados.length });
   }
 
-  // ── NOTA FISCAL (Storage) ──
-  if (action === "nf.upload_url") {
-    if (!body?.servico_id || !body?.filename) return json({ error: "servico_id e filename obrigatórios" }, 400);
-    const safe = String(body.filename).replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${body.servico_id}/${Date.now()}_${safe}`;
-    const { data, error } = await supabase.storage.from(BUCKET).createSignedUploadUrl(path);
-    if (error) return json({ error: error.message }, 500);
-    return json({ path, signed_url: data.signedUrl, token: data.token });
-  }
-
-  if (action === "nf.view_url") {
-    if (!body?.path) return json({ error: "path obrigatório" }, 400);
-    const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(body.path, 120);
-    if (error) return json({ error: error.message }, 500);
-    return json({ url: data.signedUrl });
-  }
+  // nf.upload_url / nf.view_url / entregas.list / entregas.delete /
+  // dashboard.stats sairam em 2026-10-08 junto com o /gestao estatico, unico
+  // consumidor (grep em app/src, paginas estaticas e portal). PDF de nota agora
+  // e arquivos.upload_url + nf.upsert em eloi-financas.
 
   // ── ENTREGAS (arquivos do projeto / apresentação / fonte) ──
   if (action === "entregas.upload_url") {
@@ -537,17 +544,6 @@ Deno.serve(async (req: Request) => {
     return json({ path, signed_url: data.signedUrl, token: data.token });
   }
 
-  if (action === "entregas.list") {
-    if (!body?.cliente_id) return json({ error: "cliente_id obrigatório" }, 400);
-    const resultado: Record<string, any[]> = {};
-    for (const cat of ENTREGA_CATEGORIAS) {
-      const { data } = await supabase.storage.from(ENTREGAS_BUCKET)
-        .list(`${body.cliente_id}/entregas/${cat}`, { limit: 200, sortBy: { column: "name", order: "asc" } });
-      resultado[cat] = (data ?? []).filter((f: any) => f.id).map((f: any) => ({ nome: f.name, path: `${body.cliente_id}/entregas/${cat}/${f.name}` }));
-    }
-    return json({ entregas: resultado });
-  }
-
   // Leitura assinada do bucket de entregas — o equivalente admin do
   // entregas.view_url do portal, sem a checagem de dono: aqui quem chegou já
   // passou pelo requireAdmin do topo, e o admin vê tudo por definição.
@@ -557,13 +553,6 @@ Deno.serve(async (req: Request) => {
       .createSignedUrl(String(body.path), 120);
     if (error) return json({ error: error.message }, 500);
     return json({ url: data.signedUrl });
-  }
-
-  if (action === "entregas.delete") {
-    if (!body?.path) return json({ error: "path obrigatório" }, 400);
-    const { error } = await supabase.storage.from(ENTREGAS_BUCKET).remove([body.path]);
-    if (error) return json({ error: error.message }, 500);
-    return json({ ok: true });
   }
 
   // ── MATERIAIS (Fase 7: metadados de entregas novas; upload usa entregas.upload_url) ──
@@ -637,40 +626,6 @@ Deno.serve(async (req: Request) => {
     const { data, error } = await q;
     if (error) return json({ error: error.message }, 500);
     return json({ materiais: data });
-  }
-
-  // ── DASHBOARD ──
-  if (action === "dashboard.stats") {
-    const { data: rows, error } = await supabase
-      .from("eloi_servicos")
-      .select("valor_cents,status_execucao,pago,data_pagamento,nf_numero,cliente_id,orcamento_id");
-    if (error) return json({ error: error.message }, 500);
-    let em_execucao = 0, concluido_sem_nf = 0;
-    const porCli: Record<string, number> = {};
-    const orcamentoIdsComServico = new Set<string>();
-    for (const r of rows ?? []) {
-      const v = Number(r.valor_cents) || 0;
-      if (r.status_execucao === "em_execucao") em_execucao++;
-      if (r.status_execucao === "concluida" && !r.nf_numero) concluido_sem_nf++;
-      porCli[r.cliente_id] = (porCli[r.cliente_id] ?? 0) + v;
-      if (r.orcamento_id) orcamentoIdsComServico.add(r.orcamento_id);
-    }
-    const { data: clientes } = await supabase.from("eloi_clientes").select("id,nome,cor");
-    const por_cliente = (clientes ?? [])
-      .map((c) => ({ nome: c.nome, cor: c.cor, total_cents: porCli[c.id] ?? 0 }))
-      .sort((a, b) => b.total_cents - a.total_cents);
-
-    // orçamentos aprovados que ainda não viraram serviço (fase 1) -- financeiro incompleto sem isso
-    const { data: orcsAprovados } = await supabase.from("orcamentos").select("id,valor_total").eq("status", "aprovado");
-    let aprovados_pendentes_count = 0, aprovados_pendentes_cents = 0;
-    for (const o of orcsAprovados ?? []) {
-      if (!orcamentoIdsComServico.has(o.id)) {
-        aprovados_pendentes_count++;
-        aprovados_pendentes_cents += Math.round((Number(o.valor_total) || 0) * 100);
-      }
-    }
-
-    return json({ em_execucao, concluido_sem_nf, por_cliente, aprovados_pendentes_count, aprovados_pendentes_cents });
   }
 
   return json({ error: "ação inválida" }, 400);

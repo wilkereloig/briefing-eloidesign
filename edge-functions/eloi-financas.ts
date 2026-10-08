@@ -1,6 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { requireAdmin } from "./_shared/auth.ts";
+import {
+  chavesComSequencia, dataDaParcela, hojeEmSaoPaulo, planejarPagamentoFatura, statusPorValor, vencimentoDaFatura,
+} from "./_shared/financas.ts";
 
 // Gestao ELOI — nucleo financeiro (eloi_contas, eloi_categorias, eloi_transacoes,
 // eloi_recorrencias, eloi_notas_fiscais, eloi_metas, eloi_arquivos).
@@ -48,15 +51,6 @@ function dividirParcelas(total: number, n: number): number[] {
   return Array.from({ length: n }, (_, i) => (i === 0 ? base + resto : base));
 }
 
-/** Espelha dataDaParcela(): dia 31 em mes de 30 cai no ultimo dia do mes. */
-function dataDaParcela(inicio: string, i: number): string {
-  const [a, m, d] = inicio.split("-").map(Number);
-  const alvo = new Date(Date.UTC(a, m - 1 + i, 1));
-  const ultimo = new Date(Date.UTC(alvo.getUTCFullYear(), alvo.getUTCMonth() + 1, 0)).getUTCDate();
-  alvo.setUTCDate(Math.min(d, ultimo));
-  return alvo.toISOString().slice(0, 10);
-}
-
 const PASSO_MESES: Record<string, number> = {
   mensal: 1, bimestral: 2, trimestral: 3, semestral: 6, anual: 12,
 };
@@ -71,13 +65,50 @@ function avancar(data: string, periodicidade: string): string {
   return dataDaParcela(data, PASSO_MESES[periodicidade] ?? 1);
 }
 
-/** Status derivado do quanto entrou — nunca vem escolhido pela tela. */
-function statusPorValor(valor: number, recebido: number, vencimento: string | null, hoje: string): string {
-  if (recebido >= valor) return "realizado";
-  if (recebido > 0) return "parcial";
-  if (vencimento && vencimento < hoje) return "vencido";
-  return "pendente";
+/** Cents de verdade: inteiro, finito e >= minimo. `Number(x) > 0` aceitava
+ *  12.5 e "1e3" e gravava fracao de centavo. */
+const ehCents = (v: unknown, minimo = 0) => Number.isSafeInteger(v) && (v as number) >= minimo;
+
+/** Whitelist de colunas graváveis: só entra no row a chave que (1) está na
+ *  lista e (2) veio no corpo. Ausente continua ausente — upsert/update parcial
+ *  não zera o que a tela não mandou. Coluna fora da lista (origem, status,
+ *  grupo_id, created_at…) nunca vem do corpo. */
+function escolher(obj: Record<string, unknown>, campos: readonly string[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const k of campos) if (obj[k] !== undefined) out[k] = obj[k];
+  return out;
 }
+
+// O que a tela pode escrever em eloi_transacoes. status, origem, grupo_id,
+// parcela_*, recorrencia_id, importacao_chave e created_at sao do servidor.
+const TRANSACAO_CAMPOS = [
+  "tipo", "contexto", "descricao", "valor_cents", "recebido_cents",
+  "conta_id", "conta_destino_id", "categoria_id", "cliente_id", "servico_id", "fornecedor",
+  "data_competencia", "data_vencimento", "data_liquidacao", "forma_pagamento", "observacoes",
+] as const;
+const RECORRENCIA_CAMPOS = [
+  "id", "nome", "tipo", "contexto", "valor_cents", "periodicidade", "dia_cobranca",
+  "conta_id", "categoria_id", "fornecedor", "inicio", "fim", "proxima_cobranca", "observacoes",
+] as const;
+const CONTA_CAMPOS = [
+  "id", "nome", "tipo", "contexto", "instituicao", "cor", "saldo_inicial_cents",
+  "limite_cents", "dia_fechamento", "dia_vencimento", "ativa",
+] as const;
+const CATEGORIA_CAMPOS = ["id", "nome", "contexto", "tipo", "pai_id", "cor", "icone", "ativa"] as const;
+const META_CAMPOS = ["id", "especie", "nome", "contexto", "categoria_id", "conta_id", "alvo_cents", "inicio", "fim"] as const;
+const NOTA_CAMPOS = [
+  "id", "cliente_id", "servico_id", "transacao_id", "numero", "status", "valor_cents",
+  "imposto_cents", "competencia", "emitida_em", "enviada_em", "arquivo_path", "observacoes",
+] as const;
+const ARQUIVO_CAMPOS = [
+  "id", "titulo", "path", "mime", "tamanho_bytes", "categoria",
+  "cliente_id", "servico_id", "transacao_id", "nota_fiscal_id",
+] as const;
+/** Formato exato que arquivos.upload_url gera. Sem isso eloi_arquivos.path
+ *  aceitava qualquer caminho do bucket — inclusive o PDF de uma nota fiscal,
+ *  que arquivos.remover apagaria junto. */
+const ARQUIVO_PATH = /^financeiro\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[\w.\-]{1,120}$/i;
+const ehDia = (v: unknown) => v == null || (Number.isInteger(v) && (v as number) >= 1 && (v as number) <= 31);
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -93,7 +124,8 @@ Deno.serve(async (req: Request) => {
 
   if (!(await requireAdmin(supabase, body?.token))) return json({ error: "unauthorized" }, 401);
 
-  const hoje = new Date().toISOString().slice(0, 10);
+  // Fuso do estudio, nao UTC: decide o que esta "vencido".
+  const hoje = hojeEmSaoPaulo();
 
   // ── BOOTSTRAP ──────────────────────────────────────────────────────────────
   // Dados de referencia numa chamada so: sao tabelas pequenas e toda tela usa.
@@ -118,48 +150,61 @@ Deno.serve(async (req: Request) => {
   // ── TRANSACOES ─────────────────────────────────────────────────────────────
   if (action === "transacoes.list") {
     const f = body?.filtro ?? {};
-    let q = supabase.from("eloi_transacoes").select("*");
-    if (f.contexto) q = q.eq("contexto", f.contexto);
-    if (f.conta_id) {
-      if (!ehUuid(f.conta_id)) return json({ error: "conta_id invalido" }, 400);
-      q = q.or(`conta_id.eq.${f.conta_id},conta_destino_id.eq.${f.conta_id}`);
+    if (f.conta_id && !ehUuid(f.conta_id)) return json({ error: "conta_id invalido" }, 400);
+    const de = ehData(f.de) ? f.de : null;
+    const ate = ehData(f.ate) ? f.ate : null;
+    if ((f.de && !de) || (f.ate && !ate)) return json({ error: "janela invalida" }, 400);
+    // Builder novo a cada pagina: o do supabase-js nao e reutilizavel depois do await.
+    const montar = () => {
+      let q = supabase.from("eloi_transacoes").select("*");
+      if (f.contexto) q = q.eq("contexto", f.contexto);
+      if (f.conta_id) q = q.or(`conta_id.eq.${f.conta_id},conta_destino_id.eq.${f.conta_id}`);
+      if (f.cliente_id) q = q.eq("cliente_id", f.cliente_id);
+      if (f.categoria_id) q = q.eq("categoria_id", f.categoria_id);
+      if (f.tipo) q = q.eq("tipo", f.tipo);
+      if (f.status) q = q.eq("status", f.status);
+      if (f.em_aberto) q = q.in("status", EM_ABERTO);
+      // Janela opcional por competencia, com FALLBACK para vencimento: um
+      // lancamento sem competencia explicita era excluido pelo gte/lte (NULL
+      // nunca satisfaz comparacao). O front usa a mesma cascata em competenciaDe().
+      // O /admin nao manda janela desde 2026-10-08: saldo precisa do historico inteiro.
+      if (de || ate) {
+        const faixa = (col: string) =>
+          [de ? `${col}.gte.${de}` : null, ate ? `${col}.lte.${ate}` : null]
+            .filter(Boolean).join(",");
+        q = q.or(`and(data_competencia.not.is.null,${faixa("data_competencia")}),` +
+          `and(data_competencia.is.null,data_vencimento.not.is.null,${faixa("data_vencimento")}),` +
+          `and(data_competencia.is.null,data_vencimento.is.null)`);
+      }
+      return q.order("data_competencia", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false }).order("id");
+    };
+    // Paginado: o PostgREST corta cada resposta no max-rows do projeto (1000
+    // por padrao). ponytail: historico inteiro em memoria; teto 20000 linhas —
+    // passando disso, mover saldo para agregacao no banco.
+    const limite = Math.min(Number(f.limite) || 500, 20000);
+    const PAGINA = 1000;
+    const todas: unknown[] = [];
+    while (todas.length < limite) {
+      const pedido = Math.min(PAGINA, limite - todas.length);
+      const { data, error } = await montar().range(todas.length, todas.length + pedido - 1);
+      if (error) return json({ error: error.message }, 500);
+      todas.push(...(data ?? []));
+      if ((data?.length ?? 0) < pedido) break; // ultima pagina
     }
-    if (f.cliente_id) q = q.eq("cliente_id", f.cliente_id);
-    if (f.categoria_id) q = q.eq("categoria_id", f.categoria_id);
-    if (f.tipo) q = q.eq("tipo", f.tipo);
-    if (f.status) q = q.eq("status", f.status);
-    if (f.em_aberto) q = q.in("status", EM_ABERTO);
-    // Janela por competencia. Sem janela o painel puxaria o historico inteiro —
-    // o briefing pede explicitamente para nao carregar tudo de uma vez.
-    //
-    // A janela cai sobre data_competencia com FALLBACK para vencimento: um
-    // lancamento sem competencia explicita era excluido pelo gte/lte (NULL nunca
-    // satisfaz comparacao) e sumia do painel inteiro, mesmo tendo vencimento
-    // dentro do periodo. O front usa a mesma cascata em competenciaDe().
-    if (f.de || f.ate) {
-      const de = ehData(f.de) ? f.de : null;
-      const ate = ehData(f.ate) ? f.ate : null;
-      if ((f.de && !de) || (f.ate && !ate)) return json({ error: "janela invalida" }, 400);
-      const faixa = (col: string) =>
-        [de ? `${col}.gte.${de}` : null, ate ? `${col}.lte.${ate}` : null]
-          .filter(Boolean).join(",");
-      q = q.or(`and(data_competencia.not.is.null,${faixa("data_competencia")}),` +
-        `and(data_competencia.is.null,data_vencimento.not.is.null,${faixa("data_vencimento")}),` +
-        `and(data_competencia.is.null,data_vencimento.is.null)`);
-    }
-    const limite = Math.min(Number(f.limite) || 500, 2000);
-    const { data, error } = await q
-      .order("data_competencia", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false })
-      .limit(limite);
-    if (error) return json({ error: error.message }, 500);
-    return json({ transacoes: data ?? [] });
+    return json({ transacoes: todas });
   }
 
   if (action === "transacoes.upsert") {
     const t = body?.transacao ?? {};
     if (!t.descricao || !t.tipo || !t.contexto) return json({ error: "descricao, tipo e contexto sao obrigatorios" }, 400);
-    if (!(Number(t.valor_cents) > 0)) return json({ error: "valor deve ser maior que zero" }, 400);
+    if (!ehCents(t.valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
+    if (t.recebido_cents != null && !ehCents(t.recebido_cents)) {
+      return json({ error: "recebido_cents deve ser inteiro nao negativo" }, 400);
+    }
+    for (const k of ["data_competencia", "data_vencimento", "data_liquidacao"]) {
+      if (t[k] != null && !ehData(t[k])) return json({ error: `${k} invalida` }, 400);
+    }
     if (t.tipo === "transferencia" && (!t.conta_id || !t.conta_destino_id || t.conta_id === t.conta_destino_id)) {
       return json({ error: "transferencia exige conta de origem e destino diferentes" }, 400);
     }
@@ -172,17 +217,21 @@ Deno.serve(async (req: Request) => {
     // desapareceria ao corrigir a descricao do lancamento.
     let anterior: Record<string, unknown> | null = null;
     if (t.id) {
+      if (!ehUuid(t.id)) return json({ error: "id invalido" }, 400);
       const { data: atual } = await supabase.from("eloi_transacoes")
-        .select("recebido_cents,status,data_liquidacao").eq("id", t.id).single();
-      anterior = atual ?? null;
+        .select("recebido_cents,status,data_liquidacao,data_vencimento").eq("id", t.id).maybeSingle();
+      // id que nao existe nao vira insert com id escolhido pela tela.
+      if (!atual) return json({ error: "transacao nao encontrada" }, 404);
+      anterior = atual;
     }
-    const recebido = t.recebido_cents != null
-      ? Number(t.recebido_cents) || 0
-      : Number(anterior?.recebido_cents) || 0;
-    if (recebido > Number(t.valor_cents)) return json({ error: "recebido nao pode passar do valor" }, 400);
+    const valor = t.valor_cents as number;
+    const recebido = t.recebido_cents != null ? t.recebido_cents as number : Number(anterior?.recebido_cents) || 0;
+    if (recebido > valor) return json({ error: "recebido nao pode passar do valor" }, 400);
+    const vencimento = (t.data_vencimento !== undefined ? t.data_vencimento : anterior?.data_vencimento) as string | null ?? null;
 
-    const linha = {
-      ...t,
+    // Sem `...t`: so entra coluna da whitelist. status sempre derivado aqui.
+    const linha: Record<string, unknown> = {
+      ...escolher(t, TRANSACAO_CAMPOS),
       // transferencia nao tem categoria de resultado: ela e neutra por definicao
       categoria_id: t.tipo === "transferencia" ? null : t.categoria_id ?? null,
       conta_destino_id: t.tipo === "transferencia" ? t.conta_destino_id : null,
@@ -190,13 +239,16 @@ Deno.serve(async (req: Request) => {
       // competencia cai no vencimento quando a tela nao informa: sem nenhuma das
       // duas o lancamento nao teria mes ao qual pertencer no relatorio
       data_competencia: t.data_competencia ?? t.data_vencimento ?? null,
+      // Liquidacao acompanha o recebido: nada recebido, nada liquidado.
+      data_liquidacao: recebido > 0 ? (t.data_liquidacao ?? anterior?.data_liquidacao ?? hoje) : null,
       // Cancelado so volta por transacoes.cancelar (reabrir:true) — editar
       // descricao/valor de um lancamento cancelado nao pode ressuscita-lo.
-      status: t.status
-        || (anterior?.status === "cancelado" ? "cancelado" : statusPorValor(Number(t.valor_cents), recebido, t.data_vencimento ?? null, hoje)),
+      status: anterior?.status === "cancelado" ? "cancelado" : statusPorValor(valor, recebido, vencimento, hoje),
       updated_at: new Date().toISOString(),
     };
-    const { data, error } = await supabase.from("eloi_transacoes").upsert(linha).select().single();
+    const { data, error } = anterior
+      ? await supabase.from("eloi_transacoes").update(linha).eq("id", t.id).select().single()
+      : await supabase.from("eloi_transacoes").insert(linha).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ transacao: data });
   }
@@ -227,6 +279,8 @@ Deno.serve(async (req: Request) => {
     const { id, valor_cents, data_liquidacao, forma_pagamento, conta_id, observacoes } = body ?? {};
     if (conta_id != null && !ehUuid(conta_id)) return json({ error: "conta_id invalido" }, 400);
     if (!id) return json({ error: "id obrigatorio" }, 400);
+    if (!ehCents(valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
+    if (data_liquidacao != null && !ehData(data_liquidacao)) return json({ error: "data_liquidacao invalida" }, 400);
     const { data: atual, error: e1 } = await supabase
       .from("eloi_transacoes").select("*").eq("id", id).single();
     if (e1 || !atual) return json({ error: e1?.message || "transacao nao encontrada" }, 404);
@@ -234,7 +288,7 @@ Deno.serve(async (req: Request) => {
       return json({ error: "lancamento cancelado: reabra antes de liquidar" }, 400);
     }
 
-    const soma = Number(atual.recebido_cents) + (Number(valor_cents) || 0);
+    const soma = Number(atual.recebido_cents) + valor_cents;
     if (soma > Number(atual.valor_cents)) {
       return json({ error: "pagamento excede o valor em aberto" }, 400);
     }
@@ -284,7 +338,7 @@ Deno.serve(async (req: Request) => {
     const n = Number(body?.parcelas) || 0;
     if (n < 2) return json({ error: "use transacoes.upsert para parcela unica" }, 400);
     if (n > 120) return json({ error: "maximo de 120 parcelas" }, 400);
-    if (!(Number(t.valor_cents) > 0)) return json({ error: "valor deve ser maior que zero" }, 400);
+    if (!ehCents(t.valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
     // Mesmas exigencias do upsert: parcelar nao e porta dos fundos pra gravar
     // linha invalida em lote.
     if (!t.descricao || !t.tipo || !t.contexto) return json({ error: "descricao, tipo e contexto sao obrigatorios" }, 400);
@@ -294,12 +348,11 @@ Deno.serve(async (req: Request) => {
     const valores = dividirParcelas(Number(t.valor_cents), n);
     const grupo = crypto.randomUUID();
 
-    // `id` sai do molde por DESTRUCTURING, nao por `id: undefined`. Em insert
-    // de varias linhas o postgrest-js normaliza as chaves de todas as linhas e
-    // preenche o que falta com null — `id: undefined` virava `id: null` e o
-    // banco recusava com "null value in column id violates not-null".
-    // Parcelar estava quebrado por causa disso.
-    const { id: _descartado, ...molde } = t as Record<string, unknown>;
+    // Molde pela mesma whitelist do upsert — `id` nao esta nela. (Antes era
+    // `{ id, ...molde } = t`: tirava o id, mas deixava passar status, origem e
+    // qualquer outra coluna do corpo.) Chave ausente fica ausente em todas as
+    // linhas: o postgrest-js normaliza as chaves do lote e completaria com null.
+    const molde = escolher(t, TRANSACAO_CAMPOS);
 
     const linhas = valores.map((v, i) => ({
       ...molde,
@@ -309,6 +362,7 @@ Deno.serve(async (req: Request) => {
       parcela_de: n,
       valor_cents: v,
       recebido_cents: 0,
+      data_liquidacao: null,
       status: "previsto",
       data_vencimento: dataDaParcela(inicio, i),
       data_competencia: t.data_competencia ? dataDaParcela(t.data_competencia, i) : dataDaParcela(inicio, i),
@@ -334,9 +388,12 @@ Deno.serve(async (req: Request) => {
 
   // ── RECORRENCIAS ───────────────────────────────────────────────────────────
   if (action === "recorrencias.upsert") {
-    const r = body?.recorrencia ?? {};
+    const r = escolher(body?.recorrencia ?? {}, RECORRENCIA_CAMPOS);
     if (!r.nome || !r.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
-    if (!(Number(r.valor_cents) > 0)) return json({ error: "valor deve ser maior que zero" }, 400);
+    if (!ehCents(r.valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
+    for (const k of ["inicio", "fim", "proxima_cobranca"]) {
+      if (r[k] != null && !ehData(r[k])) return json({ error: `${k} invalida` }, 400);
+    }
     if (!r.proxima_cobranca) r.proxima_cobranca = r.inicio || hoje;
     const { data, error } = await supabase.from("eloi_recorrencias").upsert(r).select().single();
     if (error) return json({ error: error.message }, 500);
@@ -372,6 +429,7 @@ Deno.serve(async (req: Request) => {
     if (e1) return json({ error: e1.message }, 500);
 
     const criadas: unknown[] = [];
+    const erros: { recorrencia_id: string; vencimento: string; erro: string }[] = [];
     for (const r of recs ?? []) {
       if (r.pausada_em) continue;
       let proxima: string = r.proxima_cobranca;
@@ -379,23 +437,33 @@ Deno.serve(async (req: Request) => {
       // virar loop infinito nem despejar centenas de linhas de uma vez
       for (let i = 0; i < 24 && proxima <= hoje; i++) {
         if (r.fim && proxima > r.fim) break;
-        const { data: existente } = await supabase.from("eloi_transacoes")
+        const { data: existente, error: eBusca } = await supabase.from("eloi_transacoes")
           .select("id").eq("recorrencia_id", r.id).eq("data_vencimento", proxima).limit(1);
+        if (eBusca) { erros.push({ recorrencia_id: r.id, vencimento: proxima, erro: eBusca.message }); break; }
         if (!existente?.length) {
-          const { data: nova } = await supabase.from("eloi_transacoes").insert({
-            tipo: r.tipo, contexto: r.contexto, status: "pendente",
+          const { data: nova, error: eNova } = await supabase.from("eloi_transacoes").insert({
+            tipo: r.tipo, contexto: r.contexto,
+            status: statusPorValor(Number(r.valor_cents), 0, proxima, hoje),
             descricao: r.nome, valor_cents: r.valor_cents,
             conta_id: r.conta_id, categoria_id: r.categoria_id, fornecedor: r.fornecedor,
             data_competencia: proxima, data_vencimento: proxima,
             recorrencia_id: r.id, origem: "recorrencia",
           }).select().single();
-          if (nova) criadas.push(nova);
+          // Falhou: proxima_cobranca PARA aqui. Avancar mesmo assim pulava a
+          // cobranca em silencio — a assinatura daquele mes nunca existiria.
+          if (eNova) { erros.push({ recorrencia_id: r.id, vencimento: proxima, erro: eNova.message }); break; }
+          criadas.push(nova);
         }
         proxima = avancar(proxima, r.periodicidade);
       }
-      await supabase.from("eloi_recorrencias").update({ proxima_cobranca: proxima }).eq("id", r.id);
+      if (proxima !== r.proxima_cobranca) {
+        const { error: eAvanca } = await supabase.from("eloi_recorrencias")
+          .update({ proxima_cobranca: proxima }).eq("id", r.id);
+        // A idempotencia por vencimento cobre a proxima chamada: nada duplica.
+        if (eAvanca) erros.push({ recorrencia_id: r.id, vencimento: proxima, erro: eAvanca.message });
+      }
     }
-    return json({ criadas: criadas.length, transacoes: criadas });
+    return json({ criadas: criadas.length, transacoes: criadas, erros });
   }
 
   // ── IMPORTACAO DE EXTRATO ──────────────────────────────────────────────────
@@ -412,28 +480,38 @@ Deno.serve(async (req: Request) => {
     if (!conta) return json({ error: "conta nao encontrada" }, 404);
     const ctx = contexto === "pessoal" || contexto === "empresa" ? contexto : conta.contexto;
     const ehCartao = conta.tipo === "cartao_credito";
+    // Compra no cartao: competencia = dia da compra (resultado), vencimento =
+    // vencimento da FATURA daquele ciclo (quando o dinheiro sai). Antes as duas
+    // eram a data da compra e a fatura importada "vencia" no dia de cada compra.
+    const cicloOk = ehCartao && conta.dia_fechamento && conta.dia_vencimento;
 
     const validas: Record<string, unknown>[] = [];
     for (const l of linhas) {
-      const cents = Math.trunc(Number(l?.valor_cents));
-      if (!ehData(l?.data) || !Number.isFinite(cents) || cents === 0) continue;
+      const cents = Number(l?.valor_cents);
+      if (!ehData(l?.data) || !Number.isSafeInteger(cents) || cents === 0) continue;
       const chave = typeof l.chave === "string" && l.chave ? l.chave : `${l.data}|${cents}|${String(l.descricao ?? "").toLowerCase()}`;
       const abs = Math.abs(cents);
+      const vencimento = cicloOk
+        ? vencimentoDaFatura(l.data, Number(conta.dia_fechamento), Number(conta.dia_vencimento))
+        : l.data;
       validas.push({
         tipo: cents > 0 ? "entrada" : "saida",
         contexto: ctx,
         descricao: String(l.descricao ?? "").trim().slice(0, 200) || "Importado",
         valor_cents: abs,
         recebido_cents: ehCartao ? 0 : abs,
-        status: ehCartao ? "pendente" : "realizado",
+        status: ehCartao ? statusPorValor(abs, 0, vencimento, hoje) : "realizado",
         conta_id,
-        data_competencia: l.data, data_vencimento: l.data,
+        data_competencia: l.data, data_vencimento: vencimento,
         data_liquidacao: ehCartao ? null : l.data,
         origem: "importacao",
         importacao_chave: chave,
       });
     }
     if (!validas.length) return json({ error: "nenhuma linha valida" }, 400);
+    // Linhas identicas no mesmo lote ganham #2, #3… (ver chavesComSequencia).
+    chavesComSequencia(validas.map((v) => v.importacao_chave as string))
+      .forEach((c, i) => { validas[i].importacao_chave = c; });
 
     const chaves = validas.map((v) => v.importacao_chave as string);
     const { data: existentes } = await supabase.from("eloi_transacoes")
@@ -444,6 +522,66 @@ Deno.serve(async (req: Request) => {
     const { error } = await supabase.from("eloi_transacoes").insert(novas);
     if (error) return json({ error: error.message }, 500);
     return json({ importadas: novas.length, ignoradas: validas.length - novas.length });
+  }
+
+  // ── PAGAMENTO DE FATURA ────────────────────────────────────────────────────
+  // Uma transferencia conta -> cartao (regra 2: pagar fatura nao e despesa; a
+  // despesa ja foi cada compra) + baixa das compras em aberto do cartao, da
+  // mais antiga para a mais nova. Estorno em aberto entra como credito.
+  //
+  // O plano (quem quita quanto) sai de planejarPagamentoFatura, pura e testada;
+  // a gravacao e UMA chamada a eloi_pagar_fatura (migracao
+  // 2026-10-08-pagar-fatura.sql), que insere a transferencia e aplica as baixas
+  // na mesma transacao. Falha no meio = nada gravado. A funcao so aplica cada
+  // baixa se a linha ainda tiver o recebido_cents lido aqui: dois pagamentos ao
+  // mesmo tempo nao quitam a mesma compra duas vezes — o segundo volta 409.
+  if (action === "transacoes.pagar_fatura") {
+    const { cartao_id, conta_id, valor_cents, data } = body ?? {};
+    if (!ehUuid(cartao_id) || !ehUuid(conta_id)) return json({ error: "cartao_id e conta_id obrigatorios" }, 400);
+    if (cartao_id === conta_id) return json({ error: "conta de origem e cartao precisam ser diferentes" }, 400);
+    if (!ehCents(valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
+    if (!ehData(data)) return json({ error: "data invalida" }, 400);
+
+    const { data: contas, error: eContas } = await supabase.from("eloi_contas")
+      .select("id,nome,tipo,contexto").in("id", [cartao_id, conta_id]);
+    if (eContas) return json({ error: eContas.message }, 500);
+    const cartao = (contas ?? []).find((c: { id: string }) => c.id === cartao_id);
+    const origem = (contas ?? []).find((c: { id: string }) => c.id === conta_id);
+    if (!cartao || cartao.tipo !== "cartao_credito") return json({ error: "cartao nao encontrado" }, 404);
+    if (!origem) return json({ error: "conta nao encontrada" }, 404);
+    if (origem.tipo === "cartao_credito") return json({ error: "fatura se paga com conta, nao com outro cartao" }, 400);
+
+    const { data: abertas, error: eAbertas } = await supabase.from("eloi_transacoes")
+      .select("id,tipo,valor_cents,recebido_cents,data_vencimento,created_at")
+      .eq("conta_id", cartao_id).in("tipo", ["saida", "entrada"])
+      .not("status", "in", "(realizado,cancelado)");
+    if (eAbertas) return json({ error: eAbertas.message }, 500);
+    const plano = planejarPagamentoFatura(
+      (abertas ?? []).map((l: Record<string, unknown>) => ({
+        id: l.id as string, tipo: l.tipo as string,
+        valor_cents: Number(l.valor_cents), recebido_cents: Number(l.recebido_cents),
+        data_vencimento: (l.data_vencimento as string | null) ?? null, created_at: String(l.created_at),
+      })),
+      valor_cents, data, hoje,
+    );
+
+    const { data: transferencia, error } = await supabase.rpc("eloi_pagar_fatura", {
+      p_transferencia: {
+        tipo: "transferencia", contexto: cartao.contexto, status: "realizado",
+        descricao: `Pagamento da fatura — ${cartao.nome}`,
+        valor_cents, recebido_cents: valor_cents,
+        conta_id, conta_destino_id: cartao_id, categoria_id: null,
+        data_competencia: data, data_vencimento: data, data_liquidacao: data,
+        origem: "manual",
+      },
+      p_baixas: plano.baixas,
+    }).single();
+    if (error) {
+      return /fatura mudou/.test(error.message)
+        ? json({ error: "a fatura mudou durante o pagamento — recarregue e tente de novo" }, 409)
+        : json({ error: error.message }, 500);
+    }
+    return json({ transferencia, liquidadas: plano.baixas.length, sobra_cents: plano.sobra_cents });
   }
 
   // ── CONFERENCIA DE SALDO ───────────────────────────────────────────────────
@@ -520,15 +658,44 @@ Deno.serve(async (req: Request) => {
   if (action === "nf.upsert") {
     // servico_ids NAO e coluna: sai do objeto antes do upsert, senao o Postgres
     // recusa a linha inteira. O vinculo e gravado depois, em eloi_servicos.
-    const { servico_ids: servicoIds, servicos: _fora, ...nf } = body?.nota ?? {};
-    if (!(Number(nf.valor_cents) >= 0)) return json({ error: "valor invalido" }, 400);
+    const corpo = body?.nota ?? {};
+    const servicoIds = corpo.servico_ids;
+    const nf = escolher(corpo, NOTA_CAMPOS);
+    if (!ehCents(nf.valor_cents)) return json({ error: "valor_cents deve ser inteiro nao negativo" }, 400);
+    if (nf.imposto_cents != null && !ehCents(nf.imposto_cents)) {
+      return json({ error: "imposto_cents deve ser inteiro nao negativo" }, 400);
+    }
     // emitida sem numero e um registro que nao serve pra nada na contabilidade
-    if (["emitida", "enviada"].includes(nf.status) && !nf.numero) {
+    if (["emitida", "enviada"].includes(nf.status as string) && !nf.numero) {
       return json({ error: "nota emitida exige numero" }, 400);
     }
     if (servicoIds !== undefined && !Array.isArray(servicoIds)) {
       return json({ error: "servico_ids tem que ser lista" }, 400);
     }
+    if (Array.isArray(servicoIds) && !servicoIds.every(ehUuid)) {
+      return json({ error: "servico_ids invalido" }, 400);
+    }
+
+    // Todo serviço da nota tem que ser do mesmo cliente dela: nota de um
+    // cliente cobrindo serviço de outro é erro de digitação, não caso de uso.
+    // Conferido ANTES de gravar a nota (antes gravava e so depois recusava —
+    // o 400 voltava com a nota ja alterada no banco).
+    if (Array.isArray(servicoIds) && servicoIds.length) {
+      let clienteDaNota = nf.cliente_id as string | null | undefined;
+      if (clienteDaNota === undefined && nf.id) {
+        const { data: atual } = await supabase.from("eloi_notas_fiscais")
+          .select("cliente_id").eq("id", nf.id).maybeSingle();
+        clienteDaNota = atual?.cliente_id ?? null;
+      }
+      const { data: svc, error: eSvc } = await supabase.from("eloi_servicos")
+        .select("id,cliente_id").in("id", servicoIds);
+      if (eSvc) return json({ error: eSvc.message }, 500);
+      const estranho = (svc ?? []).find((sv: { cliente_id: string }) => sv.cliente_id !== clienteDaNota);
+      if (estranho || (svc ?? []).length !== new Set(servicoIds).size) {
+        return json({ error: "algum serviço não existe ou é de outro cliente" }, 400);
+      }
+    }
+
     const { data, error } = await supabase.from("eloi_notas_fiscais").upsert(nf).select().single();
     if (error) {
       return /duplicate|unique/i.test(error.message)
@@ -537,16 +704,6 @@ Deno.serve(async (req: Request) => {
     }
 
     if (Array.isArray(servicoIds)) {
-      // Todo serviço da nota tem que ser do mesmo cliente dela: nota de um
-      // cliente cobrindo serviço de outro é erro de digitação, não caso de uso.
-      if (servicoIds.length) {
-        const { data: svc } = await supabase.from("eloi_servicos")
-          .select("id,cliente_id").in("id", servicoIds);
-        const estranho = (svc ?? []).find((sv: { cliente_id: string }) => sv.cliente_id !== data.cliente_id);
-        if (estranho || (svc ?? []).length !== servicoIds.length) {
-          return json({ error: "algum serviço não existe ou é de outro cliente" }, 400);
-        }
-      }
       // Desvincula quem saiu, vincula quem entrou. O trigger cuida do espelho
       // nf_numero dos dois lados.
       let solta = supabase.from("eloi_servicos").update({ nota_fiscal_id: null, nf_numero: null })
@@ -577,8 +734,14 @@ Deno.serve(async (req: Request) => {
 
   // ── CONTAS, CATEGORIAS, METAS ──────────────────────────────────────────────
   if (action === "contas.upsert") {
-    const c = body?.conta ?? {};
+    const c = escolher(body?.conta ?? {}, CONTA_CAMPOS);
     if (!c.nome || !c.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
+    // Saldo inicial pode ser negativo (conta que comecou no cheque especial).
+    if (c.saldo_inicial_cents != null && !Number.isSafeInteger(c.saldo_inicial_cents)) {
+      return json({ error: "saldo_inicial_cents deve ser inteiro" }, 400);
+    }
+    if (c.limite_cents != null && !ehCents(c.limite_cents)) return json({ error: "limite_cents deve ser inteiro nao negativo" }, 400);
+    if (!ehDia(c.dia_fechamento) || !ehDia(c.dia_vencimento)) return json({ error: "dia deve ser inteiro de 1 a 31" }, 400);
     if (c.tipo === "cartao_credito" && (!c.dia_fechamento || !c.dia_vencimento)) {
       return json({ error: "cartao exige dia de fechamento e vencimento" }, 400);
     }
@@ -588,7 +751,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "categorias.upsert") {
-    const c = body?.categoria ?? {};
+    const c = escolher(body?.categoria ?? {}, CATEGORIA_CAMPOS);
     if (!c.nome || !c.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
     const { data, error } = await supabase.from("eloi_categorias").upsert(c).select().single();
     if (error) return json({ error: error.message }, 500);
@@ -596,9 +759,9 @@ Deno.serve(async (req: Request) => {
   }
 
   if (action === "metas.upsert") {
-    const m = body?.meta ?? {};
+    const m = escolher(body?.meta ?? {}, META_CAMPOS);
     if (!m.nome || !m.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
-    if (!(Number(m.alvo_cents) > 0)) return json({ error: "alvo deve ser maior que zero" }, 400);
+    if (!ehCents(m.alvo_cents, 1)) return json({ error: "alvo_cents deve ser inteiro maior que zero" }, 400);
     const { data, error } = await supabase.from("eloi_metas").upsert(m).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ meta: data });
@@ -657,15 +820,35 @@ Deno.serve(async (req: Request) => {
     if (error) return json({ error: error.message }, 500);
     // O binario sai depois do registro: se o storage falhar, sobra um orfao no
     // bucket, que e melhor do que uma linha apontando pra arquivo inexistente.
-    if (arq?.path) await supabase.storage.from(ARQUIVOS_BUCKET).remove([arq.path]);
+    // So sai se ninguem mais aponta pra ele: o PDF de nota fiscal mora no mesmo
+    // bucket e no mesmo prefixo (financeiro/), e um registro que apontasse pra
+    // ele levaria a nota junto. Na duvida (erro de leitura), fica o orfao.
+    if (arq?.path) {
+      const [outros, notas] = await Promise.all([
+        supabase.from("eloi_arquivos").select("id", { count: "exact", head: true }).eq("path", arq.path),
+        supabase.from("eloi_notas_fiscais").select("id", { count: "exact", head: true }).eq("arquivo_path", arq.path),
+      ]);
+      const emUso = !!outros.error || !!notas.error || (outros.count ?? 1) > 0 || (notas.count ?? 1) > 0;
+      if (!emUso) await supabase.storage.from(ARQUIVOS_BUCKET).remove([arq.path]);
+    }
     return json({ ok: true });
   }
 
   if (action === "arquivos.upsert") {
-    const a = body?.arquivo ?? {};
+    const a = escolher(body?.arquivo ?? {}, ARQUIVO_CAMPOS);
     if (!a.titulo || !a.path) return json({ error: "titulo e path sao obrigatorios" }, 400);
+    if (typeof a.path !== "string" || !ARQUIVO_PATH.test(a.path)) {
+      return json({ error: "path invalido: use o caminho devolvido por arquivos.upload_url" }, 400);
+    }
+    if (a.tamanho_bytes != null && !ehCents(a.tamanho_bytes)) return json({ error: "tamanho_bytes invalido" }, 400);
     const donos = ["cliente_id", "servico_id", "transacao_id", "nota_fiscal_id"].filter((k) => a[k]);
     if (!donos.length) return json({ error: "arquivo precisa estar ligado a um registro" }, 400);
+    // O PDF de uma nota e da nota: registrar o mesmo path como arquivo avulso
+    // daria a arquivos.remover um jeito de apaga-lo.
+    const { count: daNota, error: eNota } = await supabase.from("eloi_notas_fiscais")
+      .select("id", { count: "exact", head: true }).eq("arquivo_path", a.path);
+    if (eNota) return json({ error: eNota.message }, 500);
+    if ((daNota ?? 0) > 0) return json({ error: "esse arquivo pertence a uma nota fiscal" }, 409);
     const { data, error } = await supabase.from("eloi_arquivos").upsert(a).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ arquivo: data });

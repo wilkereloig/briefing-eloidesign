@@ -1,8 +1,6 @@
 {
   "nota": "Mantido por scripts/deploy-edges.mjs — commit = HEAD no momento do deploy. Lido por scripts/release-check.mjs (edge alterada e não deployada) e pelo painel em Configurações → Sistema. Não editar à mão. Estado inicial reconstruído em 2026-09-03 cruzando updated_at do Supabase com o git log.",
-  "ignorar": {
-    "eloi-financeiro": "legado sem consumidor; sai junto com /gestao"
-  },
+  "ignorar": {},
   "edges": {
     "portal-cliente": {
       "commit": "708df45",

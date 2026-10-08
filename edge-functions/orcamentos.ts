@@ -116,8 +116,15 @@ Deno.serve(async (req: Request) => {
     return null;
   }
 
+  // valor_total e a excecao herdada da regra dos cents: REAIS, numeric. Mesmo
+  // assim tem que ser numero finito e nao negativo — "abc" virava 0 e -500
+  // passava direto.
+  const valorTotalInvalido = (v: unknown) =>
+    v != null && (typeof v !== "number" || !Number.isFinite(v) || v < 0);
+
   if (action === "create") {
     const o = body?.orcamento || {};
+    if (valorTotalInvalido(o.valor_total)) return json({ error: "valor_total inválido" }, 400);
     const { erro, ...aj } = lerAjustes(o, { complexidade: "simples", urgencia: "normal", desconto_pct: 0 });
     if (erro) return json({ error: erro }, 400);
     const errCli = exigeCliente(o);
@@ -140,6 +147,7 @@ Deno.serve(async (req: Request) => {
   if (action === "update") {
     const o = body?.orcamento || {};
     if (!o.id) return json({ error: "id obrigatório" }, 400);
+    if (valorTotalInvalido(o.valor_total)) return json({ error: "valor_total inválido" }, 400);
     // update é PATCH, não substituição: campo ausente no corpo mantém o valor
     // atual do banco. Um `{id, status:'aprovado'}` (é só isso que o botão
     // "Aprovar" de Projetos manda) não pode zerar itens/valor/cliente/etc.
@@ -162,17 +170,20 @@ Deno.serve(async (req: Request) => {
     };
     const errCli = exigeCliente(patch);
     if (errCli) return json({ error: errCli }, 400);
-    // Estratégia documentada (Fase 4): orçamento APROVADO que já virou serviço fica
-    // TRAVADO para título/valor/itens/cliente — evita orçamento e serviço divergirem
-    // silenciosamente. Pra alterar, edite o serviço na Gestão (fonte da execução).
-    if (atual.status === "aprovado") {
-      const { data: svcExistente } = await supabase.from("eloi_servicos").select("id").eq("orcamento_id", o.id).maybeSingle();
-      const mudouCore = (patch.titulo ?? null) !== (atual.titulo ?? null)
-        || Number(patch.valor_total ?? 0) !== Number(atual.valor_total ?? 0)
-        || (patch.cliente_id ?? null) !== (atual.cliente_id ?? null);
-      if (svcExistente && mudouCore) {
-        return json({ error: "orçamento aprovado já virou serviço — título, valor e cliente estão travados; ajuste o serviço na Gestão" }, 409);
-      }
+    // Estratégia documentada (Fase 4): orçamento que já virou serviço fica
+    // TRAVADO para título/valor/cliente — evita orçamento e serviço divergirem
+    // silenciosamente. Pra alterar, edite o serviço (fonte da execução).
+    // A trava olha a EXISTÊNCIA do serviço, não o status: antes ela só valia
+    // com status 'aprovado' no banco, e bastava um update {status:'rascunho'}
+    // seguido de outro mudando o valor para destravar.
+    const { data: svcExistente, error: eSvc } = await supabase.from("eloi_servicos")
+      .select("id").eq("orcamento_id", o.id).limit(1);
+    if (eSvc) return json({ error: eSvc.message }, 500);
+    const mudouCore = (patch.titulo ?? null) !== (atual.titulo ?? null)
+      || Number(patch.valor_total ?? 0) !== Number(atual.valor_total ?? 0)
+      || (patch.cliente_id ?? null) !== (atual.cliente_id ?? null);
+    if (svcExistente?.length && mudouCore) {
+      return json({ error: "orçamento já virou serviço — título, valor e cliente estão travados; ajuste o serviço" }, 409);
     }
     const { data, error } = await supabase.from("orcamentos").update({
       ...patch,
