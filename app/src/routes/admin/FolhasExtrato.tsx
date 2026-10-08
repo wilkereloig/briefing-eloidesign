@@ -194,8 +194,11 @@ export function FolhaImportar({ aoFechar, aoSalvar }: {
         linhas: selecionadas.map((l) => ({
           data: l.data!, descricao: l.descricao, valor_cents: l.valor_cents!, chave: l.chave,
         })),
+        // Identifica o lote: dá para desfazer depois na página da conta.
+        arquivo: nomeArquivo || undefined,
+        formato: /\.ofx$/i.test(nomeArquivo) ? 'ofx' : 'csv',
       })
-      aoSalvar(`${r.importadas} ${r.importadas === 1 ? 'lançamento importado' : 'lançamentos importados'}${r.ignoradas ? ` · ${r.ignoradas} já existiam` : ''}`)
+      aoSalvar(`${r.importadas} ${r.importadas === 1 ? 'lançamento importado' : 'lançamentos importados'}${r.ignoradas ? ` · ${r.ignoradas} já existiam` : ''}${r.lote ? ' · dá para desfazer na página da conta' : ''}`)
       aoFechar()
     } catch (err) {
       setErro((err as Error).message)

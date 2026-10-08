@@ -18,7 +18,7 @@ export function ambienteDoHost(host: string | undefined): Ambiente {
  *  rodar o painel fora de produção não pode gravar no banco real por acidente
  *  (inclui `recorrencias.gerar`, que escreve ao abrir o painel). */
 export function acaoSoLeitura(action: string): boolean {
-  return /^(bootstrap|list|login|logout|catalog_list)$|\.(list|detail|url|liquidacoes)$|view_url$/.test(action)
+  return /^(bootstrap|list|login|logout|catalog_list)$|\.(list|detail|url|liquidacoes|perspectivas|pagamentos)$|view_url$/.test(action)
 }
 
 /** Bloqueio de escrita fora de produção, a menos que o backend seja outro
@@ -249,7 +249,7 @@ export const briefingsApi = {
 // operações que o servidor precisa arbitrar (ver edge-functions/eloi-financas.ts).
 import type {
   Conta, Categoria, Conferencia, Transacao, Recorrencia, NotaFiscal, Meta, Arquivo, Contexto, Emprestimo,
-  Liquidacao, Perspectivas, SaldoServidor,
+  Importacao, Liquidacao, PagamentoCartao, Perspectivas, SaldoServidor,
 } from './tipos'
 
 export interface FiltroTransacao {
@@ -314,7 +314,24 @@ export const financas = {
   importar: (dados: {
     conta_id: string; contexto?: Contexto
     linhas: { data: string; descricao: string; valor_cents: number; chave: string }[]
-  }) => call<{ importadas: number; ignoradas: number }>('eloi-financas', 'transacoes.importar', dados),
+    /** Nome do arquivo e formato: identificam o lote para desfazer depois. */
+    arquivo?: string; formato?: 'csv' | 'ofx'
+  }) => call<{ importadas: number; ignoradas: number; lote: Importacao | null }>('eloi-financas', 'transacoes.importar', dados),
+  /** Lotes de importação de uma conta, do mais recente. */
+  importacoes: (conta_id: string) =>
+    call<{ importacoes: Importacao[] }>('eloi-financas', 'importacoes.list', { conta_id }).then((r) => r.importacoes),
+  /** Desfaz o lote inteiro (as linhas saem, com trilha). Recusado se alguma já
+   *  foi paga, conciliada ou tem nota/arquivo. */
+  desfazerImportacao: (id: string, motivo: string) =>
+    call<{ lote: Importacao; removidas: number }>('eloi-financas', 'importacoes.reverter', { id, motivo }),
+  /** Pagamentos feitos ao cartão e o que cada um quitou. */
+  pagamentosDoCartao: (cartao_id: string) =>
+    call<{ pagamentos: PagamentoCartao[] }>('eloi-financas', 'cartoes.pagamentos', { cartao_id }).then((r) => r.pagamentos),
+  /** Estorno de pagamento de fatura: as compras voltam a dever e a transferência
+   *  fica cancelada. Só para pagamento rastreado. */
+  estornarPagamentoFatura: (id: string, motivo: string) =>
+    call<{ transferencia_id: string; compras_reabertas: number }>(
+      'eloi-financas', 'transacoes.estornar_pagamento_fatura', { id, motivo }),
   /** Fotografia sistema × extrato. O saldo do sistema é recalculado no servidor
    *  (`saldo_sistema_cents` da tela só serve para detectar tela desatualizada).
    *  `criar_ajuste` exige justificativa em `observacoes`. */

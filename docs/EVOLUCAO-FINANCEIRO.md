@@ -23,7 +23,7 @@ Financeiro separado está vazio.
 | 2. Confiabilidade | ✅ publicado | RPCs atômicas, idempotência, unicidade de recorrência, completude, saldo no servidor, travas de conta, guarda de ambiente |
 | 3. Obrigações × liquidações × resultados | ✅ núcleo publicado · ⏳ telas | `eloi_liquidacoes`, natureza das categorias, 3 perspectivas no banco, `resultadoPorCompetencia` no domínio, relatório de diferenças |
 | 4. Revisão de dados e consolidação | ✅ no essencial | não há dado a migrar do app Financeiro (desligado); "Outros"/"Outras entradas" revisados com decisão delegada pelo dono (24 lançamentos, reversível); natureza das categorias confirmada |
-| 5. Contas, cartões, dívidas, conciliação | ⏳ parcial | saldo inicial com data e arquivamento preservando saldo; bloqueios de fatura; **empréstimo: taxa efetiva ao mês e valor para quitar hoje** (parcelas em aberto ≠ saldo devedor), cartões ordenados do juro mais caro; **importação OFX com FITID** (reimportar nunca duplica). Pendente: ciclos de fatura identificáveis, estorno de pagamento de fatura, lote/reversão de importação |
+| 5. Contas, cartões, dívidas, conciliação | ✅ código + testes · ⏳ publicação | saldo inicial com data e arquivamento preservando saldo; empréstimo com taxa efetiva e valor para quitar hoje; OFX com FITID; **pagamentos ligados às faturas que quitaram** (`pagamento_id`) e **estorno de pagamento de fatura** (compras voltam a dever, nada é apagado); **importação em lote** (`eloi_importacoes`) com **desfazer** recusado quando algo do lote já foi pago/ligado. Limitação: pagamentos e importações anteriores não têm rastro (sem estorno/desfazer automático) |
 | 6. Gestão integrada | ⏳ parcial | **Dinheiro › Análise de gastos** (pedido do dono): saídas × renda, pagando o passado, comprometido por mês, categorias mês a mês, onde mais se gasta |
 | 7. Novo visual | ⏳ | — |
 | 8. Acesso e automação | ⏳ parcial | rotina diária (pg_cron), limpeza no logout, auditoria |
@@ -131,7 +131,9 @@ de cada migração.
 1. **Migrações**, nesta ordem (todas aditivas, testadas em homologação):
    `2026-07-15-servicos-sub-cliente-legado.sql` (no-op), `2026-10-09-reconcilia-schema-producao.sql`
    (no-op), `2026-10-09-liquidacoes-e-operacoes-atomicas.sql`,
-   `2026-10-09-natureza-e-perspectivas.sql`, `2026-10-09-rotina-diaria-cron.sql`.
+   `2026-10-09-natureza-e-perspectivas.sql`, `2026-10-09-rotina-diaria-cron.sql`;
+   etapa 5: `2026-10-09-estorno-fatura-e-lotes-importacao.sql` (reversão própria:
+   `database/homologacao/reverter-2026-10-09-etapa5.sql`).
    Antes, rodar no banco real: duplicidade de `(recorrencia_id, data_competencia)` = 0
    (era 0 em 2026-10-09).
 2. **Verificar:** invariante soma(liquidações) = `recebido_cents` para todas as linhas;
@@ -151,8 +153,8 @@ Preserva transações e projeções; perde o detalhe por pagamento e a trilha (e
 - `database/homologacao/recriar.sh` recria o schema em Postgres local; `fingerprint.sql`
   compara com produção.
 - `database/homologacao/testar.sh` semeia dados **sintéticos** no formato legado, aplica a
-  migração de liquidações (testa o backfill) e roda 53 afirmações + 2 cenários de
-  concorrência (baixas simultâneas, três gerações de recorrência simultâneas).
+  migração de liquidações (testa o backfill) e roda as afirmações de
+  `testes/10`, `20` e `30` (etapa 5: estorno e lotes) + 2 cenários de concorrência (baixas simultâneas, três gerações de recorrência simultâneas).
 - O painel em `localhost` ou em preview da Vercel **não grava em produção**: escrita
   bloqueada no cliente, a menos que `VITE_FUNCTIONS_URL` aponte para outro backend
   ou `VITE_PERMITIR_ESCRITA_PRODUCAO=1`.
@@ -163,6 +165,7 @@ Preserva transações e projeções; perde o detalhe por pagamento e a trilha (e
   migração, não contra perda do projeto. Apagar o schema quando houver backup externo.
 - As telas ainda mostram o critério legado de resultado. Trocar é Etapa 6/7, junto do
   novo visual, para não mudar o número na frente do dono sem a explicação na tela.
-- O estorno de pagamento de fatura não existe. Por enquanto, apagar e cancelar estão bloqueados.
-- Importação/conciliação (CSV/OFX com FITID, lote, reversão) é a Etapa 5.
+- Estorno só para pagamento de fatura gravado depois da etapa 5 (com `pagamento_id`); os
+  anteriores continuam bloqueados para apagar/cancelar — correção por outra transferência.
+- Desfazer importação só para lotes gravados depois da etapa 5.
 - `deno lint` acusa estilo preexistente (`any`, imports inline); não faz parte do `verify`.

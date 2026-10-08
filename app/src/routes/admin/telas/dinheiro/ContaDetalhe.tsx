@@ -12,7 +12,7 @@ import { dataCurta, rotuloConta } from '../../../../ui/formato'
 import { FolhaTransacao } from '../../FolhaTransacao'
 import { FolhaConta } from '../../folhas'
 import { FolhaConferencia } from '../../FolhasExtrato'
-import { alternarCancelamento, FolhasMov, LegendaCheque, LinhaMov, type FolhaMov } from './compartilhado'
+import { alternarCancelamento, FolhasMov, LegendaCheque, LinhaMov, PainelImportacoes, type FolhaMov } from './compartilhado'
 
 type Aba = 'extrato' | 'agendado'
 
@@ -37,7 +37,9 @@ export default function ContaDetalhe() {
     | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
   const fechar = () => setFolha(null)
-  const apos = async (msg: string) => { setAviso({ texto: msg }); await recarregar() }
+  // `versao` recarrega a lista de importações (sob demanda) depois de cada ação.
+  const [versao, setVersao] = useState(0)
+  const apos = async (msg: string) => { setAviso({ texto: msg }); await recarregar(); setVersao((v) => v + 1) }
   const erro = (e: unknown) => setAviso({ texto: (e as Error).message, tipo: 'erro' })
 
   // O extrato vem inteiro do domínio (saldo acumulado desde o saldo inicial);
@@ -158,6 +160,8 @@ export default function ContaDetalhe() {
               )}
             </Painel>
           )}
+
+          <PainelImportacoes conta={conta} versao={versao} aoSalvar={apos} />
 
           {folha && 't' in folha && <FolhasMov folha={folha} aoFechar={fechar} aoSalvar={apos} />}
           {folha?.tipo === 'lancar' && <FolhaTransacao inicial={folha.inicial} aoFechar={fechar} aoSalvar={apos} />}

@@ -85,12 +85,13 @@ o estorno não estornar).
 `recorrencia_id` — `eloi_transacoes_recorrencia_ocorrencia`). Reagendar mexe no
 vencimento, não na ocorrência.
 
-### `eloi_liquidacoes` *(2026-10-09 — migração pendente de autorização)*
+### `eloi_liquidacoes` *(2026-10-09)*
 Cada pagamento/recebimento de uma transação: `valor_cents` (negativo = reversão,
 `reverte_id`), `data`, `conta_id`, `forma_pagamento`, `origem` (`manual` · `fatura` ·
 `importacao` · `recorrencia` · `ajuste` · `legado` · `espelho` · `reversao`),
 `chave_idempotencia` (única), `precisao` (`exata` · `legado_acumulado` · `espelho`),
-`autor`, `criado_em`.
+`autor`, `criado_em`, `pagamento_id` *(etapa 5)* — na baixa de compra de cartão, a
+transferência (pagamento de fatura) que a quitou; é o que permite estornar um pagamento.
 - **Invariante:** `soma(liquidações da transação) = eloi_transacoes.recebido_cents`.
   `recebido_cents`, `data_liquidacao` e `status` viram **projeção de compatibilidade**.
 - Backfill: uma linha `legado_acumulado` por transação com recebido > 0 (o valor
@@ -99,6 +100,15 @@ Cada pagamento/recebimento de uma transação: `valor_cents` (negativo = revers�
 - Trigger `trg_eloi_transacao_espelha_liquidacao`: qualquer caminho que ainda grave
   `recebido_cents` direto ganha a liquidação equivalente (`precisao=espelho`).
 - Escrita só por RPC (`eloi_liquidar`, `eloi_reverter_liquidacao`, `eloi_pagar_fatura`).
+
+### `eloi_importacoes` *(etapa 5)*
+Um lote por arquivo de extrato: `conta_id`, `contexto`, `arquivo`, `formato` (`csv` ·
+`ofx` · `outro`), `linhas_recebidas`, `importadas`, `ignoradas`, `criada_em`,
+`revertida_em`, `revertida_motivo`, `revertidas`. `eloi_transacoes.importacao_id`
+aponta o lote (`on delete set null`). Linhas importadas antes desta tabela não têm lote.
+Desfazer (`eloi_reverter_importacao`) apaga as linhas do lote com cópia inteira em
+`eloi_auditoria`; recusado se alguma linha tem pagamento vigente que não veio da
+importação, nota fiscal, arquivo ou conferência ligada.
 
 ### `eloi_auditoria` *(2026-10-09)*
 Trilha imutável: `acao`, `tabela`, `registro_id`, `antes`, `depois`, `motivo`, `autor`.
@@ -110,7 +120,11 @@ lançamento e mudança estrutural de conta.
 |---|---|
 | `eloi_liquidar(p)` | trava a linha, valida excesso, grava liquidação + projeção, idempotente por `chave` |
 | `eloi_reverter_liquidacao(id, motivo)` | grava a negativa, recalcula; não apaga |
-| `eloi_pagar_fatura(transf, baixas)` *(v2)* | transferência + baixas + liquidações; trava otimista; idempotente por `chave` |
+| `eloi_pagar_fatura(transf, baixas)` *(v3)* | transferência + baixas + liquidações com `pagamento_id`; trava otimista; idempotente por `chave` |
+| `eloi_estornar_pagamento_fatura(id, motivo)` | reverte as baixas daquele pagamento (compras voltam a dever), cancela a transferência; só pagamento com rastro |
+| `eloi_importar(lote, linhas)` | lote + linhas + liquidações numa transação; chave repetida pulada |
+| `eloi_reverter_importacao(id, motivo)` | desfaz o lote inteiro, com trilha; recusa se algo já foi pago/ligado |
+| `eloi_reprojetar_transacao(id)` | recalcula recebido/data/status a partir das liquidações |
 | `eloi_criar_emprestimo(e, parcelas)` | cadastro e parcelas juntos |
 | `eloi_registrar_conferencia(p)` | conferência e ajuste juntos; ajuste exige justificativa |
 | `eloi_gerar_recorrencias(dias, hoje)` | único por ocorrência, trava consultiva, erro em `ultimo_erro` |

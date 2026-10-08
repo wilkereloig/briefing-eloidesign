@@ -220,10 +220,45 @@ export interface Liquidacao {
   origem: 'manual' | 'fatura' | 'importacao' | 'recorrencia' | 'ajuste' | 'legado' | 'espelho' | 'reversao'
   chave_idempotencia: string | null
   reverte_id: string | null
+  /** Baixa de compra de cartão: o pagamento de fatura (transferência) que a quitou. */
+  pagamento_id?: string | null
   /** exata | legado_acumulado (soma anterior à tabela) | espelho (gravada por caminho antigo) */
   precisao: 'exata' | 'legado_acumulado' | 'espelho'
   observacoes: string | null
   criado_em: string
+}
+
+/** Um arquivo de extrato importado. Desfazer remove as linhas do lote. */
+export interface Importacao {
+  id: string
+  conta_id: string
+  contexto: Contexto
+  arquivo: string | null
+  formato: 'csv' | 'ofx' | 'outro'
+  linhas_recebidas: number
+  importadas: number
+  ignoradas: number
+  criada_em: string
+  revertida_em: string | null
+  revertida_motivo: string | null
+  revertidas: number | null
+}
+
+/** Pagamento feito a um cartão (transferência conta → cartão) e as compras
+ *  que ele quitou, líquido de estornos. `rastreado` = gravado com vínculo
+ *  compra → pagamento; só esse pode ser estornado. */
+export interface PagamentoCartao {
+  id: string
+  descricao: string
+  valor_cents: number
+  status: StatusMov
+  conta_id: string | null
+  data_liquidacao: string | null
+  data_competencia: string | null
+  observacoes: string | null
+  created_at: string
+  rastreado: boolean
+  baixas: { transacao_id: string; valor_cents: number }[]
 }
 
 /** Saldo oficial por conta, calculado no banco sobre o histórico inteiro. */
@@ -304,6 +339,8 @@ export interface Transacao {
   importacao_chave: string | null
   /** Parcela de empréstimo (eloi_emprestimos). */
   emprestimo_id: string | null
+  /** Lote de importação (eloi_importacoes) — desfazer o lote remove a linha. */
+  importacao_id?: string | null
   created_at: string
 }
 

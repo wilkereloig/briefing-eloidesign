@@ -39,3 +39,4 @@ eloi-entregas-bucket.sql
 2026-10-09-liquidacoes-e-operacoes-atomicas.sql
 2026-10-09-natureza-e-perspectivas.sql
 2026-10-09-rotina-diaria-cron.sql
+2026-10-09-estorno-fatura-e-lotes-importacao.sql

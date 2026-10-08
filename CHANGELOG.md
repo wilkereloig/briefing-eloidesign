@@ -2,6 +2,20 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Etapa 5: estorno de pagamento de fatura e importação que se desfaz (branch)
+
+- **Página do cartão › Pagamentos ao cartão:** cada pagamento mostra de quais faturas
+  tirou dinheiro ("quitou outubro R$ 250, novembro R$ 20"). **Estornar** (com motivo)
+  reabre as compras que ele quitou e devolve o valor ao saldo da conta; o pagamento fica
+  no histórico como estornado. Pagamentos anteriores a esta versão não têm o rastro e
+  não são estornados às cegas.
+- **Importações:** cada arquivo importado vira um lote, listado na página da conta e do
+  cartão. **Desfazer** (com motivo) tira as linhas do lote — cada uma guardada na trilha
+  — e libera reimportar o arquivo certo. Recusado se algo do lote já foi pago, tem nota,
+  arquivo ou conferência ligada.
+- Importar agora grava lote, linhas e pagamentos numa transação só.
+- Migração `2026-10-09-estorno-fatura-e-lotes-importacao.sql` (pendente de publicação).
+
 ## 2026-10-09 — Publicação do financeiro integrado (etapas 1–3, gastos, empréstimos, OFX)
 
 - **No ar:** migrações `liquidacoes_e_operacoes_atomicas`, `natureza_e_perspectivas` e

@@ -1,4 +1,4 @@
--- REVERSÃO das migrações de 2026-10-09 (liquidações, natureza, rotina diária).
+-- REVERSÃO das migrações de 2026-10-09 (liquidações, natureza, rotina diária, etapa 5).
 -- Volta o schema ao estado de 2026-10-08 sem perder transações: recebido_cents,
 -- status e data_liquidacao continuaram sendo gravados como projeção, então o
 -- app antigo segue funcionando com eles. O que se PERDE: o detalhe por
@@ -8,6 +8,13 @@
 -- As migrações de reconciliação (2026-07-15 e reconcilia-schema) NÃO são
 -- revertidas: elas só registram o que já existia.
 begin;
+-- Etapa 5 primeiro: eloi_transacoes.importacao_id aponta eloi_importacoes.
+drop function if exists public.eloi_reverter_importacao(uuid, text);
+drop function if exists public.eloi_importar(jsonb, jsonb);
+drop function if exists public.eloi_estornar_pagamento_fatura(uuid, text);
+drop function if exists public.eloi_reprojetar_transacao(uuid);
+alter table public.eloi_transacoes drop column if exists importacao_id;
+drop table if exists public.eloi_importacoes;
 do $$ begin
   if exists (select 1 from pg_extension where extname = 'pg_cron') then
     perform cron.unschedule(jobid) from cron.job where jobname = 'eloi-rotina-diaria';

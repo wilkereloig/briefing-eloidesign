@@ -3,7 +3,7 @@ import {
   saldoConta, saldoDisponivel, resultado, vencidas, diasDeAtraso, proximosVencimentos,
   faturaAberta, limiteDisponivel, dividirParcelas, dataDaParcela, previsaoCaixa,
   agrupar, consumoOrcamento, saldoAberto, valorLiquidado, competenciaDe,
-  agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
+  agruparPorPrazo, faixaDePrazo, cicloFatura, faturasQuitadasPor, parceladoAberto, saldoContaEm,
   totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
   faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, saidasDaCobertura, patrimonioLiquido,
   chequeEspecialUsado, filtrarLancamentos, resumoEmprestimo, pesaNosTotais, taxaMensalEmprestimo, resultadoPorCompetencia, resultadoLiquidadoPorCompetencia,
@@ -556,6 +556,22 @@ describe('faturas do cartão', () => {
     const pagas = ts.map((t) => ({ ...t, status: 'realizado' as const, recebido_cents: t.valor_cents }))
     expect(indiceFaturaAtual(faturasDoCartao(visa, pagas, '2026-10-08'), '2026-10-08')).toBe(1)
     expect(indiceFaturaAtual([], '2026-10-08')).toBe(-1)
+  })
+
+  it('pagamento: quanto quitou de cada fatura, e o que não está em fatura nenhuma', () => {
+    const ts = [
+      c({ id: 'out', data_vencimento: '2026-10-09' }),
+      c({ id: 'nov1', data_vencimento: '2026-11-09' }),
+      c({ id: 'nov2', data_vencimento: '2026-11-09' }),
+    ]
+    const f = faturasDoCartao(visa, ts, '2026-10-08')
+    const r = faturasQuitadasPor({ baixas: [
+      { transacao_id: 'nov2', valor_cents: 30_00 }, { transacao_id: 'out', valor_cents: 100_00 },
+      { transacao_id: 'nov1', valor_cents: 20_00 }, { transacao_id: 'sumiu', valor_cents: 5_00 },
+    ] }, f)
+    expect(r.porFatura).toEqual([{ vencimento: '2026-10-09', cents: 100_00 }, { vencimento: '2026-11-09', cents: 50_00 }])
+    expect(r.sem_fatura_cents).toBe(5_00)
+    expect(faturasQuitadasPor({ baixas: [] }, f)).toEqual({ porFatura: [], sem_fatura_cents: 0 })
   })
 })
 
