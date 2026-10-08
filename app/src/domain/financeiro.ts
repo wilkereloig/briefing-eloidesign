@@ -12,7 +12,9 @@
 //    Pagamento parcial é normal, não exceção;
 //  · competência (a que mês pertence) ≠ liquidação (quando o dinheiro andou).
 //    Resultado usa competência; saldo usa liquidação.
-import type { Transacao, Conta, Categoria, Contexto, Emprestimo, Meta, Natureza, StatusMov, TipoMov } from '../lib/tipos'
+import type {
+  Transacao, Conta, Categoria, Contexto, Emprestimo, Meta, Natureza, PagamentoCartao, StatusMov, TipoMov,
+} from '../lib/tipos'
 
 /** Status em que a transação ainda não liquidou e continua devida. */
 const EM_ABERTO: StatusMov[] = ['previsto', 'pendente', 'parcial', 'vencido']
@@ -516,6 +518,31 @@ export function faturasDoCartao(cartao: Conta, transacoes: Transacao[], hoje: st
     return { vencimento, fechamento, linhas, total_cents: total, falta_cents: falta,
       pago_cents: Math.max(0, total - falta), situacao }
   })
+}
+
+/**
+ * Quanto um pagamento ao cartão quitou de cada fatura. As baixas vêm do
+ * servidor (eloi_liquidacoes.pagamento_id, já líquidas de estorno); a fatura de
+ * cada compra é a de `faturasDoCartao`. Compra que não está em nenhuma fatura
+ * (cancelada depois) cai em `sem_fatura_cents`.
+ */
+export function faturasQuitadasPor(
+  pagamento: Pick<PagamentoCartao, 'baixas'>, faturas: Fatura[],
+): { porFatura: { vencimento: string; cents: number }[]; sem_fatura_cents: number } {
+  const vencDe = new Map<string, string>()
+  for (const f of faturas) for (const t of f.linhas) vencDe.set(t.id, f.vencimento)
+  const soma = new Map<string, number>()
+  let semFatura = 0
+  for (const b of pagamento.baixas) {
+    const v = vencDe.get(b.transacao_id)
+    if (!v) { semFatura += b.valor_cents; continue }
+    soma.set(v, (soma.get(v) ?? 0) + b.valor_cents)
+  }
+  return {
+    porFatura: [...soma.entries()].filter(([, c]) => c !== 0).sort(([a], [b]) => (a < b ? -1 : 1))
+      .map(([vencimento, cents]) => ({ vencimento, cents })),
+    sem_fatura_cents: semFatura,
+  }
 }
 
 /** Qual fatura a página do cartão abre: a mais antiga com saldo; sem saldo, a

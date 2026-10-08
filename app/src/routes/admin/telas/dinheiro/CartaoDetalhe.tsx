@@ -13,7 +13,7 @@ import { Carga, ChipMovimento, Dinheiro, Paginacao } from '../../../../ui/painel
 import { usePaginacao } from '../../../../ui/paginacao'
 import { dataCurta, diaMes, mesPorExtenso, rotuloConta } from '../../../../ui/formato'
 import { FolhaConta } from '../../folhas'
-import { ChipFatura, FolhaPagarFatura } from './compartilhado'
+import { ChipFatura, FolhaPagarFatura, PainelImportacoes, PainelPagamentosCartao } from './compartilhado'
 
 const SEM_CATEGORIA = 'sem-categoria'
 
@@ -51,7 +51,11 @@ function CartaoPagina({ id }: { id: string | undefined }) {
   const [folha, setFolha] = useState<'pagar' | 'editar' | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
   const fechar = () => setFolha(null)
-  const apos = async (texto: string, tipo?: 'ok' | 'erro') => { setAviso({ texto, tipo }); await recarregar() }
+  // `versao` recarrega as listas sob demanda (pagamentos, importações) depois de cada ação.
+  const [versao, setVersao] = useState(0)
+  const apos = async (texto: string, tipo?: 'ok' | 'erro') => {
+    setAviso({ texto, tipo }); await recarregar(); setVersao((v) => v + 1)
+  }
   // Mesma chamada de ContaDetalhe; nome/contexto vão porque a edge exige os dois.
   // Arquivar não apaga: cartão com compras não pode ser removido (FK restrict).
   const alternarAtivo = async () => {
@@ -229,6 +233,9 @@ function CartaoPagina({ id }: { id: string | undefined }) {
                   </ul>
                 )}
               </Painel>
+
+              <PainelPagamentosCartao cartao={cartao} faturas={faturas} versao={versao} aoSalvar={apos} />
+              <PainelImportacoes conta={cartao} versao={versao} aoSalvar={apos} />
             </div>
           </div>
 

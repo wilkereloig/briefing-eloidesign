@@ -133,8 +133,8 @@ Deno.serve(async (req: Request) => {
   const hoje = hojeEmSaoPaulo();
 
   /** Pagamento de fatura (transferência para cartão) quitou compras: apagá-lo
-   *  ou cancelá-lo deixaria as compras "pagas" sem dinheiro ter saído. Até
-   *  existir o estorno de pagamento de fatura, a correção é outra transferência. */
+   *  ou cancelá-lo deixaria as compras "pagas" sem dinheiro ter saído. O
+   *  caminho é transacoes.estornar_pagamento_fatura, que reabre as compras. */
   // deno-lint-ignore no-explicit-any
   const bloqueioDePagamentoDeFatura = async (linhas: any[]): Promise<Response | null> => {
     const transf = linhas.filter((t) => t.tipo === "transferencia" && t.conta_destino_id);
@@ -144,7 +144,7 @@ Deno.serve(async (req: Request) => {
     if (error) return json({ error: error.message }, 500);
     if (destinos?.length) {
       return json({
-        error: "pagamento de fatura não se apaga nem se cancela: as compras quitadas ficariam pagas sem saída de dinheiro. Registre a correção como outra transferência.",
+        error: "pagamento de fatura não se apaga nem se cancela por aqui: as compras quitadas ficariam pagas sem saída de dinheiro. Use \"Estornar pagamento\" na página do cartão.",
       }, 409);
     }
     return null;
@@ -738,7 +738,7 @@ Deno.serve(async (req: Request) => {
   // e gravar com origem=importacao. Cartao entra pendente (vai para a fatura);
   // conta comum entra realizado (o extrato e fato consumado).
   if (action === "transacoes.importar") {
-    const { conta_id, contexto, linhas } = body ?? {};
+    const { conta_id, contexto, linhas, arquivo, formato } = body ?? {};
     if (!ehUuid(conta_id)) return json({ error: "conta_id invalido" }, 400);
     if (!Array.isArray(linhas) || linhas.length === 0) return json({ error: "nada a importar" }, 400);
     if (linhas.length > 500) return json({ error: "maximo de 500 linhas por importacao" }, 400);
@@ -784,10 +784,42 @@ Deno.serve(async (req: Request) => {
       .select("importacao_chave").eq("conta_id", conta_id).in("importacao_chave", chaves);
     const ja = new Set((existentes ?? []).map((e: { importacao_chave: string }) => e.importacao_chave));
     const novas = validas.filter((v) => !ja.has(v.importacao_chave as string));
-    if (!novas.length) return json({ importadas: 0, ignoradas: validas.length });
-    const { error } = await supabase.from("eloi_transacoes").insert(novas);
+    if (!novas.length) return json({ importadas: 0, ignoradas: validas.length, lote: null });
+    // Lote + linhas + liquidações numa transação (eloi_importar): o arquivo
+    // inteiro entra ou nada entra, e pode ser desfeito depois (importacoes.reverter).
+    const { data: r, error } = await supabase.rpc("eloi_importar", {
+      p_lote: {
+        conta_id, contexto: ctx,
+        arquivo: typeof arquivo === "string" ? arquivo.slice(0, 200) : null,
+        formato: formato === "csv" || formato === "ofx" ? formato : "outro",
+        linhas_recebidas: linhas.length,
+        ignoradas: validas.length - novas.length,
+      },
+      p_linhas: novas,
+    });
+    if (error) return json({ error: error.message }, erroDeRegra(error) ? 400 : 500);
+    return json({ importadas: r.importadas, ignoradas: r.ignoradas, lote: r.lote });
+  }
+
+  // ── LOTES DE IMPORTACAO ────────────────────────────────────────────────────
+  if (action === "importacoes.list") {
+    const { conta_id } = body ?? {};
+    if (!ehUuid(conta_id)) return json({ error: "conta_id invalido" }, 400);
+    const { data, error } = await supabase.from("eloi_importacoes").select("*")
+      .eq("conta_id", conta_id).order("criada_em", { ascending: false }).limit(50);
     if (error) return json({ error: error.message }, 500);
-    return json({ importadas: novas.length, ignoradas: validas.length - novas.length });
+    return json({ importacoes: data ?? [] });
+  }
+
+  // Desfaz o lote inteiro (apaga as linhas, com trilha). Recusado se alguma
+  // linha já foi paga depois, conciliada ou tem nota/arquivo.
+  if (action === "importacoes.reverter") {
+    const { id, motivo } = body ?? {};
+    if (!ehUuid(id)) return json({ error: "id invalido" }, 400);
+    if (typeof motivo !== "string" || !motivo.trim()) return json({ error: "motivo obrigatorio" }, 400);
+    const { data, error } = await supabase.rpc("eloi_reverter_importacao", { p_lote: id, p_motivo: motivo.trim() });
+    if (error) return json({ error: error.message }, erroDeRegra(error) ? 409 : 500);
+    return json(data);
   }
 
   // ── PAGAMENTO DE FATURA ────────────────────────────────────────────────────
@@ -856,6 +888,56 @@ Deno.serve(async (req: Request) => {
         : json({ error: error.message }, 500);
     }
     return json({ transferencia, liquidadas: plano.baixas.length, sobra_cents: plano.sobra_cents });
+  }
+
+  // Pagamentos feitos a um cartão e o que cada um quitou (eloi_liquidacoes.
+  // pagamento_id, líquido de estornos). `rastreado` = gravado pela RPC com
+  // vínculo: só esses podem ser estornados. A tela casa cada compra com a fatura.
+  if (action === "cartoes.pagamentos") {
+    const { cartao_id } = body ?? {};
+    if (!ehUuid(cartao_id)) return json({ error: "cartao_id invalido" }, 400);
+    const { data: transf, error: eT } = await supabase.from("eloi_transacoes")
+      .select("id,descricao,valor_cents,status,conta_id,data_liquidacao,data_competencia,observacoes,created_at")
+      .eq("tipo", "transferencia").eq("conta_destino_id", cartao_id)
+      .order("data_competencia", { ascending: false, nullsFirst: false }).limit(200);
+    if (eT) return json({ error: eT.message }, 500);
+    const ids = (transf ?? []).map((t: { id: string }) => t.id);
+    if (!ids.length) return json({ pagamentos: [] });
+    const [baixas, proprias] = await Promise.all([
+      supabase.from("eloi_liquidacoes").select("pagamento_id,transacao_id,valor_cents").in("pagamento_id", ids),
+      supabase.from("eloi_liquidacoes").select("transacao_id").in("transacao_id", ids)
+        .eq("origem", "fatura").eq("precisao", "exata"),
+    ]);
+    const erro = baixas.error || proprias.error;
+    if (erro) return json({ error: erro.message }, 500);
+    const rastreados = new Set((proprias.data ?? []).map((l: { transacao_id: string }) => l.transacao_id));
+    const porPagamento = new Map<string, Map<string, number>>();
+    for (const l of baixas.data ?? []) {
+      const m = porPagamento.get(l.pagamento_id) ?? new Map<string, number>();
+      m.set(l.transacao_id, (m.get(l.transacao_id) ?? 0) + Number(l.valor_cents));
+      porPagamento.set(l.pagamento_id, m);
+    }
+    return json({
+      pagamentos: (transf ?? []).map((t: { id: string }) => ({
+        ...t,
+        rastreado: rastreados.has(t.id),
+        baixas: [...(porPagamento.get(t.id) ?? new Map()).entries()]
+          .filter(([, v]) => v !== 0).map(([transacao_id, valor_cents]) => ({ transacao_id, valor_cents })),
+      })),
+    });
+  }
+
+  // Estorno de pagamento de fatura (eloi_estornar_pagamento_fatura): as compras
+  // que ele quitou voltam a dever, a transferência fica cancelada (o dinheiro
+  // volta ao saldo da conta) e tudo fica na trilha. Nada é apagado.
+  if (action === "transacoes.estornar_pagamento_fatura") {
+    const { id, motivo } = body ?? {};
+    if (!ehUuid(id)) return json({ error: "id invalido" }, 400);
+    if (typeof motivo !== "string" || !motivo.trim()) return json({ error: "motivo obrigatorio" }, 400);
+    const { data, error } = await supabase.rpc("eloi_estornar_pagamento_fatura",
+      { p_transferencia: id, p_motivo: motivo.trim() });
+    if (error) return json({ error: error.message }, erroDeRegra(error) ? 409 : 500);
+    return json(data);
   }
 
   // ── CONFERENCIA DE SALDO ───────────────────────────────────────────────────

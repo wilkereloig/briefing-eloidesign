@@ -76,9 +76,11 @@ describe('ambiente: preview e local não gravam em produção', () => {
     expect(ambienteDoHost(undefined)).toBe('producao')
   })
   it('separa leitura de escrita', () => {
-    for (const a of ['bootstrap', 'transacoes.list', 'clientes.detail', 'arquivos.url', 'nf.view_url', 'list', 'transacoes.liquidacoes'])
+    for (const a of ['bootstrap', 'transacoes.list', 'clientes.detail', 'arquivos.url', 'nf.view_url', 'list', 'transacoes.liquidacoes',
+      'relatorios.perspectivas', 'cartoes.pagamentos', 'importacoes.list'])
       expect(acaoSoLeitura(a)).toBe(true)
-    for (const a of ['transacoes.liquidar', 'recorrencias.gerar', 'transacoes.upsert', 'contas.upsert', 'transacoes.pagar_fatura'])
+    for (const a of ['transacoes.liquidar', 'recorrencias.gerar', 'transacoes.upsert', 'contas.upsert', 'transacoes.pagar_fatura',
+      'transacoes.estornar_pagamento_fatura', 'importacoes.reverter'])
       expect(acaoSoLeitura(a)).toBe(false)
   })
   it('bloqueia escrita em preview/local contra produção; libera com backend próprio ou liberação explícita', () => {

@@ -1611,24 +1611,29 @@ function FolhaCatalogo({ itens, aoFechar, aoEscolher }: {
   )
 }
 
-export function FolhaExcluir({ titulo, consequencia, acao = 'Excluir', aoFechar, aoConfirmar }: {
+export function FolhaExcluir({ titulo, consequencia, acao = 'Excluir', pedirMotivo, aoFechar, aoConfirmar }: {
   titulo: string
   consequencia: string
   /** Verbo do título e do botão ("Encerrar" quando nada é apagado). */
   acao?: string
+  /** Operação que fica na trilha (estorno, desfazer importação): o motivo é
+   *  obrigatório e vai para `aoConfirmar`. */
+  pedirMotivo?: boolean
   aoFechar: () => void
-  aoConfirmar: () => Promise<void> | void
+  aoConfirmar: (motivo: string) => Promise<void> | void
 }) {
   const [indo, setIndo] = useState(false)
   const [erro, setErro] = useState('')
+  const [motivo, setMotivo] = useState('')
   return (
     <Folha titulo={acao} aoFechar={aoFechar}
       rodape={<>
         <Botao variante="secundario" onClick={aoFechar} style={{ flex: 2 }}>Manter</Botao>
         <Botao variante="destrutivo" carregando={indo} onClick={async () => {
+          if (pedirMotivo && !motivo.trim()) return setErro('Diga o motivo — ele fica registrado.')
           setIndo(true)
           setErro('')
-          try { await aoConfirmar(); aoFechar() }
+          try { await aoConfirmar(motivo.trim()); aoFechar() }
           catch (e) { setErro((e as Error).message) }
           finally { setIndo(false) }
         }}>{acao}</Botao>
@@ -1638,6 +1643,12 @@ export function FolhaExcluir({ titulo, consequencia, acao = 'Excluir', aoFechar,
         <div>
           <p className="t-h2">{titulo}</p>
           <p className="t-corpo">{consequencia}</p>
+          {pedirMotivo && (
+            <div style={{ marginTop: 'var(--espaco-03)' }}>
+              <Campo rotulo="Motivo" value={motivo} onChange={(e) => { setMotivo(e.target.value); setErro('') }}
+                placeholder="Ex.: pago na conta errada" />
+            </div>
+          )}
           {erro && <p className="campo-erro" role="alert">{erro}</p>}
         </div>
       </div>

@@ -1,16 +1,17 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { financas } from '../../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../../lib/dinheiro'
-import { hojeISO, useFinancas, type useNomes } from '../../../../lib/financas-store'
+import { hojeISO, useFinancas, useNomes } from '../../../../lib/financas-store'
 import {
-  chequeEspecialUsado, diasDeAtraso, estaEmAberto, faturaAberta, saldoAberto, type SituacaoFatura,
+  chequeEspecialUsado, diasDeAtraso, estaEmAberto, faturaAberta, faturasQuitadasPor, saldoAberto,
+  type Fatura, type SituacaoFatura,
 } from '../../../../domain/financeiro'
 import { semNotaFiscal } from '../../../../domain/decisoes'
-import type { Conta, ServicoRow, Transacao } from '../../../../lib/tipos'
-import { Botao, Campo, Chip, Folha, Icone } from '../../../../ui/componentes'
+import type { Conta, Importacao, PagamentoCartao, ServicoRow, Transacao } from '../../../../lib/tipos'
+import { Botao, Campo, Chip, Esqueleto, Folha, Icone, Painel } from '../../../../ui/componentes'
 import type { EstadoChip } from '../../../../ui/tokens'
 import { ChipMovimento, Dinheiro } from '../../../../ui/painel'
-import { dataCurta } from '../../../../ui/formato'
+import { dataCurta, mesPorExtenso } from '../../../../ui/formato'
 import { FolhaTransacao } from '../../FolhaTransacao'
 import { FolhaExcluir, FolhaLiquidar, FolhaReagendar } from '../../folhas'
 
@@ -277,5 +278,142 @@ export function FolhaPagarFatura({ cartao, aoFechar, aoSalvar }: {
         </p>
       </div>
     </Folha>
+  )
+}
+
+/** Lista carregada sob demanda (não vem no bootstrap): esqueleto, erro com
+ *  "tentar de novo" e recarga quando `versao` muda (depois de uma ação). */
+function useListaRemota<T>(buscar: () => Promise<T[]>, versao: number) {
+  const [lista, setLista] = useState<T[] | null>(null)
+  const [erro, setErro] = useState<string | null>(null)
+  const carregar = useCallback(async () => {
+    setErro(null)
+    try { setLista(await buscar()) } catch (e) { setErro((e as Error).message); setLista([]) }
+  }, [buscar])
+  useEffect(() => { void carregar() }, [carregar, versao])
+  return { lista, erro, carregar }
+}
+
+function EstadoLista({ lista, erro, aoTentar, vazio, children }: {
+  lista: unknown[] | null; erro: string | null; aoTentar: () => void; vazio: string; children: ReactNode
+}) {
+  if (lista === null) return <Esqueleto linhas={3} altura={44} />
+  if (erro) return (
+    <div className="pilha" style={{ gap: 'var(--espaco-03)' }}>
+      <p className="t-msg linha" role="alert" style={{ gap: 'var(--espaco-02)' }}><Icone nome="erro" tamanho={16} />{erro}</p>
+      <Botao compacto onClick={aoTentar} style={{ alignSelf: 'flex-start' }}>Tentar de novo</Botao>
+    </div>
+  )
+  if (!lista.length) return <p className="t-sec">{vazio}</p>
+  return <>{children}</>
+}
+
+/** Pagamentos feitos ao cartão e de quais faturas cada um tirou dinheiro. O
+ *  rastreado (gravado com vínculo compra → pagamento) pode ser estornado: as
+ *  compras voltam a dever e o dinheiro volta ao saldo da conta. */
+export function PainelPagamentosCartao({ cartao, faturas, versao, aoSalvar }: {
+  cartao: Conta
+  faturas: Fatura[]
+  versao: number
+  aoSalvar: (msg: string) => Promise<void>
+}) {
+  const nomes = useNomes()
+  const buscar = useCallback(() => financas.pagamentosDoCartao(cartao.id), [cartao.id])
+  const { lista, erro, carregar } = useListaRemota<PagamentoCartao>(buscar, versao)
+  const [alvo, setAlvo] = useState<PagamentoCartao | null>(null)
+
+  return (
+    <Painel titulo="Pagamentos ao cartão">
+      <EstadoLista lista={lista} erro={erro} aoTentar={() => void carregar()} vazio="Nenhum pagamento registrado neste cartão.">
+        <ul className="lista">
+          {(lista ?? []).map((p) => {
+            const estornado = p.status === 'cancelado'
+            const q = faturasQuitadasPor(p, faturas)
+            const quitou = q.porFatura.map((x) => `${mesPorExtenso(x.vencimento)} ${fmtBRL(x.cents)}`).join(', ')
+            const situacao = estornado ? 'estornado'
+              : !p.rastreado ? 'anterior ao rastreio — sem estorno automático'
+              : quitou ? `quitou ${quitou}` : 'crédito sem compra abatida'
+            const data = p.data_liquidacao ?? p.data_competencia
+            return (
+              <li key={p.id} className="lista-item" data-cancelado={estornado ? 'true' : undefined}>
+                <span className="celula">
+                  <span className="t-ui espremer">
+                    {data ? dataCurta(data) : 'Sem data'} · {p.conta_id ? nomes.conta.get(p.conta_id)?.nome ?? 'conta' : 'conta'}
+                  </span>
+                  <span className="t-legenda espremer">{situacao}</span>
+                </span>
+                <Dinheiro cents={p.valor_cents} className="t-valor" />
+                {p.rastreado && !estornado && (
+                  <Botao compacto onClick={() => setAlvo(p)} aria-label={`Estornar pagamento de ${fmtBRL(p.valor_cents)}`}>
+                    Estornar
+                  </Botao>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      </EstadoLista>
+      {alvo && (
+        <FolhaExcluir acao="Estornar pagamento" pedirMotivo
+          titulo={`Estornar o pagamento de ${fmtBRL(alvo.valor_cents)}?`}
+          consequencia="As compras que ele quitou voltam a ficar em aberto na fatura e o valor volta ao saldo da conta de onde saiu. O pagamento continua no histórico como estornado — nada é apagado."
+          aoFechar={() => setAlvo(null)}
+          aoConfirmar={async (motivo) => {
+            const r = await financas.estornarPagamentoFatura(alvo.id, motivo)
+            await aoSalvar(`Pagamento estornado · ${r.compras_reabertas} ${r.compras_reabertas === 1 ? 'compra reaberta' : 'compras reabertas'}`)
+          }} />
+      )}
+    </Painel>
+  )
+}
+
+/** Arquivos de extrato importados nesta conta. Desfazer tira as linhas do lote
+ *  (ficam na trilha) e libera a reimportação do arquivo certo. */
+export function PainelImportacoes({ conta, versao, aoSalvar }: {
+  conta: Conta
+  versao: number
+  aoSalvar: (msg: string) => Promise<void>
+}) {
+  const buscar = useCallback(() => financas.importacoes(conta.id), [conta.id])
+  const { lista, erro, carregar } = useListaRemota<Importacao>(buscar, versao)
+  const [alvo, setAlvo] = useState<Importacao | null>(null)
+
+  return (
+    <Painel titulo="Importações">
+      <EstadoLista lista={lista} erro={erro} aoTentar={() => void carregar()}
+        vazio="Nenhum extrato importado nesta conta pelo painel. Importações feitas antes desta versão do painel não aparecem aqui.">
+        <ul className="lista">
+          {(lista ?? []).map((l) => {
+            const desfeita = !!l.revertida_em
+            const apoio = desfeita
+              ? `desfeita em ${dataCurta(l.revertida_em!.slice(0, 10))} · ${l.revertidas ?? 0} removidas`
+              : `${l.importadas} ${l.importadas === 1 ? 'lançamento' : 'lançamentos'}${l.ignoradas ? ` · ${l.ignoradas} já existiam` : ''}`
+            return (
+              <li key={l.id} className="lista-item" data-cancelado={desfeita ? 'true' : undefined}>
+                <span className="celula">
+                  <span className="t-ui espremer">{l.arquivo || 'Arquivo sem nome'} · {dataCurta(l.criada_em.slice(0, 10))}</span>
+                  <span className="t-legenda espremer">{l.formato.toUpperCase()} · {apoio}</span>
+                </span>
+                {!desfeita && l.importadas > 0 && (
+                  <Botao compacto onClick={() => setAlvo(l)} aria-label={`Desfazer importação de ${l.arquivo ?? 'arquivo'}`}>
+                    Desfazer
+                  </Botao>
+                )}
+              </li>
+            )
+          })}
+        </ul>
+      </EstadoLista>
+      {alvo && (
+        <FolhaExcluir acao="Desfazer importação" pedirMotivo
+          titulo={`Desfazer a importação de ${alvo.arquivo || 'este arquivo'}?`}
+          consequencia={`Os ${alvo.importadas} lançamentos deste arquivo saem da conta, inclusive categorias que você já tenha mudado neles. Cada um fica guardado na trilha, e o arquivo certo pode ser importado de novo. Se algum já foi pago ou tem nota ou arquivo anexado, nada é desfeito.`}
+          aoFechar={() => setAlvo(null)}
+          aoConfirmar={async (motivo) => {
+            const r = await financas.desfazerImportacao(alvo.id, motivo)
+            await aoSalvar(`Importação desfeita · ${r.removidas} ${r.removidas === 1 ? 'lançamento removido' : 'lançamentos removidos'}`)
+          }} />
+      )}
+    </Painel>
   )
 }
