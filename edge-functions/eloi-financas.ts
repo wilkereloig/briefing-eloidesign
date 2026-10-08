@@ -398,14 +398,25 @@ Deno.serve(async (req: Request) => {
 
   // ── EMPRESTIMOS ────────────────────────────────────────────────────────────
   // Sem id: cadastra E gera as parcelas que faltam (as pagas antes de entrar no
-  // sistema nao viram transacao). Com id: so o cadastro — nunca regenera parcela,
-  // senao editar uma observacao duplicaria ou apagaria lancamentos ja liquidados.
+  // sistema nao viram transacao). Com id: so os campos editaveis — nunca regenera
+  // parcela, e os campos estruturais (que moldaram as parcelas) nao podem mudar:
+  // senao o cadastro divergiria dos lancamentos ja gerados/liquidados.
   if (action === "emprestimos.upsert") {
     const b = body?.emprestimo ?? {};
     const e = escolher(b, EMPRESTIMO_CAMPOS);
     const id = b.id;
     if (id != null && !ehUuid(id)) return json({ error: "id invalido" }, 400);
     const criar = id == null;
+    // Tipos na borda: sem isso o Postgres devolveria 500 (check/uuid/boolean invalido).
+    if ("nome" in e && (typeof e.nome !== "string" || !e.nome.trim())) {
+      return json({ error: "nome deve ser texto nao vazio" }, 400);
+    }
+    if ("contexto" in e && e.contexto !== "pessoal" && e.contexto !== "empresa") {
+      return json({ error: "contexto deve ser 'pessoal' ou 'empresa'" }, 400);
+    }
+    if ("ativo" in e && typeof e.ativo !== "boolean") {
+      return json({ error: "ativo deve ser booleano" }, 400);
+    }
     // Na criacao tudo que a regra exige tem de vir; na edicao so valida o que veio.
     if (criar) {
       if (!e.nome || !e.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
@@ -414,7 +425,7 @@ Deno.serve(async (req: Request) => {
       if (e.parcelas_total === undefined || e.valor_parcela_cents === undefined || e.primeiro_vencimento === undefined) {
         return json({ error: "parcelas_total, valor_parcela_cents e primeiro_vencimento sao obrigatorios" }, 400);
       }
-    } else if ("nome" in e && !e.nome) return json({ error: "nome nao pode ficar vazio" }, 400);
+    }
     if ("valor_recebido_cents" in e && !ehCents(e.valor_recebido_cents)) {
       return json({ error: "valor_recebido_cents deve ser inteiro nao negativo" }, 400);
     }
@@ -440,8 +451,20 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!criar) {
+      const { data: atual, error: eAtual } = await supabase.from("eloi_emprestimos")
+        .select("*").eq("id", id).maybeSingle();
+      if (eAtual) return json({ error: eAtual.message }, 500);
+      if (!atual) return json({ error: "emprestimo nao encontrado" }, 404);
+      // Igual ao gravado passa (a tela manda o objeto inteiro); diferente, nao.
+      const ESTRUTURAIS = ["parcelas_total", "valor_parcela_cents", "primeiro_vencimento", "parcelas_pagas_antes", "contexto"];
+      if (ESTRUTURAIS.some((k) => k in e && String(e[k]) !== String(atual[k]))) {
+        return json({
+          error: "parcelas ja geradas: para mudar valor, quantidade, datas ou contexto, encerre este emprestimo e cadastre outro",
+        }, 409);
+      }
+      const editavel = escolher(e, ["nome", "instituicao", "conta_id", "categoria_id", "valor_recebido_cents", "observacoes", "ativo"]);
       const { data, error } = await supabase.from("eloi_emprestimos")
-        .update(e).eq("id", id).select().single();
+        .update(editavel).eq("id", id).select().single();
       if (error) return json({ error: error.message }, 500);
       return json({ emprestimo: data });
     }
@@ -474,6 +497,7 @@ Deno.serve(async (req: Request) => {
       parcela_de: emp.parcelas_total,
       origem: "parcelamento",
       emprestimo_id: emp.id,
+      grupo_id: emp.id, // parcelas de um emprestimo = um grupo ("excluir grupo" do app)
     }));
     let transacoes: unknown[] = [];
     if (linhas.length) {
