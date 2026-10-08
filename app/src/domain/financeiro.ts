@@ -226,14 +226,28 @@ export function agruparPorPrazo(
  * não aparece de novo como despesa — a despesa já foi lançada na compra.
  */
 export function faturaAberta(cartao: Conta, transacoes: Transacao[]): number {
-  // Estorno (entrada no cartão) em aberto abate a fatura — mesmo critério de
-  // planejarPagamentoFatura na edge, senão a tela sugere pagar o bruto e o
-  // servidor devolve o estorno como sobra.
-  const total = transacoes
-    .filter((t) => t.conta_id === cartao.id && t.tipo !== 'transferencia' && !estaCancelada(t))
-    .reduce((s, t) => s + (t.tipo === 'saida' ? saldoAberto(t) : -saldoAberto(t)), 0)
-  return Math.max(0, total)
+  // Só a PRÓXIMA fatura: parcela que vence no mês que vem não se paga agora.
+  // Somar tudo sugeria pagar o parcelamento inteiro de uma vez. A edge quita
+  // na mesma ordem (por vencimento), então o valor sugerido fecha certinho.
+  const abertas = linhasAbertasDoCartao(cartao, transacoes)
+  const proxima = abertas.reduce<string | null>((m, t) =>
+    t.data_vencimento && (!m || t.data_vencimento < m) ? t.data_vencimento : m, null)
+  return somaComEstorno(abertas.filter((t) => !proxima || !t.data_vencimento || t.data_vencimento <= proxima))
 }
+
+/** Tudo o que o cartão ainda deve, em qualquer fatura. É o que ocupa limite. */
+export function dividaDoCartao(cartao: Conta, transacoes: Transacao[]): number {
+  return somaComEstorno(linhasAbertasDoCartao(cartao, transacoes))
+}
+
+const linhasAbertasDoCartao = (cartao: Conta, transacoes: Transacao[]) => transacoes.filter((t) =>
+  t.conta_id === cartao.id && t.tipo !== 'transferencia' && !estaCancelada(t) && saldoAberto(t) > 0)
+
+// Estorno (entrada no cartão) em aberto abate a fatura — mesmo critério de
+// planejarPagamentoFatura na edge, senão a tela sugere pagar o bruto e o
+// servidor devolve o estorno como sobra.
+const somaComEstorno = (linhas: Transacao[]) => Math.max(0,
+  linhas.reduce((s, t) => s + (t.tipo === 'saida' ? saldoAberto(t) : -saldoAberto(t)), 0))
 
 /**
  * Datas do ciclo atual do cartão a partir de `hoje`: quando a fatura fecha e
@@ -261,7 +275,7 @@ export function parceladoAberto(cartao: Conta, transacoes: Transacao[]): { qtd: 
 
 export function limiteDisponivel(cartao: Conta, transacoes: Transacao[]): number | null {
   if (cartao.limite_cents == null) return null
-  return cartao.limite_cents - faturaAberta(cartao, transacoes)
+  return cartao.limite_cents - dividaDoCartao(cartao, transacoes)
 }
 
 /**

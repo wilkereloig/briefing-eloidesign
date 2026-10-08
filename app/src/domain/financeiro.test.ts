@@ -220,6 +220,18 @@ describe('cartão de crédito', () => {
     expect(limiteDisponivel(cartao, ts)).toBe(500_00)
   })
 
+  it('fatura é só o próximo vencimento; parcela futura ocupa limite mas não entra', () => {
+    const v = [
+      tx({ id: 'out', tipo: 'saida', conta_id: 'card', valor_cents: 400_00, status: 'parcial', recebido_cents: 100_00, data_vencimento: '2026-10-09' }),
+      tx({ id: 'nov', tipo: 'saida', conta_id: 'card', valor_cents: 250_00, status: 'pendente', data_vencimento: '2026-11-09' }),
+      tx({ id: 'paga', tipo: 'saida', conta_id: 'card', valor_cents: 90_00, status: 'realizado', recebido_cents: 90_00, data_vencimento: '2026-09-09' }),
+    ]
+    expect(faturaAberta(cartao, v)).toBe(300_00)
+    expect(limiteDisponivel(cartao, v)).toBe(1000_00 - 550_00)
+    // quitada a de outubro, a de novembro vira a fatura
+    expect(faturaAberta(cartao, v.slice(1))).toBe(250_00)
+  })
+
   it('conta sem limite não finge ter um', () => {
     expect(limiteDisponivel(conta({ id: 'x' }), ts)).toBeNull()
   })

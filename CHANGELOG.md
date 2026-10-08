@@ -2,6 +2,22 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-08 — Avisos de contas a pagar e fatura de cartão
+
+- "Precisa de você" avisa conta a pagar/receber **3 dias antes** de vencer
+  (`AVISO_DIAS`), não só depois de atrasada: "Vence hoje", "Vence amanhã",
+  "Vence em N dias".
+- Compras de cartão entram na fila como **uma linha por fatura** (cartão +
+  vencimento), não uma por compra.
+- `faturaAberta` = só o próximo vencimento. Parcela futura não entra no valor
+  sugerido de "Pagar fatura"; continua ocupando limite (`dividaDoCartao`).
+- `recorrencias.gerar` cria a cobrança até 10 dias antes do vencimento, para a
+  conta fixa aparecer em "Próximos vencimentos" e no aviso.
+- Dados: primeiras contas fixas pessoais (energia, financiamento Caixa,
+  condomínio, internet), cartões Itaú Visa Gold 3035 e Itaú CBD, fatura de
+  out/2026 itemizada (95 linhas) e categorias "Juros, tarifas e encargos" e
+  "Dívidas (parcelamentos e rotativo)".
+
 ## 2026-10-08 — Auditoria geral: segurança, financeiro e telas
 
 **Segurança (edges):**

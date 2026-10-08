@@ -2,7 +2,7 @@ import type {
   ServicoRow, OrcamentoRow, Transacao, NotaFiscal, BriefingLinkRow, Conta,
 } from '../lib/tipos'
 import { centsDeReais } from '../lib/dinheiro'
-import { diasDeAtraso, estaEmAberto, saldoAberto } from './financeiro'
+import { estaEmAberto, saldoAberto } from './financeiro'
 import { diasEntre, hojeISO } from './datas'
 
 export type Urgencia = 'normal' | 'atrasado'
@@ -38,6 +38,15 @@ export interface Decisao {
 }
 
 const DIA_MS = 24 * 60 * 60 * 1000
+/** Conta a pagar/receber entra na fila este número de dias antes de vencer. */
+export const AVISO_DIAS = 3
+
+function textoVencimento(verbo: 'Pagamento' | 'Recebimento', dias: number): string {
+  if (dias < 0) return `${verbo} atrasado há ${-dias} ${dias === -1 ? 'dia' : 'dias'}`
+  if (dias === 0) return 'Vence hoje'
+  if (dias === 1) return 'Vence amanhã'
+  return `Vence em ${dias} dias`
+}
 
 /** Vencimento do pagamento; sem ele, a competência (regra antiga). */
 function vencimentoServico(s: Pick<ServicoRow, 'data_vencimento' | 'data_competencia'>): string | null {
@@ -157,20 +166,46 @@ export function decisoesDoDia(input: {
     }
   }
 
-  // Núcleo financeiro: o que venceu e continua em aberto vira fila de trabalho.
+  // Núcleo financeiro: o que venceu, ou vence em até AVISO_DIAS, e continua em
+  // aberto vira fila de trabalho. Compra no cartão não se paga uma a uma:
+  // agrupa por cartão + vencimento e vira uma linha só — a fatura.
+  const cartoes = new Map((input.contas ?? [])
+    .filter((c) => c.tipo === 'cartao_credito').map((c) => [c.id, c]))
+  const faturas = new Map<string, { nome: string; venc: string; cents: number }>()
   for (const t of input.transacoes ?? []) {
-    if (t.tipo === 'transferencia' || !estaEmAberto(t)) continue
-    const atraso = diasDeAtraso(t, hoje)
-    if (atraso <= 0) continue
+    if (t.tipo === 'transferencia' || !estaEmAberto(t) || !t.data_vencimento) continue
+    const dias = diasEntre(hoje, t.data_vencimento)
+    if (dias > AVISO_DIAS) continue
+    const cartao = t.conta_id ? cartoes.get(t.conta_id) : undefined
+    if (cartao) {
+      const chave = `${cartao.id}|${t.data_vencimento}`
+      const f = faturas.get(chave) ?? { nome: cartao.nome, venc: t.data_vencimento, cents: 0 }
+      f.cents += t.tipo === 'saida' ? saldoAberto(t) : -saldoAberto(t) // estorno abate
+      faturas.set(chave, f)
+      continue
+    }
     const receber = t.tipo === 'entrada'
     decisoes.push({
       id: `tx:${t.id}`,
       titulo: t.descricao,
-      detalhe: `${receber ? 'Recebimento' : 'Pagamento'} atrasado há ${atraso} ${atraso === 1 ? 'dia' : 'dias'}`,
+      detalhe: textoVencimento(receber ? 'Recebimento' : 'Pagamento', dias),
       clienteId: t.cliente_id,
       valorCents: saldoAberto(t),
       acao: receber ? 'cobrar_pagamento' : 'pagar_conta',
-      urgencia: 'atrasado',
+      urgencia: dias < 0 ? 'atrasado' : 'normal',
+    })
+  }
+  for (const [chave, f] of faturas) {
+    if (f.cents <= 0) continue
+    const dias = diasEntre(hoje, f.venc)
+    decisoes.push({
+      id: `fatura:${chave}`,
+      titulo: `Fatura ${f.nome}`,
+      detalhe: textoVencimento('Pagamento', dias),
+      clienteId: null,
+      valorCents: f.cents,
+      acao: 'pagar_conta',
+      urgencia: dias < 0 ? 'atrasado' : 'normal',
     })
   }
 

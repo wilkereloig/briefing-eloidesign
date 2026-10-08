@@ -420,12 +420,16 @@ Deno.serve(async (req: Request) => {
     return json({ recorrencia: data });
   }
 
-  // Materializa as cobrancas devidas ate hoje. Idempotente: antes de lancar,
-  // confere se ja existe transacao daquela recorrencia naquele vencimento.
+  // Materializa as cobrancas que vencem ate ANTECEDENCIA_DIAS a frente: conta
+  // fixa precisa aparecer antes de vencer, senao o aviso chega no proprio dia.
+  // Idempotente: antes de lancar, confere se ja existe transacao daquela
+  // recorrencia naquele vencimento.
   if (action === "recorrencias.gerar") {
+    const ANTECEDENCIA_DIAS = 10;
+    const limite = new Date(Date.parse(hoje) + ANTECEDENCIA_DIAS * 86_400_000).toISOString().slice(0, 10);
     const { data: recs, error: e1 } = await supabase
       .from("eloi_recorrencias").select("*").eq("ativa", true).is("encerrada_em", null)
-      .lte("proxima_cobranca", hoje);
+      .lte("proxima_cobranca", limite);
     if (e1) return json({ error: e1.message }, 500);
 
     const criadas: unknown[] = [];
@@ -435,7 +439,7 @@ Deno.serve(async (req: Request) => {
       let proxima: string = r.proxima_cobranca;
       // teto de 24 ciclos por chamada: recorrencia antiga e esquecida nao pode
       // virar loop infinito nem despejar centenas de linhas de uma vez
-      for (let i = 0; i < 24 && proxima <= hoje; i++) {
+      for (let i = 0; i < 24 && proxima <= limite; i++) {
         if (r.fim && proxima > r.fim) break;
         const { data: existente, error: eBusca } = await supabase.from("eloi_transacoes")
           .select("id").eq("recorrencia_id", r.id).eq("data_vencimento", proxima).limit(1);

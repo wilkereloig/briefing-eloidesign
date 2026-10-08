@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { decisoesDoDia, pendenciasDeServicos, prazos, semNotaFiscal } from './decisoes'
-import type { ServicoRow, OrcamentoRow } from '../lib/tipos'
+import { AVISO_DIAS, decisoesDoDia, pendenciasDeServicos, prazos, semNotaFiscal } from './decisoes'
+import type { ServicoRow, OrcamentoRow, Transacao, Conta } from '../lib/tipos'
 
 const AGORA = new Date('2026-07-30T12:00:00Z').getTime()
 const DIA = 24 * 3600 * 1000
@@ -235,5 +235,49 @@ describe('semNotaFiscal', () => {
   it('vale o vínculo nota_fiscal_id, não o número legado', () => {
     expect(semNotaFiscal(srv({ nf_numero: '123', nota_fiscal_id: null }))).toBe(true)
     expect(semNotaFiscal(srv({ nf_numero: null, nota_fiscal_id: 'nf1' }))).toBe(false)
+  })
+})
+
+describe('contas a pagar na fila', () => {
+  // AGORA = 2026-07-30 em Brasília
+  const tx = (p: Partial<Transacao> & { id: string }): Transacao => ({
+    tipo: 'saida', contexto: 'pessoal', status: 'pendente', descricao: 'Conta', valor_cents: 10000,
+    recebido_cents: 0, conta_id: 'cc', conta_destino_id: null, categoria_id: null, cliente_id: null,
+    servico_id: null, fornecedor: null, data_competencia: null, data_vencimento: null,
+    data_liquidacao: null, forma_pagamento: null, grupo_id: null, parcela_num: null, parcela_de: null,
+    recorrencia_id: null, observacoes: null, origem: 'manual', importacao_chave: null,
+    created_at: '2026-01-01', ...p,
+  })
+  const cartao = { id: 'visa', nome: 'Visa', tipo: 'cartao_credito' } as Conta
+  const corrente = { id: 'cc', nome: 'Conta', tipo: 'corrente' } as Conta
+  const fila = (transacoes: Transacao[]) =>
+    decisoesDoDia({ servicos: [], orcamentos: [], transacoes, contas: [corrente, cartao], agora: AGORA })
+
+  it('avisa antes de vencer, até AVISO_DIAS; atrasada fica urgente', () => {
+    const d = fila([
+      tx({ id: 'hoje', data_vencimento: '2026-07-30' }),
+      tx({ id: 'amanha', data_vencimento: '2026-07-31' }),
+      tx({ id: 'limite', data_vencimento: '2026-08-02' }),
+      tx({ id: 'longe', data_vencimento: '2026-08-03' }),
+      tx({ id: 'atrasada', data_vencimento: '2026-07-28' }),
+      tx({ id: 'paga', data_vencimento: '2026-07-30', status: 'realizado', recebido_cents: 10000 }),
+    ])
+    const por = Object.fromEntries(d.map((x) => [x.id, x]))
+    expect(Object.keys(por).sort()).toEqual(['tx:amanha', 'tx:atrasada', 'tx:hoje', 'tx:limite'])
+    expect(por['tx:hoje'].detalhe).toBe('Vence hoje')
+    expect(por['tx:amanha'].detalhe).toBe('Vence amanhã')
+    expect(por['tx:limite'].detalhe).toBe(`Vence em ${AVISO_DIAS} dias`)
+    expect(por['tx:atrasada']).toMatchObject({ detalhe: 'Pagamento atrasado há 2 dias', urgencia: 'atrasado' })
+    expect(d[0].id).toBe('tx:atrasada')
+  })
+
+  it('compras do cartão viram uma fatura só, com o que falta pagar', () => {
+    const d = fila([
+      tx({ id: 'a', conta_id: 'visa', data_vencimento: '2026-07-31', valor_cents: 5000 }),
+      tx({ id: 'b', conta_id: 'visa', data_vencimento: '2026-07-31', valor_cents: 3000, recebido_cents: 1000, status: 'parcial' }),
+      tx({ id: 'e', conta_id: 'visa', tipo: 'entrada', data_vencimento: '2026-07-31', valor_cents: 500 }),
+    ])
+    expect(d).toHaveLength(1)
+    expect(d[0]).toMatchObject({ id: 'fatura:visa|2026-07-31', titulo: 'Fatura Visa', valorCents: 6500, detalhe: 'Vence amanhã' })
   })
 })
