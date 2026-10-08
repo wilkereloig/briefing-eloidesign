@@ -26,10 +26,11 @@ Atualizado: 2026-10-08.
 
 ### Dinheiro
 - **Objetivo:** lançar, liquidar, parcelar, estornar e acompanhar todo movimento.
-- **Estado:** Em andamento — fases 1 a 3 entregues (estrutura, visão geral, contas, cartões, lançamentos com filtros, agenda, empréstimos); planejamento completo segue o plano
-- **Telas:** `telas/dinheiro/` (Layout, VisaoGeral, Contas, ContaDetalhe, Cartoes, CartaoDetalhe, Lancamentos, Agenda, Emprestimos, Planejamento — só recorrências por ora; peças comuns em `compartilhado.tsx`), `FolhaTransacao.tsx`, `folhas.tsx`
-- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar/pagar_fatura`, `conferencias.registrar`, `contas.*`, `recorrencias.*`, `emprestimos.upsert/encerrar`
-- **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_conferencias`, `eloi_emprestimos`
+- **Estado:** Em andamento — fases 1 a 4 entregues (estrutura, visão geral, contas, cartões, lançamentos com filtros, agenda, empréstimos, planejamento com recorrências, metas e categorias); falta a revisão final do plano
+- **Telas:** `telas/dinheiro/` (Layout, VisaoGeral, Contas, ContaDetalhe, Cartoes, CartaoDetalhe, Lancamentos, Agenda, Emprestimos, Planejamento com abas Recorrências · Metas e orçamentos (`Metas.tsx`) · Categorias (`Categorias.tsx`); peças comuns em `compartilhado.tsx`), `FolhaTransacao.tsx`, `folhas.tsx`
+- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar/pagar_fatura`, `conferencias.registrar`, `contas.*`, `recorrencias.*`, `metas.*`, `categorias.upsert`, `emprestimos.upsert/encerrar`
+- **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_metas`, `eloi_conferencias`, `eloi_emprestimos`
+- **Categorias:** desativar, nunca apagar — `bootstrap` devolve ativas e inativas; o store expõe `categorias` (ativas, para seletores) e `categoriasTodas` (nomeia o histórico). Contexto e tipo não mudam depois de criada (a edge recusa).
 - **Permissão:** admin
 - **Fluxos:** receita · despesa · transferência · parcelamento · pagamento parcial (com conta e observação) · reagendar · estorno · pagar fatura de cartão · recorrência (pausar/retomar/encerrar)
 - **Fila de cobrança:** A receber / A pagar agrupadas por faixa de prazo (`agruparPorPrazo`) com recortes Vencidos · Sem NF · Recorrentes · Parciais
@@ -129,11 +130,11 @@ Atualizado: 2026-10-08.
 - **Objetivo:** responder "quem fatura, onde ganho, o que está atrasado, qual a previsão" — e levar o número para fora.
 - **Estado:** Concluído
 - **Tela:** `telas/Relatorios.tsx` · domínio `domain/relatorios.ts` (testado)
-- **Abas:** Resultado (12 meses) · Clientes / Marcas · Projetos · Recebíveis (aging) · Fiscal · Por categoria · Previsão · Metas
+- **Abas:** Resultado (12 meses) · Clientes / Marcas · Projetos · Recebíveis (aging) · Fiscal · Por categoria · Previsão (metas e orçamentos foram para Dinheiro › Planejamento)
 - **Recorte:** período por competência, cliente, marca (`aplicarFiltro`) + lente pessoal/empresa
 - **Saída:** CSV por aba (`lib/exportar.ts`, `montarCsv`) e impressão (`@media print`)
-- **Endpoints:** `eloi-financas` (`metas.*`)
-- **Tabelas:** `eloi_metas`, `eloi_transacoes`, `eloi_servicos`, `eloi_notas_fiscais`
+- **Endpoints:** `eloi-financas` (`bootstrap`, transações)
+- **Tabelas:** `eloi_transacoes`, `eloi_servicos`, `eloi_notas_fiscais`
 - **Permissão:** admin
 
 ### Calendário
@@ -154,9 +155,8 @@ Atualizado: 2026-10-08.
 - **Permissão:** admin
 
 ### Configurações
-- **Objetivo:** contas, cartões e categorias por contexto.
+- **Objetivo:** regras de dado, versão do sistema e atalhos para contas/cartões e categorias (que moram em Dinheiro).
 - **Estado:** Concluído · **Tela:** `telas/Config.tsx` · **Permissão:** admin
-- Conta se desativa, não se exclui: a FK de transação é `on delete restrict`.
 
 ### Entregas — área do cliente
 - **Objetivo:** publicar no portal o material que o cliente vai baixar.

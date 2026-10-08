@@ -2,6 +2,20 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-08 — Planejamento completo no Dinheiro (fase 4 de 4)
+
+- **Planejamento** (`/admin/dinheiro/planejamento`) ganha abas na URL:
+  Recorrências (padrão), **Metas e orçamentos** e **Categorias**.
+- **Metas e orçamentos** saem de Relatórios (que perde a aba e ganha um link
+  para cá); o resto de Relatórios, CSV incluso, fica igual.
+- **Categorias** saem de Configurações (que fica com um link): lista por
+  contexto × tipo, criar, editar nome e cor, desativar e reativar. Inativas
+  ficam recolhidas, saem dos seletores e continuam nomeando o histórico.
+  Contexto e tipo não mudam depois de criada — a edge recusa.
+- **Edge `eloi-financas`:** `bootstrap` devolve categorias inativas também;
+  `categorias.upsert` valida a cor (`#rrggbb`) e recusa troca de contexto/tipo.
+  Precisa de `npm run edges:deploy -- eloi-financas`.
+
 ## 2026-10-08 — Empréstimos no Dinheiro (fase 3 de 4)
 
 - **Empréstimos** (`/admin/dinheiro/emprestimos`) deixa de ser "em breve": total

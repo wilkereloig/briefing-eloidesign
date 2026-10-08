@@ -43,7 +43,10 @@ export const rotuloMes = (mes: string) =>
 
 interface Estado {
   contas: Conta[]
+  /** Só as ativas: é o que os seletores oferecem. */
   categorias: Categoria[]
+  /** Ativas e inativas: nomeia o histórico e alimenta Planejamento › Categorias. */
+  categoriasTodas: Categoria[]
   recorrencias: Recorrencia[]
   metas: Meta[]
   /** Últimas conferências de saldo, mais recente primeiro. */
@@ -93,12 +96,12 @@ const TETO_EDGE = 2000
 const Ctx = createContext<Estado>(null!)
 export const useFinancas = () => useContext(Ctx)
 
-type Dados = Pick<Estado, 'contas' | 'categorias' | 'recorrencias' | 'metas' | 'conferencias' | 'emprestimos'
+type Dados = Pick<Estado, 'contas' | 'categoriasTodas' | 'recorrencias' | 'metas' | 'conferencias' | 'emprestimos'
   | 'transacoes' | 'notas' | 'clientes' | 'subClientes' | 'servicos' | 'orcamentos'
   | 'briefings' | 'tarefas'>
 
 const VAZIO: Dados = {
-  contas: [], categorias: [], recorrencias: [], metas: [], conferencias: [], emprestimos: [],
+  contas: [], categoriasTodas: [], recorrencias: [], metas: [], conferencias: [], emprestimos: [],
   transacoes: [], notas: [], clientes: [], subClientes: [], servicos: [], orcamentos: [],
   briefings: [], tarefas: [],
 }
@@ -149,7 +152,7 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
           'saldos podem estar incompletos'
       }
       setDados({
-        contas: ref.contas, categorias: ref.categorias,
+        contas: ref.contas, categoriasTodas: ref.categorias,
         recorrencias: ref.recorrencias, metas: ref.metas,
         conferencias: ref.conferencias ?? [],
         emprestimos: ref.emprestimos ?? [],
@@ -169,6 +172,8 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
 
   const valor = useMemo<Estado>(() => ({
     ...dados,
+    // Edge anterior a 2026-10-08 só devolvia ativas; `ativa !== false` aceita as duas.
+    categorias: dados.categoriasTodas.filter((c) => c.ativa !== false),
     carregando,
     erro,
     falhas,
@@ -192,11 +197,12 @@ export function useTransacoesDoMes() {
 
 /** Índice id→nome para não repetir `.find()` em toda linha de tabela. */
 export function useNomes() {
-  const { contas, categorias, clientes, subClientes } = useFinancas()
+  const { contas, categoriasTodas, clientes, subClientes } = useFinancas()
   return useMemo(() => ({
     conta: new Map(contas.map((c) => [c.id, c])),
-    categoria: new Map(categorias.map((c) => [c.id, c])),
+    // Inclui inativas: desativar uma categoria não apaga o nome do histórico.
+    categoria: new Map(categoriasTodas.map((c) => [c.id, c])),
     cliente: new Map(clientes.map((c) => [c.id, c])),
     subCliente: new Map(subClientes.map((s) => [s.id, s])),
-  }), [contas, categorias, clientes, subClientes])
+  }), [contas, categoriasTodas, clientes, subClientes])
 }

@@ -1,21 +1,8 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { financas } from '../../../lib/api'
-import { useFinancas } from '../../../lib/financas-store'
-import type { Categoria, Contexto, TipoMov } from '../../../lib/tipos'
-import {
-  Aviso, Botao, Campo, Etiqueta, Folha, Icone, Painel, Pilula,
-} from '../../../ui/componentes'
+import { Painel } from '../../../ui/componentes'
 import { Cabecalho, Carga } from '../../../ui/painel'
 
 export default function Config() {
-  const { categorias, recarregar } = useFinancas()
-  const [folha, setFolha] = useState<
-    | { tipo: 'categoria'; contexto: Contexto }
-    | null>(null)
-  const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
-  const apos = async (msg: string) => { setAviso({ texto: msg }); await recarregar() }
-
   return (
     <div className="tela pilha">
       <Cabecalho secao="Sistema" titulo="Configurações" />
@@ -30,28 +17,12 @@ export default function Config() {
           <Link className="btn btn-secundario" to="/admin/dinheiro/contas">Gerenciar contas e cartões</Link>
         </Painel>
 
-        <Painel titulo="Categorias"
-          acao={<Botao compacto onClick={() => setFolha({ tipo: 'categoria', contexto: 'empresa' })}>
-            <Icone nome="adicionar" tamanho={14} />Nova
-          </Botao>}>
+        {/* Categorias moram em Dinheiro › Planejamento desde 2026-10-08. */}
+        <Painel titulo="Categorias">
           <p className="t-sec" style={{ marginBottom: 'var(--espaco-04)' }}>
-            {categorias.length} categorias ativas. Elas classificam despesas e receitas nos
-            relatórios e nos limites de gasto.
+            Categorias estão em Dinheiro › Planejamento: criar, renomear, cor e desativar.
           </p>
-          <div className="grade-dupla">
-            {(['empresa', 'pessoal'] as Contexto[]).map((ctx) => (
-              <div key={ctx}>
-                <Etiqueta acento>{ctx}</Etiqueta>
-                <div className="linha" style={{ marginTop: 'var(--espaco-03)' }}>
-                  {categorias.filter((c) => c.contexto === ctx).map((c) => (
-                    <span key={c.id} className="chip-categoria" data-tipo={c.tipo}>
-                      {c.nome}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <Link className="btn btn-secundario" to="/admin/dinheiro/planejamento?aba=categorias">Gerenciar categorias</Link>
         </Painel>
 
         <Painel titulo="Sobre os dados">
@@ -107,63 +78,6 @@ export default function Config() {
           </div>
         </Painel>
       </Carga>
-
-      {folha?.tipo === 'categoria' && (
-        <FolhaCategoria contextoInicial={folha.contexto}
-          aoFechar={() => setFolha(null)} aoSalvar={apos} />
-      )}
-      {aviso && <Aviso texto={aviso.texto} tipo={aviso.tipo} aoSumir={() => setAviso(null)} />}
     </div>
-  )
-}
-
-function FolhaCategoria({ contextoInicial, aoFechar, aoSalvar }: {
-  contextoInicial?: Contexto
-  aoFechar: () => void
-  aoSalvar: (msg: string) => void
-}) {
-  const [nome, setNome] = useState('')
-  const [contexto, setContexto] = useState<Contexto>(contextoInicial ?? 'empresa')
-  const [tipo, setTipo] = useState<TipoMov>('saida')
-  const [erro, setErro] = useState('')
-  const [salvando, setSalvando] = useState(false)
-
-  async function salvar() {
-    if (!nome.trim()) return setErro('Dê um nome à categoria')
-    setSalvando(true)
-    try {
-      const nova: Partial<Categoria> = { nome: nome.trim(), contexto, tipo }
-      await financas.salvarCategoria(nova)
-      aoSalvar('Categoria criada')
-      aoFechar()
-    } catch (err) {
-      // O índice único (lower(nome), contexto, tipo) barra duplicata no banco.
-      const msg = (err as Error).message
-      setErro(/duplicate|unique/i.test(msg) ? 'Já existe uma categoria com esse nome' : msg)
-    } finally {
-      setSalvando(false)
-    }
-  }
-
-  return (
-    <Folha titulo="Nova categoria" aoFechar={aoFechar}
-      rodape={<>
-        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
-        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
-          style={{ flex: 2 }}>Salvar</Botao>
-      </>}>
-      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
-        <Campo rotulo="Nome" value={nome} erro={erro}
-          onChange={(e) => { setNome(e.target.value); setErro('') }} placeholder="Equipamentos" />
-        <div className="linha">
-          <Pilula ativa={contexto === 'empresa'} onClick={() => setContexto('empresa')}>Empresa</Pilula>
-          <Pilula ativa={contexto === 'pessoal'} onClick={() => setContexto('pessoal')}>Pessoal</Pilula>
-        </div>
-        <div className="linha">
-          <Pilula ativa={tipo === 'saida'} onClick={() => setTipo('saida')}>Despesa</Pilula>
-          <Pilula ativa={tipo === 'entrada'} onClick={() => setTipo('entrada')}>Receita</Pilula>
-        </div>
-      </div>
-    </Folha>
   )
 }

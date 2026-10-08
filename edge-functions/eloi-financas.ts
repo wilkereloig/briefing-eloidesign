@@ -140,7 +140,9 @@ Deno.serve(async (req: Request) => {
   if (action === "bootstrap") {
     const [contas, categorias, recorrencias, metas, conferencias, emprestimos] = await Promise.all([
       supabase.from("eloi_contas").select("*").order("contexto").order("nome"),
-      supabase.from("eloi_categorias").select("*").eq("ativa", true).order("nome"),
+      // Ativas e inativas: o painel filtra. Inativa some dos seletores mas
+      // continua nomeando o historico e pode ser reativada no Planejamento.
+      supabase.from("eloi_categorias").select("*").order("nome"),
       supabase.from("eloi_recorrencias").select("*").eq("ativa", true).order("proxima_cobranca"),
       supabase.from("eloi_metas").select("*").eq("ativa", true).order("inicio", { ascending: false }),
       // Ultimas conferencias: o card da conta mostra a mais recente.
@@ -895,6 +897,17 @@ Deno.serve(async (req: Request) => {
   if (action === "categorias.upsert") {
     const c = escolher(body?.categoria ?? {}, CATEGORIA_CAMPOS);
     if (!c.nome || !c.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
+    if (c.cor != null && !/^#[0-9a-f]{6}$/i.test(String(c.cor))) return json({ error: "cor deve ser #rrggbb" }, 400);
+    // Contexto e tipo sao estrutura: os lancamentos ja classificados dependem
+    // deles. Mudar a categoria de lado e criar outra, nao editar esta.
+    if (c.id) {
+      const { data: atual, error: eAtual } = await supabase.from("eloi_categorias")
+        .select("contexto, tipo").eq("id", c.id).maybeSingle();
+      if (eAtual) return json({ error: eAtual.message }, 500);
+      if (atual && (atual.contexto !== c.contexto || (c.tipo != null && atual.tipo !== c.tipo))) {
+        return json({ error: "contexto e tipo de categoria existente nao mudam" }, 400);
+      }
+    }
     const { data, error } = await supabase.from("eloi_categorias").upsert(c).select().single();
     if (error) return json({ error: error.message }, 500);
     return json({ categoria: data });
