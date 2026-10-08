@@ -30,14 +30,9 @@
       "url": "/admin/"
     },
     {
-      "name": "Gestão",
-      "short_name": "Gestão",
-      "url": "/gestao/"
-    },
-    {
       "name": "Briefings",
       "short_name": "Briefings",
-      "url": "/painel-briefings/"
+      "url": "/admin/briefings"
     }
   ]
 }

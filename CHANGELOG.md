@@ -2,6 +2,52 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-08 — Auditoria geral: segurança, financeiro e telas
+
+**Segurança (edges):**
+- Limite de tentativas usava o IP do proxy da Supabase (todos no mesmo balde →
+  qualquer um travava login admin/portal/briefing de todo mundo). Agora
+  `cf-connecting-ip` → `x-real-ip` → XFF.
+- `transacoes.upsert` com lista de campos permitidos; `status` sempre derivado
+  no servidor; `liquidar` recusa valor negativo. Mesmas listas em contas,
+  categorias, recorrências, metas e arquivos (path preso ao prefixo do upload).
+- Centavos inteiros validados em todas as edges; CHECK `>= 0` em
+  `eloi_servicos.valor_cents` e `orcamentos.valor_total`.
+- Serviço não aceita marca/nota de outro cliente; portal só baixa NF do próprio
+  cliente e só material publicado; login do portal falha fechado.
+- Trava de orçamento aprovado depende de existir serviço, não do status.
+
+**Financeiro:**
+- Pagar fatura (`transacoes.pagar_fatura`) baixa as compras do cartão na mesma
+  transação. Antes a fatura nunca zerava e a compra nunca virava despesa.
+- Fatura em tela desconta estorno em aberto.
+- Saldo usa o histórico inteiro (antes, só ~2 anos de competência).
+- "Hoje" no fuso de Brasília (antes UTC: depois das 21h já era amanhã).
+- Compra importada no cartão vence no vencimento da fatura; linhas idênticas
+  no mesmo arquivo viram `#2`, `#3`.
+- Recorrência que falha ao gerar não pula o mês em silêncio.
+- Editar lançamento não move a competência; trocar tipo/contexto limpa conta e
+  categoria inválidas; um só leitor de valor BRL ("1.500" = R$ 1.500,00).
+
+**Telas:** valor do item da proposta ("10,5" virava 105), foco pulando de campo
+na Folha, "Precisa de você" com contagem real e "Ver todas", Calendário sem
+receita em "A pagar", indicadores do Dinheiro fora da busca, critério único de
+"sem nota" (`nota_fiscal_id`), metas com `fim`, erros visíveis em Briefings.
+
+## 2026-10-08 — Painéis estáticos e financeiro antigo saem do ar
+
+- `/gestao/`, `/painel/`, `/painel-briefings/`, `/painel-ecommerce/`,
+  `/painel-orcamentos/` e `/orcamento-inteligente/` apagados. `vercel.json`
+  redireciona (301) `/gestao*` → `/admin` e `/painel*`, `/painel-ecommerce*` →
+  `/admin/briefings`; os redirects antigos continuam.
+- `manifest.json`: atalho "Gestão" removido, "Briefings" aponta para
+  `/admin/briefings`. `robots.txt` sem as rotas aposentadas.
+- `nav.js` (só `/marca/` usa): links de Gestão/Clientes passam para
+  `/admin/projetos` e `/admin/clientes`.
+- Edge `eloi-financeiro` e tabelas `eloi_caixas`/`eloi_movimentos_financeiros`
+  removidas. Planos executados movidos para `docs/historico/`. Prova de cada
+  remoção em `docs/CLEANUP_REPORT.md`.
+
 ## 2026-10-08 — Hoje funciona sem financeiro; vencimento de serviço
 
 - **Hoje** mostrava só o passo a passo do financeiro enquanto não houvesse
@@ -894,7 +940,7 @@ valor de cada serviço, isso entrega posição de negociação.
 - `orcamentos.ts` · `public_get` devolve "não encontrado" (mesmo caminho de
   token revogado, D-7) quando o orçamento do token ainda é rascunho.
 
-Fecha o Horizonte 0 (docs/ROTEIRO-SISTEMA-2026-08-28.md) — 8 itens, 8 commits.
+Fecha o Horizonte 0 (docs/historico/ROTEIRO-SISTEMA-2026-08-28.md) — 8 itens, 8 commits.
 
 ## 2026-08-28 — Ações de um clique param de falhar em silêncio
 

@@ -83,7 +83,7 @@ assets/       CSS/JS compartilhados pelas páginas estáticas
 ```
 
 Páginas estáticas ficam em pastas próprias na raiz (`briefing/`, `portal/`,
-`gestao/`, `painel-*/`, `orcamento*/`, `marca/`, `entregas-marca/`).
+`orcamento*/`, `marca/`, `entregas-marca/`).
 
 ## Documentação
 

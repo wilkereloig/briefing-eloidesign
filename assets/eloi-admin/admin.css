@@ -1,5 +1,5 @@
 /* ELOI Studio — sistema visual unificado (dark, KV aprovado 04/08/2026).
-   Compartilhado por /gestao/, /portal/, /marca/ e os paineis estaticos.
+   Compartilhado por /portal/, /marca/, /orcamento/, /orcamento-precampanha/ e os briefings estaticos.
    Fonte da verdade dos tokens: app/src/ui/tokens.css. Este arquivo serve
    paginas fora do bundler, por isso o :root repete o subconjunto usado aqui
    com os MESMOS nomes semanticos (--cor-*, --raio-*...). Tudo que vem

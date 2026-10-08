@@ -162,7 +162,7 @@ async function api(action, extra = {}) {
   return j;
 }
 
-/* ── AUTH / SHELL (mesmo padrão de /gestao/ e /aplicativos/) ── */
+/* ── AUTH / SHELL (auth.js + nav.js compartilhados) ── */
 async function entrar() {
   const pw = document.getElementById('pw').value;
   const err = document.getElementById('loginErr'); err.textContent = 'Verificando...';
@@ -379,7 +379,7 @@ async function publicar() {
       <li>Extraia o zip em <code>entregas-marca/${esc(slug)}/</code> (mesma estrutura de <code>entregas-marca/georgia-andrade/</code>: <code>manifest.json</code> + <code>logo/</code>).</li>
       <li>Copie <code>entregas-marca/georgia-andrade/index.html</code> pra <code>entregas-marca/${esc(slug)}/index.html</code> (template genérico, já lê <code>manifest.json</code> da própria pasta).</li>
       <li>Commit + push.</li>
-      <li>No painel <a href="/gestao/">/gestao/</a>, marque este cliente com <code>marca_slug: "${esc(slug)}"</code> e <code>marca_publicada: true</code>.</li>
+      <li>No painel <a href="/admin/clientes">/admin/clientes</a>, marque este cliente com <code>marca_slug: "${esc(slug)}"</code> e <code>marca_publicada: true</code>.</li>
     </ol>`;
 }
 

@@ -12,7 +12,13 @@
     { "source": "/orcamento-inteligente", "destination": "/admin/orcamentos", "permanent": true },
     { "source": "/orcamento-inteligente/:path*", "destination": "/admin/orcamentos", "permanent": true },
     { "source": "/painel-briefings", "destination": "/admin/briefings", "permanent": true },
-    { "source": "/painel-briefings/:path*", "destination": "/admin/briefings", "permanent": true }
+    { "source": "/painel-briefings/:path*", "destination": "/admin/briefings", "permanent": true },
+    { "source": "/gestao", "destination": "/admin", "permanent": true },
+    { "source": "/gestao/:path*", "destination": "/admin", "permanent": true },
+    { "source": "/painel", "destination": "/admin/briefings", "permanent": true },
+    { "source": "/painel/:path*", "destination": "/admin/briefings", "permanent": true },
+    { "source": "/painel-ecommerce", "destination": "/admin/briefings", "permanent": true },
+    { "source": "/painel-ecommerce/:path*", "destination": "/admin/briefings", "permanent": true }
   ],
   "rewrites": [
     { "source": "/admin", "destination": "/app/dist/index.html" },

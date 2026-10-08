@@ -1,4 +1,43 @@
-# Relatório de Limpeza — 2026-08-05
+# Relatório de Limpeza
+
+Duas rodadas: **2026-10-08** (aposentadoria dos painéis estáticos e do
+financeiro antigo, logo abaixo) e **2026-08-05** (auditoria e renomeação, em
+seguida).
+
+## 2026-10-08 — painéis estáticos e financeiro antigo
+
+Uma linha por remoção, com a prova. Busca feita em todo o repositório, fora
+`node_modules/`, `app/dist/`, `.claude/` e `docs/historico/`.
+
+| Removido | Prova |
+|---|---|
+| `painel-orcamentos/` | Já era redirect 301 → `/admin/orcamentos` desde 2026-09-03 (o `vercel.json` vence o arquivo); só `orcamento-inteligente/` linkava para ela |
+| `painel-briefings/` | Já era redirect 301 → `/admin/briefings`; único consumidor vivo era o atalho do `manifest.json`, trocado para `/admin/briefings` |
+| `orcamento-inteligente/` | Já era redirect 301 → `/admin/orcamentos`; nada aponta para a pasta |
+| `gestao/` | Redirect 301 novo `/gestao` e `/gestao/*` → `/admin`; consumidores vivos corrigidos: `nav.js` (4 links), atalho do `manifest.json`, link em `marca/index.html`, mensagens de `entregas-marca/_tools/gerar-variacoes.mjs` |
+| `painel/`, `painel-ecommerce/` | Redirect 301 novo (com `/:path*`) → `/admin/briefings`; nenhuma página, CSS, manifest ou sitemap apontava para elas |
+| Entradas desses caminhos no `robots.txt` | Viraram redirect — não há conteúdo a esconder. `sitemap.xml` nunca os listou |
+| `AGENTS.md` (raiz, não versionado) | 47 bytes, só um título vazio; nenhuma referência |
+| `edge-functions/eloi-financeiro.ts` | Sem consumidor desde que `/gestao` saiu (`DEPLOYS.json` já dizia "sai junto com /gestao") — feito por outro agente |
+| Tabelas `eloi_caixas`, `eloi_movimentos_financeiros` | 0 linhas, alvo só da edge acima — `DROP` feito por outro agente |
+| Ações só do `/gestao` em `edge-functions/eloi-gestao.ts` | Único chamador era `gestao/index.html` — feito por outro agente |
+| Código de movimentos em `app/src/` | Lia o modelo antigo, sem tela que o usasse — feito por outro agente |
+| Worktree `.claude/worktrees/apague-esse-5e518d`, branches `claude/apague-esse-5e518d` e `painel-interno-fase-a` | `git worktree list` e `git branch -a` não os mostram mais |
+
+**Mantido:** `assets/eloi-admin/auth.js` e `nav.js` (só `/marca/` usa — links
+repontados para `/admin/*`); `orcamento.js` e `orcamento.test.js` (`/orcamento/`
+ainda usa); `admin.css`, `pagenav.js`, `rascunho.js`, `wordmark.svg` (briefings,
+portal, orçamento).
+
+**Movido:** `docs/INSTRUCOES-CLAUDE-CODE.md`, `PLANO-OPERACAO-2026-08-28.md`,
+`PLANO-PAINEL-COMPLETO.md` e `ROTEIRO-SISTEMA-2026-08-28.md` → `docs/historico/`
+(planos executados). `RELATORIO-SISTEMA-PARA-REVISAO-IA.md` e
+`contexto-compactado-eloi-studio.md` (não versionados) →
+`eloi-workspace/_apoio/docs/`, fora do repositório.
+
+---
+
+# 2026-08-05 — auditoria e renomeação
 
 Auditoria completa, renomeação para **ELOI Studio** e reorganização da estrutura.
 O motivo de cada decisão está em [DECISIONS.md](DECISIONS.md).
@@ -141,13 +180,15 @@ em vez de duplicá-la).
 
 | Item | Por quê | Condição para sair |
 |---|---|---|
-| `edge-functions/eloi-financeiro.ts` | **Continua deployada no Supabase (v2).** Apagar o fonte deixaria produção com função sem código versionado | Retirar do Supabase primeiro |
-| Tabelas `eloi_caixas`, `eloi_movimentos_financeiros` | Alvo da função acima | Depois de removê-la |
-| `/gestao/` | **Único lugar** que gera senha do portal | `/admin` cobrir isso |
-| `/painel-orcamentos/` | **Único lugar** que cria e edita proposta | `/admin/projetos` cobrir isso |
-| `/painel-briefings/` | Único lugar que gera convite de briefing | `/admin/briefings` cobrir isso |
-| `/painel/`, `/painel-ecommerce/` | Leem os briefings antigos sem token | Migrar a leitura |
-| `/orcamento-inteligente/` | Redirect; o link pode ter sido compartilhado | Nunca — custa 1 arquivo |
+| ~~`edge-functions/eloi-financeiro.ts`~~ | — | **Saiu em 2026-10-08** (ver abaixo) |
+| ~~Tabelas `eloi_caixas`, `eloi_movimentos_financeiros`~~ | — | **Saíram em 2026-10-08** |
+| ~~`/gestao/`~~ | Senha do portal passou para a ficha do cliente em `/admin/clientes` | **Saiu em 2026-10-08** |
+| ~~`/painel-orcamentos/`~~ | `/admin/orcamentos` faz o ciclo inteiro | **Saiu em 2026-10-08** |
+| ~~`/painel-briefings/`~~ | `/admin/briefings` gera, reabre e revoga convite | **Saiu em 2026-10-08** |
+| ~~`/painel/`, `/painel-ecommerce/`~~ | `/admin/briefings` lê os briefings | **Saíram em 2026-10-08** |
+| ~~`/orcamento-inteligente/`~~ | O link antigo é coberto pelo redirect 301 do `vercel.json`, sem arquivo | **Saiu em 2026-10-08** |
+| `assets/eloi-admin/auth.js`, `nav.js` | Só `/marca/` ainda os carrega | `/marca/` migrar para o `/admin` |
+| `assets/eloi-admin/orcamento.js` (+ `.test.js`) | `/orcamento/` (view do cliente) ainda calcula com ele | `/orcamento/` passar a usar o porte de `app/src/domain/orcamento.ts` |
 | `orcamento-precampanha/` e `/cliente/` | Duas páginas com ~30 linhas de diferença. São propostas já enviadas a cliente | Unificar exigiria mudar URL de link já compartilhado |
 | `docs/historico/` | Explica o porquê de meia dúzia de decisões | Nunca |
 | `app/src/` por camada | Estrutura clara, testes assumem, nenhum arquivo órfão | Quando houver um 2º produto dentro de `app/` |

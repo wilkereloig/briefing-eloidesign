@@ -10,7 +10,8 @@ mapas ao lado dele.
 ⚠️ **Caminhos citados aqui são os da época.** Depois da reorganização de
 2026-08-05, `SITEMAP.md` virou `docs/ROUTE_MAP.md`, `CONTEXT.md` virou
 `docs/GLOSSARY.md`, `db/` virou `database/migrations/` e `admin-app/` deixou de
-existir. Não corrigimos os documentos históricos: reescrever um registro para
+existir. Em 2026-10-08, `/gestao`, `/painel`, `/painel-*` e
+`/orcamento-inteligente` saíram do repositório (viraram redirect). Não corrigimos os documentos históricos: reescrever um registro para
 combinar com o presente é como ele deixa de ser registro.
 
 | Pasta / arquivo | O que é |
@@ -20,6 +21,10 @@ combinar com o presente é como ele deixa de ser registro.
 | `superpowers/plans/` | Planos de execução, por data |
 | `superpowers/specs/` | Especificações de design, por data |
 | `superpowers/specs/design-assets/painel-kv3/` | Peças visuais da terceira rodada de KV |
+| `ROTEIRO-SISTEMA-2026-08-28.md` | Auditoria e roteiro geral (Horizontes 0–2) — executado |
+| `PLANO-OPERACAO-2026-08-28.md` | Horizonte 1 fase a fase — executado |
+| `PLANO-PAINEL-COMPLETO.md` | Plano do painel `/admin` completo — executado |
+| `INSTRUCOES-CLAUDE-CODE.md` | Instruções de execução dos três planos acima |
 
 Decisões que continuam valendo foram extraídas para
 [DECISIONS.md](../DECISIONS.md) e [adr/](../adr/).

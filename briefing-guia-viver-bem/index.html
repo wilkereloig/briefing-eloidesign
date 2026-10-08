@@ -606,7 +606,7 @@
   var FORMSPREE_ENDPOINT = "https://formspree.io/f/xpqeraow"; // caixa compartilhada ELOI
   var EMAIL_FALLBACK = "wilkereloigalvao@gmail.com";
   var STORAGE_KEY = "briefing_gvb_v1";
-  // Integração nativa com o painel ELOI (token gerado no painel-briefings)
+  // Integração nativa com o painel ELOI (token gerado em /admin/briefings)
   var SUPA_URL = "https://nlamznxoocmygfvnqcns.supabase.co";
   var TOKEN = new URLSearchParams(location.search).get("t");
   var IS_ADMIN = new URLSearchParams(location.search).get("mode") === "admin";
@@ -806,7 +806,7 @@
       obj[k] = (obj[k] !== undefined && obj[k] !== "") ? obj[k] + ", " + v : v;
     });
 
-    // 1) Painel ELOI via token (quando aberto pelo link do painel-briefings)
+    // 1) Painel ELOI via token (quando aberto pelo link gerado em /admin/briefings)
     var toSupabase = TOKEN
       ? fetch(SUPA_URL + "/functions/v1/briefing-submit", {
           method: "POST", headers: { "Content-Type": "application/json" },

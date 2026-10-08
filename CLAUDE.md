@@ -76,7 +76,9 @@ devia ter saído.
 
 Código morto sai no mesmo commit que o substitui. Legado que precisa ficar ganha
 comentário dizendo por quê e qual a condição de saída — hoje isso vale para
-`edge-functions/eloi-financeiro.ts` e os painéis estáticos `/gestao` e `/painel-*`.
+`/marca/` e o que só ela usa (`assets/eloi-admin/auth.js`, `nav.js`). Os painéis
+`/gestao` e `/painel-*` e a edge `eloi-financeiro` saíram em 2026-10-08 (redirect
+301 no `vercel.json`; ver `docs/CLEANUP_REPORT.md`).
 
 ## Cuidados que já custaram caro
 

@@ -1,4 +1,4 @@
-/* Cálculo de orçamento — compartilhado entre /painel-orcamentos/ e /orcamento/ (view do cliente).
+/* Cálculo de orçamento — usado por /orcamento/ (view do cliente); o /admin usa o porte em app/src/domain/orcamento.ts.
    A regra de multiplicador vive AQUI e só aqui. Nunca gravar linha de ajuste em `itens`. */
 (function(){
   var COMPLEX = [

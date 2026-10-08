@@ -56,7 +56,14 @@ são linhas desta tabela. O que muda é `tipo`/`contexto`/vínculo, nunca a estr
 | `grupo_id` | liga parcelas irmãs |
 | `recorrencia_id` | de que molde a linha nasceu |
 | `origem` | `manual` · `recorrencia` · `parcelamento` · `importacao` · `ajuste` — de onde a linha veio |
-| `importacao_chave` | `data\|valor\|descrição normalizada`; único por conta (índice parcial) → reimportar não duplica |
+| `importacao_chave` | `data\|valor\|descrição normalizada`; único por conta (índice parcial) → reimportar não duplica. Linha idêntica repetida no mesmo arquivo ganha sufixo `#2`, `#3` (duas compras iguais no mesmo dia são duas linhas) |
+
+**Cartão:** compra entra na conta do cartão com competência = data da compra e
+vencimento = vencimento da fatura do ciclo. Pagar fatura (`transacoes.pagar_fatura`
+→ RPC `eloi_pagar_fatura`, migração `2026-10-08-pagar-fatura.sql`) grava, numa
+transação só, a transferência conta→cartão **e** a baixa das compras abertas
+(mais antiga primeiro; estorno em aberto soma ao valor). Sem a baixa, a compra
+nunca entra no resultado e a fatura não zera.
 
 Enum `eloi_status_mov`: `previsto` · `pendente` · `parcial` · `realizado` ·
 `vencido` · **`cancelado`** (masculino — escrever `cancelada` no TypeScript fez
@@ -203,17 +210,15 @@ com `service_role`, lê e escreve. Ver [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
-## 5. Legado congelado (vazio, não remover ainda)
+## 5. Legado
 
 | Tabela | Nota |
 |---|---|
-| `eloi_caixas` | Conta do painel `/gestao`; substituída por `eloi_contas` |
-| `eloi_movimentos_financeiros` | Movimento do `/gestao`; substituído por `eloi_transacoes` |
 | `eloi_materiais` | Metadados de entrega; lido por `/portal` e `/admin/entregas` |
 
-`eloi_caixas` e `eloi_movimentos_financeiros` estão vazias e sem consumidor no
-painel novo, mas a edge `eloi-financeiro` **continua deployada** apontando para
-elas. Só remover depois de retirar a função do Supabase.
+`eloi_caixas` e `eloi_movimentos_financeiros` (modelo do antigo `/gestao`, 0
+linhas) e a edge `eloi-financeiro` foram **removidas em 2026-10-08** — ver
+`CLEANUP_REPORT.md`.
 
 ---
 

@@ -1,9 +1,7 @@
-// 2026-09-03: Briefings e Orçamentos apontam para /admin — os painéis
-// estáticos correspondentes viraram redirect no vercel.json.
-// TODO (painel interno, Fase B): quando /gestao/, /painel/ e
-// /painel-ecommerce/ saírem do ar, PRIMARY
-// abaixo fica com 4 links mortos — /marca/ é a única página que ainda usa
-// este nav. Trocar por um link único "← Painel" pra /admin nessa hora.
+// 2026-10-08: /gestao/, /painel/ e /painel-ecommerce/ saíram do ar (viraram
+// redirect no vercel.json). /marca/ é a única página que ainda carrega este
+// nav; todos os links apontam para o /admin. Condição de saída: /marca/ migrar
+// para o /admin — aí este arquivo e o auth.js saem juntos.
 
 /* nav.js — navegacao admin compartilhada. Injetado por JS (1 <script> por pagina).
    window.EloiNav = { mount, unmount }. Auth-aware: so injeta se logado.
@@ -19,27 +17,24 @@
   // rota, label, href (icone = SVG minimalista inline)
   var PRIMARY = [
     ['/admin/',                'Painel',              'M3 12l9-8 9 8M5 10v10h14V10'],
-    ['/gestao/',               'Gestão',              'M4 19V9m6 10V5m6 14v-7'],
+    ['/admin/projetos',        'Projetos',            'M4 19V9m6 10V5m6 14v-7'],
     ['/admin/briefings',       'Briefings',           'M8 4h8v3H8zM6 7h12v13H6z'],
     ['/admin/orcamentos',      'Orçamentos',          'M7 4h10v16H7zM10 8h4M10 12h4M10 16h3'],
-    // Era 'Portal do Cliente', mas leva pra aba clientes da Gestao -- nao pro portal
-    // (/portal/, que e do cliente e pede senha dele). Preview do portal fica na
-    // propria lista de clientes, onde existe um cliente pra previsualizar.
-    ['/gestao/#clientes',      'Clientes',            'M12 12a4 4 0 100-8 4 4 0 000 8zM5 20a7 7 0 0114 0']
+    // Clientes do estudio, nao o /portal/ (que e do cliente e pede senha dele).
+    ['/admin/clientes',        'Clientes',            'M12 12a4 4 0 100-8 4 4 0 000 8zM5 20a7 7 0 0114 0']
   ];
   var MARCA = ['/marca/', 'Entregas de Marca', 'M12 3l7 4v6c0 4-3 6-7 8-4-2-7-4-7-8V7z'];
   var TOOLS = [MARCA];
 
-  // Abas != trilho, de proposito. 'Clientes' apontava pro MESMO documento que
-  // 'Gestao' (/gestao/#clientes) -- duas abas pro mesmo lugar quebram a premissa
-  // da barra, e em /marca/ nenhuma acenderia. Clientes ja e aba DENTRO da Gestao.
+  // Abas != trilho, de proposito: a barra do celular tem 5 lugares; Clientes
+  // fica so no trilho.
   var TABS = PRIMARY.slice(0, 4).concat([[MARCA[0], 'Marca', MARCA[2]]]);
 
   // So no trilho: no celular sao links para destinos que ja sao abas.
   var QUICK = [
-    ['+ Serviço',  '/gestao/'],
+    ['+ Projeto',  '/admin/projetos'],
     ['+ Orçamento','/admin/orcamentos'],
-    ['+ Cliente',  '/gestao/#clientes']
+    ['+ Cliente',  '/admin/clientes']
   ];
 
   function logged(){ try { return !!(w.EloiAdminAuth && EloiAdminAuth.token()); } catch(e){ return false; } }

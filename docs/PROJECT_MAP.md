@@ -46,7 +46,7 @@ navegador ──► Vercel (arquivos estáticos + rewrites)
 | Orçamento view-only do cliente | `orcamento/` | Ativo |
 | Portal do cliente | `portal/` | Ativo |
 | Entrega de marca | `entregas-marca/` | Ativo |
-| Painéis estáticos antigos | `gestao/`, `painel*/` | **Congelados** — ver §15 |
+| Painéis estáticos antigos | ~~`gestao/`, `painel*/`, `orcamento-inteligente/`~~ | **Removidos em 2026-10-08** — redirect 301 para `/admin` (ver `ROUTE_MAP.md`) |
 | Gerador de variações de logo | `marca/`, `entregas-marca/_tools/` | Ativo, uso local |
 
 ## 4. Módulos
@@ -119,15 +119,16 @@ Push em `master` publica o site. Edge function só pelo script
 
 - Painel completo e verificado em produção; **as tabelas financeiras estão vazias**
   porque nunca houve lançamento — não é defeito, é sistema novo.
-- Clientes (2) e serviços (50) já têm dado real, herdado do painel `/gestao`.
-- `/admin-app/` foi removido; os painéis estáticos continuam no ar, congelados.
+- Clientes (2) e serviços (50) já têm dado real, herdado do antigo painel `/gestao`.
+- `/admin-app/` foi removido; `/gestao`, `/painel`, `/painel-*` e `/orcamento-inteligente`
+  saíram em 2026-10-08 e viraram redirect 301 para `/admin`. `/marca/` é a única
+  página estática de admin que sobrou.
 
 ## 15. Pendências
 
 | Pendência | Onde | Nota |
 |---|---|---|
 | Cadastrar as contas reais | `/admin/config` | Sem conta cadastrada, todo indicador mostra zero |
-| Aposentar `/gestao` e `/painel-*` | raiz | Só depois que `/admin` cobrir o que eles fazem; ao migrar, redirecionar no `vercel.json` |
 | Importação XLSX | `FolhasExtrato.tsx` | CSV pronto (2026-09-04); XLSX exigiria biblioteca — salvar como CSV cobre |
 | Service worker (offline real) | `app/` | O manifest existe, o worker não |
 | Etapas de projeto com pagamento por etapa | — | Precisaria de tabela nova |
@@ -148,5 +149,4 @@ Push em `master` publica o site. Edge function só pelo script
 
 1. Cadastrar contas e categorias reais em `/admin/config` e começar a lançar.
 2. Trazer o editor de propostas para `/admin/projetos`.
-3. Redirecionar `/gestao` e `/painel-*` quando as telas equivalentes estiverem provadas em uso.
-4. Re-letrar o wordmark (trabalho de design).
+3. Re-letrar o wordmark (trabalho de design).

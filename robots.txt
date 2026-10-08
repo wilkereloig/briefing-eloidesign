@@ -9,13 +9,7 @@ Allow: /briefing-ecommerce/
 Disallow: /admin
 Disallow: /admin/
 Disallow: /portal/
-Disallow: /gestao/
-Disallow: /painel/
-Disallow: /painel-briefings/
-Disallow: /painel-orcamentos/
-Disallow: /painel-ecommerce/
 Disallow: /orcamento/
-Disallow: /orcamento-inteligente/
 Disallow: /orcamento-precampanha/
 Disallow: /entregas-marca/
 Disallow: /marca/

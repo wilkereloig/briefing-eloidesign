@@ -12,7 +12,7 @@ Escrito em 2026-08-28 a partir do código, do **banco de produção** e do
 > portal gravar em coluna que a function não conhece.
 >
 > Escopo fora daqui: núcleo financeiro (contas, transações, cartão, recorrência,
-> metas) — ver `docs/PLANO-PAINEL-COMPLETO.md`. Não tocar, não apagar.
+> metas) — ver `docs/historico/PLANO-PAINEL-COMPLETO.md`. Não tocar, não apagar.
 
 ---
 

@@ -37,7 +37,7 @@ _Avoid_: tabelas paralelas por contexto — dariam dois lugares para calcular sa
 
 **Conta**:
 Um lugar onde dinheiro fica: conta bancária, carteira, dinheiro, investimento, reserva ou **cartão de crédito**. Tabela `eloi_contas`. Saldo = inicial + entradas liquidadas − saídas liquidadas ± transferências. Cartão de crédito **não entra no saldo disponível** — sua fatura é dívida, não caixa; e cartão sem `dia_fechamento`/`dia_vencimento` é barrado por constraint, porque sem ciclo não existe fatura.
-_Avoid_: "Caixa" para o conceito novo. `eloi_caixas` é a tabela do painel legado `/gestao`, vazia e congelada.
+_Avoid_: "Caixa" para o conceito novo. `eloi_caixas` era a tabela do antigo `/gestao` (removida em 2026-10-08).
 
 **Transação**:
 Qualquer movimento de dinheiro. Tabela `eloi_transacoes` — receita, despesa, transferência, parcela e compra no cartão são todas linhas dela; o que muda é `tipo`/`contexto`/vínculo, não a estrutura.
@@ -66,7 +66,7 @@ Mesma tabela (`eloi_metas`), discriminada por `especie`. `orcamento` compara gas
 `eloi_notas_fiscais`, ligada a Cliente, Serviço e Transação. **O painel não emite nota**: ela é emitida no sistema da prefeitura e anexada aqui (número + PDF). Os status descrevem a nota, não uma ação do painel. Nota com status `emitida`/`enviada` **exige número** — validado no servidor. Serviço concluído sem nota vira Decisão.
 
 **Movimento** (legado):
-Entrada/saída em `eloi_movimentos_financeiros`, do painel `/gestao`. Tabela vazia e congelada; substituída por Transação.
+Entrada/saída do antigo `/gestao` (`eloi_movimentos_financeiros`, removida em 2026-10-08). Substituído por Transação.
 
 **Convite** (Briefings):
 Um link com token (`briefing_links`) que dá acesso a um dos 4 formulários de briefing. Tem estado `pendente`/`respondido`. Formulário respondido sem token vira registro "legado" (sem Cliente vinculado).

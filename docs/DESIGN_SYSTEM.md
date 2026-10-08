@@ -22,7 +22,7 @@ em 1440/1024/768/375 ainda pendente — ver CHANGELOG.
 | 4. Telas de gestão (standard) | Vazio/Chip/Erro corrigidos nas ~12 telas restantes | ✅ |
 | 5. Shell, navegação, responsivo | Topbar, breakpoint da sidebar, modal aninhado→página | ✅ |
 | 6. Ícones e acessibilidade fina | Sprite, pisos de fonte, Coral como texto, `<main>` | ✅ |
-| 7. Páginas estáticas | `admin.css` espelha os tokens semânticos; portal, home, gestão, briefings e painéis legados nos mesmos valores/componentes | ✅ |
+| 7. Páginas estáticas | `admin.css` espelha os tokens semânticos; portal, home, briefings, orçamento e `/marca` nos mesmos valores/componentes | ✅ |
 
 Decisões já batidas (não reabrir sem motivo novo): nomenclatura de token em
 **português com 4 segmentos** (`--cor-fundo-primario`, não `--color-background-primary`
@@ -48,9 +48,9 @@ marca, decisão explícita do Wilke.
 | Layout do shell, trilho, cabeçalho, acesso | `app/src/app.css` | — |
 | Ícones autorais | `app/public/eloi-icons.svg` (sprite) | `eloi-handoff/assets/icons/` (45 avulsos) |
 | Logos e assinaturas | `app/public/assinatura.svg`, `icone-app.svg` | `eloi-handoff/assets/logos/` |
-| Wordmark das páginas estáticas | `assets/eloi-admin/wordmark.svg` — legado: só /gestao, /marca, /painel* ainda o puxam | — |
+| Wordmark das páginas estáticas | `assets/eloi-admin/wordmark.svg` — legado: briefings, `/orcamento*` e `/marca` ainda o usam | — |
 | Assinatura textual das páginas estáticas | `.marca` em `assets/eloi-admin/admin.css` (espelho de `.marca` no `app/src/app.css`) | — |
-| Tokens e componentes das páginas estáticas (portal, gestão, briefings, painéis) | `assets/eloi-admin/admin.css` — `:root` repete o subconjunto de `tokens.css` com os MESMOS nomes; o resto do `:root` é alias antigo (`--brand`, `--ink`, `--texto-2`…) que 14 páginas ainda usam | — |
+| Tokens e componentes das páginas estáticas (portal, briefings, orçamento, `/marca`) | `assets/eloi-admin/admin.css` — `:root` repete o subconjunto de `tokens.css` com os MESMOS nomes; o resto do `:root` é alias antigo (`--brand`, `--ink`, `--texto-2`…) que 14 páginas ainda usam | — |
 | Tokens da home (`/index.html`) | `:root` inline na própria página (não carrega `admin.css`) | — |
 | Guias escritas | — | `eloi-handoff/*.md` |
 
@@ -106,7 +106,7 @@ lugares; alias antigo só existe no `admin.css` e não cresce.
 - ⚠️ **O wordmark desenhado (`assets/eloi-admin/wordmark.svg`) ainda letra
   "ELOI Design Studio".** O nome mudou em 2026-08-05; re-letrar são curvas, não
   código. Todo texto (`alt`, `aria-label`, títulos, manifest) já diz "ELOI Studio".
-  Quem ainda o exibe: `/gestao`, `/marca`, `/painel`, `/painel-*`. `/portal/`
+  Quem ainda o exibe: briefings, `/orcamento*` e `/marca`. `/portal/`
   saiu dele em 2026-09-17 e usa `.marca` — o caminho de saída para as outras.
 
 ## Tipografia

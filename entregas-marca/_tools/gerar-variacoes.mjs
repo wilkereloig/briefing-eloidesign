@@ -8,7 +8,7 @@
 // --upload publica tudo no bucket privado eloi-entregas (Supabase Storage),
 // em <cliente-id>/marca/... -- exige SUPABASE_SERVICE_ROLE_KEY no ambiente
 // (Supabase dashboard -> Project Settings -> API -> service_role secret).
-// cliente-id é o id do cliente em /gestao/ (aba Clientes).
+// cliente-id é o id do cliente em /admin/clientes.
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createWriteStream } from "node:fs";
@@ -98,7 +98,7 @@ if (uploadFlag) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const BUCKET = "eloi-entregas";
 
-  if (!clienteId) { console.error("\n--upload precisa de --cliente-id=<uuid> (pega em /gestao/, aba Clientes)."); process.exit(1); }
+  if (!clienteId) { console.error("\n--upload precisa de --cliente-id=<uuid> (pega em /admin/clientes)."); process.exit(1); }
   if (!SERVICE_KEY) { console.error("\nSUPABASE_SERVICE_ROLE_KEY não definida no ambiente -- upload cancelado."); process.exit(1); }
 
   async function put(relPath, absPath, contentType) {

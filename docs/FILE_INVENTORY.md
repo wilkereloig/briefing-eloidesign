@@ -42,9 +42,10 @@ eloi-studio/                      (pasta local: briefing-eloidesign-repo)
 ├── scripts/deploy-edges.mjs      deploy de edge function a partir do repo
 │
 ├── briefing/  briefing-ecommerce/  briefing-solarium/  briefing-guia-viver-bem/
-├── orcamento/  orcamento-inteligente/  orcamento-precampanha/
+├── orcamento/  orcamento-precampanha/
 ├── portal/  marca/  entregas-marca/
-├── gestao/  painel/  painel-briefings/  painel-ecommerce/  painel-orcamentos/   (legado)
+│   (gestao/, painel/, painel-*/ e orcamento-inteligente/ saíram em 2026-10-08 —
+│    redirect 301 no vercel.json; ver CLEANUP_REPORT.md)
 │
 ├── index.html   manifest.json   favicon.svg   apple-touch-icon.png
 ├── vercel.json  package.json    .env.example  .gitignore

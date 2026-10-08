@@ -6,7 +6,7 @@ qualidade e legado). Destino: uma sessão do Claude Code executar horizonte a
 horizonte.
 
 Este documento é o mapa geral. O **Horizonte 1** está detalhado à parte, em
-`docs/PLANO-OPERACAO-2026-08-28.md` — não repito aqui.
+`docs/historico/PLANO-OPERACAO-2026-08-28.md` — não repito aqui.
 
 **Legenda de esforço:** `P` até ~1 h · `M` meio dia · `G` vários dias.
 Todo achado abaixo foi localizado no código; os marcados **[conferido]** eu
@@ -112,7 +112,7 @@ posição de negociação. Filtrar `status <> 'rascunho'` nos dois lados.
 
 ## Horizonte 1 — Operação: serviços, sub-clientes, NF e portal da F2
 
-Já detalhado em **`docs/PLANO-OPERACAO-2026-08-28.md`** (fases 0 a 5):
+Já detalhado em **`docs/historico/PLANO-OPERACAO-2026-08-28.md`** (fases 0 a 5):
 `eloi_sub_clientes` como entidade real, Projetos sem o corte de mês, edição de
 valor em linha, nota fiscal 1:N com espelho por trigger, fechar o fluxo de valor
 sugerido que entrou no commit `d8f9499`, tela de Fechamento por sub-cliente e

@@ -11,9 +11,9 @@ Este é o documento que o Claude Code deve ler primeiro ao abrir o repositório.
 
 1. `CLAUDE.md` — regras do projeto: dinheiro em cents, nomenclatura, interface,
    deploy, o que nunca fazer.
-2. `docs/ROTEIRO-SISTEMA-2026-08-28.md` — **o mapa geral**: auditoria completa de
+2. `docs/historico/ROTEIRO-SISTEMA-2026-08-28.md` — **o mapa geral**: auditoria completa de
    28/08 em 4 horizontes, ~90 achados com arquivo, linha e esforço.
-3. `docs/PLANO-OPERACAO-2026-08-28.md` — o Horizonte 1 detalhado fase a fase
+3. `docs/historico/PLANO-OPERACAO-2026-08-28.md` — o Horizonte 1 detalhado fase a fase
    (sub-clientes, nota fiscal 1:N, portal da F2, fechamento).
 4. `docs/GLOSSARY.md` — antes de nomear qualquer coisa nova.
 5. `docs/DECISIONS.md` — antes de "melhorar" algo que parece estranho: pode ser
@@ -41,8 +41,8 @@ Não comece a codar antes de ter lido 1, 2 e 3.
 ## 3. A ordem do trabalho
 
 ```
-Horizonte 0  → docs/ROTEIRO-SISTEMA-2026-08-28.md, seção "Horizonte 0"
-Horizonte 1  → docs/PLANO-OPERACAO-2026-08-28.md, fases 0 a 5
+Horizonte 0  → docs/historico/ROTEIRO-SISTEMA-2026-08-28.md, seção "Horizonte 0"
+Horizonte 1  → docs/historico/PLANO-OPERACAO-2026-08-28.md, fases 0 a 5
 Horizonte 2  → ROTEIRO, seção "Horizonte 2"
 Horizonte 4a → ROTEIRO, "Horizonte 4 · Segurança" (junto com o 2)
 Horizonte 3  → ROTEIRO, seção "Horizonte 3"

@@ -54,8 +54,8 @@ Padrão já validado duas vezes (Solarium, Guia Viver Bem):
      Supabase estiver pausado;
    - `?mode=admin` pula a validação, para preview;
    - sucesso mostra confirmação; falha mostra erro, nunca silêncio.
-4. Registre o tipo em `painel-briefings/index.html`: `<option>` em `#newTipo`
-   + entradas em `TIPO_LABEL` e `TIPO_PATH`.
+4. Registre o tipo em `TIPOS_BRIEFING` de `app/src/lib/briefing-mapas.ts`
+   (chave, label, caminho) — é dali que `/admin/briefings` gera o convite.
 5. Documente em [ROUTE_MAP.md](ROUTE_MAP.md).
 6. Commit **só** dos arquivos do briefing.
 

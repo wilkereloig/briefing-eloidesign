@@ -28,7 +28,7 @@ Atualizado: 2026-08-07.
 - **Objetivo:** lançar, liquidar, parcelar, estornar e acompanhar todo movimento.
 - **Estado:** Concluído
 - **Telas:** `telas/Dinheiro.tsx` (5 abas), `FolhaTransacao.tsx`, `folhas.tsx`
-- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar`, `conferencias.registrar`, `contas.*`, `recorrencias.*`
+- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar/pagar_fatura`, `conferencias.registrar`, `contas.*`, `recorrencias.*`
 - **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_conferencias`
 - **Permissão:** admin
 - **Fluxos:** receita · despesa · transferência · parcelamento · pagamento parcial (com conta e observação) · reagendar · estorno · pagar fatura de cartão · recorrência (pausar/retomar/encerrar)
@@ -168,7 +168,7 @@ Atualizado: 2026-08-07.
 
 ### Briefings (dentro do painel)
 - **Objetivo:** leitura dos convites de briefing e vínculo com cliente.
-- **Estado:** Funcional com ajustes — **só leitura e vínculo**; gerar convite e **ler as respostas** ainda é em `/painel-briefings`
+- **Estado:** Funcional — gera convite, lê a resposta, reabre, revoga e vincula a cliente. Substituiu `/painel-briefings`, `/painel` e `/painel-ecommerce` (removidos em 2026-10-08)
 - **Tela:** `telas/Briefings.tsx`
 - **Endpoints:** `briefing-links`, `get-briefings`, `get-ecommerce-briefings`
 
@@ -226,15 +226,10 @@ que **não está vendorizado**. A geração de produção é feita pelo script N
 
 ---
 
-## Legado (congelado — no ar, sem evolução)
+## Legado
 
-| Rota | Substituída por | Por que ainda existe |
-|---|---|---|
-| `/gestao/` | `/admin/clientes` | **Nada — substituído em 2026-08-07.** Senha do portal, envio de entrega e anexo de NF estão no painel novo. Pronto para sair. |
-| `/painel-orcamentos/` | `/admin/projetos` (parcial) | **Único lugar que cria e edita proposta** |
-| `/painel-briefings/` | `/admin/briefings` (leitura) | Gera convite **e** é o único lugar que mostra o que o cliente respondeu (`raw`) |
-| `/painel/`, `/painel-ecommerce/` | `/admin/briefings` | Leem os briefings antigos, sem token |
-| `/orcamento-inteligente/` | `/painel-orcamentos/` | Redirect; o link pode ter sido compartilhado |
+Nenhum painel estático no ar desde 2026-10-08. `/marca/` é a única página
+estática de admin que sobrou (ver `ROUTE_MAP.md`).
 
 ## Descontinuado
 
@@ -243,4 +238,5 @@ que **não está vendorizado**. A geração de produção é feita pelo script N
 | `/admin-app/` (SPA React 18) | 2026-08-05 | Removido. `vercel.json` redireciona 301 para `/admin` |
 | `admin/index.html` (hub estático) | 2026-08-05 (anterior) | Arquivo estático vencia o rewrite de `/admin` |
 | `assets/eloi-admin/periodo.js` | 2026-08-05 | Perdeu o único consumidor junto com o hub |
-| edge `eloi-financeiro` | 2026-08-05 | Sem consumidor no repo. Fonte mantida porque a função **continua deployada** |
+| edge `eloi-financeiro` + tabelas `eloi_caixas`, `eloi_movimentos_financeiros` | 2026-10-08 | Removidos (0 linhas). Ver `CLEANUP_REPORT.md` |
+| `/gestao/`, `/painel/`, `/painel-briefings/`, `/painel-ecommerce/`, `/painel-orcamentos/`, `/orcamento-inteligente/` | 2026-10-08 | Pastas apagadas; redirect 301 para `/admin/*` no `vercel.json` |

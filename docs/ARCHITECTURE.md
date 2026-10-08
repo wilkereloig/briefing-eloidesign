@@ -13,7 +13,7 @@ por edge functions que rodam com `service_role` — porque o RLS nega tudo para
 ┌─ navegador ────────────────────────────────────────────────┐
 │  páginas HTML          SPA React (/admin)                  │
 │  briefing · portal     app/dist                            │
-│  orçamento · gestão                                        │
+│  orçamento · marca                                         │
 └───────────┬──────────────────────┬─────────────────────────┘
             │  fetch POST          │  fetch POST
             │  {action, ...}       │  {token, action, ...}
@@ -21,7 +21,7 @@ por edge functions que rodam com `service_role` — porque o RLS nega tudo para
 ┌─ Supabase Edge Functions (Deno) ───────────────────────────┐
 │  admin-auth  eloi-financas  eloi-gestao  orcamentos        │
 │  portal-cliente  briefing-links  briefing-submit           │
-│  get-briefings  get-ecommerce-briefings  eloi-financeiro   │
+│  get-briefings  get-ecommerce-briefings                    │
 │                                                            │
 │  valida sessão ▸ valida entrada ▸ usa service_role         │
 └───────────┬────────────────────────────────────────────────┘
@@ -56,10 +56,10 @@ redeployar `admin-auth`.
 
 **Cliente (portal).** Senha própria por cliente, hash PBKDF2 em
 `eloi_clientes.portal_senha_hash`, sessão em `portal_sessions`. Gerada pelo
-admin em `/gestao`.
+admin na ficha do cliente (`/admin/clientes`).
 
-O token do admin é o mesmo (`eloi_admin_token`) para o painel novo e os painéis
-estáticos, de propósito: enquanto os dois convivem, um login só serve para tudo.
+O token do admin é o mesmo (`eloi_admin_token`) para o `/admin` e para `/marca/`,
+única página estática de admin que sobrou (2026-10-08): um login só serve para os dois.
 
 ## Camadas do painel (`app/src/`)
 
