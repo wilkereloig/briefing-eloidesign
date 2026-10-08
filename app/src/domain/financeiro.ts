@@ -759,3 +759,46 @@ export function naturezaDaCategoria(c: Pick<Categoria, 'nome' | 'natureza'> | un
   }
 }
 
+
+// ── Entre contextos e revisão ────────────────────────────────────────────────
+
+/**
+ * Dinheiro que passou entre empresa e pessoal no mês (pela data em que andou).
+ * Transferência é neutra no consolidado; em cada contexto ela explica por que o
+ * caixa mudou sem ser receita nem despesa (aporte, retirada, pró-labore,
+ * distribuição, reembolso). Pró-labore/distribuição lançados como ENTRADA
+ * categorizada não estão aqui — esses aparecem como patrimonial no resultado.
+ */
+export function movimentoEntreContextos(contas: Conta[], transacoes: Transacao[], mes: string) {
+  const ctx = new Map(contas.map((c) => [c.id, c.contexto]))
+  const r = { empresa_para_pessoal_cents: 0, pessoal_para_empresa_cents: 0, qtd: 0 }
+  for (const t of transacoes) {
+    if (t.tipo !== 'transferencia' || estaCancelada(t) || !t.conta_id || !t.conta_destino_id) continue
+    const de = ctx.get(t.conta_id), para = ctx.get(t.conta_destino_id)
+    if (!de || !para || de === para) continue
+    const data = t.data_liquidacao ?? t.data_competencia
+    const v = valorLiquidado(t)
+    if (!data || data.slice(0, 7) !== mes.slice(0, 7) || v <= 0) continue
+    if (de === 'empresa') r.empresa_para_pessoal_cents += v
+    else r.pessoal_para_empresa_cents += v
+    r.qtd += 1
+  }
+  return r
+}
+
+/** O que pede olho do dono: lançamento marcado "confirmar", entrada/saída sem
+ *  categoria e categoria usada cuja natureza ninguém confirmou. Só conta — não
+ *  decide nada sozinho. */
+export function pendenciasDeRevisao(transacoes: Transacao[], categorias: Categoria[], contexto?: Contexto) {
+  const usadas = new Set<string>()
+  let confirmar = 0, semCategoria = 0
+  for (const t of transacoes) {
+    if (estaCancelada(t) || (contexto && t.contexto !== contexto)) continue
+    if (t.categoria_id) usadas.add(t.categoria_id)
+    if (/confirmar/i.test(t.observacoes ?? '')) confirmar += 1
+    if (t.tipo !== 'transferencia' && !t.categoria_id) semCategoria += 1
+  }
+  const naturezaPendente = categorias.filter((c) => usadas.has(c.id) && !c.natureza_definida_por).length
+  return { confirmar, sem_categoria: semCategoria, natureza_pendente: naturezaPendente,
+    total: confirmar + semCategoria + naturezaPendente }
+}

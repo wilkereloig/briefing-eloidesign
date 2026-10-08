@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { rotuloMes, useFinancas } from '../../../../lib/financas-store'
 import { diasEntre, hojeISO } from '../../../../domain/datas'
 import {
-  cobertura, faturaAberta, faturasDoCartao, indiceFaturaAtual, patrimonioLiquido,
-  resultado, resumoEmprestimo, saidasDaCobertura, saldoAberto, saldoConta,
-  type Fatura, type SituacaoFatura,
+  cobertura, faturaAberta, faturasDoCartao, indiceFaturaAtual, movimentoEntreContextos, patrimonioLiquido,
+  pendenciasDeRevisao, previsaoCaixa, resultadoPorCompetencia, resumoEmprestimo, saidasDaCobertura, saldoAberto,
+  saldoConta, type Fatura, type SituacaoFatura,
 } from '../../../../domain/financeiro'
 import type { Conta, StatusMov, Transacao } from '../../../../lib/tipos'
 import { fmtBRL } from '../../../../lib/dinheiro'
@@ -23,7 +23,7 @@ type Item =
   | { tipo: 'fatura'; id: string; titulo: string; data: string; cents: number; situacao: SituacaoFatura }
 
 export default function VisaoGeral() {
-  const { contas, emprestimos, transacoes, mes, contexto } = useFinancas()
+  const { contas, emprestimos, transacoes, categoriasTodas, mes, contexto } = useFinancas()
   const hoje = hojeISO()
 
   const ativas = useMemo(() => contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto)),
@@ -38,7 +38,16 @@ export default function VisaoGeral() {
   }, [emprestimos, transacoes, contexto])
   const pat = useMemo(() => patrimonioLiquido(contas, transacoes, contexto, emp.cents),
     [contas, transacoes, contexto, emp.cents])
-  const r = useMemo(() => resultado(transacoes, contexto, mes), [transacoes, contexto, mes])
+  // Resultado pela competência e pela natureza da categoria (Etapa 6): compra no
+  // cartão conta no mês da compra; parcela de dívida, juros e empréstimo
+  // recebido aparecem à parte, não como lucro ou prejuízo do dia a dia.
+  const r = useMemo(() => resultadoPorCompetencia(transacoes, categoriasTodas, contexto, mes.slice(0, 7)),
+    [transacoes, categoriasTodas, contexto, mes])
+  const entre = useMemo(() => movimentoEntreContextos(contas, transacoes, mes), [contas, transacoes, mes])
+  const caixa = useMemo(() => [7, 30, 90].map((d) => ({ d, c: previsaoCaixa(contas, transacoes, hoje, d, contexto) })),
+    [contas, transacoes, hoje, contexto])
+  const revisar = useMemo(() => pendenciasDeRevisao(transacoes, categoriasTodas, contexto),
+    [transacoes, categoriasTodas, contexto])
   const cob = useMemo(() => cobertura(contas, transacoes, hoje, DIAS, contexto),
     [contas, transacoes, hoje, contexto])
   const faturas = cartoes.reduce((s, c) => s + faturaAberta(c, transacoes), 0)
@@ -79,8 +88,8 @@ export default function VisaoGeral() {
               nota={`${cartoes.length} ${cartoes.length === 1 ? 'cartão' : 'cartões'} · próxima fatura de cada`} />
             <Indicador rotulo="Empréstimos em aberto" valor={fmtBRL(emp.cents)}
               nota={`${emp.qtd} ${emp.qtd === 1 ? 'empréstimo ativo' : 'empréstimos ativos'}`} />
-            <Indicador rotulo="Resultado do mês" valor={fmtBRL(r.lucro_cents)}
-              cor={r.lucro_cents < 0 ? 'coral' : undefined} nota={rotuloMes(mes)} />
+            <Indicador rotulo="Resultado do mês" valor={fmtBRL(r.resultado_cents)}
+              cor={r.resultado_cents < 0 ? 'coral' : undefined} nota={`${rotuloMes(mes)} · dia a dia, pelo mês da compra`} />
           </div>
 
           <div className="grade-dupla">
@@ -149,6 +158,77 @@ export default function VisaoGeral() {
               </Painel>
             </div>
           </div>
+
+          <div className="grade-dupla">
+            <Painel titulo={`Resultado de ${rotuloMes(mes)}`}
+              acao={<Link className="t-legenda" to="/admin/dinheiro/gastos">Análise de gastos</Link>}>
+              <ul className="lista">
+                <LinhaValor rotulo="Receitas do dia a dia" cents={r.receita_cents} />
+                <LinhaValor rotulo="Gastos do dia a dia" cents={-r.despesa_cents} />
+                <LinhaValor rotulo="Resultado" cents={r.resultado_cents} forte />
+              </ul>
+              <p className="etiqueta-mini" style={{ marginTop: 'var(--espaco-04)' }}>Fora do resultado</p>
+              <ul className="lista">
+                <LinhaValor rotulo="Parcelas de dívida" cents={-r.divida_cents} />
+                <LinhaValor rotulo="Juros, tarifas e rendimentos" cents={-r.financeiro_liquido_cents} />
+                <LinhaValor rotulo="Empréstimos recebidos, aportes, retiradas" cents={r.patrimonial_entradas_cents - r.patrimonial_saidas_cents} />
+                {r.ajustes_cents !== 0 && <LinhaValor rotulo="Ajustes de conferência" cents={r.ajustes_cents} />}
+                {entre.qtd > 0 && (
+                  <LinhaValor
+                    rotulo={contexto === 'pessoal' ? 'Veio da empresa (líquido)' : contexto === 'empresa' ? 'Foi para o pessoal (líquido)' : 'Entre empresa e pessoal (neutro aqui)'}
+                    cents={contexto === 'pessoal' ? entre.empresa_para_pessoal_cents - entre.pessoal_para_empresa_cents
+                      : contexto === 'empresa' ? entre.pessoal_para_empresa_cents - entre.empresa_para_pessoal_cents : 0} />
+                )}
+              </ul>
+              <p className="t-legenda" style={{ marginTop: 'var(--espaco-03)' }}>
+                Pelo valor de cada lançamento no mês a que pertence, pago ou não
+                {r.a_pagar_cents || r.a_receber_cents
+                  ? ` · ainda a pagar ${fmtBRL(r.a_pagar_cents)}, a receber ${fmtBRL(r.a_receber_cents)}` : ''}.
+              </p>
+            </Painel>
+
+            <div className="pilha">
+              <Painel titulo="Caixa previsto">
+                <ul className="lista">
+                  {caixa.map(({ d, c }) => (
+                    <LinhaValor key={d} rotulo={`Em ${d} dias`} cents={c.provavel}
+                      legenda={`entre ${fmtBRL(c.conservador)} e ${fmtBRL(c.otimista)}`} />
+                  ))}
+                </ul>
+                <p className="t-legenda" style={{ marginTop: 'var(--espaco-03)' }}>
+                  Saldo de hoje + o que vence até lá. Faixa: quanto do “a receber” de fato entra.
+                </p>
+              </Painel>
+
+              {revisar.total > 0 && (
+                <Painel titulo="Precisa de revisão">
+                  <ul className="lista">
+                    {revisar.confirmar > 0 && (
+                      <li><Link className="lista-item lista-link" to="/admin/dinheiro/lancamentos?busca=confirmar">
+                        <span className="celula"><span className="t-ui">{revisar.confirmar} marcados “confirmar”</span>
+                          <span className="t-legenda">origem ou categoria incerta</span></span>
+                        <Icone nome="avancar" tamanho={16} />
+                      </Link></li>
+                    )}
+                    {revisar.sem_categoria > 0 && (
+                      <li><Link className="lista-item lista-link" to="/admin/dinheiro/lancamentos">
+                        <span className="celula"><span className="t-ui">{revisar.sem_categoria} sem categoria</span>
+                          <span className="t-legenda">ficam de fora das análises por categoria</span></span>
+                        <Icone nome="avancar" tamanho={16} />
+                      </Link></li>
+                    )}
+                    {revisar.natureza_pendente > 0 && (
+                      <li><Link className="lista-item lista-link" to="/admin/dinheiro/planejamento?aba=categorias">
+                        <span className="celula"><span className="t-ui">{revisar.natureza_pendente} categorias com natureza a confirmar</span>
+                          <span className="t-legenda">decide se entra no resultado</span></span>
+                        <Icone nome="avancar" tamanho={16} />
+                      </Link></li>
+                    )}
+                  </ul>
+                </Painel>
+              )}
+            </div>
+          </div>
         </>
       )}
     </Carga>
@@ -158,6 +238,18 @@ export default function VisaoGeral() {
 function faturaAtual(c: Conta, transacoes: Transacao[], hoje: string): Fatura | null {
   const fs = faturasDoCartao(c, transacoes, hoje)
   return fs[indiceFaturaAtual(fs, hoje)] ?? null
+}
+
+function LinhaValor({ rotulo, cents, legenda, forte }: { rotulo: string; cents: number; legenda?: string; forte?: boolean }) {
+  return (
+    <li className="lista-item">
+      <span className="celula">
+        <span className="t-ui">{forte ? <strong>{rotulo}</strong> : rotulo}</span>
+        {legenda && <span className="t-legenda">{legenda}</span>}
+      </span>
+      <Dinheiro cents={cents} sinal={cents !== 0} className="t-valor" />
+    </li>
+  )
 }
 
 /** Linha clicável de conta/cartão: a linha inteira leva à página dela. */

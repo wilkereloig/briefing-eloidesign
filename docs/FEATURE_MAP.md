@@ -36,6 +36,7 @@ Atualizado: 2026-10-08.
 - **Fila de cobrança:** A receber / A pagar agrupadas por faixa de prazo (`agruparPorPrazo`) com recortes Vencidos · Sem NF · Recorrentes · Parciais
 - **Visão geral e contas:** `patrimonioLiquido`, `cobertura`/`saidasDaCobertura` (próximos 7 dias), `extratoDaConta` (saldo após cada linha); arquivar conta/cartão em vez de apagar
 - **Empréstimos:** `resumoEmprestimo` (pago, falta, juros, próxima, quitação, progresso) · cadastro gera só as parcelas que faltam; estrutura imutável depois (encerrar e cadastrar outro) · saldo devedor entra no patrimônio líquido
+- **Visão geral:** resultado por competência e natureza (`resultadoPorCompetencia`), entre contextos (`movimentoEntreContextos`), caixa previsto 7/30/90 (`previsaoCaixa`), revisão (`pendenciasDeRevisao`)
 - **Cartão:** `faturasDoCartao` (uma fatura por mês) · pagamentos e de quais faturas tiraram (`faturasQuitadasPor`, painel na página do cartão) · fatura aberta, limite disponível, ciclo (`cicloFatura`), parcelado em aberto (`parceladoAberto`)
 - **Onboarding:** `routes/admin/Onboarding.tsx` (Hoje e Dinheiro) enquanto faltar conta ou lançamento — `domain/onboarding.ts`
 - **Conferência e importação:** `routes/admin/FolhasExtrato.tsx` — `FolhaConferencia` (sistema × extrato, ajuste identificado) e `FolhaImportar` (CSV/OFX, `domain/importacao.ts`); cada arquivo vira um lote, listado e desfeito em `PainelImportacoes` (página da conta e do cartão)

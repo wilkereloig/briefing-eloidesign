@@ -2,6 +2,19 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Etapa 6: um "resultado" só, previsão e revisão na Visão geral
+
+- **Dinheiro › Visão geral:** "Resultado do mês" agora é pelo mês da compra e pela
+  natureza da categoria (só o dia a dia entra). Painel do resultado mostra à parte
+  parcelas de dívida, juros e tarifas, empréstimos recebidos/aportes/retiradas, ajustes
+  e o dinheiro que passou entre empresa e pessoal. Novo **Caixa previsto** (7/30/90 dias,
+  com faixa) e **Precisa de revisão** (marcados "confirmar", sem categoria, natureza a
+  confirmar), cada um levando à lista que explica.
+- **Categorias:** campo **Natureza** (dia a dia, juros e tarifas, dívida, patrimonial);
+  salvar confirma a escolha e tira da fila de revisão.
+- Hoje, Lançamentos e Relatórios: o número recebido − pago passa a se chamar **Sobra**.
+- Valor de indicador não quebra mais linha; card de destaque sem cor semântica sobre o roxo.
+
 ## 2026-10-09 — Etapa 5: estorno de pagamento de fatura e importação que se desfaz
 
 - **Página do cartão › Pagamentos ao cartão:** cada pagamento mostra de quais faturas

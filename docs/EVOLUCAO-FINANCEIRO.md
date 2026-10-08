@@ -24,7 +24,7 @@ Financeiro separado está vazio.
 | 3. Obrigações × liquidações × resultados | ✅ núcleo publicado · ⏳ telas | `eloi_liquidacoes`, natureza das categorias, 3 perspectivas no banco, `resultadoPorCompetencia` no domínio, relatório de diferenças |
 | 4. Revisão de dados e consolidação | ✅ no essencial | não há dado a migrar do app Financeiro (desligado); "Outros"/"Outras entradas" revisados com decisão delegada pelo dono (24 lançamentos, reversível); natureza das categorias confirmada |
 | 5. Contas, cartões, dívidas, conciliação | ✅ publicado | saldo inicial com data e arquivamento preservando saldo; empréstimo com taxa efetiva e valor para quitar hoje; OFX com FITID; **pagamentos ligados às faturas que quitaram** (`pagamento_id`) e **estorno de pagamento de fatura** (compras voltam a dever, nada é apagado); **importação em lote** (`eloi_importacoes`) com **desfazer** recusado quando algo do lote já foi pago/ligado. Limitação: pagamentos e importações anteriores não têm rastro (sem estorno/desfazer automático) |
-| 6. Gestão integrada | ⏳ parcial | **Dinheiro › Análise de gastos** (pedido do dono): saídas × renda, pagando o passado, comprometido por mês, categorias mês a mês, onde mais se gasta |
+| 6. Gestão integrada | ✅ código + testes | **Dinheiro › Análise de gastos**; **Visão geral** com resultado do mês por competência e natureza (dia a dia × dívida × juros × patrimonial × ajustes), dinheiro entre empresa e pessoal (neutro no consolidado), caixa previsto em 7/30/90 dias e fila "precisa de revisão" com links; natureza editável na categoria (decisão do dono). Os números de caixa (recebido − pago) foram renomeados para "Sobra" no Hoje, Lançamentos e Relatórios — "Resultado" agora é um só |
 | 7. Novo visual | ⏳ | — |
 | 8. Acesso e automação | ⏳ parcial | rotina diária (pg_cron), limpeza no logout, auditoria |
 | 9. Site e portal | ⏳ | política de INSERT anônimo em `briefings` documentada |
@@ -165,8 +165,8 @@ Preserva transações e projeções; perde o detalhe por pagamento e a trilha (e
 
 - Backup só interno (`eloi_backup_20261009`, mesmo banco): protege contra erro de
   migração, não contra perda do projeto. Apagar o schema quando houver backup externo.
-- As telas ainda mostram o critério legado de resultado. Trocar é Etapa 6/7, junto do
-  novo visual, para não mudar o número na frente do dono sem a explicação na tela.
+- "Resultado do mês" (Visão geral) usa competência + natureza. Hoje, Lançamentos e
+  Relatórios mostram "Sobra" (recebido − pago), que é caixa, não resultado.
 - Estorno só para pagamento de fatura gravado depois da etapa 5 (com `pagamento_id`); os
   anteriores continuam bloqueados para apagar/cancelar — correção por outra transferência.
 - Desfazer importação só para lotes gravados depois da etapa 5.

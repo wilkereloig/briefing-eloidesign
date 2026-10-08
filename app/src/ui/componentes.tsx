@@ -109,7 +109,9 @@ export function Indicador({ rotulo, valor, nota, cor, dominante }:
     <Card dominante={dominante} className="indicador">
       <Etiqueta mini>{rotulo}</Etiqueta>
       <span className="valor t-valor-g dinheiro" aria-label={valor}
-        style={cor ? { color: `var(--${cor === 'acento' ? 'acento' : 'coral'})` } : undefined}>{valor}</span>
+        // No card dominante (fundo de acento) a cor semântica perde contraste: o
+        // sinal do número já informa.
+        style={cor && !dominante ? { color: `var(--${cor === 'acento' ? 'acento' : 'coral'})` } : undefined}>{valor}</span>
       {nota && <span className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>{nota}</span>}
     </Card>
   )

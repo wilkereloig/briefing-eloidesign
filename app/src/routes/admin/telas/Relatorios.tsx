@@ -194,7 +194,7 @@ export default function Relatorios() {
               <Indicador dominante rotulo="Receita em 12 meses" valor={fmtBRL(totalAno.receita_cents)}
                 nota="Só o que foi efetivamente recebido" />
               <Indicador rotulo="Despesa em 12 meses" valor={fmtBRL(totalAno.despesa_cents)} nota="Liquidado" />
-              <Indicador rotulo="Resultado" valor={fmtBRL(totalAno.lucro_cents)}
+              <Indicador rotulo="Sobra (recebido − pago)" valor={fmtBRL(totalAno.lucro_cents)}
                 cor={totalAno.lucro_cents < 0 ? 'coral' : 'acento'}
                 nota={totalAno.receita_cents > 0
                   ? `Margem de ${(totalAno.margem * 100).toFixed(0)}%`

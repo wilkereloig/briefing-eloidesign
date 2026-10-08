@@ -40,7 +40,8 @@ export default function Lancamentos() {
     return n
   }, { replace: true })
 
-  const [busca, setBusca] = useState('')
+  // `?busca=` vem de links (ex.: Visão geral › Precisa de revisão).
+  const [busca, setBusca] = useState(params.get('busca') ?? '')
   const [folha, setFolha] = useState<FolhaMov | { tipo: 'nova' } | { tipo: 'importar' } | null>(null)
   const [aviso, setAviso] = useState<{ texto: string; tipo?: 'ok' | 'erro' } | null>(null)
   const fechar = () => setFolha(null)
@@ -75,8 +76,8 @@ export default function Lancamentos() {
       <Carga linhas={6}>
         <Onboarding />
         <div className="grade-indicadores">
-          <Indicador dominante rotulo="Resultado do mês" valor={fmtBRL(r.lucro_cents)}
-            nota={`${fmtBRL(r.receita_cents)} recebido · ${fmtBRL(r.despesa_cents)} gasto`} />
+          <Indicador dominante rotulo="Sobra do mês" valor={fmtBRL(r.lucro_cents)}
+            nota={`${fmtBRL(r.receita_cents)} recebido − ${fmtBRL(r.despesa_cents)} pago`} />
         </div>
 
         <div className="grade-filtros" role="group" aria-label="Filtros dos lançamentos">

@@ -132,6 +132,14 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 
 .indicador{display:flex;flex-direction:column;min-height:150px}
 .indicador .valor{margin-top:auto;padding-top:var(--espaco-03)}
+/* Valor nunca quebra (o sinal de menos ia sozinho para a linha de cima): o
+   tamanho encolhe com a largura do card até caber "−R$ 000.000,00". */
+.indicador{container-type:inline-size}
+.indicador .valor{white-space:nowrap}
+@supports (font-size:1cqi){
+  .indicador .t-valor-g{font-size:min(var(--tipo-dado-grande-tamanho),12cqi)}
+  .card-dominante.indicador .t-valor-g{font-size:min(var(--tipo-dado-xl-tamanho),12cqi)}
+}
 .grade-indicadores{display:grid;gap:var(--gap-grade);
   grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
 
