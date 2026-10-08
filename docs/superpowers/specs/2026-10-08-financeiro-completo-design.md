@@ -90,7 +90,7 @@ Tabela `eloi_emprestimos`:
 | coluna | tipo | nota |
 |---|---|---|
 | id | uuid pk | |
-| nome | text not null | "Empréstimo Itaú R$ 16 mil" |
+| nome | text not null | "Empréstimo pessoal do banco" |
 | instituicao | text | |
 | contexto | eloi_contexto not null | |
 | conta_id | uuid → eloi_contas | conta que debita |
@@ -119,10 +119,7 @@ recebido; pago = parcelas_pagas_antes × parcela + liquidado das parcelas no
 sistema; falta = soma em aberto; próxima parcela; quitação = último
 vencimento; progresso = parcelas pagas / total.
 
-Migração dos 3 empréstimos já lançados (Itaú 16 mil 12× 1.711,46, 8 pagas
-antes, 1º venc. 13/02/2026; Itaú 5 mil 6× 1.174,02, 1 paga antes, 1º venc.
-14/09/2026; Mercado Pago 5× 587,98, 1 paga antes, 1º venc. 28/08/2026, valor
-recebido desconhecido = 0): cria o cadastro e liga as parcelas existentes por
+Migração dos empréstimos já lançados: cria o cadastro e liga as parcelas existentes por
 `emprestimo_id` (sem gerar de novo).
 
 ### Planejamento

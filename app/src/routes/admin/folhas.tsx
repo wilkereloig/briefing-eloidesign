@@ -476,7 +476,7 @@ export function FolhaEmprestimo({ inicial, contextoInicial, aoFechar, aoSalvar }
       </>}>
       <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <Campo rotulo="Nome" value={nome} erro={erros.nome}
-          onChange={(e) => setNome(e.target.value)} placeholder="Empréstimo Itaú R$ 16 mil" />
+          onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Empréstimo pessoal do banco" />
         <Campo rotulo="Instituição" value={instituicao}
           onChange={(e) => setInstituicao(e.target.value)} placeholder="Itaú" />
 

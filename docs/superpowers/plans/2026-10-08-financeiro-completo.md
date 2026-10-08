@@ -405,7 +405,7 @@ alter table public.eloi_transacoes add column emprestimo_id uuid references publ
 create index eloi_transacoes_emprestimo_idx on public.eloi_transacoes(emprestimo_id) where emprestimo_id is not null;
 comment on table public.eloi_emprestimos is 'Empréstimos (ELOI). Parcelas são eloi_transacoes com emprestimo_id.';
 ```
-- Aplicar via MCP `apply_migration`. Migrar os 3 empréstimos existentes (spec) com SQL: inserir cadastro e `update eloi_transacoes set emprestimo_id = ... where grupo_id = <grupo das parcelas>`. Conferir: 4 parcelas Itaú 16 mil, 5 Itaú 5 mil, 4 Mercado Pago ligadas.
+- Aplicar via MCP `apply_migration`. Migrar os empréstimos já lançados: inserir cadastro e ligar as parcelas existentes por `emprestimo_id`.
 - Ajustar `limite_cents` da "Itaú — conta 1" para 10000 (print: limite disponível R$ 100 com saldo 0).
 
 ### Task 8: Edge
@@ -456,7 +456,7 @@ export function resumoEmprestimo(e: Emprestimo, transacoes: Transacao[]): Resumo
   }
 }
 ```
-Teste com o Itaú 16 mil: 8 antes + 4 abertas de 1.711,46 → `total 2053752`, `juros 453752`, `pago 1369168`, `falta 684584`, `parcelas_pagas 8`, `quitacao '2027-01-13'`, `progresso 8/12`; com 1 parcela liquidada → pagas 9, falta 513438. `valor_recebido 0` → `juros null`.
+Teste com um empréstimo de exemplo: 8 antes + 4 abertas de 1.711,46 → `total 2053752`, `juros 453752`, `pago 1369168`, `falta 684584`, `parcelas_pagas 8`, `quitacao '2027-01-13'`, `progresso 8/12`; com 1 parcela liquidada → pagas 9, falta 513438. `valor_recebido 0` → `juros null`.
 - `dinheiro/Emprestimos.tsx`: card por empréstimo ativo (lente): nome, instituição, `Progresso` (n/total), Pago, Falta, Juros (ou "valor recebido não informado"), próxima parcela (data + valor + conta), quitação. Total em aberto no topo. Botão "Novo empréstimo" → `Folha` com campos nome, instituição, contexto, conta que debita, valor recebido, nº parcelas, valor da parcela, 1º vencimento, parcelas já pagas (prévia: "Vai gerar N parcelas de R$ X, de dd/mm/aaaa a dd/mm/aaaa"). Editar (mesma folha, sem regerar) e Encerrar (confirmação). Encerrados recolhidos.
 - `VisaoGeral.tsx`: `patrimonioLiquido(..., Σ resumoEmprestimo(e).falta_cents dos ativos)` + indicador "Empréstimos em aberto".
 - Router `emprestimos` → tela nova; remover `EmBreve`.

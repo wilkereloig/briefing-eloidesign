@@ -267,3 +267,39 @@ anterior sem aviso.
 
 ### A logo nunca é centralizada
 Sempre à esquerda, em qualquer contexto.
+
+### Dinheiro é uma área com sub-páginas, não telas separadas por pessoal/empresa (2026-10-08)
+Uma tela só (`Dinheiro.tsx`, 616 linhas) não comportava conta, cartão, empréstimo
+e planejamento. Separar "Pessoal" de "Empresa" duplicaria telas. Decisão do dono:
+`/admin/dinheiro/*` com Visão geral, Contas, Cartões, Lançamentos, A pagar e
+receber, Empréstimos e Planejamento; a lente empresa/pessoal vale em todas. A
+primária segue com 7 itens. Spec: `docs/superpowers/specs/2026-10-08-financeiro-completo-design.md`.
+
+### Empréstimo tem cadastro próprio (`eloi_emprestimos`) (2026-10-08)
+Agrupar parcelas soltas não sabia o valor recebido nem os juros. O cadastro gera
+as parcelas (transações com `emprestimo_id` e `grupo_id` = id do empréstimo).
+Depois de gerado, valor, nº de parcelas, datas e contexto não mudam (edge
+devolve 409): para mudar, encerra e cadastra outro. Parcelas pagas antes de o
+sistema existir entram em `parcelas_pagas_antes`, sem virar transação.
+
+### Fatura do cartão = próximo vencimento; o valor sugerido é o que o servidor quita (2026-10-08)
+`faturaAberta` segue a mesma ordem de `planejarPagamentoFatura` (estornos em
+aberto abatem primeiro, depois saídas da mais antiga). Parcela de mês futuro não
+entra no valor sugerido, mas ocupa limite (`dividaDoCartao`). Compra de cartão
+salva sem vencimento ganha o vencimento do ciclo na edge, para app e servidor
+agruparem igual.
+
+### Aviso de conta 3 dias antes; recorrência nasce 10 dias antes (2026-10-08)
+"Precisa de você" mostrava só o atrasado — o aviso chegava tarde. `AVISO_DIAS = 3`
+e `recorrencias.gerar` com antecedência de 10 dias. Compras de cartão viram uma
+linha por fatura na fila. Lembretes também vão para o Google Agenda do dono.
+
+### Serviço: `data_vencimento` é quando o cliente paga; competência é o mês do trabalho (2026-10-08)
+Gravar data de pagamento em `data_competencia` mudava a receita de mês.
+
+### PIX que entrou é entrada (2026-10-08)
+Regra do dono ao importar extrato: dinheiro de pessoa física entra como entrada
+(categoria pela origem: "Rateio da casa" para o colega de apartamento, "Outras
+entradas" no geral), não como estorno. Transferência entre as próprias contas é
+`transferencia`. PIX no cartão (PIX CARTAO + CREDITO LIBERAD) é neutro na conta:
+a despesa é do cartão.

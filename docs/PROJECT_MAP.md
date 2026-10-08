@@ -117,8 +117,13 @@ Push em `master` publica o site. Edge function só pelo script
 
 ## 14. Estado atual
 
-- Painel completo e verificado em produção; **as tabelas financeiras estão vazias**
-  porque nunca houve lançamento — não é defeito, é sistema novo.
+- Painel completo e verificado em produção. Área **Dinheiro** com sub-páginas
+  (visão geral, contas, cartões com faturas por mês, lançamentos, a pagar e
+  receber, empréstimos, planejamento) desde 2026-10-08.
+- **Financeiro pessoal real lançado em 2026-10-08** (contas, cartões, empréstimos
+  e 3 meses de extrato conciliados com o banco). Detalhes ficam no banco e na
+  memória local do assistente — **nunca neste repositório, que é público**.
+  Lançamentos com "confirmar" na observação aguardam o dono.
 - Clientes (2) e serviços (50) já têm dado real, herdado do antigo painel `/gestao`.
 - `/admin-app/` foi removido; `/gestao`, `/painel`, `/painel-*` e `/orcamento-inteligente`
   saíram em 2026-10-08 e viraram redirect 301 para `/admin`. `/marca/` é a única
@@ -128,7 +133,10 @@ Push em `master` publica o site. Edge function só pelo script
 
 | Pendência | Onde | Nota |
 |---|---|---|
-| Cadastrar as contas reais | `/admin/config` | Sem conta cadastrada, todo indicador mostra zero |
+| Faturas de cartão ainda parciais (valor do app, sem itens) | `/admin/dinheiro/cartoes` | Hoje são valores parciais; trocar pelos itens do PDF |
+| Lançamentos marcados "confirmar" | `/admin/dinheiro/lancamentos` | Boletos Itaú sem produto, PIX ao Mercado Pago, entradas de contas não cadastradas |
+| Diagnóstico financeiro do dono | — | Depois de todas as faturas: renda, gastos, dívidas, juros, ordem de quitação |
+| Token do Supabase CLI expirado | `npm run edges:deploy` | Deploys de 2026-10-08 foram pelo MCP, conferidos byte a byte e registrados em `DEPLOYS.json` |
 | Importação XLSX | `FolhasExtrato.tsx` | CSV pronto (2026-09-04); XLSX exigiria biblioteca — salvar como CSV cobre |
 | Service worker (offline real) | `app/` | O manifest existe, o worker não |
 | Etapas de projeto com pagamento por etapa | — | Precisaria de tabela nova |
@@ -147,6 +155,6 @@ Push em `master` publica o site. Edge function só pelo script
 
 ## 17. Próximas etapas
 
-1. Cadastrar contas e categorias reais em `/admin/config` e começar a lançar.
+1. Lançar as faturas fechadas e fazer o diagnóstico financeiro.
 2. Trazer o editor de propostas para `/admin/projetos`.
 3. Re-letrar o wordmark (trabalho de design).

@@ -657,9 +657,9 @@ describe('filtrarLancamentos', () => {
 })
 
 describe('resumo do empréstimo', () => {
-  // Itaú R$ 16 mil: 12× 1.711,46, 8 pagas antes de entrar no sistema.
+  // Exemplo: 12× 1.711,46, 8 pagas antes de entrar no sistema.
   const itau: Emprestimo = {
-    id: 'e1', nome: 'Empréstimo Itaú R$ 16 mil', instituicao: 'Itaú', contexto: 'pessoal',
+    id: 'e1', nome: 'Empréstimo de exemplo', instituicao: 'Banco', contexto: 'pessoal',
     conta_id: 'c', categoria_id: null, valor_recebido_cents: 16000_00, parcelas_total: 12,
     valor_parcela_cents: 1711_46, primeiro_vencimento: '2026-02-13', parcelas_pagas_antes: 8,
     ativo: true, observacoes: null, created_at: '2026-10-08',

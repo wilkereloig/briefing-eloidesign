@@ -32,6 +32,9 @@ Leia, nesta ordem, o que for do assunto:
 - Backend: edge functions Deno em `edge-functions/`, `service_role`.
 - Postgres com **RLS negando `anon` em toda tabela**. Autorização é na edge.
 - Deploy de edge **só** por `npm run edges:deploy -- <fn>`. Dashboard nunca.
+  Token do CLI expirado → deploy pelo MCP do Supabase (`deploy_edge_function`,
+  `index.ts` + `_shared/*.ts` importados, `verify_jwt=false`), conferir byte a
+  byte com `get_edge_function`, smoke 401 e registrar em `edge-functions/DEPLOYS.json`.
 
 ## Três regras de dinheiro que o código inteiro assume
 
@@ -91,6 +94,31 @@ comentário dizendo por quê e qual a condição de saída — hoje isso vale pa
   andamento; commit só o que é da tarefa.
 - **Ações destrutivas** (apagar arquivo, reset/force-push, mexer em segredo,
   deploy) só com confirmação.
+
+## Financeiro do dono (lançar fatura, extrato, conta)
+
+O painel também guarda o financeiro **pessoal** do Wilker (lente "pessoal").
+
+- **Este repositório é PÚBLICO.** Nome de pessoa, final de cartão, banco, valor de
+  dívida ou saldo real **nunca** vão para arquivo versionado (doc, teste, spec,
+  commit). O dado vive no banco; o contexto, na memória local do assistente.
+- Área: `/admin/dinheiro/*` (visão geral, contas, cartões, lançamentos, a pagar e
+  receber, empréstimos, planejamento). Mapa em `docs/ROUTE_MAP.md`.
+- **Fatura de cartão (PDF):** cada linha é `saida` no cartão (`conta_id` = cartão),
+  `data_competencia` = data da compra, `data_vencimento` = vencimento da fatura,
+  `origem='importacao'`, `importacao_chave` (`AAAA-MM-DD|-cents|descrição`, `#n` se
+  repetida), categoria do mesmo contexto. Estorno = `entrada`. Juros/IOF/tarifas →
+  "Juros, tarifas e encargos"; saldo rotativo/parcelamento → "Empréstimos e
+  dívidas". **A soma tem que bater com o total do PDF.** Valor parcial lançado
+  antes ("Fatura … — parcial") sai quando os itens entram.
+- **Pagamento de fatura** é transferência conta → cartão com baixa das compras:
+  RPC `eloi_pagar_fatura` (mesma regra da edge `transacoes.pagar_fatura`).
+- **Extrato bancário:** linhas `realizado`, saldo conferido contra cada "SALDO DO
+  DIA". Transferência entre contas próprias = uma linha `transferencia`. PIX no
+  cartão (PIX CARTAO + CREDITO LIBERAD) é neutro na conta. PIX que entrou é entrada.
+- **Empréstimo:** cadastro em `eloi_emprestimos` gera as parcelas (`emprestimo_id`).
+- Lançamento incerto ganha "confirmar" em `observacoes` e vai para a lista de
+  pendências do dono — nunca chutar categoria em silêncio.
 
 ## Convenção
 

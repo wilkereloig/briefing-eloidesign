@@ -73,7 +73,7 @@ Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente 
 - `recorrencias.gerar` cria a cobrança até 10 dias antes do vencimento, para a
   conta fixa aparecer em "Próximos vencimentos" e no aviso.
 - Dados: primeiras contas fixas pessoais (energia, financiamento Caixa,
-  condomínio, internet), cartões Itaú Visa Gold 3035 e Itaú CBD, fatura de
+  condomínio, internet), dois cartões de crédito, fatura de
   out/2026 itemizada (95 linhas) e categorias "Juros, tarifas e encargos" e
   "Dívidas (parcelamentos e rotativo)".
 
