@@ -83,8 +83,10 @@ de impacto:
 
 ## Exceções para o dono decidir (sem dado pessoal aqui; detalhe no baseline privado)
 
-1. Confirmar a natureza das categorias em uso (`eloi_revisao_natureza`), em especial
-   "Outros", "Outras entradas" e "Compras", que concentram lançamentos sem classificação clara.
+1. ~~Natureza das categorias~~ — **confirmada pelo dono em 2026-10-09** (dia a dia:
+   Alimentação, Moradia, Saúde, Transporte, Lazer, Assinaturas, Viagens, Cuidados
+   pessoais, Compras, Projetos, Rateio da casa). "Outros" e "Outras entradas" misturam
+   naturezas: revisão lançamento a lançamento, feita com o dono fora do repositório.
 2. Linhas de cartão "saldo não pago da fatura anterior" e "parcelamento de faturas"
    podem **duplicar** compras de faturas anteriores, se essas compras também estiverem
    lançadas. Conferir com os PDFs.

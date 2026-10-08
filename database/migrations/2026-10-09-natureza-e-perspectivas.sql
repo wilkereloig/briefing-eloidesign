@@ -35,6 +35,15 @@ update public.eloi_categorias set natureza = v.natureza, natureza_definida_por =
  where eloi_categorias.nome = v.nome and eloi_categorias.tipo::text = v.tipo
    and eloi_categorias.natureza_definida_por is null;
 
+-- Confirmadas pelo dono em 2026-10-09: gasto/ganho do dia a dia. "Rateio da
+-- casa" = ajuda nas despesas da casa (operacional). "Outros" e "Outras
+-- entradas" NÃO entram aqui: misturam naturezas e são revisadas lançamento a
+-- lançamento.
+update public.eloi_categorias set natureza = 'operacional', natureza_definida_por = 'dono'
+ where nome in ('Alimentação', 'Moradia', 'Saúde', 'Transporte', 'Lazer', 'Assinaturas', 'Viagens',
+                'Cuidados pessoais', 'Compras', 'Projetos', 'Rateio da casa')
+   and natureza_definida_por is null;
+
 -- Categorias que o dono ainda não confirmou, com uso — fila de revisão.
 create or replace view public.eloi_revisao_natureza with (security_invoker = true) as
 select c.id, c.nome, c.contexto, c.tipo, c.natureza, c.natureza_definida_por,
