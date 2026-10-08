@@ -613,21 +613,49 @@ export function patrimonioLiquido(contas: Conta[], transacoes: Transacao[], cont
 // ── empréstimos ──────────────────────────────────────────────────────────────
 
 export interface ResumoEmprestimo {
-  total_cents: number; juros_cents: number | null; pago_cents: number; falta_cents: number
+  total_cents: number; juros_cents: number | null; pago_cents: number
+  /** Soma das parcelas em aberto (valor nominal). NÃO é o saldo devedor: tem os juros futuros dentro. */
+  falta_cents: number
   parcelas_pagas: number; proxima: Transacao | null; quitacao: string; progresso: number
+  /** Taxa efetiva ao mês (0,0407 = 4,07%), pelo valor recebido e as parcelas. Nulo sem valor recebido. */
+  taxa_mensal: number | null
+  /** Estimativa para quitar hoje: parcelas futuras trazidas a valor presente pela taxa do contrato
+   *  (o banco é obrigado a abater os juros futuros); atrasadas entram cheias, sem multa. */
+  quitar_hoje_cents: number | null
+}
+
+/** Taxa mensal que iguala o valor recebido às `n` parcelas iguais (tabela Price). Bisseção:
+ *  sem dependência, estável para qualquer taxa entre 0 e 100% ao mês. Nulo se não há juros a achar. */
+export function taxaMensalEmprestimo(recebido_cents: number, parcela_cents: number, n: number): number | null {
+  if (recebido_cents <= 0 || parcela_cents <= 0 || n < 1 || parcela_cents * n <= recebido_cents) return null
+  const vp = (i: number) => parcela_cents * (1 - (1 + i) ** -n) / i
+  let lo = 1e-9, hi = 1
+  for (let k = 0; k < 200; k++) {
+    const meio = (lo + hi) / 2
+    if (vp(meio) > recebido_cents) lo = meio; else hi = meio
+  }
+  return (lo + hi) / 2
 }
 
 /** Situação de um empréstimo. As parcelas pagas antes de entrar no sistema não
  *  têm transação: contam pelo valor da parcela. `falta_cents` é o saldo devedor
  *  (o que entra em `patrimonioLiquido`); juros só com valor recebido informado. */
-export function resumoEmprestimo(e: Emprestimo, transacoes: Transacao[]): ResumoEmprestimo {
+export function resumoEmprestimo(e: Emprestimo, transacoes: Transacao[], hoje?: string): ResumoEmprestimo {
   const parcelas = transacoes.filter((t) => t.emprestimo_id === e.id && !estaCancelada(t))
   const total = e.valor_parcela_cents * e.parcelas_total
   const quitadas = parcelas.filter((t) => saldoAberto(t) === 0).length
   const abertas = parcelas.filter((t) => saldoAberto(t) > 0)
     .sort((a, b) => (a.data_vencimento ?? '').localeCompare(b.data_vencimento ?? ''))
   const pagas = e.parcelas_pagas_antes + quitadas
+  const taxa = taxaMensalEmprestimo(e.valor_recebido_cents, e.valor_parcela_cents, e.parcelas_total)
+  const quitarHoje = taxa == null || !hoje ? null : Math.round(abertas.reduce((s, t) => {
+    const meses = t.data_vencimento && t.data_vencimento > hoje
+      ? (Date.parse(t.data_vencimento) - Date.parse(hoje)) / (30 * 86_400_000) : 0
+    return s + saldoAberto(t) / (1 + taxa) ** meses
+  }, 0))
   return {
+    taxa_mensal: taxa,
+    quitar_hoje_cents: quitarHoje,
     total_cents: total,
     juros_cents: e.valor_recebido_cents > 0 ? total - e.valor_recebido_cents : null,
     pago_cents: e.parcelas_pagas_antes * e.valor_parcela_cents + parcelas.reduce((s, t) => s + valorLiquidado(t), 0),

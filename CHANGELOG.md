@@ -2,6 +2,15 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Empréstimos com custo real; importação OFX (branch, não publicada)
+
+- **Empréstimos:** cada cartão mostra a taxa efetiva ao mês (quando o valor recebido
+  foi informado) e quanto custa quitar hoje, com a economia de juros futuros. "Falta"
+  passa a se chamar "Parcelas em aberto" — soma de parcelas não é saldo devedor. Lista
+  ordenada do juro mais caro para o mais barato.
+- **Importar extrato aceita OFX:** cada lançamento usa o código do banco (FITID) como
+  chave — dois lançamentos iguais no mesmo dia nunca colidem e reimportar não duplica.
+
 ## 2026-10-09 — Dinheiro › Análise de gastos (branch `evolucao/financeiro-integrado`, não publicada)
 
 - **Nova tela Análise de gastos** (`/admin/dinheiro/gastos`, item na barra de Dinheiro):

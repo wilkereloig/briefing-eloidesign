@@ -1,4 +1,4 @@
-// Importação de extrato CSV: ler, adivinhar colunas, interpretar, e apontar o
+// Importação de extrato CSV ou OFX: ler, adivinhar colunas, interpretar, e apontar o
 // que provavelmente já existe. Nada aqui grava — a tela mostra o resultado e
 // só depois de confirmar a edge insere (transacoes.importar).
 //
@@ -57,7 +57,40 @@ const valida = (a: string, m: string, d: string) =>
  *  de valor da tela (`lib/dinheiro.ts`): duas regras davam dois números. */
 export const lerValor = lerCents
 
-export interface Mapa { data: number; descricao: number; valor: number }
+export interface Mapa {
+  data: number; descricao: number; valor: number
+  /** Coluna do identificador do banco (FITID do OFX). Com ele, a chave de
+   *  importação é o próprio id: duas compras iguais no mesmo dia não colidem e
+   *  reimportar nunca duplica. */
+  id?: number
+}
+
+/**
+ * OFX (1.x SGML e 2.x XML): cada <STMTTRN> vira uma linha da mesma Tabela do
+ * CSV — Data, Descrição, Valor, FITID — para seguir o mesmo fluxo de prévia.
+ * Tag sem fechamento é normal no OFX 1.x: o valor vai até o próximo '<'.
+ */
+export function lerOfx(texto: string): Tabela {
+  const tag = (bloco: string, nome: string) => bloco.match(new RegExp(`<${nome}>([^<\r\n]*)`, 'i'))?.[1].trim() ?? ''
+  const linhas: string[][] = []
+  for (const m of texto.matchAll(/<STMTTRN>([\s\S]*?)(?=<\/STMTTRN>|<STMTTRN>|<\/BANKTRANLIST>)/gi)) {
+    const b = m[1]
+    const d = tag(b, 'DTPOSTED')
+    const data = /^\d{8}/.test(d) ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : ''
+    const memo = tag(b, 'MEMO'), nome = tag(b, 'NAME')
+    const descricao = memo && nome && !memo.includes(nome) ? `${nome} — ${memo}` : memo || nome
+    // Valor do OFX usa ponto decimal; a Tabela fala o formato da tela (vírgula).
+    const valor = tag(b, 'TRNAMT').replace(',', '.')
+    const num = Number(valor)
+    linhas.push([data, descricao, Number.isFinite(num) && valor ? num.toFixed(2).replace('.', ',') : '', tag(b, 'FITID')])
+  }
+  return { cabecalho: ['Data', 'Descrição', 'Valor', 'FITID'], linhas }
+}
+
+/** Extrato em texto → Tabela, pelo conteúdo (OFX tem <OFX> ou <STMTTRN>) ou extensão. */
+export function lerExtrato(texto: string, nomeArquivo = ''): Tabela {
+  return /<OFX>|<STMTTRN>/i.test(texto) || /\.ofx$/i.test(nomeArquivo) ? lerOfx(texto) : lerCsv(texto)
+}
 
 /** Adivinha as colunas pela maioria das células. Data e valor pela forma;
  *  descrição é a coluna de texto mais longa que sobrou. */
@@ -74,7 +107,8 @@ export function detectarColunas(t: Tabela): Mapa {
   const tamanho = Array.from({ length: n }, (_, i) =>
     amostra.reduce((s, l) => s + (l[i]?.length ?? 0), 0))
   const descricao = melhor(tamanho, [data, valor])
-  return { data, descricao, valor }
+  const id = t.cabecalho.findIndex((c) => c.toUpperCase() === 'FITID')
+  return id >= 0 ? { data, descricao, valor, id } : { data, descricao, valor }
 }
 
 export interface LinhaLida {
@@ -109,7 +143,10 @@ export function interpretar(t: Tabela, mapa: Mapa, inverterSinal = false): Linha
     const descricao = (l[mapa.descricao] ?? '').trim() || 'Sem descrição'
     const problema = !data ? 'data inválida' : valor == null ? 'valor inválido' : valor === 0 ? 'valor zero' : undefined
     let chave = ''
-    if (data && valor) {
+    const idBanco = mapa.id != null ? (l[mapa.id] ?? '').trim() : ''
+    if (data && valor && idBanco) {
+      chave = `fitid|${idBanco}`
+    } else if (data && valor) {
       const base = chaveImportacao(data, valor, descricao)
       const n = (vezes.get(base) ?? 0) + 1
       vezes.set(base, n)

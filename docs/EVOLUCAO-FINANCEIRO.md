@@ -15,9 +15,9 @@ Financeiro separado está vazio.
 | 1. Inventário e proteção | ✅ (com limitação) | `INVENTARIO-2026-10.md`; schema de homologação idêntico ao de produção; baseline privado; **backup de dados não feito** — sem credencial (ver inventário §7) |
 | 2. Confiabilidade | ✅ código + testes · ⏳ publicação | RPCs atômicas, idempotência, unicidade de recorrência, completude, saldo no servidor, travas de conta, guarda de ambiente |
 | 3. Obrigações × liquidações × resultados | ✅ núcleo · ⏳ telas | `eloi_liquidacoes`, natureza das categorias, 3 perspectivas no banco, `resultadoPorCompetencia` no domínio, relatório de diferenças |
-| 4. Revisão de dados e consolidação | ⏳ | mapa feito (inventário §6): não há dado a migrar do app Financeiro; fila de exceções abaixo |
-| 5. Contas, cartões, dívidas, conciliação | ⏳ parcial | saldo inicial com data e arquivamento preservando saldo; bloqueios de fatura; resto pendente |
-| 6. Gestão integrada | ⏳ | — |
+| 4. Revisão de dados e consolidação | ✅ no essencial | não há dado a migrar do app Financeiro (desligado); "Outros"/"Outras entradas" revisados com decisão delegada pelo dono (24 lançamentos, reversível); natureza das categorias confirmada |
+| 5. Contas, cartões, dívidas, conciliação | ⏳ parcial | saldo inicial com data e arquivamento preservando saldo; bloqueios de fatura; **empréstimo: taxa efetiva ao mês e valor para quitar hoje** (parcelas em aberto ≠ saldo devedor), cartões ordenados do juro mais caro; **importação OFX com FITID** (reimportar nunca duplica). Pendente: ciclos de fatura identificáveis, estorno de pagamento de fatura, lote/reversão de importação |
+| 6. Gestão integrada | ⏳ parcial | **Dinheiro › Análise de gastos** (pedido do dono): saídas × renda, pagando o passado, comprometido por mês, categorias mês a mês, onde mais se gasta |
 | 7. Novo visual | ⏳ | — |
 | 8. Acesso e automação | ⏳ parcial | rotina diária (pg_cron), limpeza no logout, auditoria |
 | 9. Site e portal | ⏳ | política de INSERT anônimo em `briefings` documentada |

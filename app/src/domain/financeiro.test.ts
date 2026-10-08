@@ -6,7 +6,7 @@ import {
   agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
   totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
   faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, saidasDaCobertura, patrimonioLiquido,
-  chequeEspecialUsado, filtrarLancamentos, resumoEmprestimo, pesaNosTotais, resultadoPorCompetencia, resultadoLiquidadoPorCompetencia,
+  chequeEspecialUsado, filtrarLancamentos, resumoEmprestimo, pesaNosTotais, taxaMensalEmprestimo, resultadoPorCompetencia, resultadoLiquidadoPorCompetencia,
 } from './financeiro'
 import type { Categoria, Conta, Emprestimo, Meta, Transacao } from '../lib/tipos'
 
@@ -752,5 +752,28 @@ describe('resultado por competência × critério legado (2026-10-09)', () => {
     const r = resultadoPorCompetencia([tx({ id: 'z', tipo: 'saida', categoria_id: 'nova', valor_cents: 5, data_competencia: '2026-10-01' })],
       [{ ...cat('nova', undefined) }], undefined, '2026-10')
     expect(r.despesa_cents).toBe(5)
+  })
+})
+
+describe('custo real do empréstimo (2026-10-09)', () => {
+  it('taxa mensal pela tabela Price', () => {
+    // 10.000 em 12 × 1.000: ~2,92% a.m.
+    expect(taxaMensalEmprestimo(1_000_000, 100_000, 12)!).toBeCloseTo(0.0292, 3)
+    expect(taxaMensalEmprestimo(0, 100_000, 12)).toBeNull()
+    expect(taxaMensalEmprestimo(1_200_000, 100_000, 12)).toBeNull() // sem juros
+  })
+  it('quitar hoje desconta os juros das parcelas futuras; atrasada entra cheia', () => {
+    const e = { id: 'e', nome: 'E', instituicao: null, contexto: 'empresa', conta_id: null, categoria_id: null,
+      valor_recebido_cents: 1_000_000, parcelas_total: 12, valor_parcela_cents: 100_000, primeiro_vencimento: '2026-01-10',
+      parcelas_pagas_antes: 10, ativo: true, observacoes: null, created_at: '2026-01-01' } as Emprestimo
+    const ps = [
+      tx({ id: 'atr', tipo: 'saida', emprestimo_id: 'e', status: 'vencido', valor_cents: 100_000, data_vencimento: '2026-10-01' }),
+      tx({ id: 'fut', tipo: 'saida', emprestimo_id: 'e', status: 'pendente', valor_cents: 100_000, data_vencimento: '2026-11-08' }),
+    ]
+    const r = resumoEmprestimo(e, ps, '2026-10-09')
+    expect(r.falta_cents).toBe(200_000)
+    expect(r.quitar_hoje_cents!).toBeLessThan(200_000)
+    expect(r.quitar_hoje_cents!).toBeGreaterThan(197_000) // ~1 mês de desconto a ~2,9%
+    expect(resumoEmprestimo(e, ps).quitar_hoje_cents).toBeNull() // sem "hoje", não estima
   })
 })

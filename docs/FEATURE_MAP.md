@@ -243,3 +243,9 @@ estática de admin que sobrou (ver `ROUTE_MAP.md`).
 | `assets/eloi-admin/periodo.js` | 2026-08-05 | Perdeu o único consumidor junto com o hub |
 | edge `eloi-financeiro` + tabelas `eloi_caixas`, `eloi_movimentos_financeiros` | 2026-10-08 | Removidos (0 linhas). Ver `CLEANUP_REPORT.md` |
 | `/gestao/`, `/painel/`, `/painel-briefings/`, `/painel-ecommerce/`, `/painel-orcamentos/`, `/orcamento-inteligente/` | 2026-10-08 | Pastas apagadas; redirect 301 para `/admin/*` no `vercel.json` |
+
+### Importação de extrato (2026-10-09)
+- CSV ou **OFX** (`lerExtrato` → `lerOfx`/`lerCsv`, `domain/importacao.ts`, testado). OFX: chave `fitid|<FITID>`; CSV: `data|valor|descrição` com `#n`.
+
+### Empréstimos — custo real (2026-10-09)
+- `taxaMensalEmprestimo` (Price, bisseção) e `quitar_hoje_cents` em `resumoEmprestimo(e, transacoes, hoje)`.
