@@ -5,7 +5,7 @@ import {
   agrupar, consumoOrcamento, saldoAberto, valorLiquidado, competenciaDe,
   agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
   totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
-  faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, patrimonioLiquido,
+  faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, saidasDaCobertura, patrimonioLiquido,
   chequeEspecialUsado,
 } from './financeiro'
 import type { Conta, Meta, Transacao } from '../lib/tipos'
@@ -232,6 +232,15 @@ describe('cartão de crédito', () => {
     expect(limiteDisponivel(cartao, v)).toBe(1000_00 - 550_00)
     // quitada a de outubro, a de novembro vira a fatura
     expect(faturaAberta(cartao, v.slice(1))).toBe(250_00)
+  })
+
+  it('estorno que zera outubro não esconde a fatura de novembro', () => {
+    const v = [
+      tx({ id: 'out', tipo: 'saida', conta_id: 'card', valor_cents: 100_00, status: 'pendente', data_vencimento: '2026-10-09' }),
+      tx({ id: 'est', tipo: 'entrada', conta_id: 'card', valor_cents: 150_00, status: 'pendente', data_vencimento: '2026-10-09' }),
+      tx({ id: 'nov', tipo: 'saida', conta_id: 'card', valor_cents: 250_00, status: 'pendente', data_vencimento: '2026-11-09' }),
+    ]
+    expect(faturaAberta(cartao, v)).toBe(250_00)
   })
 
   it('fatura aberta concorda com faturasDoCartao quando a linha só tem data da compra', () => {
@@ -566,6 +575,15 @@ describe('cobertura e patrimônio', () => {
     expect(cobertura([cc, visa], ts, '2026-10-08')).toEqual({
       a_pagar_cents: 510_00, disponivel_cents: 200_00, falta_cents: 310_00, itens: 3,
     })
+  })
+  it('saidasDaCobertura lista só o que a cobertura soma: saída aberta em conta ativa não-cartão', () => {
+    const inativa = conta({ id: 'x', tipo: 'corrente', ativa: false })
+    const extra = [
+      tx({ id: 'inativa', tipo: 'saida', conta_id: 'x', valor_cents: 9_00, status: 'pendente', data_vencimento: '2026-10-10' }),
+      tx({ id: 'sem-conta', tipo: 'saida', valor_cents: 9_00, status: 'pendente', data_vencimento: '2026-10-10' }),
+    ]
+    expect(saidasDaCobertura([cc, visa, inativa], [...ts, ...extra], '2026-10-08').map((t) => t.id))
+      .toEqual(['atrasada', 'semana'])
   })
   it('patrimônio = contas − dívida dos cartões − empréstimos', () => {
     expect(patrimonioLiquido([cc, visa], ts, undefined, 1000_00)).toEqual({

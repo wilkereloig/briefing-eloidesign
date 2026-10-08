@@ -47,7 +47,7 @@ export default function ContaDetalhe() {
     : []), [conta, transacoes, mes])
   const pag = usePaginacao(extrato, 'conta-extrato', 50)
   const agendado = useMemo(() => transacoes
-    .filter((t) => t.conta_id === id && estaEmAberto(t)).sort(porVencimento), [transacoes, id])
+    .filter((t) => (t.conta_id === id || t.conta_destino_id === id) && estaEmAberto(t)).sort(porVencimento), [transacoes, id])
 
   // Cartão tem página própria; link velho ou digitado cai no lugar certo.
   if (conta?.tipo === 'cartao_credito') return <Navigate to={`/admin/dinheiro/cartoes/${conta.id}`} replace />
@@ -145,6 +145,7 @@ export default function ContaDetalhe() {
                 <ul className="lista">
                   {agendado.map((t) => (
                     <LinhaMov key={t.id} t={t} nomes={nomes} hoje={hoje} modoCobranca
+                      entrando={t.tipo === 'transferencia' && t.conta_destino_id === id}
                       aoEditar={() => setFolha({ tipo: 'editar', t })}
                       aoCancelar={() => void alternarCancelamento(t, apos, erro)}
                       aoLiquidar={() => setFolha({ tipo: 'liquidar', t })}

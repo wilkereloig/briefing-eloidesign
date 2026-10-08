@@ -5,16 +5,16 @@ import { Esqueleto, Vazio } from '../../../../ui/componentes'
 import { Cabecalho, SeletorLente } from '../../../../ui/painel'
 
 // Links antigos `/admin/dinheiro?aba=<x>` (favoritos, histórico) → sub-página.
-const ABA_ANTIGA: Record<string, string> = {
-  movimentos: 'lancamentos', receber: 'agenda', pagar: 'agenda',
-  contas: 'contas', recorrencias: 'planejamento',
-}
+const ABA_ANTIGA = new Map([
+  ['movimentos', 'lancamentos'], ['receber', 'agenda'], ['pagar', 'agenda'],
+  ['contas', 'contas'], ['recorrencias', 'planejamento'],
+])
 
 /** Moldura da área Dinheiro: título, lente e a barra das sub-páginas. A lente
  *  mora no store (useFinancas), então vale em todas as sub-páginas. */
 export default function DinheiroLayout() {
   const [params] = useSearchParams()
-  const antiga = ABA_ANTIGA[params.get('aba') ?? '']
+  const antiga = ABA_ANTIGA.get(params.get('aba') ?? '')
   if (antiga) return <Navigate to={`/admin/dinheiro/${antiga}`} replace />
 
   return (

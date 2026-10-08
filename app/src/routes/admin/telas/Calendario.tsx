@@ -175,7 +175,7 @@ function acao(i: ItemAgenda, h: {
       ? <Botao compacto onClick={() => h.liquidar((i.ref as { transacao: Transacao }).transacao)}>
         {i.tipo === 'recebimento' ? 'Receber' : 'Pagar'}
       </Botao>
-      : <Link className="btn btn-secundario btn-compacto" to="/admin/dinheiro">Ver</Link>
+      : <Link className="btn btn-secundario btn-compacto" to="/admin/dinheiro/agenda">Ver</Link>
   }
   if ('tarefa' in i.ref) {
     return (
@@ -188,7 +188,7 @@ function acao(i: ItemAgenda, h: {
     )
   }
   if ('servico' in i.ref) return <Link className="btn btn-secundario btn-compacto" to="/admin/projetos">Ver projeto</Link>
-  return <Link className="btn btn-secundario btn-compacto" to="/admin/dinheiro">Ver recorrência</Link>
+  return <Link className="btn btn-secundario btn-compacto" to="/admin/dinheiro/planejamento">Ver recorrência</Link>
 }
 
 /** Grade do mês com os vazios do começo da semana. `null` = célula fora do mês. */

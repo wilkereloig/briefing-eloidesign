@@ -53,11 +53,12 @@ function CartaoPagina({ id }: { id: string | undefined }) {
   const fechar = () => setFolha(null)
   const apos = async (texto: string, tipo?: 'ok' | 'erro') => { setAviso({ texto, tipo }); await recarregar() }
   // Mesma chamada de ContaDetalhe; nome/contexto vão porque a edge exige os dois.
-  const reativar = async () => {
+  // Arquivar não apaga: cartão com compras não pode ser removido (FK restrict).
+  const alternarAtivo = async () => {
     if (!cartao) return
     try {
-      await financas.salvarConta({ id: cartao.id, nome: cartao.nome, contexto: cartao.contexto, ativa: true })
-      await apos('Cartão reativado')
+      await financas.salvarConta({ id: cartao.id, nome: cartao.nome, contexto: cartao.contexto, ativa: !cartao.ativa })
+      await apos(cartao.ativa ? 'Cartão arquivado' : 'Cartão reativado')
     } catch (e) { await apos((e as Error).message, 'erro') }
   }
 
@@ -89,7 +90,7 @@ function CartaoPagina({ id }: { id: string | undefined }) {
             {cartao.instituicao && <p className="t-legenda">{cartao.instituicao}</p>}
             <div className="linha" style={{ marginTop: 'var(--espaco-04)' }}>
               <Botao onClick={() => setFolha('editar')}>Editar cartão</Botao>
-              {!cartao.ativa && <Botao onClick={() => void reativar()}>Reativar</Botao>}
+              <Botao onClick={() => void alternarAtivo()}>{cartao.ativa ? 'Arquivar' : 'Reativar'}</Botao>
             </div>
           </Painel>
 

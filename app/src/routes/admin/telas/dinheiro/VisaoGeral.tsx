@@ -4,7 +4,7 @@ import { rotuloMes, useFinancas } from '../../../../lib/financas-store'
 import { diasEntre, hojeISO } from '../../../../domain/datas'
 import {
   cobertura, faturaAberta, faturasDoCartao, indiceFaturaAtual, patrimonioLiquido,
-  proximosVencimentos, resultado, saldoAberto, saldoConta, vencidas,
+  resultado, saidasDaCobertura, saldoAberto, saldoConta,
   type Fatura, type SituacaoFatura,
 } from '../../../../domain/financeiro'
 import type { Conta, StatusMov, Transacao } from '../../../../lib/tipos'
@@ -38,14 +38,10 @@ export default function VisaoGeral() {
   const faturas = cartoes.reduce((s, c) => s + faturaAberta(c, transacoes), 0)
 
   const itens = useMemo<Item[]>(() => {
-    const idsCartao = new Set(contas.filter((c) => c.tipo === 'cartao_credito').map((c) => c.id))
-    const soltas = [
-      ...vencidas(transacoes, hoje, contexto).filter((t) => t.tipo !== 'transferencia'),
-      ...proximosVencimentos(transacoes, hoje, DIAS).filter((t) => !contexto || t.contexto === contexto),
-    ].filter((t) => !t.conta_id || !idsCartao.has(t.conta_id))
+    const soltas = saidasDaCobertura(contas, transacoes, hoje, DIAS, contexto)
     const movs: Item[] = soltas.map((t) => ({
       tipo: 'mov', id: t.id, titulo: t.descricao, data: t.data_vencimento!, status: t.status,
-      cents: t.tipo === 'saida' ? -saldoAberto(t) : saldoAberto(t),
+      cents: -saldoAberto(t),
     }))
     const fats: Item[] = contas
       .filter((c) => c.ativa && c.tipo === 'cartao_credito' && (!contexto || c.contexto === contexto))
@@ -96,7 +92,7 @@ export default function VisaoGeral() {
                 : <ul className="lista" style={{ marginTop: 'var(--espaco-03)' }}>
                   {itens.map((i) => (
                     <li key={i.id} className="lista-item">
-                      <Icone nome={i.tipo === 'fatura' ? 'dinheiro' : i.cents >= 0 ? 'pagamento' : 'caixa'} tamanho={18} />
+                      <Icone nome={i.tipo === 'fatura' ? 'dinheiro' : 'caixa'} tamanho={18} />
                       <span className="celula">
                         <span className="t-ui espremer">{i.titulo}</span>
                         <span className="t-legenda">{i.data < hoje ? 'venceu' : 'vence'} {dataCurta(i.data)}</span>

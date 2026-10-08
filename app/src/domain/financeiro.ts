@@ -235,8 +235,15 @@ export function faturaAberta(cartao: Conta, transacoes: Transacao[]): number {
     t, venc: t.data_vencimento
       ?? (t.data_competencia ? cicloFatura(cartao, t.data_competencia)?.vencimento : undefined) ?? null,
   }))
-  const proxima = abertas.reduce<string | null>((m, x) => (x.venc && (!m || x.venc < m) ? x.venc : m), null)
-  return somaComEstorno(abertas.filter((x) => !proxima || !x.venc || x.venc <= proxima).map((x) => x.t))
+  // Primeira fatura (por vencimento) que de fato deve: estorno que zera uma
+  // fatura não faz a tela sugerir R$ 0 enquanto a seguinte tem saldo.
+  const semVenc = abertas.filter((x) => !x.venc).map((x) => x.t)
+  const vencs = [...new Set(abertas.map((x) => x.venc).filter((v): v is string => !!v))].sort()
+  for (const v of vencs) {
+    const soma = somaComEstorno([...semVenc, ...abertas.filter((x) => x.venc === v).map((x) => x.t)])
+    if (soma > 0) return soma
+  }
+  return somaComEstorno(semVenc)
 }
 
 /** Tudo o que o cartão ainda deve, em qualquer fatura. É o que ocupa limite. */
@@ -491,6 +498,17 @@ export interface Cobertura { a_pagar_cents: number; disponivel_cents: number; fa
 const somaDias = (iso: string, dias: number) =>
   new Date(Date.parse(iso) + dias * 86_400_000).toISOString().slice(0, 10)
 
+/** Saídas soltas que `cobertura` conta: em aberto, vencendo até `dias` (atrasadas
+ *  incluídas), em conta ativa que não é cartão. A lista da Visão geral usa a
+ *  mesma função, senão a tela lista uma coisa e soma outra. */
+export function saidasDaCobertura(contas: Conta[], transacoes: Transacao[], hoje: string, dias = 7, contexto?: Contexto): Transacao[] {
+  const ate = somaDias(hoje, dias)
+  const ids = new Set(contas.filter((c) => c.ativa && c.tipo !== 'cartao_credito' && (!contexto || c.contexto === contexto))
+    .map((c) => c.id))
+  return transacoes.filter((t) => t.tipo === 'saida' && !!t.conta_id && ids.has(t.conta_id) && estaEmAberto(t) &&
+    !!t.data_vencimento && t.data_vencimento <= ate)
+}
+
 /**
  * Dá para pagar o que vence nos próximos `dias`? A pagar = saídas em aberto
  * das contas (atrasadas incluídas) + faturas de cartão com saldo que vencem
@@ -500,12 +518,9 @@ const somaDias = (iso: string, dias: number) =>
 export function cobertura(contas: Conta[], transacoes: Transacao[], hoje: string, dias = 7, contexto?: Contexto): Cobertura {
   const ate = somaDias(hoje, dias)
   const ativas = contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto))
-  const ids = new Set(ativas.filter((c) => c.tipo !== 'cartao_credito').map((c) => c.id))
   let aPagar = 0
   let itens = 0
-  for (const t of transacoes) {
-    if (t.tipo !== 'saida' || !t.conta_id || !ids.has(t.conta_id) || !estaEmAberto(t)) continue
-    if (!t.data_vencimento || t.data_vencimento > ate) continue
+  for (const t of saidasDaCobertura(contas, transacoes, hoje, dias, contexto)) {
     aPagar += saldoAberto(t); itens++
   }
   for (const cartao of ativas.filter((c) => c.tipo === 'cartao_credito')) {

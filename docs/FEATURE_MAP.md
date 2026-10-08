@@ -26,14 +26,15 @@ Atualizado: 2026-08-07.
 
 ### Dinheiro
 - **Objetivo:** lançar, liquidar, parcelar, estornar e acompanhar todo movimento.
-- **Estado:** Concluído
-- **Telas:** `telas/Dinheiro.tsx` (5 abas), `FolhaTransacao.tsx`, `folhas.tsx`
+- **Estado:** Em andamento — fase 1 de 4 entregue (estrutura, visão geral, contas, cartões); lançamentos/agenda, empréstimos e planejamento seguem o plano
+- **Telas:** `telas/dinheiro/` (Layout, VisaoGeral, Contas, ContaDetalhe, Cartoes, CartaoDetalhe — fase 1), `telas/Dinheiro.tsx` (tela antiga, ainda atrás de `/lancamentos`, `/agenda` e `/planejamento`), `FolhaTransacao.tsx`, `folhas.tsx`
 - **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar/pagar_fatura`, `conferencias.registrar`, `contas.*`, `recorrencias.*`
 - **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_conferencias`
 - **Permissão:** admin
 - **Fluxos:** receita · despesa · transferência · parcelamento · pagamento parcial (com conta e observação) · reagendar · estorno · pagar fatura de cartão · recorrência (pausar/retomar/encerrar)
 - **Fila de cobrança:** A receber / A pagar agrupadas por faixa de prazo (`agruparPorPrazo`) com recortes Vencidos · Sem NF · Recorrentes · Parciais
-- **Cartão:** fatura aberta, limite disponível, ciclo (`cicloFatura`), parcelado em aberto (`parceladoAberto`)
+- **Visão geral e contas:** `patrimonioLiquido`, `cobertura`/`saidasDaCobertura` (próximos 7 dias), `extratoDaConta` (saldo após cada linha); arquivar conta/cartão em vez de apagar
+- **Cartão:** `faturasDoCartao` (uma fatura por mês) · fatura aberta, limite disponível, ciclo (`cicloFatura`), parcelado em aberto (`parceladoAberto`)
 - **Onboarding:** `routes/admin/Onboarding.tsx` (Hoje e Dinheiro) enquanto faltar conta ou lançamento — `domain/onboarding.ts`
 - **Conferência e importação:** `routes/admin/FolhasExtrato.tsx` — `FolhaConferencia` (sistema × extrato, ajuste identificado) e `FolhaImportar` (CSV, `domain/importacao.ts`)
 - **Pendência:** importação XLSX (exige biblioteca; CSV cobre)

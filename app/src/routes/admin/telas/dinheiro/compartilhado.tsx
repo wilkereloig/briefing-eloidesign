@@ -81,7 +81,7 @@ export function FolhasMov({ folha, aoFechar, aoSalvar }: {
 /** Uma árvore só para toque e desktop: as colunas extras entram por CSS
  *  (.col-desktop) em vez de existir uma tabela e uma lista em paralelo. */
 export function LinhaMov({
-  t, nomes, hoje, modoCobranca, servico, aoEditar, aoCancelar, aoLiquidar, aoReagendar, aoRecorrencia, aoExcluir,
+  t, nomes, hoje, modoCobranca, servico, entrando, aoEditar, aoCancelar, aoLiquidar, aoReagendar, aoRecorrencia, aoExcluir,
 }: {
   t: Transacao
   nomes: ReturnType<typeof useNomes>
@@ -91,6 +91,8 @@ export function LinhaMov({
   /** Abas A receber / A pagar: o número que importa é quanto FALTA, e o atraso
    *  aparece. No extrato de movimentações vale o valor do lançamento. */
   modoCobranca?: boolean
+  /** Transferência que chega NESTA conta (página da conta destino): mostra como entrada. */
+  entrando?: boolean
   aoEditar: () => void
   aoCancelar: () => void
   aoLiquidar: () => void
@@ -108,7 +110,9 @@ export function LinhaMov({
   const parcial = !modoCobranca && t.recebido_cents > 0 && t.recebido_cents < t.valor_cents
   // Na fila de cobrança a linha responde "de quem, por quê e tem nota?" sem
   // abrir nada. Só entrada com serviço tem NF a mostrar.
-  const apoio = modoCobranca
+  const apoio = entrando
+    ? ['Transferência recebida', conta].filter(Boolean).join(' · ')
+    : modoCobranca
     ? [
       cliente,
       servico?.sub_cliente,
@@ -137,7 +141,7 @@ export function LinhaMov({
         </span>
       </span>
       {t.parcela_de && <span className="col-desktop t-legenda">{t.parcela_num}/{t.parcela_de}</span>}
-      <Dinheiro cents={t.tipo === 'saida' ? -valor : valor} className="t-valor" />
+      <Dinheiro cents={t.tipo === 'saida' && !entrando ? -valor : valor} className="t-valor" />
       <ChipMovimento status={t.status} />
       {estaEmAberto(t) && t.tipo !== 'transferencia' && (
         <Botao variante="icone" onClick={aoLiquidar}

@@ -148,7 +148,7 @@ export function buscar(fonte: FonteBusca, termo: string): Resultado[] {
     id: t.id,
     titulo: t.descricao,
     detalhe: [fonte.formatarValor(t.valor_cents), t.data_vencimento].filter(Boolean).join(' · '),
-    destino: '/admin/dinheiro',
+    destino: '/admin/dinheiro/agenda',
   })))
 
   return achados.sort((a, b) => b.peso - a.peso)

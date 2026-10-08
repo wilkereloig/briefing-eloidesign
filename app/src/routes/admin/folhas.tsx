@@ -73,7 +73,7 @@ export function FolhaConta({ inicial, contextoInicial, tipoInicial, aoFechar, ao
         id: inicial?.id, nome: nome.trim(), tipo, contexto,
         instituicao: instituicao.trim() || null,
         saldo_inicial_cents: centsDeBRL(saldoInicial),
-        limite_cents: temLimite ? centsDeBRL(limite) : null,
+        limite_cents: temLimite && limite.trim() ? centsDeBRL(limite) : null, // vazio = sem limite, não 0
         dia_fechamento: ehCartao ? Number(fechamento) : null,
         dia_vencimento: ehCartao ? Number(vencimento) : null,
         cor,

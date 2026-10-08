@@ -2,6 +2,26 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-08 — Dinheiro vira área com sub-páginas (fase 1 de 4)
+
+- `/admin/dinheiro` agora é uma área: **Visão geral**, **Contas**, **Cartões**,
+  Lançamentos, Agenda, Empréstimos (em breve) e Planejamento, com barra própria.
+  Links antigos `?aba=…` redirecionam.
+- **Visão geral:** patrimônio líquido, disponível, faturas a pagar, resultado do
+  mês e "Próximos 7 dias" com aviso de quanto falta para cobrir.
+- **Página da conta:** extrato do mês com saldo após cada linha, cheque
+  especial, conferência de saldo, agendado (inclui transferências que chegam) e
+  arquivar/reativar.
+- **Página do cartão:** fatura por mês (← →), compras por categoria, limite,
+  parcelado, pagar fatura e arquivar/reativar.
+- Lançamentos, Agenda e Planejamento ainda abrem a tela antiga (fases 2 e 4).
+- Alertas e atalhos (Precisa de você, busca, calendário, onboarding) apontam
+  para a sub-página certa.
+- Correções: `faturaAberta` pega a primeira fatura que de fato deve (estorno que
+  zera uma fatura não esconde a seguinte); limite vazio no cadastro de conta
+  grava "sem limite" (antes gravava 0); "Próximos 7 dias" lista só o que a
+  cobertura soma; `?aba=constructor` não redireciona mais para endereço inválido.
+
 ## 2026-10-08 — Avisos de contas a pagar e fatura de cartão
 
 - "Precisa de você" avisa conta a pagar/receber **3 dias antes** de vencer
