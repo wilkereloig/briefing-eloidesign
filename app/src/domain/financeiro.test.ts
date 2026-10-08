@@ -234,13 +234,22 @@ describe('cartão de crédito', () => {
     expect(faturaAberta(cartao, v.slice(1))).toBe(250_00)
   })
 
-  it('estorno que zera outubro não esconde a fatura de novembro', () => {
+  it('estorno é abatido primeiro (como a edge): sobra de outubro reduz novembro', () => {
     const v = [
       tx({ id: 'out', tipo: 'saida', conta_id: 'card', valor_cents: 100_00, status: 'pendente', data_vencimento: '2026-10-09' }),
       tx({ id: 'est', tipo: 'entrada', conta_id: 'card', valor_cents: 150_00, status: 'pendente', data_vencimento: '2026-10-09' }),
       tx({ id: 'nov', tipo: 'saida', conta_id: 'card', valor_cents: 250_00, status: 'pendente', data_vencimento: '2026-11-09' }),
     ]
-    expect(faturaAberta(cartao, v)).toBe(250_00)
+    // edge: disponível 150, quita out (100) e sobram 50 para nov → falta 200
+    expect(faturaAberta(cartao, v)).toBe(200_00)
+  })
+
+  it('estorno de outro mês também abate a primeira fatura em aberto', () => {
+    const v = [
+      tx({ id: 'out', tipo: 'saida', conta_id: 'card', valor_cents: 100_00, status: 'pendente', data_vencimento: '2026-10-09' }),
+      tx({ id: 'est', tipo: 'entrada', conta_id: 'card', valor_cents: 30_00, status: 'pendente', data_vencimento: '2026-12-09' }),
+    ]
+    expect(faturaAberta(cartao, v)).toBe(70_00)
   })
 
   it('fatura aberta concorda com faturasDoCartao quando a linha só tem data da compra', () => {

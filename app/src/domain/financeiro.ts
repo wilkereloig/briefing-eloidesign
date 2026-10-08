@@ -226,24 +226,27 @@ export function agruparPorPrazo(
  * não aparece de novo como despesa — a despesa já foi lançada na compra.
  */
 export function faturaAberta(cartao: Conta, transacoes: Transacao[]): number {
-  // Só a PRÓXIMA fatura: parcela que vence no mês que vem não se paga agora.
-  // Somar tudo sugeria pagar o parcelamento inteiro de uma vez. A edge quita
-  // na mesma ordem (por vencimento), então o valor sugerido fecha certinho.
-  // Mesmo vencimento efetivo de `faturasDoCartao` (compra sem vencimento cai no
-  // ciclo da data da compra); sem nenhum dos dois, entra sempre.
-  const abertas = linhasAbertasDoCartao(cartao, transacoes).map((t) => ({
-    t, venc: t.data_vencimento
-      ?? (t.data_competencia ? cicloFatura(cartao, t.data_competencia)?.vencimento : undefined) ?? null,
-  }))
-  // Primeira fatura (por vencimento) que de fato deve: estorno que zera uma
-  // fatura não faz a tela sugerir R$ 0 enquanto a seguinte tem saldo.
-  const semVenc = abertas.filter((x) => !x.venc).map((x) => x.t)
-  const vencs = [...new Set(abertas.map((x) => x.venc).filter((v): v is string => !!v))].sort()
-  for (const v of vencs) {
-    const soma = somaComEstorno([...semVenc, ...abertas.filter((x) => x.venc === v).map((x) => x.t)])
-    if (soma > 0) return soma
+  // Espelha `planejarPagamentoFatura` (edge): TODOS os estornos em aberto do
+  // cartão entram primeiro no disponível; depois as saídas são quitadas por
+  // vencimento, da mais antiga. Sugerir o valor que a edge de fato consome evita
+  // sobra devolvida ou fatura parcialmente paga. Vencimento efetivo = o mesmo de
+  // `faturasDoCartao` (compra sem vencimento cai no ciclo da data da compra);
+  // sem nenhum dos dois, conta como a mais antiga (entra sempre).
+  const abertas = linhasAbertasDoCartao(cartao, transacoes)
+  const estornos = abertas.filter((t) => t.tipo === 'entrada').reduce((s, t) => s + saldoAberto(t), 0)
+  const porVenc = new Map<string, number>()
+  for (const t of abertas) {
+    if (t.tipo !== 'saida') continue
+    const venc = t.data_vencimento
+      ?? (t.data_competencia ? cicloFatura(cartao, t.data_competencia)?.vencimento : undefined) ?? ''
+    porVenc.set(venc, (porVenc.get(venc) ?? 0) + saldoAberto(t))
   }
-  return somaComEstorno(semVenc)
+  let acumulado = 0
+  for (const venc of [...porVenc.keys()].sort()) {
+    acumulado += porVenc.get(venc)!
+    if (acumulado - estornos > 0) return acumulado - estornos
+  }
+  return 0
 }
 
 /** Tudo o que o cartão ainda deve, em qualquer fatura. É o que ocupa limite. */

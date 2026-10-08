@@ -6,7 +6,7 @@ estar concluída: só conta como **Concluído** se o fluxo completa e o dado per
 Estados usados: `Concluído` · `Funcional com ajustes` · `Em desenvolvimento` ·
 `Planejado` · `Legado` · `Descontinuado`.
 
-Atualizado: 2026-08-07.
+Atualizado: 2026-10-08.
 
 ---
 

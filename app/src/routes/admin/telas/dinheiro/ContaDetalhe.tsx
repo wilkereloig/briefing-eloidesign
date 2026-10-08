@@ -145,7 +145,7 @@ export default function ContaDetalhe() {
                 <ul className="lista">
                   {agendado.map((t) => (
                     <LinhaMov key={t.id} t={t} nomes={nomes} hoje={hoje} modoCobranca
-                      entrando={t.tipo === 'transferencia' && t.conta_destino_id === id}
+                      entrando={t.tipo === 'transferencia' ? t.conta_destino_id === id : undefined}
                       aoEditar={() => setFolha({ tipo: 'editar', t })}
                       aoCancelar={() => void alternarCancelamento(t, apos, erro)}
                       aoLiquidar={() => setFolha({ tipo: 'liquidar', t })}

@@ -91,7 +91,9 @@ export function LinhaMov({
   /** Abas A receber / A pagar: o número que importa é quanto FALTA, e o atraso
    *  aparece. No extrato de movimentações vale o valor do lançamento. */
   modoCobranca?: boolean
-  /** Transferência que chega NESTA conta (página da conta destino): mostra como entrada. */
+  /** Só com conta em contexto (página da conta): true = a transferência chega
+   *  NESTA conta (entrada); false = sai dela (negativo). Sem contexto
+   *  (listas globais) fica `undefined` e a transferência não ganha sinal. */
   entrando?: boolean
   aoEditar: () => void
   aoCancelar: () => void
@@ -110,8 +112,12 @@ export function LinhaMov({
   const parcial = !modoCobranca && t.recebido_cents > 0 && t.recebido_cents < t.valor_cents
   // Na fila de cobrança a linha responde "de quem, por quê e tem nota?" sem
   // abrir nada. Só entrada com serviço tem NF a mostrar.
-  const apoio = entrando
-    ? ['Transferência recebida', conta].filter(Boolean).join(' · ')
+  const emConta = t.tipo === 'transferencia' && entrando !== undefined
+  const destino = t.conta_destino_id ? nomes.conta.get(t.conta_destino_id)?.nome : null
+  const apoio = emConta
+    ? entrando
+      ? `Transferência de ${conta ?? 'outra conta'}`
+      : `Transferência para ${destino ?? 'outra conta'}`
     : modoCobranca
     ? [
       cliente,
@@ -141,7 +147,7 @@ export function LinhaMov({
         </span>
       </span>
       {t.parcela_de && <span className="col-desktop t-legenda">{t.parcela_num}/{t.parcela_de}</span>}
-      <Dinheiro cents={t.tipo === 'saida' && !entrando ? -valor : valor} className="t-valor" />
+      <Dinheiro cents={t.tipo === 'saida' || (emConta && !entrando) ? -valor : valor} className="t-valor" />
       <ChipMovimento status={t.status} />
       {estaEmAberto(t) && t.tipo !== 'transferencia' && (
         <Botao variante="icone" onClick={aoLiquidar}
