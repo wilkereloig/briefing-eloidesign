@@ -2,6 +2,68 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Publicação do financeiro integrado (etapas 1–3, gastos, empréstimos, OFX)
+
+- **No ar:** migrações `liquidacoes_e_operacoes_atomicas`, `natureza_e_perspectivas` e
+  `rotina_diaria_cron` no banco; edge `eloi-financas` v14; painel pela `master`.
+- Cada pagamento agora é um registro próprio (data, conta, forma, chave contra clique
+  duplo). O histórico entrou como 214 liquidações "legado acumulado"; nenhum lançamento
+  antigo mudou de valor, data ou status.
+- Rotina diária às 06:05 (Brasília) gera as contas fixas e marca o que venceu, sem
+  depender de alguém abrir o painel.
+- Backup interno antes da publicação no schema `eloi_backup_20261009`.
+
+## 2026-10-09 — Empréstimos com custo real; importação OFX
+
+- **Empréstimos:** cada cartão mostra a taxa efetiva ao mês (quando o valor recebido
+  foi informado) e quanto custa quitar hoje, com a economia de juros futuros. "Falta"
+  passa a se chamar "Parcelas em aberto" — soma de parcelas não é saldo devedor. Lista
+  ordenada do juro mais caro para o mais barato.
+- **Importar extrato aceita OFX:** cada lançamento usa o código do banco (FITID) como
+  chave — dois lançamentos iguais no mesmo dia nunca colidem e reimportar não duplica.
+
+## 2026-10-09 — Dinheiro › Análise de gastos
+
+- **Nova tela Análise de gastos** (`/admin/dinheiro/gastos`, item na barra de Dinheiro):
+  períodos de 3, 6 ou 12 meses; o que saiu pelo valor original (pago ou não, pelo mês da
+  compra); renda real; quanto é pagamento do passado; saídas × renda; gráfico renda ×
+  saídas por mês; para onde vai (dia a dia, dívidas, juros, cartão sem detalhe); quanto
+  já está comprometido todo mês (contas fixas + parcelas de empréstimo); categorias mês a
+  mês; onde mais se gasta; CSV. Relatórios ganha um link para ela.
+- Legenda "Gasto/Saídas" dos gráficos agora usa o mesmo estilo da barra (dizia coral; a
+  barra é contorno).
+- **Correção visual:** tabelas em cartões no celular ficavam com a altura de uma linha
+  e o conteúdo vazava sobre o cartão seguinte (especificidade de `.tabela tbody tr`).
+- Dados: duas categorias novas no pessoal ("Dinheiro de outras contas", "Estornos e
+  devoluções") e 24 lançamentos de "Outros"/"Outras entradas" recategorizados.
+
+## 2026-10-09 — Evolução do financeiro, etapas 1–3
+
+- **Inventário real** (`docs/INVENTARIO-2026-10.md`): matriz de propriedade dos dados
+  (só o Studio tem lançamentos; app Financeiro vazio), schema de produção × migrações
+  reconciliado, diagnóstico priorizado, procedimento de backup.
+- **Homologação local** (`database/homologacao/`): recria o schema idêntico ao de
+  produção, testes de banco com dados sintéticos (53 afirmações + concorrência) e
+  reversão testada.
+- **Migrações novas (publicadas em 2026-10-09):** liquidações por pagamento
+  (`eloi_liquidacoes`), auditoria, RPCs atômicas (liquidar, reverter, pagar fatura v2,
+  empréstimo, conferência, recorrências, vencidos), saldo oficial no banco, natureza
+  das categorias e perspectivas (caixa, competência, obrigações), rotina diária no pg_cron.
+- **Edge `eloi-financas`:** usa as RPCs; `transacoes.list` diz se veio tudo
+  (`total`/`completo`) e devolve a situação do dia sem gravar; `bootstrap` traz
+  `saldos`; novas `transacoes.liquidacoes`, `transacoes.reverter_liquidacao`,
+  `relatorios.perspectivas`. Validações novas: tipo/contexto, categoria do mesmo
+  contexto e tipo, recorrência exige conta, saldo inicial de conta com histórico exige
+  motivo, pagamento de fatura não se apaga nem se cancela, conferência recalcula o saldo
+  no servidor e exige justificativa para ajuste. Precisa das migrações antes do deploy.
+- **Painel:** aviso de lançamentos incompletos vem do servidor (o antigo disparava à
+  toa); recorrências geradas uma vez por sessão, com erro visível; aviso se o saldo da
+  tela divergir do servidor; conta/cartão arquivado com saldo ou dívida continua nos
+  totais; baixa e pagamento de fatura idempotentes; cartão não aparece como conta de
+  origem de uma baixa; `localhost`/preview não gravam em produção; logout limpa as
+  buscas recentes. `resultado()` ganhou o nome preciso `resultadoLiquidadoPorCompetencia`
+  e o domínio ganhou `resultadoPorCompetencia` (telas ainda no critério antigo).
+
 ## 2026-10-08 — Planejamento completo no Dinheiro (fase 4 de 4)
 
 - **Planejamento** (`/admin/dinheiro/planejamento`) ganha abas na URL:

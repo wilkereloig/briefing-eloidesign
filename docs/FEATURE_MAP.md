@@ -130,6 +130,7 @@ Atualizado: 2026-10-08.
 - **Objetivo:** responder "quem fatura, onde ganho, o que está atrasado, qual a previsão" — e levar o número para fora.
 - **Estado:** Concluído
 - **Tela:** `telas/Relatorios.tsx` · domínio `domain/relatorios.ts` (testado)
+- **Análise de gastos** (2026-10-09, tela `/admin/dinheiro/gastos`): `analiseGastos` + `compromissoMensal` — saídas pelo valor original na competência (pago ou não), renda só operacional (sem empréstimo, dinheiro de outra conta, estorno ou ajuste), grupos dia a dia / dívida / juros / cartão sem detalhe, ranking de lugares. Natureza via `naturezaDaCategoria` (coluna `natureza` ou regra de nome das categorias-padrão).
 - **Abas:** Resultado (12 meses) · Clientes / Marcas · Projetos · Recebíveis (aging) · Fiscal · Por categoria · Previsão (metas e orçamentos foram para Dinheiro › Planejamento)
 - **Recorte:** período por competência, cliente, marca (`aplicarFiltro`) + lente pessoal/empresa
 - **Saída:** CSV por aba (`lib/exportar.ts`, `montarCsv`) e impressão (`@media print`)
@@ -242,3 +243,9 @@ estática de admin que sobrou (ver `ROUTE_MAP.md`).
 | `assets/eloi-admin/periodo.js` | 2026-08-05 | Perdeu o único consumidor junto com o hub |
 | edge `eloi-financeiro` + tabelas `eloi_caixas`, `eloi_movimentos_financeiros` | 2026-10-08 | Removidos (0 linhas). Ver `CLEANUP_REPORT.md` |
 | `/gestao/`, `/painel/`, `/painel-briefings/`, `/painel-ecommerce/`, `/painel-orcamentos/`, `/orcamento-inteligente/` | 2026-10-08 | Pastas apagadas; redirect 301 para `/admin/*` no `vercel.json` |
+
+### Importação de extrato (2026-10-09)
+- CSV ou **OFX** (`lerExtrato` → `lerOfx`/`lerCsv`, `domain/importacao.ts`, testado). OFX: chave `fitid|<FITID>`; CSV: `data|valor|descrição` com `#n`.
+
+### Empréstimos — custo real (2026-10-09)
+- `taxaMensalEmprestimo` (Price, bisseção) e `quitar_hoje_cents` em `resumoEmprestimo(e, transacoes, hoje)`.

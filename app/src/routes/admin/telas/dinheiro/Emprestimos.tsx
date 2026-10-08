@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { financas } from '../../../../lib/api'
 import { fmtBRL } from '../../../../lib/dinheiro'
-import { useFinancas, useNomes } from '../../../../lib/financas-store'
+import { hojeISO, useFinancas, useNomes } from '../../../../lib/financas-store'
 import { resumoEmprestimo, type ResumoEmprestimo } from '../../../../domain/financeiro'
 import type { Emprestimo } from '../../../../lib/tipos'
 import { Aviso, Botao, Card, Chip, Icone, Indicador, Painel, Progresso, Vazio } from '../../../../ui/componentes'
@@ -22,8 +22,10 @@ export default function Emprestimos() {
 
   const lista = useMemo(() => emprestimos
     .filter((e) => !contexto || e.contexto === contexto)
-    .map((e) => ({ e, r: resumoEmprestimo(e, transacoes) })), [emprestimos, transacoes, contexto])
+    .map((e) => ({ e, r: resumoEmprestimo(e, transacoes, hojeISO()) })), [emprestimos, transacoes, contexto])
+  // Mais caro primeiro: é a ordem certa para quitar antes quando sobrar dinheiro.
   const ativos = lista.filter((x) => x.e.ativo)
+    .sort((a, b) => (b.r.taxa_mensal ?? -1) - (a.r.taxa_mensal ?? -1))
   const encerrados = lista.filter((x) => !x.e.ativo)
   const emAberto = ativos.reduce((s, x) => s + x.r.falta_cents, 0)
 
@@ -34,7 +36,7 @@ export default function Emprestimos() {
           nota={`${ativos.length} ${ativos.length === 1 ? 'empréstimo ativo' : 'empréstimos ativos'}`} />
       </div>
 
-      <Painel titulo="Empréstimos"
+      <Painel titulo="Empréstimos — do juro mais caro para o mais barato"
         acao={<Botao compacto onClick={() => setFolha({ tipo: 'editar' })}>
           <Icone nome="adicionar" tamanho={14} />Novo empréstimo
         </Botao>}>
@@ -114,12 +116,25 @@ function CardEmprestimo({ e, r, aoEditar, aoEncerrar }:
 
       <dl className="ficha">
         <div><dt className="etiqueta-mini">Pago</dt><dd><Dinheiro cents={r.pago_cents} className="t-valor" /></dd></div>
-        <div><dt className="etiqueta-mini">Falta</dt><dd><Dinheiro cents={r.falta_cents} className="t-valor" /></dd></div>
+        <div><dt className="etiqueta-mini">Parcelas em aberto</dt><dd><Dinheiro cents={r.falta_cents} className="t-valor" /></dd></div>
         <div><dt className="etiqueta-mini">Juros</dt><dd>
           {r.juros_cents == null
             ? <span className="t-legenda">valor recebido não informado</span>
-            : <Dinheiro cents={r.juros_cents} className="t-valor" />}
+            : <span className="pilha" style={{ gap: 0 }}>
+              <Dinheiro cents={r.juros_cents} className="t-valor" />
+              {r.taxa_mensal != null && <span className="t-legenda">
+                {(r.taxa_mensal * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}% ao mês
+              </span>}
+            </span>}
         </dd></div>
+        {r.quitar_hoje_cents != null && r.falta_cents > 0 && (
+          <div><dt className="etiqueta-mini">Para quitar hoje (estimado)</dt><dd className="pilha" style={{ gap: 0 }}>
+            <Dinheiro cents={r.quitar_hoje_cents} className="t-valor" />
+            {r.falta_cents - r.quitar_hoje_cents > 0 && <span className="t-legenda">
+              economiza <Dinheiro cents={r.falta_cents - r.quitar_hoje_cents} /> de juros futuros
+            </span>}
+          </dd></div>
+        )}
         <div><dt className="etiqueta-mini">Quitação</dt><dd className="t-corpo">{dataLonga(r.quitacao)}</dd></div>
       </dl>
 

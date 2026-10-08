@@ -1,0 +1,41 @@
+# Ordem de aplicação das migrações para recriar o schema em homologação.
+# Arquivos sem data são anteriores à convenção AAAA-MM-DD; a ordem segue o
+# histórico de supabase_migrations do projeto.
+briefings-legado.sql
+eloi-gestao.sql
+orcamentos.sql
+catalogo-servicos.sql
+ecommerce-briefings-legado.sql
+briefing-links.sql
+admin-auth.sql
+portal-cliente.sql
+orcamento-servico-bridge.sql
+gestao-data-competencia.sql
+orcamento-auto-servico.sql
+eloi-financeiro.sql
+eloi-materiais.sql
+eloi-entregas-bucket.sql
+2026-07-15-servicos-sub-cliente-legado.sql
+2026-07-27-revogado-em.sql
+2026-07-30-briefings-legado-cliente-id.sql
+2026-07-30-admin-login-throttle.sql
+2026-08-04-gestao-eloi-financeiro.sql
+2026-08-07-admin-login-ip-throttle.sql
+2026-08-28-servicos-valor-sugerido.sql
+2026-08-28-servico-valor-sugerido-observacao.sql
+2026-09-03-briefing-submit-ip-throttle.sql
+2026-09-03-sub-clientes-e-nota-1n.sql
+2026-09-03-contatos.sql
+2026-09-03-cliente-arquivado.sql
+2026-09-03-orcamento-ajustes.sql
+2026-09-04-transacao-origem-e-conferencia.sql
+2026-09-04-tarefas-e-prazo-de-servico.sql
+2026-10-08-vencimento-de-servico.sql
+2026-10-08-checks-e-search-path.sql
+2026-10-08-pagar-fatura.sql
+2026-10-08-remove-caixa-legado.sql
+2026-10-08-emprestimos.sql
+2026-10-09-reconcilia-schema-producao.sql
+2026-10-09-liquidacoes-e-operacoes-atomicas.sql
+2026-10-09-natureza-e-perspectivas.sql
+2026-10-09-rotina-diaria-cron.sql

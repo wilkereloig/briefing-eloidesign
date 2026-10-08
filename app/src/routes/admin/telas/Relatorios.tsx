@@ -15,7 +15,8 @@ import { semNotaFiscal } from '../../../domain/decisoes'
 import {
   Botao, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
-import { Cabecalho, Carga, Dinheiro, SeletorLente } from '../../../ui/painel'
+import { Cabecalho, Carga, Dinheiro, Ranking, SeletorLente } from '../../../ui/painel'
+import { fmtCompacto } from '../../../ui/formato'
 
 type Aba = 'resultado' | 'clientes' | 'projetos' | 'recebiveis' | 'fiscal' | 'categorias' | 'previsao'
 const ABAS: { chave: Aba; label: string }[] = [
@@ -115,6 +116,7 @@ export default function Relatorios() {
 
   const porCategoria = useMemo(() => agrupar(base, (t) => t.categoria_id, 'saida'), [base])
 
+
   const cenarios = useMemo(
     () => previsaoCaixa(contas, transacoes, hoje, 90, contexto), [contas, transacoes, hoje, contexto])
 
@@ -182,6 +184,8 @@ export default function Relatorios() {
         <p className="t-legenda nao-imprime">
           Metas e orçamentos estão em{' '}
           <Link to="/admin/dinheiro/planejamento?aba=metas">Dinheiro › Planejamento</Link>.
+          {' '}Para onde vai o dinheiro (gastos por categoria, renda × saídas, comprometido por mês):{' '}
+          <Link to="/admin/dinheiro/gastos">Dinheiro › Análise de gastos</Link>.
         </p>
 
         {aba === 'resultado' && (
@@ -223,7 +227,7 @@ export default function Relatorios() {
               </div>
               <div className="linha" style={{ marginTop: 'var(--espaco-04)' }}>
                 <span className="legenda-item"><span className="ponto-cor" style={{ background: 'var(--roxo)' }} />Recebido</span>
-                <span className="legenda-item"><span className="ponto-cor" style={{ background: 'var(--coral)' }} />Gasto</span>
+                <span className="legenda-item"><span className="ponto-cor barra-despesa" />Gasto</span>
               </div>
             </Painel>
           </>
@@ -378,37 +382,3 @@ export default function Relatorios() {
 
 // ── partes ───────────────────────────────────────────────────────────────────
 
-function Ranking({ itens }: { itens: { chave: string; total: number; qtd: number }[] }) {
-  const teto = Math.max(...itens.map((i) => i.total), 1)
-  return (
-    <ul className="lista">
-      {itens.map((i) => (
-        <li key={i.chave} className="lista-item meta-item">
-          <span className="celula">
-            <span className="linha" style={{ justifyContent: 'space-between' }}>
-              <span className="t-ui espremer">{i.chave}</span>
-              {/* percentual nunca sem o valor absoluto ao lado */}
-              <span className="t-legenda">
-                <Dinheiro cents={i.total} /> · {((i.total / teto) * 100).toFixed(0)}%
-              </span>
-            </span>
-            <span className="barra-ranking" aria-hidden>
-              <span style={{ width: `${(i.total / teto) * 100}%` }} />
-            </span>
-            <span className="t-legenda">{i.qtd} {i.qtd === 1 ? 'lançamento' : 'lançamentos'}</span>
-          </span>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-
-// ── formatação de apresentação ───────────────────────────────────────────────
-
-/** Valor curto para o topo da coluna do gráfico: 12,4 mil. */
-function fmtCompacto(cents: number): string {
-  const reais = cents / 100
-  if (reais >= 1000) return `${(reais / 1000).toFixed(reais >= 10000 ? 0 : 1)} mil`
-  return reais.toFixed(0)
-}

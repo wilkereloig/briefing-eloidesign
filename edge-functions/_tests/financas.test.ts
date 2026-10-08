@@ -1,7 +1,7 @@
 import { assertEquals } from "jsr:@std/assert";
 import {
-  chavesComSequencia, hojeEmSaoPaulo, type LinhaAberta, planejarPagamentoFatura, planoDeParcelasEmprestimo,
-  vencimentoDaFatura,
+  chavesComSequencia, comSituacaoDoDia, hojeEmSaoPaulo, type LinhaAberta, planejarPagamentoFatura, planoDeParcelasEmprestimo,
+  proximaOcorrencia, vencimentoDaFatura,
 } from "../_shared/financas.ts";
 
 // ── hoje no fuso do estúdio ──
@@ -106,4 +106,34 @@ Deno.test("empréstimo com vencimento no dia 31 cai no último dia do mês curto
     parcelas_total: 3, parcelas_pagas_antes: 0, valor_parcela_cents: 100, primeiro_vencimento: "2026-01-31",
   });
   assertEquals(p.map((x) => x.vencimento), ["2026-01-31", "2026-02-28", "2026-03-31"]);
+});
+
+// ── 2026-10-09: situação do dia e próxima ocorrência ────────────────────────
+
+Deno.test("situação do dia: pendente com vencimento passado aparece vencido, sem gravar", () => {
+  const t = { status: "pendente", recebido_cents: 0, data_vencimento: "2026-10-01" };
+  assertEquals(comSituacaoDoDia(t, "2026-10-09").status, "vencido");
+  assertEquals(t.status, "pendente"); // não muta a linha
+});
+Deno.test("situação do dia: previsto passado vira vencido; futuro continua previsto", () => {
+  assertEquals(comSituacaoDoDia({ status: "previsto", recebido_cents: 0, data_vencimento: "2026-10-08" }, "2026-10-09").status, "vencido");
+  assertEquals(comSituacaoDoDia({ status: "previsto", recebido_cents: 0, data_vencimento: "2026-10-10" }, "2026-10-09").status, "previsto");
+});
+Deno.test("situação do dia: vence hoje não está vencido; parcial continua parcial", () => {
+  assertEquals(comSituacaoDoDia({ status: "pendente", recebido_cents: 0, data_vencimento: "2026-10-09" }, "2026-10-09").status, "pendente");
+  assertEquals(comSituacaoDoDia({ status: "parcial", recebido_cents: 10, data_vencimento: "2026-01-01" }, "2026-10-09").status, "parcial");
+});
+Deno.test("situação do dia: vencido reagendado para o futuro volta a pendente", () => {
+  assertEquals(comSituacaoDoDia({ status: "vencido", recebido_cents: 0, data_vencimento: "2026-11-01" }, "2026-10-09").status, "pendente");
+});
+Deno.test("próxima ocorrência mensal respeita o dia de cobrança depois de fevereiro", () => {
+  assertEquals(proximaOcorrencia("2026-01-31", "mensal", 31), "2026-02-28");
+  assertEquals(proximaOcorrencia("2026-02-28", "mensal", 31), "2026-03-31");
+  assertEquals(proximaOcorrencia("2026-03-31", "mensal", 31), "2026-04-30");
+});
+Deno.test("próxima ocorrência: semanal, quinzenal, anual e sem dia de cobrança", () => {
+  assertEquals(proximaOcorrencia("2026-10-09", "semanal", null), "2026-10-16");
+  assertEquals(proximaOcorrencia("2026-10-09", "quinzenal", null), "2026-10-24");
+  assertEquals(proximaOcorrencia("2024-02-29", "anual", 29), "2025-02-28");
+  assertEquals(proximaOcorrencia("2026-01-15", "trimestral", null), "2026-04-15");
 });

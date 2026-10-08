@@ -4,7 +4,7 @@ import { centsDeBRL, fmtBRL } from '../../lib/dinheiro'
 import { hojeISO, useFinancas } from '../../lib/financas-store'
 import { saldoContaEm } from '../../domain/financeiro'
 import {
-  classificar, detectarColunas, interpretar, lerCsv, type Mapa, type Situacao, type Tabela,
+  classificar, detectarColunas, interpretar, lerExtrato, type Mapa, type Situacao, type Tabela,
 } from '../../domain/importacao'
 import type { Conta, Contexto } from '../../lib/tipos'
 import { Botao, Campo, CampoTexto, Chip, Folha, Pilula } from '../../ui/componentes'
@@ -37,13 +37,19 @@ export function FolhaConferencia({ conta, aoFechar, aoSalvar }: {
 
   async function salvar() {
     if (informadoCents == null) return setErro('Informe o saldo que o extrato mostra')
+    // Ajuste sem motivo é o que esconde diferença não investigada.
+    if (criarAjuste && diferenca !== 0 && !observacoes.trim()) {
+      return setErro('Para criar ajuste, explique a diferença nas observações')
+    }
     setSalvando(true)
     try {
       const r = await financas.registrarConferencia({
         conta_id: conta.id, data, saldo_informado_cents: informadoCents, saldo_sistema_cents: sistema,
         observacoes: observacoes.trim() || undefined, criar_ajuste: criarAjuste && diferenca !== 0,
       })
-      aoSalvar(r.ajuste ? 'Conferência registrada com ajuste' : diferenca === 0 ? 'Saldo bateu' : 'Conferência registrada')
+      // O servidor recalcula o saldo do sistema; se a tela estava velha, avisa.
+      const aviso = r.tela_desatualizada ? ' · o painel estava desatualizado, valores recarregados' : ''
+      aoSalvar((r.ajuste ? 'Conferência registrada com ajuste' : diferenca === 0 ? 'Saldo bateu' : 'Conferência registrada') + aviso)
       aoFechar()
     } catch (err) {
       setErro((err as Error).message)
@@ -156,7 +162,7 @@ export function FolhaImportar({ aoFechar, aoSalvar }: {
     if (!f) return
     setErro('')
     const texto = await f.text()
-    const t = lerCsv(texto)
+    const t = lerExtrato(texto, f.name)
     if (!t.linhas.length) return setErro('Não encontrei linhas nesse arquivo.')
     if (t.cabecalho.length < 2) return setErro('Precisa de pelo menos data, descrição e valor em colunas separadas.')
     setNomeArquivo(f.name)
@@ -219,13 +225,14 @@ export function FolhaImportar({ aoFechar, aoSalvar }: {
       </>}>
       <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
         <div>
-          <input ref={entrada} type="file" accept=".csv,.txt,text/csv" className="so-leitor"
-            aria-label="Arquivo CSV" onChange={(e) => void lerArquivo(e.target.files?.[0])} />
+          <input ref={entrada} type="file" accept=".csv,.txt,.ofx,text/csv,application/x-ofx" className="so-leitor"
+            aria-label="Arquivo do extrato (CSV ou OFX)" onChange={(e) => void lerArquivo(e.target.files?.[0])} />
           <Botao onClick={() => entrada.current?.click()}>
-            {nomeArquivo ? `Trocar arquivo (${nomeArquivo})` : 'Escolher arquivo CSV'}
+            {nomeArquivo ? `Trocar arquivo (${nomeArquivo})` : 'Escolher arquivo (CSV ou OFX)'}
           </Botao>
           <p className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>
-            CSV exportado do banco. Planilha XLSX: salve como CSV antes.
+            CSV ou OFX exportado do banco. O OFX é o melhor: cada lançamento traz o código
+            do banco e reimportar nunca duplica. Planilha XLSX: salve como CSV antes.
           </p>
         </div>
 

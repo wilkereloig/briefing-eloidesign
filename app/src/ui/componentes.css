@@ -163,6 +163,9 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 @media (max-width:767px){
   .tabela-cartoes thead{display:none}
   .tabela-cartoes,.tabela-cartoes tbody,.tabela-cartoes tr,.tabela-cartoes td{display:block;height:auto}
+  /* .tabela tbody tr fixa a altura com especificidade maior: sem isto o cartão
+     ficava com a altura de uma linha e o conteúdo vazava por cima do próximo. */
+  .tabela.tabela-cartoes tbody tr{height:auto}
   .tabela-cartoes tr{padding:var(--espaco-03) 0;border-top:1px solid var(--cor-borda-padrao)}
   .tabela-cartoes td{display:flex;justify-content:space-between;gap:var(--espaco-03);
     padding:var(--espaco-01) 0;border:0;text-align:right}

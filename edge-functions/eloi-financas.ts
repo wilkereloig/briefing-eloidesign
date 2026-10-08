@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { requireAdmin } from "./_shared/auth.ts";
 import {
-  chavesComSequencia, dataDaParcela, hojeEmSaoPaulo, planejarPagamentoFatura, planoDeParcelasEmprestimo, statusPorValor,
+  chavesComSequencia, comSituacaoDoDia, dataDaParcela, hojeEmSaoPaulo, planejarPagamentoFatura, planoDeParcelasEmprestimo, proximaOcorrencia, statusPorValor,
   vencimentoDaFatura,
 } from "./_shared/financas.ts";
 
@@ -52,20 +52,6 @@ function dividirParcelas(total: number, n: number): number[] {
   return Array.from({ length: n }, (_, i) => (i === 0 ? base + resto : base));
 }
 
-const PASSO_MESES: Record<string, number> = {
-  mensal: 1, bimestral: 2, trimestral: 3, semestral: 6, anual: 12,
-};
-
-function avancar(data: string, periodicidade: string): string {
-  if (periodicidade === "semanal") {
-    return new Date(Date.parse(data) + 7 * 86_400_000).toISOString().slice(0, 10);
-  }
-  if (periodicidade === "quinzenal") {
-    return new Date(Date.parse(data) + 15 * 86_400_000).toISOString().slice(0, 10);
-  }
-  return dataDaParcela(data, PASSO_MESES[periodicidade] ?? 1);
-}
-
 /** Cents de verdade: inteiro, finito e >= minimo. `Number(x) > 0` aceitava
  *  12.5 e "1e3" e gravava fracao de centavo. */
 const ehCents = (v: unknown, minimo = 0) => Number.isSafeInteger(v) && (v as number) >= minimo;
@@ -92,10 +78,11 @@ const RECORRENCIA_CAMPOS = [
   "conta_id", "categoria_id", "fornecedor", "inicio", "fim", "proxima_cobranca", "observacoes",
 ] as const;
 const CONTA_CAMPOS = [
-  "id", "nome", "tipo", "contexto", "instituicao", "cor", "saldo_inicial_cents",
+  "id", "nome", "tipo", "contexto", "instituicao", "cor", "saldo_inicial_cents", "saldo_inicial_em",
   "limite_cents", "dia_fechamento", "dia_vencimento", "ativa",
 ] as const;
-const CATEGORIA_CAMPOS = ["id", "nome", "contexto", "tipo", "pai_id", "cor", "icone", "ativa"] as const;
+const CATEGORIA_CAMPOS = ["id", "nome", "contexto", "tipo", "pai_id", "cor", "icone", "ativa", "natureza"] as const;
+const NATUREZAS = ["operacional", "financeira", "divida", "patrimonial"];
 const META_CAMPOS = ["id", "especie", "nome", "contexto", "categoria_id", "conta_id", "alvo_cents", "inicio", "fim"] as const;
 const NOTA_CAMPOS = [
   "id", "cliente_id", "servico_id", "transacao_id", "numero", "status", "valor_cents",
@@ -117,6 +104,16 @@ const ARQUIVO_CAMPOS = [
  *  que arquivos.remover apagaria junto. */
 const ARQUIVO_PATH = /^financeiro\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-[\w.\-]{1,120}$/i;
 const ehDia = (v: unknown) => v == null || (Number.isInteger(v) && (v as number) >= 1 && (v as number) <= 31);
+const CONTEXTOS = ["pessoal", "empresa"];
+const TIPOS_MOV = ["entrada", "saida", "transferencia"];
+const PERIODICIDADES = ["semanal", "quinzenal", "mensal", "bimestral", "trimestral", "semestral", "anual"];
+
+/** Erro levantado por regra de negócio nas RPCs (raise … errcode 22023/P0001/P0002):
+ *  é 4xx para a tela, não falha do servidor. */
+function erroDeRegra(e: { code?: string } | null): boolean {
+  return !!e && ["22023", "P0001", "P0002"].includes(String(e.code));
+}
+
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
@@ -135,6 +132,24 @@ Deno.serve(async (req: Request) => {
   // Fuso do estudio, nao UTC: decide o que esta "vencido".
   const hoje = hojeEmSaoPaulo();
 
+  /** Pagamento de fatura (transferência para cartão) quitou compras: apagá-lo
+   *  ou cancelá-lo deixaria as compras "pagas" sem dinheiro ter saído. Até
+   *  existir o estorno de pagamento de fatura, a correção é outra transferência. */
+  // deno-lint-ignore no-explicit-any
+  const bloqueioDePagamentoDeFatura = async (linhas: any[]): Promise<Response | null> => {
+    const transf = linhas.filter((t) => t.tipo === "transferencia" && t.conta_destino_id);
+    if (!transf.length) return null;
+    const { data: destinos, error } = await supabase.from("eloi_contas").select("id")
+      .in("id", transf.map((t) => t.conta_destino_id)).eq("tipo", "cartao_credito");
+    if (error) return json({ error: error.message }, 500);
+    if (destinos?.length) {
+      return json({
+        error: "pagamento de fatura não se apaga nem se cancela: as compras quitadas ficariam pagas sem saída de dinheiro. Registre a correção como outra transferência.",
+      }, 409);
+    }
+    return null;
+  };
+
   // ── BOOTSTRAP ──────────────────────────────────────────────────────────────
   // Dados de referencia numa chamada so: sao tabelas pequenas e toda tela usa.
   if (action === "bootstrap") {
@@ -152,11 +167,59 @@ Deno.serve(async (req: Request) => {
     const erro = contas.error || categorias.error || recorrencias.error || metas.error || conferencias.error
       || emprestimos.error;
     if (erro) return json({ error: erro.message }, 500);
+    // Saldo OFICIAL por conta, calculado no banco sobre o histórico inteiro
+    // (inclui arquivadas). A tela confere contra a própria conta e avisa se
+    // divergir. Falha aqui não derruba o painel: vai como `saldos_erro`.
+    const saldos = await supabase.rpc("eloi_saldos_contas", {});
     return json({
       contas: contas.data ?? [], categorias: categorias.data ?? [],
       recorrencias: recorrencias.data ?? [], metas: metas.data ?? [],
       conferencias: conferencias.data ?? [], emprestimos: emprestimos.data ?? [],
+      saldos: saldos.error ? null : saldos.data ?? [],
+      saldos_erro: saldos.error?.message ?? null,
+      hoje,
     });
+  }
+
+  // Perspectivas financeiras calculadas no banco sobre o histórico inteiro
+  // (migração 2026-10-09-natureza-e-perspectivas.sql). Cada uma responde uma
+  // pergunta diferente — não se somam entre si:
+  //  caixa       dinheiro que andou, na data da liquidação
+  //  competencia o que pertence ao mês (valor original), por natureza
+  //  obrigacoes  o que falta pagar/receber, por prazo
+  if (action === "relatorios.perspectivas") {
+    const { de, ate, contexto } = body ?? {};
+    if (!ehData(de) || !ehData(ate) || de > ate) return json({ error: "periodo invalido" }, 400);
+    if (contexto != null && !CONTEXTOS.includes(contexto)) return json({ error: "contexto invalido" }, 400);
+    const ctx = contexto ?? null;
+    const [caixa, competencia, obrigacoes] = await Promise.all([
+      supabase.rpc("eloi_caixa_realizado", { p_de: de, p_ate: ate, p_contexto: ctx }),
+      supabase.rpc("eloi_resultado_competencia", { p_de: de, p_ate: ate, p_contexto: ctx }),
+      supabase.rpc("eloi_obrigacoes_abertas", { p_contexto: ctx, p_hoje: hoje }),
+    ]);
+    const erro = caixa.error || competencia.error || obrigacoes.error;
+    if (erro) return json({ error: erro.message }, 500);
+    return json({ caixa: caixa.data ?? [], competencia: competencia.data ?? [], obrigacoes: obrigacoes.data ?? [], hoje });
+  }
+
+  // Liquidações de uma transação (detalhe/histórico). Mais antiga primeiro.
+  if (action === "transacoes.liquidacoes") {
+    const { id } = body ?? {};
+    if (!ehUuid(id)) return json({ error: "id invalido" }, 400);
+    const { data, error } = await supabase.from("eloi_liquidacoes").select("*")
+      .eq("transacao_id", id).order("data").order("criado_em");
+    if (error) return json({ error: error.message }, 500);
+    return json({ liquidacoes: data ?? [] });
+  }
+
+  if (action === "transacoes.reverter_liquidacao") {
+    const { liquidacao_id, motivo } = body ?? {};
+    if (!ehUuid(liquidacao_id)) return json({ error: "liquidacao_id invalido" }, 400);
+    if (typeof motivo !== "string" || !motivo.trim()) return json({ error: "motivo obrigatorio" }, 400);
+    const { data, error } = await supabase.rpc("eloi_reverter_liquidacao",
+      { p_liquidacao: liquidacao_id, p_motivo: motivo.trim() }).single();
+    if (error) return json({ error: error.message }, erroDeRegra(error) ? 400 : 500);
+    return json({ transacao: data });
   }
 
   // ── TRANSACOES ─────────────────────────────────────────────────────────────
@@ -167,8 +230,9 @@ Deno.serve(async (req: Request) => {
     const ate = ehData(f.ate) ? f.ate : null;
     if ((f.de && !de) || (f.ate && !ate)) return json({ error: "janela invalida" }, 400);
     // Builder novo a cada pagina: o do supabase-js nao e reutilizavel depois do await.
-    const montar = () => {
-      let q = supabase.from("eloi_transacoes").select("*");
+    // deno-lint-ignore no-explicit-any
+    const montar = (colunas = "*", opcoes?: any) => {
+      let q = supabase.from("eloi_transacoes").select(colunas, opcoes);
       if (f.contexto) q = q.eq("contexto", f.contexto);
       if (f.conta_id) q = q.or(`conta_id.eq.${f.conta_id},conta_destino_id.eq.${f.conta_id}`);
       if (f.cliente_id) q = q.eq("cliente_id", f.cliente_id);
@@ -192,24 +256,53 @@ Deno.serve(async (req: Request) => {
         .order("created_at", { ascending: false }).order("id");
     };
     // Paginado: o PostgREST corta cada resposta no max-rows do projeto (1000
-    // por padrao). ponytail: historico inteiro em memoria; teto 20000 linhas —
-    // passando disso, mover saldo para agregacao no banco.
+    // por padrao). O total vem do banco (count exact) na primeira pagina e a
+    // resposta diz se veio TUDO — a tela nunca precisa adivinhar truncamento
+    // pelo tamanho da lista. Saldo oficial nao depende disto: sai de
+    // eloi_saldos_contas no bootstrap.
     const limite = Math.min(Number(f.limite) || 500, 20000);
     const PAGINA = 1000;
-    const todas: unknown[] = [];
-    while (todas.length < limite) {
-      const pedido = Math.min(PAGINA, limite - todas.length);
+    // Total com os MESMOS filtros: a resposta diz se veio tudo, e a tela nunca
+    // precisa adivinhar truncamento pelo tamanho da lista.
+    const { count: total, error: eTotal } = await montar("id", { count: "exact", head: true });
+    if (eTotal) return json({ error: eTotal.message }, 500);
+    const todas: Record<string, unknown>[] = [];
+    const alvo = Math.min(total ?? limite, limite);
+    while (todas.length < alvo) {
+      const pedido = Math.min(PAGINA, alvo - todas.length);
       const { data, error } = await montar().range(todas.length, todas.length + pedido - 1);
       if (error) return json({ error: error.message }, 500);
-      todas.push(...(data ?? []));
-      if ((data?.length ?? 0) < pedido) break; // ultima pagina
+      // Página vazia encerra; página "menor que o pedido" NÃO — um max-rows
+      // abaixo de 1000 cortaria o histórico calado.
+      if (!data?.length) break;
+      todas.push(...(data as unknown as Record<string, unknown>[]));
     }
-    return json({ transacoes: todas });
+    return json({
+      transacoes: todas.map((t) => comSituacaoDoDia(t as never, hoje)),
+      total: total ?? null,
+      completo: total != null && todas.length >= total,
+      limite,
+    });
   }
 
   if (action === "transacoes.upsert") {
     const t = body?.transacao ?? {};
     if (!t.descricao || !t.tipo || !t.contexto) return json({ error: "descricao, tipo e contexto sao obrigatorios" }, 400);
+    if (!TIPOS_MOV.includes(t.tipo)) return json({ error: "tipo invalido" }, 400);
+    if (!CONTEXTOS.includes(t.contexto)) return json({ error: "contexto invalido" }, 400);
+    for (const k of ["conta_id", "conta_destino_id", "categoria_id", "cliente_id", "servico_id"]) {
+      if (t[k] != null && !ehUuid(t[k])) return json({ error: `${k} invalido` }, 400);
+    }
+    // Categoria de outro contexto ou do tipo oposto classificaria o resultado errado.
+    if (t.categoria_id && t.tipo !== "transferencia") {
+      const { data: cat, error: eCat } = await supabase.from("eloi_categorias")
+        .select("contexto,tipo").eq("id", t.categoria_id).maybeSingle();
+      if (eCat) return json({ error: eCat.message }, 500);
+      if (!cat) return json({ error: "categoria nao encontrada" }, 400);
+      if (cat.contexto !== t.contexto || cat.tipo !== t.tipo) {
+        return json({ error: "categoria de outro contexto ou de outro tipo" }, 400);
+      }
+    }
     if (!ehCents(t.valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
     if (t.recebido_cents != null && !ehCents(t.recebido_cents)) {
       return json({ error: "recebido_cents deve ser inteiro nao negativo" }, 400);
@@ -288,6 +381,8 @@ Deno.serve(async (req: Request) => {
     const { data: atual, error: e1 } = await supabase
       .from("eloi_transacoes").select("*").eq("id", id).single();
     if (e1 || !atual) return json({ error: e1?.message || "transacao nao encontrada" }, 404);
+    const bloqueio = await bloqueioDePagamentoDeFatura([atual]);
+    if (bloqueio) return bloqueio;
 
     const status = reabrir
       ? statusPorValor(Number(atual.valor_cents), Number(atual.recebido_cents), atual.data_vencimento, hoje)
@@ -299,41 +394,37 @@ Deno.serve(async (req: Request) => {
     return json({ transacao: data });
   }
 
-  // Registrar pagamento (total ou parcial). O status sai do valor, nao da tela.
+  // Registrar pagamento (total ou parcial). Uma chamada a eloi_liquidar
+  // (migração 2026-10-09): trava a linha, grava a liquidação própria (data,
+  // conta, forma) e atualiza a projeção recebido_cents/status na MESMA
+  // transação. `chave` (gerada pela tela ao abrir a folha) torna o clique
+  // duplo e o retry de rede inofensivos.
   if (action === "transacoes.liquidar") {
-    const { id, valor_cents, data_liquidacao, forma_pagamento, conta_id, observacoes } = body ?? {};
+    const { id, valor_cents, data_liquidacao, forma_pagamento, conta_id, observacoes, chave } = body ?? {};
     if (conta_id != null && !ehUuid(conta_id)) return json({ error: "conta_id invalido" }, 400);
-    if (!id) return json({ error: "id obrigatorio" }, 400);
+    if (!ehUuid(id)) return json({ error: "id obrigatorio" }, 400);
     if (!ehCents(valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
     if (data_liquidacao != null && !ehData(data_liquidacao)) return json({ error: "data_liquidacao invalida" }, 400);
-    const { data: atual, error: e1 } = await supabase
-      .from("eloi_transacoes").select("*").eq("id", id).single();
-    if (e1 || !atual) return json({ error: e1?.message || "transacao nao encontrada" }, 404);
-    if (atual.status === "cancelado") {
-      return json({ error: "lancamento cancelado: reabra antes de liquidar" }, 400);
+    if (chave != null && (typeof chave !== "string" || chave.length > 100)) return json({ error: "chave invalida" }, 400);
+    // Pagamento direto numa compra de cartão não tem dinheiro saindo de lugar
+    // nenhum: compra de cartão se quita pagando a fatura.
+    const { data: atual, error: e1 } = await supabase.from("eloi_transacoes")
+      .select("conta_id").eq("id", id).maybeSingle();
+    if (e1) return json({ error: e1.message }, 500);
+    if (!atual) return json({ error: "transacao nao encontrada" }, 404);
+    const { data: contaAlvo } = await supabase.from("eloi_contas").select("tipo")
+      .eq("id", conta_id ?? atual.conta_id).maybeSingle();
+    if (contaAlvo?.tipo === "cartao_credito") {
+      return json({
+        error: conta_id && conta_id !== atual.conta_id
+          ? "cartão de crédito não paga conta por aqui: edite o lançamento e troque a conta para o cartão — ele entra na fatura"
+          : "compra no cartão se quita pelo pagamento da fatura",
+      }, 400);
     }
-
-    const soma = Number(atual.recebido_cents) + valor_cents;
-    if (soma > Number(atual.valor_cents)) {
-      return json({ error: "pagamento excede o valor em aberto" }, 400);
-    }
-    const status = statusPorValor(Number(atual.valor_cents), soma, atual.data_vencimento, hoje);
-    // Observacao da baixa vai para o rodape do que ja existe: quem recebeu em
-    // duas vezes quer ver as duas anotacoes, nao a ultima sobrescrevendo.
-    const nota = typeof observacoes === "string" && observacoes.trim()
-      ? [atual.observacoes, `${data_liquidacao || hoje}: ${observacoes.trim()}`].filter(Boolean).join("\n")
-      : atual.observacoes;
-    const { data, error } = await supabase.from("eloi_transacoes").update({
-      recebido_cents: soma,
-      status,
-      data_liquidacao: data_liquidacao || hoje,
-      forma_pagamento: forma_pagamento ?? atual.forma_pagamento,
-      // Conta em que o dinheiro caiu, quando difere da prevista.
-      conta_id: conta_id ?? atual.conta_id,
-      observacoes: nota,
-      updated_at: new Date().toISOString(),
-    }).eq("id", id).select().single();
-    if (error) return json({ error: error.message }, 500);
+    const { data, error } = await supabase.rpc("eloi_liquidar", {
+      p: { id, valor_cents, data: data_liquidacao ?? hoje, conta_id: conta_id ?? null, forma_pagamento, observacoes, chave },
+    }).single();
+    if (error) return json({ error: error.message }, erroDeRegra(error) ? 400 : 500);
     return json({ transacao: data });
   }
 
@@ -369,7 +460,18 @@ Deno.serve(async (req: Request) => {
     if (!t.descricao || !t.tipo || !t.contexto) return json({ error: "descricao, tipo e contexto sao obrigatorios" }, 400);
     if (t.tipo === "transferencia") return json({ error: "transferencia nao e parcelada" }, 400);
     if (!t.conta_id) return json({ error: "parcelamento exige conta" }, 400);
-    const inicio = t.data_vencimento || hoje;
+    if (!TIPOS_MOV.includes(t.tipo) || !CONTEXTOS.includes(t.contexto)) return json({ error: "tipo ou contexto invalido" }, 400);
+    if (!ehUuid(t.conta_id)) return json({ error: "conta_id invalido" }, 400);
+    // Parcelado no cartão: a 1ª parcela vence na fatura do ciclo da compra, não
+    // na data da compra (mesma regra do upsert e da importação).
+    let inicio = t.data_vencimento || hoje;
+    if (!t.data_vencimento) {
+      const { data: conta } = await supabase.from("eloi_contas")
+        .select("tipo,dia_fechamento,dia_vencimento").eq("id", t.conta_id).maybeSingle();
+      if (conta?.tipo === "cartao_credito" && conta.dia_fechamento && conta.dia_vencimento) {
+        inicio = vencimentoDaFatura(t.data_competencia ?? hoje, Number(conta.dia_fechamento), Number(conta.dia_vencimento));
+      }
+    }
     const valores = dividirParcelas(Number(t.valor_cents), n);
     const grupo = crypto.randomUUID();
 
@@ -388,7 +490,8 @@ Deno.serve(async (req: Request) => {
       valor_cents: v,
       recebido_cents: 0,
       data_liquidacao: null,
-      status: "previsto",
+      // Futura continua "previsto"; com vencimento já passado nasce vencida.
+      status: dataDaParcela(inicio, i) < hoje ? "vencido" : "previsto",
       data_vencimento: dataDaParcela(inicio, i),
       data_competencia: t.data_competencia ? dataDaParcela(t.data_competencia, i) : dataDaParcela(inicio, i),
       descricao: `${t.descricao} (${i + 1}/${n})`,
@@ -403,12 +506,24 @@ Deno.serve(async (req: Request) => {
     if (!id && !grupo_id) return json({ error: "id ou grupo_id obrigatorio" }, 400);
     // Remover o grupo inteiro e o comportamento esperado de "cancelar o
     // parcelamento"; remover uma parcela sozinha deixaria 3/12 orfa.
+    if ((id && !ehUuid(id)) || (grupo_id && !ehUuid(grupo_id))) return json({ error: "id invalido" }, 400);
+    const { data: alvo, error: eAlvo } = grupo_id
+      ? await supabase.from("eloi_transacoes").select("*").eq("grupo_id", grupo_id)
+      : await supabase.from("eloi_transacoes").select("*").eq("id", id);
+    if (eAlvo) return json({ error: eAlvo.message }, 500);
+    if (!alvo?.length) return json({ error: "transacao nao encontrada" }, 404);
+    const bloqueio = await bloqueioDePagamentoDeFatura(alvo);
+    if (bloqueio) return bloqueio;
     const q = grupo_id
       ? supabase.from("eloi_transacoes").delete().eq("grupo_id", grupo_id)
       : supabase.from("eloi_transacoes").delete().eq("id", id);
     const { error } = await q;
     if (error) return json({ error: error.message }, 500);
-    return json({ ok: true });
+    // Apagar é irreversível: o que existia fica na trilha.
+    await supabase.from("eloi_auditoria").insert(alvo.map((t: { id: string }) => ({
+      acao: "remover", tabela: "eloi_transacoes", registro_id: t.id, antes: t,
+    })));
+    return json({ ok: true, removidas: alvo.length });
   }
 
   // ── EMPRESTIMOS ────────────────────────────────────────────────────────────
@@ -514,41 +629,27 @@ Deno.serve(async (req: Request) => {
       e.categoria_id = cat?.[0]?.id ?? null;
     }
 
-    const { data: emp, error: eEmp } = await supabase.from("eloi_emprestimos").insert(e).select().single();
-    if (eEmp) return json({ error: eEmp.message }, 500);
-
-    const plano = planoDeParcelasEmprestimo(emp);
+    // Cadastro + parcelas numa transação só (eloi_criar_emprestimo): falhou uma
+    // parcela, não sobra cadastro órfão. emprestimo_id/grupo_id saem da RPC.
+    const plano = planoDeParcelasEmprestimo(e as Parameters<typeof planoDeParcelasEmprestimo>[0]);
     const linhas = plano.map((p) => ({
       tipo: "saida",
-      contexto: emp.contexto,
-      descricao: `${emp.nome} (${p.parcela_num}/${emp.parcelas_total})`,
+      contexto: e.contexto,
+      descricao: `${e.nome} (${p.parcela_num}/${e.parcelas_total})`,
       valor_cents: p.valor_cents,
-      recebido_cents: 0,
       status: statusPorValor(p.valor_cents, 0, p.vencimento, hoje),
-      conta_id: emp.conta_id,
-      categoria_id: emp.categoria_id,
-      fornecedor: emp.instituicao,
+      conta_id: e.conta_id,
+      categoria_id: e.categoria_id,
+      fornecedor: e.instituicao ?? null,
       data_competencia: p.vencimento,
       data_vencimento: p.vencimento,
       parcela_num: p.parcela_num,
-      parcela_de: emp.parcelas_total,
-      origem: "parcelamento",
-      emprestimo_id: emp.id,
-      grupo_id: emp.id, // parcelas de um emprestimo = um grupo ("excluir grupo" do app)
+      parcela_de: e.parcelas_total,
     }));
-    let transacoes: unknown[] = [];
-    if (linhas.length) {
-      const { data, error } = await supabase.from("eloi_transacoes").insert(linhas).select();
-      if (error) {
-        // Sem orfao: cadastro sem parcelas e pior que nenhum cadastro.
-        const { error: eDel } = await supabase.from("eloi_emprestimos").delete().eq("id", emp.id);
-        return json({
-          error: eDel ? `${error.message} (e o cadastro ${emp.id} nao pode ser desfeito: ${eDel.message})` : error.message,
-        }, 500);
-      }
-      transacoes = data ?? [];
-    }
-    return json({ emprestimo: emp, transacoes });
+    const { data: criado, error: eCriar } = await supabase.rpc("eloi_criar_emprestimo",
+      { p_emprestimo: e, p_parcelas: linhas });
+    if (eCriar) return json({ error: eCriar.message }, erroDeRegra(eCriar) ? 400 : 500);
+    return json(criado);
   }
 
   // Encerrar sai do uso (ativo=false) sem apagar nem mexer nas parcelas lancadas.
@@ -565,6 +666,14 @@ Deno.serve(async (req: Request) => {
   if (action === "recorrencias.upsert") {
     const r = escolher(body?.recorrencia ?? {}, RECORRENCIA_CAMPOS);
     if (!r.nome || !r.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
+    if (!CONTEXTOS.includes(r.contexto as string)) return json({ error: "contexto invalido" }, 400);
+    if (r.tipo !== "entrada" && r.tipo !== "saida") return json({ error: "tipo deve ser entrada ou saida" }, 400);
+    if (!PERIODICIDADES.includes(r.periodicidade as string)) return json({ error: "periodicidade invalida" }, 400);
+    if (r.id != null && !ehUuid(r.id)) return json({ error: "id invalido" }, 400);
+    // Sem conta, toda cobrança gerada violaria entrada_saida_tem_conta: a
+    // recorrência travava para sempre, calada. Exigir aqui é a correção.
+    if (!ehUuid(r.conta_id)) return json({ error: "recorrência precisa de conta" }, 400);
+    if (!ehDia(r.dia_cobranca)) return json({ error: "dia_cobranca deve ser de 1 a 31" }, 400);
     if (!ehCents(r.valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
     for (const k of ["inicio", "fim", "proxima_cobranca"]) {
       if (r[k] != null && !ehData(r[k])) return json({ error: `${k} invalida` }, 400);
@@ -584,11 +693,24 @@ Deno.serve(async (req: Request) => {
     if (!["pausar", "retomar", "encerrar"].includes(estado)) {
       return json({ error: "estado deve ser pausar, retomar ou encerrar" }, 400);
     }
-    const patch = estado === "pausar"
+    if (!ehUuid(id)) return json({ error: "id invalido" }, 400);
+    // deno-lint-ignore no-explicit-any
+    let patch: Record<string, any> = estado === "pausar"
       ? { pausada_em: new Date().toISOString() }
       : estado === "retomar"
       ? { pausada_em: null, ativa: true, encerrada_em: null }
       : { encerrada_em: new Date().toISOString(), ativa: false };
+    // Retomar não cobra o período em que ficou pausada: a próxima cobrança
+    // pula para a primeira ocorrência a partir de hoje.
+    if (estado === "retomar") {
+      const { data: rec, error: eRec } = await supabase.from("eloi_recorrencias")
+        .select("proxima_cobranca,periodicidade,dia_cobranca").eq("id", id).maybeSingle();
+      if (eRec) return json({ error: eRec.message }, 500);
+      if (!rec) return json({ error: "recorrencia nao encontrada" }, 404);
+      let prox: string = rec.proxima_cobranca;
+      for (let i = 0; prox < hoje && i < 1000; i++) prox = proximaOcorrencia(prox, rec.periodicidade, rec.dia_cobranca);
+      patch = { ...patch, proxima_cobranca: prox };
+    }
     const { data, error } = await supabase.from("eloi_recorrencias")
       .update(patch).eq("id", id).select().single();
     if (error) return json({ error: error.message }, 500);
@@ -599,50 +721,15 @@ Deno.serve(async (req: Request) => {
   // fixa precisa aparecer antes de vencer, senao o aviso chega no proprio dia.
   // Idempotente: antes de lancar, confere se ja existe transacao daquela
   // recorrencia naquele vencimento.
+  // Materializa as cobrancas que vencem ate 10 dias a frente (conta fixa precisa
+  // aparecer antes de vencer). Tudo no banco (eloi_gerar_recorrencias): unico
+  // por (recorrencia_id, ocorrencia), trava consultiva contra chamadas
+  // simultaneas, erro gravado em eloi_recorrencias.ultimo_erro. A rotina diaria
+  // (pg_cron → eloi_rotina_diaria) faz o mesmo sem ninguem abrir o painel.
   if (action === "recorrencias.gerar") {
-    const ANTECEDENCIA_DIAS = 10;
-    const limite = new Date(Date.parse(hoje) + ANTECEDENCIA_DIAS * 86_400_000).toISOString().slice(0, 10);
-    const { data: recs, error: e1 } = await supabase
-      .from("eloi_recorrencias").select("*").eq("ativa", true).is("encerrada_em", null)
-      .lte("proxima_cobranca", limite);
-    if (e1) return json({ error: e1.message }, 500);
-
-    const criadas: unknown[] = [];
-    const erros: { recorrencia_id: string; vencimento: string; erro: string }[] = [];
-    for (const r of recs ?? []) {
-      if (r.pausada_em) continue;
-      let proxima: string = r.proxima_cobranca;
-      // teto de 24 ciclos por chamada: recorrencia antiga e esquecida nao pode
-      // virar loop infinito nem despejar centenas de linhas de uma vez
-      for (let i = 0; i < 24 && proxima <= limite; i++) {
-        if (r.fim && proxima > r.fim) break;
-        const { data: existente, error: eBusca } = await supabase.from("eloi_transacoes")
-          .select("id").eq("recorrencia_id", r.id).eq("data_vencimento", proxima).limit(1);
-        if (eBusca) { erros.push({ recorrencia_id: r.id, vencimento: proxima, erro: eBusca.message }); break; }
-        if (!existente?.length) {
-          const { data: nova, error: eNova } = await supabase.from("eloi_transacoes").insert({
-            tipo: r.tipo, contexto: r.contexto,
-            status: statusPorValor(Number(r.valor_cents), 0, proxima, hoje),
-            descricao: r.nome, valor_cents: r.valor_cents,
-            conta_id: r.conta_id, categoria_id: r.categoria_id, fornecedor: r.fornecedor,
-            data_competencia: proxima, data_vencimento: proxima,
-            recorrencia_id: r.id, origem: "recorrencia",
-          }).select().single();
-          // Falhou: proxima_cobranca PARA aqui. Avancar mesmo assim pulava a
-          // cobranca em silencio — a assinatura daquele mes nunca existiria.
-          if (eNova) { erros.push({ recorrencia_id: r.id, vencimento: proxima, erro: eNova.message }); break; }
-          criadas.push(nova);
-        }
-        proxima = avancar(proxima, r.periodicidade);
-      }
-      if (proxima !== r.proxima_cobranca) {
-        const { error: eAvanca } = await supabase.from("eloi_recorrencias")
-          .update({ proxima_cobranca: proxima }).eq("id", r.id);
-        // A idempotencia por vencimento cobre a proxima chamada: nada duplica.
-        if (eAvanca) erros.push({ recorrencia_id: r.id, vencimento: proxima, erro: eAvanca.message });
-      }
-    }
-    return json({ criadas: criadas.length, transacoes: criadas, erros });
+    const { data, error } = await supabase.rpc("eloi_gerar_recorrencias", { p_antecedencia_dias: 10, p_hoje: hoje });
+    if (error) return json({ error: error.message }, 500);
+    return json(data);
   }
 
   // ── IMPORTACAO DE EXTRATO ──────────────────────────────────────────────────
@@ -715,8 +802,9 @@ Deno.serve(async (req: Request) => {
   // baixa se a linha ainda tiver o recebido_cents lido aqui: dois pagamentos ao
   // mesmo tempo nao quitam a mesma compra duas vezes — o segundo volta 409.
   if (action === "transacoes.pagar_fatura") {
-    const { cartao_id, conta_id, valor_cents, data } = body ?? {};
+    const { cartao_id, conta_id, valor_cents, data, chave, antecipado } = body ?? {};
     if (!ehUuid(cartao_id) || !ehUuid(conta_id)) return json({ error: "cartao_id e conta_id obrigatorios" }, 400);
+    if (chave != null && (typeof chave !== "string" || chave.length > 100)) return json({ error: "chave invalida" }, 400);
     if (cartao_id === conta_id) return json({ error: "conta de origem e cartao precisam ser diferentes" }, 400);
     if (!ehCents(valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
     if (!ehData(data)) return json({ error: "data invalida" }, 400);
@@ -743,6 +831,12 @@ Deno.serve(async (req: Request) => {
       })),
       valor_cents, data, hoje,
     );
+    // Nada em aberto para quitar: um segundo envio do mesmo pagamento cairia
+    // aqui e debitaria a conta de novo. Pagamento antecipado (crédito no
+    // cartão) precisa ser pedido explicitamente.
+    if (!plano.baixas.length && antecipado !== true) {
+      return json({ error: "não há compra em aberto nesta fatura; para pagar antecipado, confirme o crédito" }, 409);
+    }
 
     const { data: transferencia, error } = await supabase.rpc("eloi_pagar_fatura", {
       p_transferencia: {
@@ -752,6 +846,7 @@ Deno.serve(async (req: Request) => {
         conta_id, conta_destino_id: cartao_id, categoria_id: null,
         data_competencia: data, data_vencimento: data, data_liquidacao: data,
         origem: "manual",
+        chave: typeof chave === "string" ? chave : null,
       },
       p_baixas: plano.baixas,
     }).single();
@@ -771,37 +866,27 @@ Deno.serve(async (req: Request) => {
     const { conta_id, data, saldo_informado_cents, saldo_sistema_cents, observacoes, criar_ajuste } = body ?? {};
     if (!ehUuid(conta_id)) return json({ error: "conta_id invalido" }, 400);
     if (!ehData(data)) return json({ error: "data invalida" }, 400);
-    const informado = Math.trunc(Number(saldo_informado_cents));
-    const sistema = Math.trunc(Number(saldo_sistema_cents));
-    if (!Number.isFinite(informado) || !Number.isFinite(sistema)) return json({ error: "saldos invalidos" }, 400);
-    const { data: conta } = await supabase.from("eloi_contas").select("*").eq("id", conta_id).single();
-    if (!conta) return json({ error: "conta nao encontrada" }, 404);
-    const diferenca = informado - sistema;
-
-    let ajuste: unknown = null;
-    if (criar_ajuste && diferenca !== 0) {
-      const abs = Math.abs(diferenca);
-      const { data: t, error: eA } = await supabase.from("eloi_transacoes").insert({
-        tipo: diferenca > 0 ? "entrada" : "saida",
-        contexto: conta.contexto,
-        descricao: `Ajuste de conferência ${data}`,
-        valor_cents: abs, recebido_cents: abs, status: "realizado",
-        conta_id,
-        data_competencia: data, data_vencimento: data, data_liquidacao: data,
-        origem: "ajuste",
-        observacoes: `Saldo informado ${(informado / 100).toFixed(2)} × sistema ${(sistema / 100).toFixed(2)}${observacoes ? ` — ${String(observacoes).trim()}` : ""}`,
-      }).select().single();
-      if (eA) return json({ error: eA.message }, 500);
-      ajuste = t;
-    }
-    const { data: conf, error } = await supabase.from("eloi_conferencias").insert({
-      conta_id, data,
-      saldo_informado_cents: informado, saldo_sistema_cents: sistema, diferenca_cents: diferenca,
-      observacoes: typeof observacoes === "string" ? observacoes.trim() || null : null,
-      ajuste_transacao_id: (ajuste as { id?: string } | null)?.id ?? null,
-    }).select().single();
-    if (error) return json({ error: error.message }, 500);
-    return json({ conferencia: conf, ajuste });
+    if (!Number.isSafeInteger(saldo_informado_cents)) return json({ error: "saldo informado invalido" }, 400);
+    // Saldo do sistema calculado AQUI, sobre o histórico inteiro até a data —
+    // não o número que a tela mandou. O da tela só serve para avisar se a
+    // tela estava desatualizada.
+    const { data: saldos, error: eS } = await supabase.rpc("eloi_saldos_contas", { p_ate: data });
+    if (eS) return json({ error: eS.message }, 500);
+    const linha = (saldos ?? []).find((x: { conta_id: string }) => x.conta_id === conta_id);
+    if (!linha) return json({ error: "conta nao encontrada" }, 404);
+    const sistema = Number(linha.saldo_cents);
+    const { data: r, error } = await supabase.rpc("eloi_registrar_conferencia", {
+      p: {
+        conta_id, data, saldo_informado_cents, saldo_sistema_cents: sistema,
+        observacoes: typeof observacoes === "string" ? observacoes : null, criar_ajuste: criar_ajuste === true,
+      },
+    });
+    if (error) return json({ error: error.message }, erroDeRegra(error) ? 400 : 500);
+    return json({
+      ...r,
+      saldo_sistema_cents: sistema,
+      tela_desatualizada: Number.isSafeInteger(saldo_sistema_cents) && saldo_sistema_cents !== sistema,
+    });
   }
 
   // ── NOTAS FISCAIS ──────────────────────────────────────────────────────────
@@ -924,8 +1009,41 @@ Deno.serve(async (req: Request) => {
     if (c.tipo === "cartao_credito" && (!c.dia_fechamento || !c.dia_vencimento)) {
       return json({ error: "cartao exige dia de fechamento e vencimento" }, 400);
     }
+    if (c.id != null && !ehUuid(c.id)) return json({ error: "id invalido" }, 400);
+    let antes: Record<string, unknown> | null = null;
+    if (c.id) {
+      const { data: atual, error: eAtual } = await supabase.from("eloi_contas").select("*").eq("id", c.id).maybeSingle();
+      if (eAtual) return json({ error: eAtual.message }, 500);
+      antes = atual;
+    }
+    if (antes) {
+      const { count, error: eN } = await supabase.from("eloi_transacoes").select("id", { count: "exact", head: true })
+        .or(`conta_id.eq.${c.id},conta_destino_id.eq.${c.id}`);
+      if (eN) return json({ error: eN.message }, 500);
+      const temHistorico = (count ?? 0) > 0;
+      if (temHistorico && ((c.tipo != null && c.tipo !== antes.tipo) || (c.contexto != null && c.contexto !== antes.contexto))) {
+        return json({ error: "conta com lançamentos não muda de tipo nem de contexto — crie outra conta" }, 409);
+      }
+      // Saldo inicial reescreve o saldo de todo o histórico: só com motivo, e fica na trilha.
+      if (temHistorico && c.saldo_inicial_cents != null && Number(c.saldo_inicial_cents) !== Number(antes.saldo_inicial_cents)
+        && !(typeof body?.motivo === "string" && body.motivo.trim())) {
+        return json({ error: "alterar o saldo inicial de conta com lançamentos exige motivo" }, 409);
+      }
+      if (c.ativa === false && antes.ativa !== false) c.arquivada_em = new Date().toISOString();
+      if (c.ativa === true && antes.ativa === false) c.arquivada_em = null;
+    }
     const { data, error } = await supabase.from("eloi_contas").upsert(c).select().single();
-    if (error) return json({ error: error.message }, 500);
+    if (error) return json({ error: error.message }, /tipo nem de contexto/.test(error.message) ? 409 : 500);
+    if (antes) {
+      const mudou = ["saldo_inicial_cents", "ativa", "tipo", "contexto", "limite_cents", "dia_fechamento", "dia_vencimento"]
+        .filter((k) => String(antes![k]) !== String((data as Record<string, unknown>)[k]));
+      if (mudou.length) {
+        await supabase.from("eloi_auditoria").insert({
+          acao: "conta.alterar", tabela: "eloi_contas", registro_id: data.id, antes, depois: data,
+          motivo: typeof body?.motivo === "string" ? body.motivo.trim() || null : null,
+        });
+      }
+    }
     return json({ conta: data });
   }
 
@@ -933,6 +1051,11 @@ Deno.serve(async (req: Request) => {
     const c = escolher(body?.categoria ?? {}, CATEGORIA_CAMPOS);
     if (!c.nome || !c.contexto) return json({ error: "nome e contexto sao obrigatorios" }, 400);
     if (c.cor != null && !/^#[0-9a-f]{6}$/i.test(String(c.cor))) return json({ error: "cor deve ser #rrggbb" }, 400);
+    // Natureza escolhida na tela é decisão do dono: sai da fila de revisão.
+    if (c.natureza !== undefined) {
+      if (!NATUREZAS.includes(c.natureza as string)) return json({ error: "natureza invalida" }, 400);
+      c.natureza_definida_por = "dono";
+    }
     // Contexto e tipo sao estrutura: os lancamentos ja classificados dependem
     // deles. Mudar a categoria de lado e criar outra, nao editar esta.
     if (c.id) {

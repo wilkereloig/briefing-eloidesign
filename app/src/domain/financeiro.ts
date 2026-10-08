@@ -12,7 +12,7 @@
 //    Pagamento parcial é normal, não exceção;
 //  · competência (a que mês pertence) ≠ liquidação (quando o dinheiro andou).
 //    Resultado usa competência; saldo usa liquidação.
-import type { Transacao, Conta, Contexto, Emprestimo, Meta, StatusMov, TipoMov } from '../lib/tipos'
+import type { Transacao, Conta, Categoria, Contexto, Emprestimo, Meta, Natureza, StatusMov, TipoMov } from '../lib/tipos'
 
 /** Status em que a transação ainda não liquidou e continua devida. */
 const EM_ABERTO: StatusMov[] = ['previsto', 'pendente', 'parcial', 'vencido']
@@ -71,11 +71,22 @@ export function saldoContaEm(conta: Conta, transacoes: Transacao[], data: string
     (t.data_liquidacao ?? t.created_at.slice(0, 10)) <= data))
 }
 
+/**
+ * A conta entra nos totais econômicos? Ativa, sempre. Arquivada, enquanto
+ * ainda tiver dinheiro (ou cheque especial usado) ou dívida de cartão:
+ * arquivar é tirar dos seletores, não fazer saldo ou dívida sumir do patrimônio.
+ */
+export function pesaNosTotais(c: Conta, transacoes: Transacao[]): boolean {
+  if (c.ativa) return true
+  return c.tipo === 'cartao_credito' ? dividaDoCartao(c, transacoes) !== 0 : saldoConta(c, transacoes) !== 0
+}
+
 /** Soma de saldos das contas de um contexto. Cartão de crédito fica de fora:
- *  fatura é dívida, não saldo disponível — some em `faturaAberta`. */
+ *  fatura é dívida, não saldo disponível — some em `faturaAberta`. Conta
+ *  arquivada com saldo continua somando (ver pesaNosTotais). */
 export function saldoDisponivel(contas: Conta[], transacoes: Transacao[], contexto?: Contexto): number {
   return contas
-    .filter((c) => c.ativa && c.tipo !== 'cartao_credito' && (!contexto || c.contexto === contexto))
+    .filter((c) => c.tipo !== 'cartao_credito' && (!contexto || c.contexto === contexto) && pesaNosTotais(c, transacoes))
     .reduce((s, c) => s + saldoConta(c, transacoes), 0)
 }
 
@@ -92,7 +103,21 @@ export interface Resultado {
   a_pagar_cents: number
 }
 
-/** `mes` no formato 'AAAA-MM'; omitido, considera todas as competências. */
+/**
+ * CRITÉRIO LEGADO — "liquidado por competência": soma o que JÁ FOI PAGO das
+ * transações cuja competência é o mês. Não é regime de competência (que
+ * soma o valor contratado) nem de caixa (que usa a data do pagamento): o mês
+ * corrente parece sem despesa até as contas serem pagas, e o passado muda.
+ * Mantido enquanto as telas migram para `resultadoPorCompetencia` (domínio)
+ * e para as perspectivas do banco (`financas.perspectivas`). Ver o relatório
+ * de diferenças em docs/EVOLUCAO-FINANCEIRO.md.
+ *
+ * `mes` no formato 'AAAA-MM'; omitido, considera todas as competências.
+ */
+export const resultadoLiquidadoPorCompetencia = (transacoes: Transacao[], contexto?: Contexto, mes?: string) =>
+  resultado(transacoes, contexto, mes)
+
+/** Ver `resultadoLiquidadoPorCompetencia` (mesmo cálculo, nome antigo). */
 export function resultado(transacoes: Transacao[], contexto?: Contexto, mes?: string): Resultado {
   let receita = 0, despesa = 0, aReceber = 0, aPagar = 0
   for (const t of transacoes) {
@@ -542,7 +567,8 @@ const somaDias = (iso: string, dias: number) =>
  *  mesma função, senão a tela lista uma coisa e soma outra. */
 export function saidasDaCobertura(contas: Conta[], transacoes: Transacao[], hoje: string, dias = 7, contexto?: Contexto): Transacao[] {
   const ate = somaDias(hoje, dias)
-  const ids = new Set(contas.filter((c) => c.ativa && c.tipo !== 'cartao_credito' && (!contexto || c.contexto === contexto))
+  // Conta arquivada com conta a pagar continua devendo: entra.
+  const ids = new Set(contas.filter((c) => c.tipo !== 'cartao_credito' && (!contexto || c.contexto === contexto))
     .map((c) => c.id))
   return transacoes.filter((t) => t.tipo === 'saida' && !!t.conta_id && ids.has(t.conta_id) && estaEmAberto(t) &&
     !!t.data_vencimento && t.data_vencimento <= ate)
@@ -556,7 +582,7 @@ export function saidasDaCobertura(contas: Conta[], transacoes: Transacao[], hoje
  */
 export function cobertura(contas: Conta[], transacoes: Transacao[], hoje: string, dias = 7, contexto?: Contexto): Cobertura {
   const ate = somaDias(hoje, dias)
-  const ativas = contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto))
+  const ativas = contas.filter((c) => (!contexto || c.contexto === contexto) && pesaNosTotais(c, transacoes))
   let aPagar = 0
   let itens = 0
   for (const t of saidasDaCobertura(contas, transacoes, hoje, dias, contexto)) {
@@ -577,7 +603,7 @@ export interface Patrimonio { contas_cents: number; cartoes_cents: number; empre
 /** Quanto se tem menos quanto se deve. `emprestimos_cents` = saldo devedor
  *  dos empréstimos (vem de `resumoEmprestimo`). */
 export function patrimonioLiquido(contas: Conta[], transacoes: Transacao[], contexto?: Contexto, emprestimos_cents = 0): Patrimonio {
-  const ativas = contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto))
+  const ativas = contas.filter((c) => (!contexto || c.contexto === contexto) && pesaNosTotais(c, transacoes))
   const contasCents = ativas.filter((c) => c.tipo !== 'cartao_credito').reduce((s, c) => s + saldoConta(c, transacoes), 0)
   const cartoes = ativas.filter((c) => c.tipo === 'cartao_credito').reduce((s, c) => s + dividaDoCartao(c, transacoes), 0)
   return { contas_cents: contasCents, cartoes_cents: cartoes, emprestimos_cents,
@@ -587,21 +613,49 @@ export function patrimonioLiquido(contas: Conta[], transacoes: Transacao[], cont
 // ── empréstimos ──────────────────────────────────────────────────────────────
 
 export interface ResumoEmprestimo {
-  total_cents: number; juros_cents: number | null; pago_cents: number; falta_cents: number
+  total_cents: number; juros_cents: number | null; pago_cents: number
+  /** Soma das parcelas em aberto (valor nominal). NÃO é o saldo devedor: tem os juros futuros dentro. */
+  falta_cents: number
   parcelas_pagas: number; proxima: Transacao | null; quitacao: string; progresso: number
+  /** Taxa efetiva ao mês (0,0407 = 4,07%), pelo valor recebido e as parcelas. Nulo sem valor recebido. */
+  taxa_mensal: number | null
+  /** Estimativa para quitar hoje: parcelas futuras trazidas a valor presente pela taxa do contrato
+   *  (o banco é obrigado a abater os juros futuros); atrasadas entram cheias, sem multa. */
+  quitar_hoje_cents: number | null
+}
+
+/** Taxa mensal que iguala o valor recebido às `n` parcelas iguais (tabela Price). Bisseção:
+ *  sem dependência, estável para qualquer taxa entre 0 e 100% ao mês. Nulo se não há juros a achar. */
+export function taxaMensalEmprestimo(recebido_cents: number, parcela_cents: number, n: number): number | null {
+  if (recebido_cents <= 0 || parcela_cents <= 0 || n < 1 || parcela_cents * n <= recebido_cents) return null
+  const vp = (i: number) => parcela_cents * (1 - (1 + i) ** -n) / i
+  let lo = 1e-9, hi = 1
+  for (let k = 0; k < 200; k++) {
+    const meio = (lo + hi) / 2
+    if (vp(meio) > recebido_cents) lo = meio; else hi = meio
+  }
+  return (lo + hi) / 2
 }
 
 /** Situação de um empréstimo. As parcelas pagas antes de entrar no sistema não
  *  têm transação: contam pelo valor da parcela. `falta_cents` é o saldo devedor
  *  (o que entra em `patrimonioLiquido`); juros só com valor recebido informado. */
-export function resumoEmprestimo(e: Emprestimo, transacoes: Transacao[]): ResumoEmprestimo {
+export function resumoEmprestimo(e: Emprestimo, transacoes: Transacao[], hoje?: string): ResumoEmprestimo {
   const parcelas = transacoes.filter((t) => t.emprestimo_id === e.id && !estaCancelada(t))
   const total = e.valor_parcela_cents * e.parcelas_total
   const quitadas = parcelas.filter((t) => saldoAberto(t) === 0).length
   const abertas = parcelas.filter((t) => saldoAberto(t) > 0)
     .sort((a, b) => (a.data_vencimento ?? '').localeCompare(b.data_vencimento ?? ''))
   const pagas = e.parcelas_pagas_antes + quitadas
+  const taxa = taxaMensalEmprestimo(e.valor_recebido_cents, e.valor_parcela_cents, e.parcelas_total)
+  const quitarHoje = taxa == null || !hoje ? null : Math.round(abertas.reduce((s, t) => {
+    const meses = t.data_vencimento && t.data_vencimento > hoje
+      ? (Date.parse(t.data_vencimento) - Date.parse(hoje)) / (30 * 86_400_000) : 0
+    return s + saldoAberto(t) / (1 + taxa) ** meses
+  }, 0))
   return {
+    taxa_mensal: taxa,
+    quitar_hoje_cents: quitarHoje,
     total_cents: total,
     juros_cents: e.valor_recebido_cents > 0 ? total - e.valor_recebido_cents : null,
     pago_cents: e.parcelas_pagas_antes * e.valor_parcela_cents + parcelas.reduce((s, t) => s + valorLiquidado(t), 0),
@@ -612,3 +666,69 @@ export function resumoEmprestimo(e: Emprestimo, transacoes: Transacao[]): Resumo
     progresso: pagas / e.parcelas_total,
   }
 }
+
+// ── resultado por competência (regime de competência, por natureza) ───────────
+
+export interface ResultadoCompetencia {
+  /** Receita e despesa OPERACIONAIS: valor original, pago ou não. */
+  receita_cents: number
+  despesa_cents: number
+  /** Receita − despesa operacionais. */
+  resultado_cents: number
+  /** Parcelas de empréstimo, rotativo, parcelamento de fatura (principal + juros). */
+  divida_cents: number
+  /** Juros, tarifas, IOF (saída) − rendimentos (entrada). */
+  financeiro_liquido_cents: number
+  /** Empréstimo recebido, pró-labore, aporte etc. — dinheiro que andou sem ser resultado. */
+  patrimonial_entradas_cents: number
+  patrimonial_saidas_cents: number
+  /** Ajustes de conferência: nunca entram como receita/despesa. */
+  ajustes_cents: number
+  /** Do que pertence ao mês, quanto ainda não foi pago/recebido. */
+  a_receber_cents: number
+  a_pagar_cents: number
+}
+
+/**
+ * Regime de competência: cada entrada/saída não cancelada conta pelo VALOR
+ * ORIGINAL no mês de `competenciaDe`, separada pela natureza da categoria.
+ * Compra no cartão é despesa no mês da compra; pagar a fatura não é despesa
+ * (é transferência). Espelha eloi_resultado_competencia (banco).
+ */
+export function resultadoPorCompetencia(transacoes: Transacao[], categorias: Categoria[], contexto?: Contexto, mes?: string): ResultadoCompetencia {
+  const natureza = new Map(categorias.map((c) => [c.id, naturezaDaCategoria(c)]))
+  const r: ResultadoCompetencia = {
+    receita_cents: 0, despesa_cents: 0, resultado_cents: 0, divida_cents: 0, financeiro_liquido_cents: 0,
+    patrimonial_entradas_cents: 0, patrimonial_saidas_cents: 0, ajustes_cents: 0, a_receber_cents: 0, a_pagar_cents: 0,
+  }
+  for (const t of transacoes) {
+    if (t.tipo === 'transferencia' || estaCancelada(t)) continue
+    if (contexto && t.contexto !== contexto) continue
+    if (mes && competenciaDe(t) !== mes) continue
+    const entrada = t.tipo === 'entrada'
+    if (entrada) r.a_receber_cents += saldoAberto(t); else r.a_pagar_cents += saldoAberto(t)
+    if (t.origem === 'ajuste') { r.ajustes_cents += entrada ? t.valor_cents : -t.valor_cents; continue }
+    const nat = (t.categoria_id && natureza.get(t.categoria_id)) || 'operacional'
+    if (nat === 'operacional') { if (entrada) r.receita_cents += t.valor_cents; else r.despesa_cents += t.valor_cents }
+    else if (nat === 'divida') r.divida_cents += entrada ? -t.valor_cents : t.valor_cents
+    else if (nat === 'financeira') r.financeiro_liquido_cents += entrada ? -t.valor_cents : t.valor_cents
+    else if (entrada) r.patrimonial_entradas_cents += t.valor_cents
+    else r.patrimonial_saidas_cents += t.valor_cents
+  }
+  r.resultado_cents = r.receita_cents - r.despesa_cents
+  return r
+}
+
+/** Natureza da categoria. Usa a coluna `natureza` (migração 2026-10-09); antes
+ *  dela, cai na mesma regra de nome das categorias-padrão que a migração aplica. */
+export function naturezaDaCategoria(c: Pick<Categoria, 'nome' | 'natureza'> | undefined): Natureza {
+  if (c?.natureza) return c.natureza
+  switch (c?.nome) {
+    case 'Empréstimos e dívidas': return 'divida'
+    case 'Juros, tarifas e encargos': case 'Rendimentos': return 'financeira'
+    case 'Empréstimos recebidos': case 'Pró-labore': case 'Distribuição de lucro':
+    case 'Dinheiro de outras contas': return 'patrimonial'
+    default: return 'operacional'
+  }
+}
+

@@ -19,9 +19,9 @@ import {
 } from './api'
 import type {
   BriefingLinkRow, Categoria, ClienteRow, Conferencia, Conta, Contexto, Emprestimo, Meta, NotaFiscal,
-  OrcamentoRow, Recorrencia, ServicoRow, SubClienteRow, TarefaRow, Transacao,
+  OrcamentoRow, Recorrencia, SaldoServidor, ServicoRow, SubClienteRow, TarefaRow, Transacao,
 } from './tipos'
-import { competenciaDe } from '../domain/financeiro'
+import { competenciaDe, saldoConta } from '../domain/financeiro'
 import { mesAtual } from '../domain/datas'
 
 /** Filtro de contexto da interface: 'tudo' soma pessoal + empresa. */
@@ -64,6 +64,9 @@ interface Estado {
   briefings: BriefingLinkRow[]
   /** Tarefas manuais (abertas + recentes). Hoje, calendário e ficha leem daqui. */
   tarefas: TarefaRow[]
+  /** Saldo oficial por conta calculado no banco (histórico inteiro). Vazio se a
+   *  edge/migração ainda não estiverem publicadas. */
+  saldosServidor: SaldoServidor[]
   carregando: boolean
   erro: string | null
   /** Partes que falharam sem derrubar o painel (marcas, orçamentos, convites,
@@ -79,31 +82,41 @@ interface Estado {
   contexto: Contexto | undefined
 }
 
-export type Parte = 'transacoes' | 'subClientes' | 'orcamentos' | 'briefings' | 'tarefas'
+export type Parte = 'transacoes' | 'subClientes' | 'orcamentos' | 'briefings' | 'tarefas' | 'recorrencias' | 'saldos'
 
 export const ROTULO_PARTE: Record<Parte, string> = {
   transacoes: 'lançamentos', subClientes: 'marcas', orcamentos: 'orçamentos',
-  briefings: 'convites de briefing', tarefas: 'tarefas',
+  briefings: 'convites de briefing', tarefas: 'tarefas', recorrencias: 'contas fixas', saldos: 'saldos',
 }
 
-// ponytail: teto de uma chamada só. A edge corta em 2000 hoje (Math.min em
-// transacoes.list); passar disso trunca o histórico mais antigo e o saldo
-// fica errado — por isso o store avisa em `falhas.transacoes`. Saída quando
-// encostar: saldo por conta calculado no servidor (RPC) ou paginar a lista.
+// Teto de uma chamada: a edge pagina até 20000 e diz se veio TUDO
+// (`completo`, contagem no banco com os mesmos filtros). O aviso sai dessa
+// resposta — nunca de adivinhar pelo tamanho da lista. Saldo oficial não
+// depende disto: vem calculado no banco (bootstrap.saldos).
 const LIMITE_TRANSACOES = 20000
-const TETO_EDGE = 2000
+
+// Recorrências: uma vez por sessão do navegador, não a cada recarga (cada folha
+// salva chama recarregar). A rotina diária do banco (eloi_rotina_diaria) é o
+// gatilho principal; isto cobre o período até o cron estar ligado.
+let recorrenciasGeradasNestaSessao = false
+
+/** Contas cujo saldo calculado na tela difere do saldo oficial do servidor. */
+export function divergenciasDeSaldo(contas: Conta[], transacoes: Transacao[], saldos: SaldoServidor[]): string[] {
+  const porId = new Map(saldos.map((x) => [x.conta_id, Number(x.saldo_cents)]))
+  return contas.filter((c) => porId.has(c.id) && porId.get(c.id) !== saldoConta(c, transacoes)).map((c) => c.nome)
+}
 
 const Ctx = createContext<Estado>(null!)
 export const useFinancas = () => useContext(Ctx)
 
 type Dados = Pick<Estado, 'contas' | 'categoriasTodas' | 'recorrencias' | 'metas' | 'conferencias' | 'emprestimos'
   | 'transacoes' | 'notas' | 'clientes' | 'subClientes' | 'servicos' | 'orcamentos'
-  | 'briefings' | 'tarefas'>
+  | 'briefings' | 'tarefas' | 'saldosServidor'>
 
 const VAZIO: Dados = {
   contas: [], categoriasTodas: [], recorrencias: [], metas: [], conferencias: [], emprestimos: [],
   transacoes: [], notas: [], clientes: [], subClientes: [], servicos: [], orcamentos: [],
-  briefings: [], tarefas: [],
+  briefings: [], tarefas: [], saldosServidor: [],
 }
 
 export function FinancasProvider({ children }: { children: ReactNode }) {
@@ -122,18 +135,28 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
     if (!jaCarregou.current) setCarregando(true)
     setErro(null)
     try {
-      // Materializa recorrências vencidas antes de ler: abrir o painel é o
-      // gatilho natural: não há cron aqui. A chamada é idempotente por
-      // vencimento, então abrir dez vezes no mesmo dia não duplica nada.
-      await financas.gerarRecorrencias().catch(() => { /* não bloqueia a carga */ })
-
       // Partes secundárias não derrubam o painel, mas a falha fica registrada
       // e aparece na tela — lista vazia calada parece "não tem nada".
       const novasFalhas: Partial<Record<Parte, string>> = {}
+
+      // Materializa recorrências antes de ler (uma vez por sessão). Idempotente
+      // no banco; falha ou recorrência travada aparece em `falhas`, não some.
+      if (!recorrenciasGeradasNestaSessao) {
+        recorrenciasGeradasNestaSessao = true
+        try {
+          const g = await financas.gerarRecorrencias()
+          if (g.erros?.length) {
+            novasFalhas.recorrencias = `${g.erros.length} conta(s) fixa(s) não geraram a cobrança: ${g.erros[0].erro}`
+          }
+        } catch (e) {
+          recorrenciasGeradasNestaSessao = false
+          novasFalhas.recorrencias = `não foi possível gerar as contas fixas: ${(e as Error).message}`
+        }
+      }
       const parcial = <T,>(parte: Parte, p: Promise<T[]>) =>
         p.catch((e: unknown) => { novasFalhas[parte] = (e as Error).message; return [] as T[] })
 
-      const [ref, transacoes, notas, cli, sub, svc, orc, bri, tar] = await Promise.all([
+      const [ref, lista, notas, cli, sub, svc, orc, bri, tar] = await Promise.all([
         financas.bootstrap(),
         financas.transacoes({ limite: LIMITE_TRANSACOES }),
         financas.notas(),
@@ -147,9 +170,19 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
         parcial<BriefingLinkRow>('briefings', briefingsApi.convites()),
         parcial<TarefaRow>('tarefas', tarefasApi.list()),
       ])
-      if (transacoes.length >= TETO_EDGE && transacoes.length < LIMITE_TRANSACOES) {
-        novasFalhas.transacoes = `o servidor devolveu só ${transacoes.length} lançamentos; ` +
-          'saldos podem estar incompletos'
+      const transacoes = lista.transacoes
+      if (lista.completo === false) {
+        novasFalhas.transacoes = `o servidor tem ${lista.total ?? 'mais'} lançamentos e devolveu ${transacoes.length}; ` +
+          'listas e relatórios estão incompletos'
+      } else if (lista.completo === undefined && transacoes.length >= LIMITE_TRANSACOES) {
+        // Edge antiga (sem `completo`): só dá para afirmar no teto.
+        novasFalhas.transacoes = `o servidor devolveu ${transacoes.length} lançamentos (teto); pode haver mais`
+      }
+      const saldosServidor = ref.saldos ?? []
+      if (ref.saldos_erro) novasFalhas.saldos = `saldo oficial indisponível: ${ref.saldos_erro}`
+      else if (lista.completo !== false) {
+        const div = divergenciasDeSaldo(ref.contas, transacoes, saldosServidor)
+        if (div.length) novasFalhas.saldos = `saldo da tela difere do servidor em: ${div.join(', ')}`
       }
       setDados({
         contas: ref.contas, categoriasTodas: ref.categorias,
@@ -157,7 +190,7 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
         conferencias: ref.conferencias ?? [],
         emprestimos: ref.emprestimos ?? [],
         transacoes, notas, clientes: cli, subClientes: sub, servicos: svc, orcamentos: orc,
-        briefings: bri, tarefas: tar,
+        briefings: bri, tarefas: tar, saldosServidor,
       })
       setFalhas(novasFalhas)
     } catch (e) {

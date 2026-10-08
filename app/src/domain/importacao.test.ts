@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  chaveImportacao, classificar, detectarColunas, interpretar, lerCsv, lerData, lerValor,
+  chaveImportacao, classificar, detectarColunas, interpretar, lerCsv, lerData, lerExtrato, lerValor,
 } from './importacao'
 
 describe('lerValor', () => {
@@ -127,5 +127,35 @@ describe('classificar', () => {
     const manual = { conta_id: 'c', importacao_chave: null, data_liquidacao: '2026-09-05', data_vencimento: null,
       valor_cents: 800, tipo: 'saida' as const, status: 'realizado' as const }
     expect(classificar(ls, [manual], 'c')).toEqual(['provavel', 'nova'])
+  })
+})
+
+describe('OFX', () => {
+  const ofx = `OFXHEADER:100
+<OFX><BANKMSGSRSV1><STMTTRNRS><STMTRS><BANKTRANLIST>
+<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20261008120000[-3:BRT]<TRNAMT>-8.00<FITID>A1<MEMO>CAFE DA ESQUINA
+</STMTTRN>
+<STMTTRN><TRNTYPE>DEBIT<DTPOSTED>20261008<TRNAMT>-8.00<FITID>A2<MEMO>CAFE DA ESQUINA</STMTTRN>
+<STMTTRN><TRNTYPE>CREDIT<DTPOSTED>20261009<TRNAMT>1500.50<FITID>A3<NAME>PIX RECEBIDO<MEMO>CLIENTE X</STMTTRN>
+</BANKTRANLIST></STMTRS></STMTTRNRS></BANKMSGSRSV1></OFX>`
+  it('lê cada lançamento com data, descrição, valor e FITID', () => {
+    const t = lerExtrato(ofx, 'extrato.ofx')
+    expect(t.cabecalho).toEqual(['Data', 'Descrição', 'Valor', 'FITID'])
+    expect(t.linhas).toEqual([
+      ['2026-10-08', 'CAFE DA ESQUINA', '-8,00', 'A1'],
+      ['2026-10-08', 'CAFE DA ESQUINA', '-8,00', 'A2'],
+      ['2026-10-09', 'PIX RECEBIDO — CLIENTE X', '1500,50', 'A3'],
+    ])
+  })
+  it('chave de importação é o FITID: dois cafés iguais no mesmo dia são duas linhas, sem sufixo', () => {
+    const t = lerExtrato(ofx)
+    const m = detectarColunas(t)
+    expect(m.id).toBe(3)
+    const l = interpretar(t, m)
+    expect(l.map((x) => x.chave)).toEqual(['fitid|A1', 'fitid|A2', 'fitid|A3'])
+    expect(l.map((x) => x.valor_cents)).toEqual([-800, -800, 150050])
+  })
+  it('CSV continua indo para o leitor de CSV', () => {
+    expect(lerExtrato('data;descricao;valor\n08/10/2026;Café;-8,00').cabecalho).toEqual(['data', 'descricao', 'valor'])
   })
 })
