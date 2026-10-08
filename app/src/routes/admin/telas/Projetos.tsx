@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { orcamentos as orcamentosApi, servicos as servicosApi } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
 import { useAbrirNovo } from '../../../lib/abrir-novo'
-import { hojeISO, rotuloMes, useFinancas, useNomes } from '../../../lib/financas-store'
+import { hojeISO, mesAtual, rotuloMes, useFinancas, useNomes } from '../../../lib/financas-store'
 import { dataCurta } from '../../../ui/formato'
 import { juntarProjetos, mesDoProjeto, type Etapa, type Projeto } from '../../../domain/projeto'
 import { Aviso, Botao, Chip, Icone, Indicador, Painel, Pilula, Vazio } from '../../../ui/componentes'
@@ -149,11 +149,15 @@ export default function Projetos() {
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase()
     const casaPendencia = PENDENCIAS.find((x) => x.chave === pendencia)?.casa
+    const corrente = mesAtual()
     return projetos.filter((p) => {
       // Orçamento sem serviço (sem mês) nunca some no filtro de mês — só
       // existe data depois que o orçamento é aprovado.
       const m = mesDoProjeto(p)
-      if (m && m !== mes) return false
+      // Serviço não pago de mês anterior continua no mês corrente: dívida não
+      // vence junto com o mês. Aparece agrupado no mês de origem.
+      const arrastado = mes === corrente && !!m && m < mes && !!p.servico && !p.servico.pago
+      if (m && m !== mes && !arrastado) return false
       if (etapa !== 'todos' && p.etapa !== etapa) return false
       if (clienteFiltro && p.clienteId !== clienteFiltro) return false
       if (marcaFiltro && p.servico?.sub_cliente_id !== marcaFiltro) return false
