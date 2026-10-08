@@ -4,7 +4,7 @@
 
 ## O SVG mestre real (evidência, não suposição)
 
-Li `entregas-marca/georgia-andrade/logo/simbolo/grafite.svg` em `C:/Users/wilke/Documents/ELOI SITES/briefing-eloidesign-repo`. É um único `<path>` com fill fixo via `<style>.cls-1{fill:#272126}`, viewBox `407.48 x 574.74`, sem `<text>`, sem `<image>`, sem `<filter>`, sem `foreignObject`, sem fontes externas. Este arquivo é um output já recolorido (uma das variações "grafite" geradas pelo script), mas confirma o padrão real do pipeline: path único, fill chapado, geometria simples, exatamente como o briefing descreveu o master (`fill:currentColor`). Isso é decisivo: não estamos rasterizando SVG arbitrário — estamos rasterizando o caso mais simples que existe pra um `<canvas>` desenhar, o que descarta boa parte do risco que normalmente justificaria um renderizador de servidor tipo resvg.
+Li `entregas-marca/georgia-andrade/logo/simbolo/grafite.svg` em `C:/Users/wilke/Documents/eloi-workspace/eloi/studio`. É um único `<path>` com fill fixo via `<style>.cls-1{fill:#272126}`, viewBox `407.48 x 574.74`, sem `<text>`, sem `<image>`, sem `<filter>`, sem `foreignObject`, sem fontes externas. Este arquivo é um output já recolorido (uma das variações "grafite" geradas pelo script), mas confirma o padrão real do pipeline: path único, fill chapado, geometria simples, exatamente como o briefing descreveu o master (`fill:currentColor`). Isso é decisivo: não estamos rasterizando SVG arbitrário — estamos rasterizando o caso mais simples que existe pra um `<canvas>` desenhar, o que descarta boa parte do risco que normalmente justificaria um renderizador de servidor tipo resvg.
 
 ## (a) Canvas API — verificação dos pontos de risco pedidos
 
@@ -46,6 +46,6 @@ Canvas API client-side vence pela escada de simplicidade: é um recurso nativo d
 
 ## Arquivos lidos (nenhum editado)
 
-- `C:/Users/wilke/Documents/ELOI SITES/briefing-eloidesign-repo/entregas-marca/georgia-andrade/logo/simbolo/grafite.svg`
+- `C:/Users/wilke/Documents/eloi-workspace/eloi/studio/entregas-marca/georgia-andrade/logo/simbolo/grafite.svg`
 
 Nenhum arquivo de produção foi criado ou modificado — esta é apenas a saída de planejamento solicitada.

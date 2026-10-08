@@ -135,5 +135,5 @@ A única coisa real que se perde ao escolher Y é a conveniência de repassar ar
 
 ## Fontes consultadas nesta avaliação
 - MCP Supabase (`nlamznxoocmygfvnqcns`, read-only): `execute_sql` em `storage.buckets` e `public.eloi_clientes` — confirma que não existe bucket `entregas-marca` (só `anexos` e `eloi-notas`, ambos privados) e que `marca_publicada=true` pra Georgia Andrade é só uma flag, sem infraestrutura pública por trás.
-- `Glob` em `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\entregas-marca\**` — nenhum arquivo encontrado.
-- `Grep` em `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\gestao\index.html` — confirma `copiarLinkMarca()` (linhas 406-407) gerando URL para página inexistente.
+- `Glob` em `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\entregas-marca\**` — nenhum arquivo encontrado.
+- `Grep` em `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\gestao\index.html` — confirma `copiarLinkMarca()` (linhas 406-407) gerando URL para página inexistente.

@@ -33,7 +33,7 @@
 - [ ] **Step 1: Scaffold**
 
 ```bash
-cd "C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo"
+cd "C:\Users\wilke\Documents\eloi-workspace\eloi\studio"
 npm create vite@latest app -- --template react-ts
 cd app
 npm install

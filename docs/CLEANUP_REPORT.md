@@ -133,7 +133,7 @@ design. Todo o texto ao redor já diz "ELOI Studio".
 `docs/historico/README.md`
 
 Atualizados: `docs/ROUTE_MAP.md`, `docs/GLOSSARY.md`, `CHANGELOG.md`,
-`app/README.md` e o `CLAUDE.md` da pasta-mãe `ELOI SITES/` (que apontava para
+`app/README.md` e o `CLAUDE.md` da pasta-mãe `eloi-workspace/` (que apontava para
 arquivos que mudaram de lugar e agora aponta para a documentação do repositório
 em vez de duplicá-la).
 

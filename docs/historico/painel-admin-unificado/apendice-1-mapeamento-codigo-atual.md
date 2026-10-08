@@ -105,16 +105,16 @@ E toda página admin lê/grava a **mesma chave** `sessionStorage['eloi_pw']`, no
 
 ## Arquivos lidos (paths absolutos)
 
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\SITEMAP.md`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\admin\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\gestao\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\painel-briefings\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\painel\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\painel-ecommerce\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\painel-orcamentos\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\orcamento-inteligente\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\aplicativos\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\db\eloi-gestao.sql`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\entregas-marca\_tools\config-georgia-andrade.json` (referência de contexto)
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\SITEMAP.md`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\admin\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\gestao\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\painel-briefings\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\painel\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\painel-ecommerce\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\painel-orcamentos\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\orcamento-inteligente\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\aplicativos\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\db\eloi-gestao.sql`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\entregas-marca\_tools\config-georgia-andrade.json` (referência de contexto)
 
 Nenhum arquivo foi escrito ou editado — leitura e MCP read-only (`list_tables`, `list_edge_functions`, `get_edge_function`) apenas, conforme instruído.

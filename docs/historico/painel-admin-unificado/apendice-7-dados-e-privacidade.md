@@ -208,11 +208,11 @@ Registros antigos sem `cliente_id` (o único orçamento real hoje, até o Wilke 
 - Sem RLS policy nova além do `enable row level security` sem policy (mesmo padrão de `admin_sessions`) — só a service-role (edge function) acessa essas tabelas, front-end nunca fala direto com o Postgres.
 
 ## Arquivos lidos
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\painel-orcamentos\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\painel-briefings\index.html`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\SITEMAP.md`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\docs\painel-admin-unificado\plano.md`
-- `C:\Users\wilke\Documents\ELOI SITES\briefing-eloidesign-repo\docs\painel-admin-unificado\apendice-1-mapeamento-codigo-atual.md`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\painel-orcamentos\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\painel-briefings\index.html`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\SITEMAP.md`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\docs\painel-admin-unificado\plano.md`
+- `C:\Users\wilke\Documents\eloi-workspace\eloi\studio\docs\painel-admin-unificado\apendice-1-mapeamento-codigo-atual.md`
 - MCP Supabase (`nlamznxoocmygfvnqcns`, SELECT-only): `execute_sql` em `orcamentos`, `briefing_links`, `eloi_clientes`; `list_tables` verbose (schema `public`); `get_edge_function` em `eloi-gestao`, `orcamentos`, `briefing-submit`.
 
 Nada foi escrito no banco nem no repositório — só leitura, conforme instruído.
