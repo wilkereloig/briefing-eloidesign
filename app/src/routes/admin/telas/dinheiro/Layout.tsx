@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { Navigate, NavLink, Outlet, useMatch, useSearchParams } from 'react-router-dom'
 import { NAV_DINHEIRO } from '../../nav'
-import { Esqueleto, Vazio } from '../../../../ui/componentes'
+import { Esqueleto } from '../../../../ui/componentes'
 import { Cabecalho, SeletorLente } from '../../../../ui/painel'
 
 // Links antigos `/admin/dinheiro?aba=<x>` (favoritos, histórico) → sub-página.
@@ -40,9 +40,4 @@ export default function DinheiroLayout() {
       </Suspense>
     </div>
   )
-}
-
-/** Sub-página ainda não construída. ponytail: some quando a fase dela chegar. */
-export function EmBreve({ titulo }: { titulo: string }) {
-  return <Vazio icone="info" titulo={titulo} instrucao="Esta parte do Dinheiro ainda está sendo construída." />
 }

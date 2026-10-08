@@ -56,6 +56,7 @@ são linhas desta tabela. O que muda é `tipo`/`contexto`/vínculo, nunca a estr
 | `grupo_id` | liga parcelas irmãs |
 | `recorrencia_id` | de que molde a linha nasceu |
 | `origem` | `manual` · `recorrencia` · `parcelamento` · `importacao` · `ajuste` — de onde a linha veio |
+| `emprestimo_id` | parcela de empréstimo (`eloi_emprestimos`, sem `ON DELETE`) — também ganha `grupo_id` = id do empréstimo |
 | `importacao_chave` | `data\|valor\|descrição normalizada`; único por conta (índice parcial) → reimportar não duplica. Linha idêntica repetida no mesmo arquivo ganha sufixo `#2`, `#3` (duas compras iguais no mesmo dia são duas linhas) |
 
 **Cartão:** compra entra na conta do cartão com competência = data da compra e
@@ -95,6 +96,23 @@ nenhuma edge ler. `numero` é único por emissor (índice parcial); mudar o
 número propaga pro espelho `nf_numero` dos serviços
 (`trg_eloi_nota_propaga_numero`). Status `emitida`/`enviada` **exige
 número**, validado no servidor.
+
+### `eloi_emprestimos`
+Contrato de empréstimo (migração `2026-10-08-emprestimos.sql`). `nome`,
+`instituicao`, `contexto`, `conta_id` (conta que debita), `categoria_id`,
+`valor_recebido_cents` (0 = não informado → sem juros), `parcelas_total`,
+`valor_parcela_cents`, `primeiro_vencimento` (da parcela 1, mesmo já paga),
+`parcelas_pagas_antes`, `ativo`, `observacoes`.
+- Cadastrar (`emprestimos.upsert` sem id) gera **só as parcelas que faltam** como
+  `eloi_transacoes` (`origem=parcelamento`, `emprestimo_id`, `grupo_id`); as pagas
+  antes de entrar no sistema contam só no número.
+- Editar muda nome, instituição, conta, categoria, valor recebido, observações e
+  `ativo`. Os campos **estruturais** (parcelas, valor, 1º vencimento, pagas antes,
+  contexto) não mudam — a edge devolve 409; encerre e cadastre outro.
+- Encerrar (`emprestimos.encerrar`) = `ativo=false`; não apaga nem mexe nas parcelas.
+- Pago, falta (saldo devedor), juros, próxima parcela e quitação saem de
+  `resumoEmprestimo` (`domain/financeiro.ts`); o saldo devedor dos ativos entra no
+  `patrimonioLiquido`.
 
 ### `eloi_metas`
 Meta e orçamento de gasto na mesma tabela, discriminados por `especie`.
@@ -260,11 +278,13 @@ Projeto  =  1 orcamentos  +  0..1 eloi_servicos  (por orcamento_id, único)
 Conta (eloi_contas)
 ├── Transações ......... conta_id / conta_destino_id       RESTRICT
 ├── Recorrências ....... eloi_recorrencias.conta_id        SET NULL
+├── Empréstimos ........ eloi_emprestimos.conta_id
 └── Metas .............. eloi_metas.conta_id               CASCADE
 
 Transação (eloi_transacoes)
 ├── Categoria .......... categoria_id                      SET NULL
 ├── Recorrência ........ recorrencia_id                    SET NULL
+├── Empréstimo ......... emprestimo_id
 ├── Parcelas irmãs ..... grupo_id (sem FK — é agrupamento)
 ├── Nota fiscal ........ eloi_notas_fiscais.transacao_id   SET NULL
 └── Arquivos ........... eloi_arquivos.transacao_id        CASCADE

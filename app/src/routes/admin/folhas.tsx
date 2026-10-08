@@ -7,9 +7,9 @@ import {
 } from '../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../lib/dinheiro'
 import { hojeISO, useFinancas } from '../../lib/financas-store'
-import { saldoAberto } from '../../domain/financeiro'
+import { dataDaParcela, saldoAberto } from '../../domain/financeiro'
 import type {
-  ClienteRow, Conta, ContatoRow, Contexto, MaterialRow, OrcamentoRow, Periodicidade,
+  ClienteRow, Conta, ContatoRow, Contexto, Emprestimo, MaterialRow, OrcamentoRow, Periodicidade,
   Recorrencia, ServicoRow, StatusExecucao, SubClienteRow, TarefaRow, TipoConta, TipoMov, Transacao,
 } from '../../lib/tipos'
 import { ROTULO_PRIORIDADE, ROTULO_STATUS_TAREFA, STATUS_TAREFA } from '../../domain/tarefas'
@@ -18,7 +18,7 @@ import {
   type Complexidade, type ItemOrcamento, type Urgencia,
 } from '../../domain/orcamento'
 import { Botao, Campo, CampoTexto, Folha, Icone, Pilula } from '../../ui/componentes'
-import { rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
+import { dataLonga, rotuloConta, rotuloPeriodo, custoMensal } from '../../ui/formato'
 import { corCliente } from '../../ui/tokens'
 
 // Folhas de cadastro e de ação. Todas seguem o mesmo par no rodapé
@@ -391,6 +391,149 @@ export function FolhaRecorrencia({ inicial, aoFechar, aoSalvar }: {
           <input id="inicio-rec" type="date" className="campo-caixa" value={inicio}
             onChange={(e) => setInicio(e.target.value)} />
         </div>
+
+        {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
+      </div>
+    </Folha>
+  )
+}
+
+// ── empréstimo ───────────────────────────────────────────────────────────────
+
+/** Cadastro de empréstimo. Criar gera as parcelas que faltam (edge
+ *  emprestimos.upsert); editar muda só nome, instituição, conta e valor
+ *  recebido — os campos que moldaram as parcelas ficam só leitura. */
+export function FolhaEmprestimo({ inicial, contextoInicial, aoFechar, aoSalvar }: {
+  inicial?: Emprestimo
+  contextoInicial?: Contexto
+  aoFechar: () => void
+  aoSalvar: (msg: string) => void
+}) {
+  const { contas } = useFinancas()
+  const [nome, setNome] = useState(inicial?.nome ?? '')
+  const [instituicao, setInstituicao] = useState(inicial?.instituicao ?? '')
+  const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? contextoInicial ?? 'pessoal')
+  const [contaId, setContaId] = useState(inicial?.conta_id ?? '')
+  const [recebido, setRecebido] = useState(inicial?.valor_recebido_cents ? fmtBRL(inicial.valor_recebido_cents) : '')
+  const [parcelas, setParcelas] = useState('')
+  const [valorParcela, setValorParcela] = useState('')
+  const [primeiro, setPrimeiro] = useState(hojeISO())
+  const [pagasAntes, setPagasAntes] = useState('0')
+  const [erros, setErros] = useState<Record<string, string>>({})
+  const [salvando, setSalvando] = useState(false)
+
+  const total = Number(parcelas)
+  const pagas = Number(pagasAntes)
+  const parcelaCents = centsDeBRL(valorParcela)
+  const totalOk = parcelas.trim() !== '' && Number.isInteger(total) && total >= 1 && total <= 600
+  const pagasOk = pagasAntes.trim() !== '' && Number.isInteger(pagas) && pagas >= 0 && (!totalOk || pagas <= total)
+  const gerar = total - pagas
+
+  async function salvar() {
+    const e: Record<string, string> = {}
+    if (!nome.trim()) e.nome = 'Dê um nome ao empréstimo'
+    if (recebido.trim() && centsDeBRL(recebido) <= 0) e.recebido = 'Valor inválido: deixe em branco se não souber'
+    if (!inicial) {
+      if (!totalOk) e.parcelas = 'Informe de 1 a 600 parcelas'
+      if (parcelaCents <= 0) e.valorParcela = 'Informe um valor maior que zero'
+      if (!primeiro) e.primeiro = 'Informe a data'
+      if (!pagasOk) e.pagasAntes = 'Entre 0 e o número de parcelas'
+    }
+    setErros(e)
+    if (Object.keys(e).length) return
+
+    setSalvando(true)
+    try {
+      const editavel = {
+        nome: nome.trim(), instituicao: instituicao.trim() || null, conta_id: contaId || null,
+        valor_recebido_cents: centsDeBRL(recebido),
+      }
+      // Na edição os campos estruturais nem vão: a edge recusa mudança neles (409).
+      await financas.salvarEmprestimo(inicial
+        ? { id: inicial.id, ...editavel }
+        : { ...editavel, contexto, parcelas_total: total, valor_parcela_cents: parcelaCents,
+          primeiro_vencimento: primeiro, parcelas_pagas_antes: pagas })
+      aoSalvar(inicial ? 'Empréstimo atualizado'
+        : `Empréstimo cadastrado · ${gerar} ${gerar === 1 ? 'parcela lançada' : 'parcelas lançadas'}`)
+      aoFechar()
+    } catch (err) {
+      setErros({ geral: (err as Error).message })
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Folha titulo={inicial ? 'Editar empréstimo' : 'Novo empréstimo'} aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>Salvar</Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
+        <Campo rotulo="Nome" value={nome} erro={erros.nome}
+          onChange={(e) => setNome(e.target.value)} placeholder="Empréstimo Itaú R$ 16 mil" />
+        <Campo rotulo="Instituição" value={instituicao}
+          onChange={(e) => setInstituicao(e.target.value)} placeholder="Itaú" />
+
+        {!inicial && (
+          <div className="linha">
+            <Pilula ativa={contexto === 'pessoal'} onClick={() => { setContexto('pessoal'); setContaId('') }}>Pessoal</Pilula>
+            <Pilula ativa={contexto === 'empresa'} onClick={() => { setContexto('empresa'); setContaId('') }}>Empresa</Pilula>
+          </div>
+        )}
+
+        <div className="campo">
+          <label htmlFor="conta-emp">Conta que debita</label>
+          <select id="conta-emp" className="campo-caixa" value={contaId}
+            onChange={(e) => setContaId(e.target.value)}>
+            <option value="">Selecione…</option>
+            {contas.filter((c) => c.ativa && c.contexto === contexto && c.tipo !== 'cartao_credito')
+              .map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+          </select>
+        </div>
+
+        <Campo rotulo="Valor recebido" value={recebido} inputMode="decimal" erro={erros.recebido}
+          onChange={(e) => setRecebido(e.target.value)} placeholder="Em branco se não souber" />
+
+        {inicial ? (
+          <>
+            <dl className="ficha">
+              <div><dt className="etiqueta-mini">Contexto</dt><dd className="t-corpo">{inicial.contexto}</dd></div>
+              <div><dt className="etiqueta-mini">Parcelas</dt>
+                <dd className="t-corpo">{inicial.parcelas_total}× {fmtBRL(inicial.valor_parcela_cents)}</dd></div>
+              <div><dt className="etiqueta-mini">1º vencimento</dt>
+                <dd className="t-corpo">{dataLonga(inicial.primeiro_vencimento)}</dd></div>
+              <div><dt className="etiqueta-mini">Pagas antes do cadastro</dt>
+                <dd className="t-corpo">{inicial.parcelas_pagas_antes}</dd></div>
+            </dl>
+            <p className="t-legenda">Para mudar valor, parcelas ou datas, encerre e cadastre outro.</p>
+          </>
+        ) : (
+          <>
+            <Campo rotulo="Nº de parcelas" value={parcelas} type="number" min={1} max={600}
+              inputMode="numeric" erro={erros.parcelas} onChange={(e) => setParcelas(e.target.value)} />
+            <Campo rotulo="Valor da parcela" value={valorParcela} inputMode="decimal" erro={erros.valorParcela}
+              onChange={(e) => setValorParcela(e.target.value)} placeholder="R$ 0,00" />
+            <div className="campo">
+              <label htmlFor="primeiro-emp">Vencimento da 1ª parcela</label>
+              <input id="primeiro-emp" type="date" className="campo-caixa" value={primeiro}
+                onChange={(e) => setPrimeiro(e.target.value)} />
+              <span className="t-legenda">A primeira do contrato, mesmo que já esteja paga.</span>
+              {erros.primeiro && <span className="campo-erro" role="alert">{erros.primeiro}</span>}
+            </div>
+            <Campo rotulo="Parcelas já pagas" value={pagasAntes} type="number" min={0}
+              inputMode="numeric" erro={erros.pagasAntes} onChange={(e) => setPagasAntes(e.target.value)} />
+            {totalOk && pagasOk && parcelaCents > 0 && primeiro && (
+              <p className="t-ui" role="status">
+                {gerar === 0
+                  ? 'Todas as parcelas já foram pagas: nenhuma será lançada.'
+                  : `Vai gerar ${gerar} ${gerar === 1 ? 'parcela' : 'parcelas'} de ${fmtBRL(parcelaCents)}, `
+                    + `de ${dataLonga(dataDaParcela(primeiro, pagas))} a ${dataLonga(dataDaParcela(primeiro, total - 1))}`}
+              </p>
+            )}
+          </>
+        )}
 
         {erros.geral && <p className="campo-erro" role="alert">{erros.geral}</p>}
       </div>
@@ -1455,16 +1598,18 @@ function FolhaCatalogo({ itens, aoFechar, aoEscolher }: {
   )
 }
 
-export function FolhaExcluir({ titulo, consequencia, aoFechar, aoConfirmar }: {
+export function FolhaExcluir({ titulo, consequencia, acao = 'Excluir', aoFechar, aoConfirmar }: {
   titulo: string
   consequencia: string
+  /** Verbo do título e do botão ("Encerrar" quando nada é apagado). */
+  acao?: string
   aoFechar: () => void
   aoConfirmar: () => Promise<void> | void
 }) {
   const [indo, setIndo] = useState(false)
   const [erro, setErro] = useState('')
   return (
-    <Folha titulo="Excluir" aoFechar={aoFechar}
+    <Folha titulo={acao} aoFechar={aoFechar}
       rodape={<>
         <Botao variante="secundario" onClick={aoFechar} style={{ flex: 2 }}>Manter</Botao>
         <Botao variante="destrutivo" carregando={indo} onClick={async () => {
@@ -1473,7 +1618,7 @@ export function FolhaExcluir({ titulo, consequencia, aoFechar, aoConfirmar }: {
           try { await aoConfirmar(); aoFechar() }
           catch (e) { setErro((e as Error).message) }
           finally { setIndo(false) }
-        }}>Excluir</Botao>
+        }}>{acao}</Botao>
       </>}>
       <div className="linha" style={{ alignItems: 'flex-start', gap: 'var(--espaco-03)' }}>
         <span className="alerta-icone" aria-hidden><Icone nome="alerta" tamanho={20} /></span>

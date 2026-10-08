@@ -2,6 +2,18 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-08 — Empréstimos no Dinheiro (fase 3 de 4)
+
+- **Empréstimos** (`/admin/dinheiro/emprestimos`) deixa de ser "em breve": total
+  em aberto e um card por empréstimo com progresso das parcelas, pago, falta,
+  juros (quando o valor recebido é informado), próxima parcela e data de quitação.
+- **Novo empréstimo** lança só as parcelas que faltam (as pagas antes contam no
+  número) e mostra antes quantas parcelas vai gerar e entre quais datas.
+  Editar muda nome, instituição, conta e valor recebido; valor, parcelas e datas
+  ficam só leitura — para mudar, encerre e cadastre outro. Encerrar não apaga nada.
+- **Visão geral:** patrimônio líquido passa a descontar o saldo devedor dos
+  empréstimos ativos, e entra o indicador "Empréstimos em aberto".
+
 ## 2026-10-08 — Dinheiro vira área com sub-páginas (fase 1 de 4)
 
 - `/admin/dinheiro` agora é uma área: **Visão geral**, **Contas**, **Cartões**,

@@ -245,7 +245,7 @@ describe('contas a pagar na fila', () => {
     recebido_cents: 0, conta_id: 'cc', conta_destino_id: null, categoria_id: null, cliente_id: null,
     servico_id: null, fornecedor: null, data_competencia: null, data_vencimento: null,
     data_liquidacao: null, forma_pagamento: null, grupo_id: null, parcela_num: null, parcela_de: null,
-    recorrencia_id: null, observacoes: null, origem: 'manual', importacao_chave: null,
+    recorrencia_id: null, observacoes: null, origem: 'manual', importacao_chave: null, emprestimo_id: null,
     created_at: '2026-01-01', ...p,
   })
   const cartao = { id: 'visa', nome: 'Visa', tipo: 'cartao_credito' } as Conta

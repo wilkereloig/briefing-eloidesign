@@ -4,7 +4,7 @@ import { rotuloMes, useFinancas } from '../../../../lib/financas-store'
 import { diasEntre, hojeISO } from '../../../../domain/datas'
 import {
   cobertura, faturaAberta, faturasDoCartao, indiceFaturaAtual, patrimonioLiquido,
-  resultado, saidasDaCobertura, saldoAberto, saldoConta,
+  resultado, resumoEmprestimo, saidasDaCobertura, saldoAberto, saldoConta,
   type Fatura, type SituacaoFatura,
 } from '../../../../domain/financeiro'
 import type { Conta, StatusMov, Transacao } from '../../../../lib/tipos'
@@ -23,7 +23,7 @@ type Item =
   | { tipo: 'fatura'; id: string; titulo: string; data: string; cents: number; situacao: SituacaoFatura }
 
 export default function VisaoGeral() {
-  const { contas, transacoes, mes, contexto } = useFinancas()
+  const { contas, emprestimos, transacoes, mes, contexto } = useFinancas()
   const hoje = hojeISO()
 
   const ativas = useMemo(() => contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto)),
@@ -31,7 +31,13 @@ export default function VisaoGeral() {
   const cartoes = ativas.filter((c) => c.tipo === 'cartao_credito')
   const contasCorrentes = ativas.filter((c) => c.tipo !== 'cartao_credito')
 
-  const pat = useMemo(() => patrimonioLiquido(contas, transacoes, contexto), [contas, transacoes, contexto])
+  // Saldo devedor dos empréstimos ativos da lente — entra no patrimônio.
+  const emp = useMemo(() => {
+    const ativos = emprestimos.filter((e) => e.ativo && (!contexto || e.contexto === contexto))
+    return { qtd: ativos.length, cents: ativos.reduce((s, e) => s + resumoEmprestimo(e, transacoes).falta_cents, 0) }
+  }, [emprestimos, transacoes, contexto])
+  const pat = useMemo(() => patrimonioLiquido(contas, transacoes, contexto, emp.cents),
+    [contas, transacoes, contexto, emp.cents])
   const r = useMemo(() => resultado(transacoes, contexto, mes), [transacoes, contexto, mes])
   const cob = useMemo(() => cobertura(contas, transacoes, hoje, DIAS, contexto),
     [contas, transacoes, hoje, contexto])
@@ -71,6 +77,8 @@ export default function VisaoGeral() {
               nota={`${contasCorrentes.length} ${contasCorrentes.length === 1 ? 'conta ativa' : 'contas ativas'}`} />
             <Indicador rotulo="Faturas a pagar" valor={fmtBRL(faturas)}
               nota={`${cartoes.length} ${cartoes.length === 1 ? 'cartão' : 'cartões'} · próxima fatura de cada`} />
+            <Indicador rotulo="Empréstimos em aberto" valor={fmtBRL(emp.cents)}
+              nota={`${emp.qtd} ${emp.qtd === 1 ? 'empréstimo ativo' : 'empréstimos ativos'}`} />
             <Indicador rotulo="Resultado do mês" valor={fmtBRL(r.lucro_cents)}
               cor={r.lucro_cents < 0 ? 'coral' : undefined} nota={rotuloMes(mes)} />
           </div>

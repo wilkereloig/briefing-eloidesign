@@ -6,9 +6,9 @@ import {
   agruparPorPrazo, faixaDePrazo, cicloFatura, parceladoAberto, saldoContaEm,
   totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
   faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, saidasDaCobertura, patrimonioLiquido,
-  chequeEspecialUsado, filtrarLancamentos,
+  chequeEspecialUsado, filtrarLancamentos, resumoEmprestimo,
 } from './financeiro'
-import type { Conta, Meta, Transacao } from '../lib/tipos'
+import type { Conta, Emprestimo, Meta, Transacao } from '../lib/tipos'
 
 const conta = (p: Partial<Conta> & { id: string }): Conta => ({
   nome: 'c', tipo: 'corrente', contexto: 'empresa', instituicao: null, cor: null,
@@ -21,7 +21,7 @@ const tx = (p: Partial<Transacao> & { id: string; tipo: Transacao['tipo'] }): Tr
   conta_id: null, conta_destino_id: null, categoria_id: null, cliente_id: null, servico_id: null,
   fornecedor: null, data_competencia: null, data_vencimento: null, data_liquidacao: null,
   forma_pagamento: null, grupo_id: null, parcela_num: null, parcela_de: null,
-  recorrencia_id: null, observacoes: null, origem: 'manual', importacao_chave: null,
+  recorrencia_id: null, observacoes: null, origem: 'manual', importacao_chave: null, emprestimo_id: null,
   created_at: '2026-01-01', ...p,
 })
 
@@ -645,5 +645,43 @@ describe('filtrarLancamentos', () => {
   })
   it('filtros combinam (E)', () => {
     expect(ids(filtrarLancamentos(ts, { conta: 'cc', tipo: 'saida', status: 'realizado' }))).toEqual(['s'])
+  })
+})
+
+describe('resumo do empréstimo', () => {
+  // Itaú R$ 16 mil: 12× 1.711,46, 8 pagas antes de entrar no sistema.
+  const itau: Emprestimo = {
+    id: 'e1', nome: 'Empréstimo Itaú R$ 16 mil', instituicao: 'Itaú', contexto: 'pessoal',
+    conta_id: 'c', categoria_id: null, valor_recebido_cents: 16000_00, parcelas_total: 12,
+    valor_parcela_cents: 1711_46, primeiro_vencimento: '2026-02-13', parcelas_pagas_antes: 8,
+    ativo: true, observacoes: null, created_at: '2026-10-08',
+  }
+  const parcela = (n: number, p: Partial<Transacao> = {}) => tx({
+    id: `p${n}`, tipo: 'saida', status: 'pendente', valor_cents: 1711_46, emprestimo_id: 'e1',
+    data_vencimento: dataDaParcela('2026-02-13', n - 1), parcela_num: n, parcela_de: 12, ...p,
+  })
+  const abertas = [12, 9, 11, 10].map((n) => parcela(n))
+
+  it('8 pagas antes + 4 abertas', () => {
+    const r = resumoEmprestimo(itau, [...abertas, tx({ id: 'outra', tipo: 'saida', valor_cents: 999 })])
+    expect(r).toMatchObject({
+      total_cents: 2053752, juros_cents: 453752, pago_cents: 1369168, falta_cents: 684584,
+      parcelas_pagas: 8, quitacao: '2027-01-13', progresso: 8 / 12,
+    })
+    expect(r.proxima?.id).toBe('p9')
+  })
+
+  it('parcela liquidada sai do saldo devedor; cancelada não conta', () => {
+    const ts = [parcela(9, { status: 'realizado', recebido_cents: 1711_46 }), parcela(10), parcela(11),
+      parcela(12), parcela(13, { status: 'cancelado' })]
+    const r = resumoEmprestimo(itau, ts)
+    expect(r.parcelas_pagas).toBe(9)
+    expect(r.falta_cents).toBe(513438)
+    expect(r.pago_cents).toBe(1369168 + 1711_46)
+    expect(r.proxima?.id).toBe('p10')
+  })
+
+  it('valor recebido não informado → juros null', () => {
+    expect(resumoEmprestimo({ ...itau, valor_recebido_cents: 0 }, abertas).juros_cents).toBeNull()
   })
 })

@@ -21,7 +21,6 @@ const Orcamentos = lazy(() => import('./routes/admin/telas/Orcamentos'))
 const Clientes = lazy(() => import('./routes/admin/telas/Clientes'))
 const ClienteFicha = lazy(() => import('./routes/admin/telas/ClienteFicha'))
 const DinheiroLayout = lazy(() => import('./routes/admin/telas/dinheiro/Layout'))
-const EmBreve = lazy(() => import('./routes/admin/telas/dinheiro/Layout').then((m) => ({ default: m.EmBreve })))
 const VisaoGeral = lazy(() => import('./routes/admin/telas/dinheiro/VisaoGeral'))
 const Contas = lazy(() => import('./routes/admin/telas/dinheiro/Contas'))
 const ContaDetalhe = lazy(() => import('./routes/admin/telas/dinheiro/ContaDetalhe'))
@@ -29,6 +28,7 @@ const Cartoes = lazy(() => import('./routes/admin/telas/dinheiro/Cartoes'))
 const CartaoDetalhe = lazy(() => import('./routes/admin/telas/dinheiro/CartaoDetalhe'))
 const Lancamentos = lazy(() => import('./routes/admin/telas/dinheiro/Lancamentos'))
 const Agenda = lazy(() => import('./routes/admin/telas/dinheiro/Agenda'))
+const Emprestimos = lazy(() => import('./routes/admin/telas/dinheiro/Emprestimos'))
 const Planejamento = lazy(() => import('./routes/admin/telas/dinheiro/Planejamento'))
 const Briefings = lazy(() => import('./routes/admin/telas/Briefings'))
 const Entregas = lazy(() => import('./routes/admin/telas/Entregas'))
@@ -69,7 +69,7 @@ export const router = createBrowserRouter([
         { path: 'cartoes/:id', element: <CartaoDetalhe /> },
         { path: 'lancamentos', element: <Lancamentos /> },
         { path: 'agenda', element: <Agenda /> },
-        { path: 'emprestimos', element: <EmBreve titulo="Empréstimos" /> },
+        { path: 'emprestimos', element: <Emprestimos /> },
         { path: 'planejamento', element: <Planejamento /> },
       ] },
       { path: 'briefings', element: <Briefings /> },

@@ -205,7 +205,7 @@ export const briefingsApi = {
 // Parcelar e liquidar NÃO têm equivalente local de propósito: são as duas
 // operações que o servidor precisa arbitrar (ver edge-functions/eloi-financas.ts).
 import type {
-  Conta, Categoria, Conferencia, Transacao, Recorrencia, NotaFiscal, Meta, Arquivo, Contexto,
+  Conta, Categoria, Conferencia, Transacao, Recorrencia, NotaFiscal, Meta, Arquivo, Contexto, Emprestimo,
 } from './tipos'
 
 export interface FiltroTransacao {
@@ -229,6 +229,8 @@ export const financas = {
     contas: Conta[]; categorias: Categoria[]; recorrencias: Recorrencia[]; metas: Meta[]
     /** Ausente até a edge ser publicada com a action; o store trata como []. */
     conferencias?: Conferencia[]
+    /** Idem: ausente até a edge com empréstimos ser publicada. */
+    emprestimos?: Emprestimo[]
   }>('eloi-financas', 'bootstrap'),
 
   transacoes: (filtro?: FiltroTransacao) =>
@@ -304,6 +306,15 @@ export const financas = {
   salvarMeta: (meta: Partial<Meta>) =>
     call<{ meta: Meta }>('eloi-financas', 'metas.upsert', { meta }).then((r) => r.meta),
   desativarMeta: (id: string) => call<{ ok: true }>('eloi-financas', 'metas.desativar', { id }),
+  /** Sem id: cadastra e gera as parcelas que faltam. Com id: só nome, instituição,
+   *  conta, categoria, valor recebido, observações e ativo — os campos estruturais
+   *  não mudam (a edge devolve 409 se vierem diferentes). */
+  salvarEmprestimo: (emprestimo: Partial<Emprestimo>) =>
+    call<{ emprestimo: Emprestimo; transacoes?: Transacao[] }>('eloi-financas', 'emprestimos.upsert', { emprestimo })
+      .then((r) => r.emprestimo),
+  /** Sai do uso (ativo=false). As parcelas lançadas ficam como estão. */
+  encerrarEmprestimo: (id: string) =>
+    call<{ emprestimo: Emprestimo }>('eloi-financas', 'emprestimos.encerrar', { id }).then((r) => r.emprestimo),
 
   arquivos: (filtro?: Partial<Record<'cliente_id' | 'servico_id' | 'transacao_id' | 'nota_fiscal_id' | 'categoria', string>>) =>
     call<{ arquivos: Arquivo[] }>('eloi-financas', 'arquivos.list', filtro ? { filtro } : {}).then((r) => r.arquivos),

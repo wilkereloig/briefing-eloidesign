@@ -246,6 +246,8 @@ export interface Transacao {
   origem: OrigemMov
   /** data|valor|descrição normalizada — única por conta; reimportar não duplica. */
   importacao_chave: string | null
+  /** Parcela de empréstimo (eloi_emprestimos). */
+  emprestimo_id: string | null
   created_at: string
 }
 
@@ -330,6 +332,29 @@ export interface Meta {
   inicio: string
   fim: string | null
   ativa: boolean
+}
+
+/** Empréstimo. As parcelas que faltam são eloi_transacoes com emprestimo_id;
+ *  as pagas antes de entrar no sistema só contam em `parcelas_pagas_antes`.
+ *  Campos estruturais (parcelas, valor, 1º vencimento, pagas antes, contexto)
+ *  não mudam depois do cadastro — ver emprestimos.upsert na edge. */
+export interface Emprestimo {
+  id: string
+  nome: string
+  instituicao: string | null
+  contexto: Contexto
+  /** Conta que debita as parcelas. */
+  conta_id: string | null
+  categoria_id: string | null
+  /** 0 = não informado (sem ele não dá para calcular juros). */
+  valor_recebido_cents: number
+  parcelas_total: number
+  valor_parcela_cents: number
+  primeiro_vencimento: string
+  parcelas_pagas_antes: number
+  ativo: boolean
+  observacoes: string | null
+  created_at: string
 }
 
 export interface Arquivo {

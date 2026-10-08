@@ -18,7 +18,7 @@ import {
   servicos as servicosApi, subClientes as subClientesApi, tarefas as tarefasApi,
 } from './api'
 import type {
-  BriefingLinkRow, Categoria, ClienteRow, Conferencia, Conta, Contexto, Meta, NotaFiscal,
+  BriefingLinkRow, Categoria, ClienteRow, Conferencia, Conta, Contexto, Emprestimo, Meta, NotaFiscal,
   OrcamentoRow, Recorrencia, ServicoRow, SubClienteRow, TarefaRow, Transacao,
 } from './tipos'
 import { competenciaDe } from '../domain/financeiro'
@@ -48,6 +48,8 @@ interface Estado {
   metas: Meta[]
   /** Últimas conferências de saldo, mais recente primeiro. */
   conferencias: Conferencia[]
+  /** Ativos e encerrados; a tela filtra. */
+  emprestimos: Emprestimo[]
   transacoes: Transacao[]
   notas: NotaFiscal[]
   clientes: ClienteRow[]
@@ -91,12 +93,12 @@ const TETO_EDGE = 2000
 const Ctx = createContext<Estado>(null!)
 export const useFinancas = () => useContext(Ctx)
 
-type Dados = Pick<Estado, 'contas' | 'categorias' | 'recorrencias' | 'metas' | 'conferencias'
+type Dados = Pick<Estado, 'contas' | 'categorias' | 'recorrencias' | 'metas' | 'conferencias' | 'emprestimos'
   | 'transacoes' | 'notas' | 'clientes' | 'subClientes' | 'servicos' | 'orcamentos'
   | 'briefings' | 'tarefas'>
 
 const VAZIO: Dados = {
-  contas: [], categorias: [], recorrencias: [], metas: [], conferencias: [],
+  contas: [], categorias: [], recorrencias: [], metas: [], conferencias: [], emprestimos: [],
   transacoes: [], notas: [], clientes: [], subClientes: [], servicos: [], orcamentos: [],
   briefings: [], tarefas: [],
 }
@@ -150,6 +152,7 @@ export function FinancasProvider({ children }: { children: ReactNode }) {
         contas: ref.contas, categorias: ref.categorias,
         recorrencias: ref.recorrencias, metas: ref.metas,
         conferencias: ref.conferencias ?? [],
+        emprestimos: ref.emprestimos ?? [],
         transacoes, notas, clientes: cli, subClientes: sub, servicos: svc, orcamentos: orc,
         briefings: bri, tarefas: tar,
       })

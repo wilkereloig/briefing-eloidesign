@@ -26,14 +26,15 @@ Atualizado: 2026-10-08.
 
 ### Dinheiro
 - **Objetivo:** lançar, liquidar, parcelar, estornar e acompanhar todo movimento.
-- **Estado:** Em andamento — fases 1 e 2 entregues (estrutura, visão geral, contas, cartões, lançamentos com filtros, agenda); empréstimos e planejamento completo seguem o plano
-- **Telas:** `telas/dinheiro/` (Layout, VisaoGeral, Contas, ContaDetalhe, Cartoes, CartaoDetalhe, Lancamentos, Agenda, Planejamento — só recorrências por ora; peças comuns em `compartilhado.tsx`), `FolhaTransacao.tsx`, `folhas.tsx`
-- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar/pagar_fatura`, `conferencias.registrar`, `contas.*`, `recorrencias.*`
-- **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_conferencias`
+- **Estado:** Em andamento — fases 1 a 3 entregues (estrutura, visão geral, contas, cartões, lançamentos com filtros, agenda, empréstimos); planejamento completo segue o plano
+- **Telas:** `telas/dinheiro/` (Layout, VisaoGeral, Contas, ContaDetalhe, Cartoes, CartaoDetalhe, Lancamentos, Agenda, Emprestimos, Planejamento — só recorrências por ora; peças comuns em `compartilhado.tsx`), `FolhaTransacao.tsx`, `folhas.tsx`
+- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar/pagar_fatura`, `conferencias.registrar`, `contas.*`, `recorrencias.*`, `emprestimos.upsert/encerrar`
+- **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_conferencias`, `eloi_emprestimos`
 - **Permissão:** admin
 - **Fluxos:** receita · despesa · transferência · parcelamento · pagamento parcial (com conta e observação) · reagendar · estorno · pagar fatura de cartão · recorrência (pausar/retomar/encerrar)
 - **Fila de cobrança:** A receber / A pagar agrupadas por faixa de prazo (`agruparPorPrazo`) com recortes Vencidos · Sem NF · Recorrentes · Parciais
 - **Visão geral e contas:** `patrimonioLiquido`, `cobertura`/`saidasDaCobertura` (próximos 7 dias), `extratoDaConta` (saldo após cada linha); arquivar conta/cartão em vez de apagar
+- **Empréstimos:** `resumoEmprestimo` (pago, falta, juros, próxima, quitação, progresso) · cadastro gera só as parcelas que faltam; estrutura imutável depois (encerrar e cadastrar outro) · saldo devedor entra no patrimônio líquido
 - **Cartão:** `faturasDoCartao` (uma fatura por mês) · fatura aberta, limite disponível, ciclo (`cicloFatura`), parcelado em aberto (`parceladoAberto`)
 - **Onboarding:** `routes/admin/Onboarding.tsx` (Hoje e Dinheiro) enquanto faltar conta ou lançamento — `domain/onboarding.ts`
 - **Conferência e importação:** `routes/admin/FolhasExtrato.tsx` — `FolhaConferencia` (sistema × extrato, ajuste identificado) e `FolhaImportar` (CSV, `domain/importacao.ts`)

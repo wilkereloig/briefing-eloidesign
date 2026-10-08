@@ -12,7 +12,7 @@
 //    Pagamento parcial é normal, não exceção;
 //  · competência (a que mês pertence) ≠ liquidação (quando o dinheiro andou).
 //    Resultado usa competência; saldo usa liquidação.
-import type { Transacao, Conta, Contexto, Meta, StatusMov, TipoMov } from '../lib/tipos'
+import type { Transacao, Conta, Contexto, Emprestimo, Meta, StatusMov, TipoMov } from '../lib/tipos'
 
 /** Status em que a transação ainda não liquidou e continua devida. */
 const EM_ABERTO: StatusMov[] = ['previsto', 'pendente', 'parcial', 'vencido']
@@ -580,4 +580,33 @@ export function patrimonioLiquido(contas: Conta[], transacoes: Transacao[], cont
   const cartoes = ativas.filter((c) => c.tipo === 'cartao_credito').reduce((s, c) => s + dividaDoCartao(c, transacoes), 0)
   return { contas_cents: contasCents, cartoes_cents: cartoes, emprestimos_cents,
     liquido_cents: contasCents - cartoes - emprestimos_cents }
+}
+
+// ── empréstimos ──────────────────────────────────────────────────────────────
+
+export interface ResumoEmprestimo {
+  total_cents: number; juros_cents: number | null; pago_cents: number; falta_cents: number
+  parcelas_pagas: number; proxima: Transacao | null; quitacao: string; progresso: number
+}
+
+/** Situação de um empréstimo. As parcelas pagas antes de entrar no sistema não
+ *  têm transação: contam pelo valor da parcela. `falta_cents` é o saldo devedor
+ *  (o que entra em `patrimonioLiquido`); juros só com valor recebido informado. */
+export function resumoEmprestimo(e: Emprestimo, transacoes: Transacao[]): ResumoEmprestimo {
+  const parcelas = transacoes.filter((t) => t.emprestimo_id === e.id && !estaCancelada(t))
+  const total = e.valor_parcela_cents * e.parcelas_total
+  const quitadas = parcelas.filter((t) => saldoAberto(t) === 0).length
+  const abertas = parcelas.filter((t) => saldoAberto(t) > 0)
+    .sort((a, b) => (a.data_vencimento ?? '').localeCompare(b.data_vencimento ?? ''))
+  const pagas = e.parcelas_pagas_antes + quitadas
+  return {
+    total_cents: total,
+    juros_cents: e.valor_recebido_cents > 0 ? total - e.valor_recebido_cents : null,
+    pago_cents: e.parcelas_pagas_antes * e.valor_parcela_cents + parcelas.reduce((s, t) => s + valorLiquidado(t), 0),
+    falta_cents: abertas.reduce((s, t) => s + saldoAberto(t), 0),
+    parcelas_pagas: pagas,
+    proxima: abertas[0] ?? null,
+    quitacao: dataDaParcela(e.primeiro_vencimento, e.parcelas_total - 1),
+    progresso: pagas / e.parcelas_total,
+  }
 }

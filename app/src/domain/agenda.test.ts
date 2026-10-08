@@ -7,7 +7,7 @@ const tx = (p: Partial<Transacao> & { id: string }): Transacao => ({
   conta_id: null, conta_destino_id: null, categoria_id: null, cliente_id: null, servico_id: null,
   fornecedor: null, data_competencia: null, data_vencimento: '2026-09-10', data_liquidacao: null,
   forma_pagamento: null, grupo_id: null, parcela_num: null, parcela_de: null,
-  recorrencia_id: null, observacoes: null, origem: 'manual', importacao_chave: null, created_at: '2026-01-01', ...p,
+  recorrencia_id: null, observacoes: null, origem: 'manual', importacao_chave: null, emprestimo_id: null, created_at: '2026-01-01', ...p,
 })
 const tarefa = (p: Partial<TarefaRow> & { id: string }): TarefaRow => ({
   titulo: 't', prazo: '2026-09-10', status: 'aberta', prioridade: 'normal', cliente_id: null,
