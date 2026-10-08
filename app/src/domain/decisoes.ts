@@ -38,6 +38,35 @@ export interface Decisao {
 
 const DIA_MS = 24 * 60 * 60 * 1000
 
+/** Competência é o vencimento do serviço. Sem competência, não há atraso. */
+function servicoVencido(s: Pick<ServicoRow, 'data_competencia'>, agora: number): boolean {
+  return s.data_competencia ? new Date(s.data_competencia).getTime() < agora : false
+}
+
+export interface PendenciasServicos {
+  a_receber_cents: number; a_receber_qtd: number
+  atrasado_cents: number; atrasado_qtd: number
+  sem_nf_cents: number; sem_nf_qtd: number
+}
+
+/**
+ * O que os serviços concluídos ainda devem: pagamento e nota fiscal. É o
+ * "a receber" de quem trabalha só com serviços, sem lançamentos no
+ * financeiro. Mesmo critério da fila `decisoesDoDia`.
+ */
+export function pendenciasDeServicos(servicos: ServicoRow[], agora = Date.now()): PendenciasServicos {
+  const concluidos = servicos.filter((s) => s.status_execucao === 'concluida')
+  const aReceber = concluidos.filter((s) => !s.pago)
+  const atrasados = aReceber.filter((s) => servicoVencido(s, agora))
+  const semNf = concluidos.filter((s) => !s.nota_fiscal_id)
+  const soma = (l: ServicoRow[]) => l.reduce((t, s) => t + s.valor_cents, 0)
+  return {
+    a_receber_cents: soma(aReceber), a_receber_qtd: aReceber.length,
+    atrasado_cents: soma(atrasados), atrasado_qtd: atrasados.length,
+    sem_nf_cents: soma(semNf), sem_nf_qtd: semNf.length,
+  }
+}
+
 export function decisoesDoDia(input: {
   servicos: ServicoRow[]
   orcamentos: OrcamentoRow[]
@@ -63,7 +92,7 @@ export function decisoesDoDia(input: {
       })
     }
     if (!s.pago) {
-      const venceu = s.data_competencia ? new Date(s.data_competencia).getTime() < agora : false
+      const venceu = servicoVencido(s, agora)
       decisoes.push({
         id: `pag:${s.id}`, titulo: s.descricao,
         detalhe: venceu ? 'Pagamento atrasado' : 'Aguardando pagamento',

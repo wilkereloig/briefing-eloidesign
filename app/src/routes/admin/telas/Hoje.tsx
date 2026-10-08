@@ -7,7 +7,7 @@ import {
   resultado, saldoDisponivel, saldoConta, faturaAberta, vencidas, proximosVencimentos,
   valorLiquidado,
 } from '../../../domain/financeiro'
-import { ACAO, decisoesDoDia } from '../../../domain/decisoes'
+import { ACAO, decisoesDoDia, pendenciasDeServicos } from '../../../domain/decisoes'
 import { Etiqueta, Icone, Indicador, Painel } from '../../../ui/componentes'
 import { Onboarding } from '../Onboarding'
 import { PainelTarefas } from '../Tarefas'
@@ -36,9 +36,12 @@ export default function Hoje() {
   // enviada há N dias sem resposta", que é a única do funil comercial.
   // `contas` entra para a regra "nenhuma conta cadastrada" saber a diferença
   // entre "não há conta" e "ninguém informou" — as duas são [] sem isso.
+  // `setup:contas` sai daqui: sem conta o <Onboarding> já está na tela dizendo isso.
   const decisoes = useMemo(() => decisoesDoDia({
     servicos, orcamentos, transacoes, notas, briefings, contas,
-  }).slice(0, 8), [servicos, orcamentos, transacoes, notas, briefings, contas])
+  }).filter((d) => d.id !== 'setup:contas').slice(0, 8),
+  [servicos, orcamentos, transacoes, notas, briefings, contas])
+  const pend = useMemo(() => pendenciasDeServicos(servicos), [servicos])
 
   const ultimas = useMemo(() => [...doMes]
     .filter((t) => valorLiquidado(t) > 0)
@@ -58,6 +61,63 @@ export default function Hoje() {
       <Carga linhas={5}>
         {/* Instalação vazia: a lista de passos substitui o dashboard de zeros. */}
         <Onboarding />
+
+        {/* Serviço, NF, prazo e briefing não dependem de conta: ficam fora da
+            trava de `semNada`. Quem usa só serviços também tem o que decidir. */}
+        <div className="grade-indicadores">
+          <Indicador rotulo="A receber de serviços" valor={fmtBRL(pend.a_receber_cents)} cor="acento"
+            nota={pend.atrasado_qtd === 0
+              ? `${pend.a_receber_qtd} em aberto · nada atrasado`
+              : `${pend.atrasado_qtd} atrasado${pend.atrasado_qtd === 1 ? '' : 's'} · ${fmtBRL(pend.atrasado_cents)}`} />
+          <Indicador rotulo="Concluído sem nota" valor={String(pend.sem_nf_qtd)}
+            cor={pend.sem_nf_qtd > 0 ? 'coral' : undefined}
+            nota={pend.sem_nf_qtd > 0 ? `${fmtBRL(pend.sem_nf_cents)} sem NF` : 'Tudo com nota'} />
+          <Indicador rotulo="Notas pendentes"
+            valor={String(notas.filter((n) => n.status === 'pendente' || n.status === 'pronta').length)}
+            cor={notas.some((n) => n.status === 'pronta') ? 'coral' : undefined}
+            nota="Sem PDF anexado" />
+          <Indicador rotulo="Em execução"
+            valor={String(servicos.filter((s) => s.status_execucao === 'em_execucao').length)}
+            nota={`${servicos.filter((s) => s.status_execucao === 'aguardando_inicio').length} na fila`} />
+        </div>
+
+        <Painel titulo="Precisa de você"
+          acao={<span className="t-legenda">{decisoes.length} {decisoes.length === 1 ? 'item' : 'itens'}</span>}>
+          {decisoes.length === 0 ? (
+            <p className="t-sec">Nada atrasado e nada pendente de decisão. O mês está em dia.</p>
+          ) : (
+            <ul className="lista">
+              {decisoes.map((d) => (
+                <li key={d.id} className="lista-item">
+                  <span className="marca-cor" aria-hidden style={{
+                    background: d.urgencia === 'atrasado' ? 'var(--coral)' : 'var(--azul)',
+                  }} />
+                  <span className="celula">
+                    {/* Contexto antes do problema: "F2 · Vibra" responde
+                        "de quem é isso?" sem abrir nada. */}
+                    {(d.clienteId || d.marca) && (
+                      <span className="etiqueta-mini espremer">
+                        {[d.clienteId ? nomes.cliente.get(d.clienteId)?.nome : null, d.marca]
+                          .filter(Boolean).join(' · ')}
+                      </span>
+                    )}
+                    <span className="t-ui espremer">{d.titulo}</span>
+                    <span className="t-legenda espremer">{d.detalhe}</span>
+                  </span>
+                  {d.valorCents != null && <Dinheiro cents={d.valorCents} className="t-valor" />}
+                  <Link className="btn btn-secundario btn-compacto" to={ACAO[d.acao].destino}>
+                    {ACAO[d.acao].rotulo}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Painel>
+
+        {/* Manual, separado do automático: tarefa é o que o dono decidiu
+            fazer; "Precisa de você" é o que o sistema detectou. */}
+        <PainelTarefas limite={6} aceitaUrlNovo />
+
         {semNada ? null : (
           <>
             <div className="grade-indicadores">
@@ -75,55 +135,13 @@ export default function Hoje() {
             </div>
 
             <div className="grade-indicadores">
-              <Indicador rotulo="A receber" valor={fmtBRL(r.a_receber_cents)} cor="acento"
+              {/* "Lançado": vem de transações, não de serviços — os dois
+                  "a receber" convivem até o financeiro substituir o campo `pago`. */}
+              <Indicador rotulo="Lançado a receber" valor={fmtBRL(r.a_receber_cents)} cor="acento"
                 nota={textoAtraso(atrasadas.filter((t) => t.tipo === 'entrada').length, 'receber')} />
               <Indicador rotulo="A pagar" valor={fmtBRL(r.a_pagar_cents)}
                 nota={textoAtraso(atrasadas.filter((t) => t.tipo === 'saida').length, 'pagar')} />
-              <Indicador rotulo="Notas pendentes"
-                valor={String(notas.filter((n) => n.status === 'pendente' || n.status === 'pronta').length)}
-                cor={notas.some((n) => n.status === 'pronta') ? 'coral' : undefined}
-                nota="Sem PDF anexado" />
-              <Indicador rotulo="Em execução"
-                valor={String(servicos.filter((s) => s.status_execucao === 'em_execucao').length)}
-                nota={`${servicos.filter((s) => s.status_execucao === 'aguardando_inicio').length} na fila`} />
             </div>
-
-            <Painel titulo="Precisa de você"
-              acao={<span className="t-legenda">{decisoes.length} {decisoes.length === 1 ? 'item' : 'itens'}</span>}>
-              {decisoes.length === 0 ? (
-                <p className="t-sec">Nada atrasado e nada pendente de decisão. O mês está em dia.</p>
-              ) : (
-                <ul className="lista">
-                  {decisoes.map((d) => (
-                    <li key={d.id} className="lista-item">
-                      <span className="marca-cor" aria-hidden style={{
-                        background: d.urgencia === 'atrasado' ? 'var(--coral)' : 'var(--azul)',
-                      }} />
-                      <span className="celula">
-                        {/* Contexto antes do problema: "F2 · Vibra" responde
-                            "de quem é isso?" sem abrir nada. */}
-                        {(d.clienteId || d.marca) && (
-                          <span className="etiqueta-mini espremer">
-                            {[d.clienteId ? nomes.cliente.get(d.clienteId)?.nome : null, d.marca]
-                              .filter(Boolean).join(' · ')}
-                          </span>
-                        )}
-                        <span className="t-ui espremer">{d.titulo}</span>
-                        <span className="t-legenda espremer">{d.detalhe}</span>
-                      </span>
-                      {d.valorCents != null && <Dinheiro cents={d.valorCents} className="t-valor" />}
-                      <Link className="btn btn-secundario btn-compacto" to={ACAO[d.acao].destino}>
-                        {ACAO[d.acao].rotulo}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Painel>
-
-            {/* Manual, separado do automático: tarefa é o que o dono decidiu
-                fazer; "Precisa de você" é o que o sistema detectou. */}
-            <PainelTarefas limite={6} aceitaUrlNovo />
 
             <div className="grade-dupla">
               <Painel titulo="Contas e cartões"

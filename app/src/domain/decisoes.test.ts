@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { decisoesDoDia, prazos } from './decisoes'
+import { decisoesDoDia, pendenciasDeServicos, prazos } from './decisoes'
 import type { ServicoRow, MovimentoRow, OrcamentoRow } from '../lib/tipos'
 
 const AGORA = new Date('2026-07-30T12:00:00Z').getTime()
@@ -193,5 +193,28 @@ describe('serviço com prazo vencido', () => {
     expect(prazo.map((x) => x.id)).toEqual(['prazo:a'])
     expect(prazo[0]).toMatchObject({ acao: 'ver_projeto', urgencia: 'atrasado' })
     expect(prazo[0].detalhe).toContain('2 dias de atraso')
+  })
+})
+
+describe('pendenciasDeServicos', () => {
+  it('soma a receber, atraso e falta de nota só de serviço concluído', () => {
+    const r = pendenciasDeServicos([
+      srv({ id: 'a', valor_cents: 275000, data_competencia: '2026-07-01' }),            // atrasado, sem NF
+      srv({ id: 'b', valor_cents: 275000, data_competencia: '2026-08-30', nota_fiscal_id: 'nf' }), // a vencer
+      srv({ id: 'c', valor_cents: 100000, pago: true }),                                 // pago, sem NF
+      srv({ id: 'd', valor_cents: 900000, status_execucao: 'em_execucao' }),             // fora: não concluído
+    ], AGORA)
+    expect(r).toEqual({
+      a_receber_cents: 550000, a_receber_qtd: 2,
+      atrasado_cents: 275000, atrasado_qtd: 1,
+      sem_nf_cents: 375000, sem_nf_qtd: 2,
+    })
+  })
+
+  it('sem competência não é atraso — mesmo critério da fila', () => {
+    const r = pendenciasDeServicos([srv({ data_competencia: null })], AGORA)
+    expect(r.atrasado_qtd).toBe(0)
+    expect(decisoesDoDia({ servicos: [srv({ data_competencia: null })], orcamentos: [], agora: AGORA })
+      .find((d) => d.id === 'pag:s1')?.urgencia).toBe('normal')
   })
 })
