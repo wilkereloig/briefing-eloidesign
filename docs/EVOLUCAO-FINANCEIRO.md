@@ -23,7 +23,7 @@ Financeiro separado está vazio.
 | 2. Confiabilidade | ✅ publicado | RPCs atômicas, idempotência, unicidade de recorrência, completude, saldo no servidor, travas de conta, guarda de ambiente |
 | 3. Obrigações × liquidações × resultados | ✅ núcleo publicado · ⏳ telas | `eloi_liquidacoes`, natureza das categorias, 3 perspectivas no banco, `resultadoPorCompetencia` no domínio, relatório de diferenças |
 | 4. Revisão de dados e consolidação | ✅ no essencial | não há dado a migrar do app Financeiro (desligado); "Outros"/"Outras entradas" revisados com decisão delegada pelo dono (24 lançamentos, reversível); natureza das categorias confirmada |
-| 5. Contas, cartões, dívidas, conciliação | ✅ código + testes · ⏳ publicação | saldo inicial com data e arquivamento preservando saldo; empréstimo com taxa efetiva e valor para quitar hoje; OFX com FITID; **pagamentos ligados às faturas que quitaram** (`pagamento_id`) e **estorno de pagamento de fatura** (compras voltam a dever, nada é apagado); **importação em lote** (`eloi_importacoes`) com **desfazer** recusado quando algo do lote já foi pago/ligado. Limitação: pagamentos e importações anteriores não têm rastro (sem estorno/desfazer automático) |
+| 5. Contas, cartões, dívidas, conciliação | ✅ publicado | saldo inicial com data e arquivamento preservando saldo; empréstimo com taxa efetiva e valor para quitar hoje; OFX com FITID; **pagamentos ligados às faturas que quitaram** (`pagamento_id`) e **estorno de pagamento de fatura** (compras voltam a dever, nada é apagado); **importação em lote** (`eloi_importacoes`) com **desfazer** recusado quando algo do lote já foi pago/ligado. Limitação: pagamentos e importações anteriores não têm rastro (sem estorno/desfazer automático) |
 | 6. Gestão integrada | ⏳ parcial | **Dinheiro › Análise de gastos** (pedido do dono): saídas × renda, pagando o passado, comprometido por mês, categorias mês a mês, onde mais se gasta |
 | 7. Novo visual | ⏳ | — |
 | 8. Acesso e automação | ⏳ parcial | rotina diária (pg_cron), limpeza no logout, auditoria |
@@ -121,9 +121,11 @@ de impacto:
 **Pré-requisito: backup restaurável** (procedimento no inventário §7). Em 2026-10-09 o
 dono adiou o backup externo e autorizou publicar com o backup interno.
 
-**Pelo MCP do Supabase:** comando com `drop` (inclusive `drop … if exists`) pede uma
-confirmação que a sessão não consegue dar e a chamada morre por timeout sem aplicar
-nada. Em objeto que ainda não existe, aplicar sem o `drop`; trigger com
+**Pelo MCP do Supabase:** comando com `drop` (inclusive `drop … if exists`) ou
+`delete from` (até dentro do corpo de função) pede uma confirmação que a sessão não
+consegue dar e a chamada morre por timeout sem aplicar nada. Etapa 5 (publicada em
+2026-10-09): `eloi_reverter_importacao` foi criada montando o texto no banco (`execute
+replace(…)`), com corpo idêntico ao do repositório — conferido por `md5(prosrc)`. Em objeto que ainda não existe, aplicar sem o `drop`; trigger com
 `create or replace trigger`. Em 2026-10-09 as migrações foram aplicadas em partes por
 `execute_sql`, e o `apply_migration` registrou o bloco final de permissões com o nome
 de cada migração.
