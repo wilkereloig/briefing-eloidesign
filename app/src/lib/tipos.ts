@@ -54,6 +54,8 @@ export interface ServicoRow {
   pago: boolean
   data_pagamento: string | null
   data_competencia: string | null
+  /** Quando o cliente paga. Nulo = vence na competência. Atrasado é derivado. */
+  data_vencimento: string | null
   /** Entrega combinada. Atrasado = prazo < hoje e não concluída (derivado). */
   prazo: string | null
   nf_numero: string | null

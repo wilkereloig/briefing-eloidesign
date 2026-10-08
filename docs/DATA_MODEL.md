@@ -137,6 +137,12 @@ vinculada aceita texto legado até `FolhaServico` perder o campo.
 `prazo` (date, nulo = sem prazo) é a entrega combinada. "Atrasado" = `prazo < hoje`
 e não concluída — derivado, nunca gravado. `data_competencia` é outra coisa: a
 que mês o valor pertence.
+`data_vencimento` (date, 2026-10-08) é quando o cliente paga. Nulo = vence na
+`data_competencia` (regra anterior). "Pagamento atrasado" = não pago e
+`coalesce(data_vencimento, data_competencia) < hoje` — derivado em
+`domain/decisoes.ts`. **Nunca grave data de pagamento em `data_competencia`**:
+ela move a receita de mês em Projetos, Notas e Relatórios. Parcela de serviço
+= uma linha por parcela, `(1/2)`/`(2/2)` na descrição, mesma nota fiscal.
 
 `valor_sugerido_cents` / `valor_sugerido_em` / `valor_sugerido_observacao`: o
 cliente propõe valor (e observação opcional) pelo portal, aba Pendências

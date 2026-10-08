@@ -13,7 +13,7 @@ const tx = (p: Partial<Transacao> & { id: string }): Transacao => ({
 const srv = (p: Partial<ServicoRow> & { id: string }): ServicoRow => ({
   cliente_id: 'c1', orcamento_id: null, sub_cliente_id: null, sub_cliente: null, nota_fiscal_id: null,
   prazo: null, descricao: 'Site', valor_cents: 5000, status_execucao: 'em_execucao', pago: false,
-  data_pagamento: null, data_competencia: null, nf_numero: null, nf_arquivo_url: null, observacoes: null,
+  data_pagamento: null, data_competencia: null, data_vencimento: null, nf_numero: null, nf_arquivo_url: null, observacoes: null,
   created_at: '2026-01-01', valor_sugerido_cents: null, valor_sugerido_em: null, valor_sugerido_observacao: null, ...p,
 })
 const hoje = '2026-09-15'

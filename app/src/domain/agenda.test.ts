@@ -17,7 +17,7 @@ const tarefa = (p: Partial<TarefaRow> & { id: string }): TarefaRow => ({
 const srv = (p: Partial<ServicoRow> & { id: string }): ServicoRow => ({
   cliente_id: 'c', orcamento_id: null, sub_cliente_id: null, sub_cliente: 'Vibra', nota_fiscal_id: null,
   prazo: '2026-09-10', descricao: 'Site', valor_cents: 5000, status_execucao: 'em_execucao', pago: false,
-  data_pagamento: null, data_competencia: null, nf_numero: null, nf_arquivo_url: null, observacoes: null,
+  data_pagamento: null, data_competencia: null, data_vencimento: null, nf_numero: null, nf_arquivo_url: null, observacoes: null,
   created_at: '2026-01-01', valor_sugerido_cents: null, valor_sugerido_em: null, valor_sugerido_observacao: null, ...p,
 })
 const rec = (p: Partial<Recorrencia> & { id: string }): Recorrencia => ({

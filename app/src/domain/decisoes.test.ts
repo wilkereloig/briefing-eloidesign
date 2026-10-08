@@ -9,7 +9,7 @@ function srv(over: Partial<ServicoRow> = {}): ServicoRow {
   return {
     id: 's1', cliente_id: 'c1', orcamento_id: null, sub_cliente_id: null, sub_cliente: null, nota_fiscal_id: null, prazo: null, descricao: 'Identidade visual',
     valor_cents: 500000, status_execucao: 'concluida', pago: false, data_pagamento: null,
-    data_competencia: null, nf_numero: null, nf_arquivo_url: null, observacoes: null,
+    data_competencia: null, data_vencimento: null, nf_numero: null, nf_arquivo_url: null, observacoes: null,
     valor_sugerido_cents: null, valor_sugerido_em: null, valor_sugerido_observacao: null,
     created_at: '2026-01-01', ...over,
   }
@@ -216,5 +216,22 @@ describe('pendenciasDeServicos', () => {
     expect(r.atrasado_qtd).toBe(0)
     expect(decisoesDoDia({ servicos: [srv({ data_competencia: null })], orcamentos: [], agora: AGORA })
       .find((d) => d.id === 'pag:s1')?.urgencia).toBe('normal')
+  })
+})
+
+describe('vencimento de serviço', () => {
+  it('vencimento manda sobre a competência', () => {
+    // Competência em julho (mês do trabalho), cliente paga em agosto: não está atrasado.
+    const s = srv({ data_competencia: '2026-07-01', data_vencimento: '2026-08-15' })
+    const d = decisoesDoDia({ servicos: [s], orcamentos: [], agora: AGORA }).find((x) => x.id === 'pag:s1')
+    expect(d?.urgencia).toBe('normal')
+    expect(d?.detalhe).toBe('Aguardando pagamento · vence 15/08')
+    expect(pendenciasDeServicos([s], AGORA).atrasado_qtd).toBe(0)
+  })
+
+  it('vence no fim do dia: no próprio dia ainda não atrasou', () => {
+    const r = pendenciasDeServicos([srv({ data_vencimento: '2026-07-30' })], AGORA)
+    expect(r.atrasado_qtd).toBe(0)
+    expect(pendenciasDeServicos([srv({ data_vencimento: '2026-07-29' })], AGORA).atrasado_qtd).toBe(1)
   })
 })

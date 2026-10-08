@@ -239,6 +239,12 @@ Deno.serve(async (req: Request) => {
       if (s.prazo && !/^\d{4}-\d{2}-\d{2}$/.test(String(s.prazo))) return json({ error: "prazo inválido" }, 400);
       row.prazo = s.prazo || null;
     }
+    // Vencimento do pagamento (2026-10-08): mesma regra do prazo. Separado de
+    // data_competencia, que decide o mes da receita.
+    if (s.data_vencimento !== undefined) {
+      if (s.data_vencimento && !/^\d{4}-\d{2}-\d{2}$/.test(String(s.data_vencimento))) return json({ error: "data_vencimento inválida" }, 400);
+      row.data_vencimento = s.data_vencimento || null;
+    }
     if (s.id) {
       const { data, error } = await supabase.from("eloi_servicos").update(row).eq("id", s.id).select().single();
       if (error) return json({ error: error.message }, 500);

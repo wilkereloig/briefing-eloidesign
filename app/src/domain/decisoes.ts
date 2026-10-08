@@ -38,9 +38,15 @@ export interface Decisao {
 
 const DIA_MS = 24 * 60 * 60 * 1000
 
-/** Competência é o vencimento do serviço. Sem competência, não há atraso. */
-function servicoVencido(s: Pick<ServicoRow, 'data_competencia'>, agora: number): boolean {
-  return s.data_competencia ? new Date(s.data_competencia).getTime() < agora : false
+/** Vencimento do pagamento; sem ele, a competência (regra antiga). */
+function vencimentoServico(s: Pick<ServicoRow, 'data_vencimento' | 'data_competencia'>): string | null {
+  return s.data_vencimento ?? s.data_competencia
+}
+
+/** Sem vencimento nem competência, não há atraso. Vence no fim do dia. */
+function servicoVencido(s: Pick<ServicoRow, 'data_vencimento' | 'data_competencia'>, agora: number): boolean {
+  const v = vencimentoServico(s)
+  return v ? v < new Date(agora).toISOString().slice(0, 10) : false
 }
 
 export interface PendenciasServicos {
@@ -93,9 +99,11 @@ export function decisoesDoDia(input: {
     }
     if (!s.pago) {
       const venceu = servicoVencido(s, agora)
+      const v = vencimentoServico(s)
+      const quando = v ? ` · vence ${v.slice(8, 10)}/${v.slice(5, 7)}` : ''
       decisoes.push({
         id: `pag:${s.id}`, titulo: s.descricao,
-        detalhe: venceu ? 'Pagamento atrasado' : 'Aguardando pagamento',
+        detalhe: (venceu ? 'Pagamento atrasado' : 'Aguardando pagamento') + quando,
         clienteId: s.cliente_id, marca: s.sub_cliente, valorCents: s.valor_cents,
         acao: 'cobrar_pagamento', urgencia: venceu ? 'atrasado' : 'normal',
       })

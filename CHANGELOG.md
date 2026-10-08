@@ -2,6 +2,19 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-08 — Hoje funciona sem financeiro; vencimento de serviço
+
+- **Hoje** mostrava só o passo a passo do financeiro enquanto não houvesse
+  conta nem lançamento, escondendo pendências que dependem só de serviço.
+  Agora "Precisa de você", Tarefas e uma linha de indicadores (a receber de
+  serviços, atrasados, concluído sem nota, em execução) aparecem sempre.
+- **`eloi_servicos.data_vencimento`**: quando o cliente paga, separado da
+  competência (mês do trabalho). Campo "Vencimento do pagamento" no formulário
+  de serviço; a fila mostra "vence dd/mm". Migração
+  `2026-10-08-vencimento-de-servico.sql`.
+- Dados: Cartoon SCW (NF 54) dividido em 2 × R$ 2.750 (vence 09/10 e 15/11),
+  competência devolvida a 28/09; NF 44, 52 e 55 com vencimentos da agenda F2.
+
 ## 2026-09-17 — Entrada do portal do cliente no KV novo
 
 A tela de senha do `/portal/` era a última com o visual antigo: card mole no

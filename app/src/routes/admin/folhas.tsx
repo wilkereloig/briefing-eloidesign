@@ -761,6 +761,7 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar, aoAnexarNota }: {
   const [pago, setPago] = useState(inicial?.pago ?? false)
   const [competencia, setCompetencia] = useState(inicial?.data_competencia ?? '')
   const [prazo, setPrazo] = useState(inicial?.prazo ?? '')
+  const [vencimento, setVencimento] = useState(inicial?.data_vencimento ?? '')
   const [observacoes, setObservacoes] = useState(inicial?.observacoes ?? '')
   const [erros, setErros] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
@@ -778,15 +779,21 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar, aoAnexarNota }: {
 
     setSalvando(true)
     try {
-      await servicosApi.upsert({
+      const salvo = await servicosApi.upsert({
         id: inicial?.id, cliente_id: clienteId, descricao: descricao.trim(),
         sub_cliente_id: subClienteId || null, valor_cents: centsDeBRL(valor),
         status_execucao: status, pago,
         data_pagamento: pago ? inicial?.data_pagamento ?? hojeISO() : null,
         data_competencia: competencia || null,
         prazo: prazo || null,
+        data_vencimento: vencimento || null,
         observacoes: observacoes.trim(),
       })
+      // Edge antiga ignora campo desconhecido sem erro. Conferir o que voltou
+      // impede o "salvou" falso se o deploy de eloi-gestao ficar para trás.
+      if ((salvo.data_vencimento ?? '') !== vencimento) {
+        throw new Error('Serviço salvo, mas o vencimento não: o servidor está desatualizado (deploy de eloi-gestao pendente).')
+      }
       aoSalvar(inicial ? 'Serviço atualizado' : 'Serviço criado')
       aoFechar()
     } catch (err) {
@@ -858,6 +865,14 @@ export function FolhaServico({ inicial, aoFechar, aoSalvar, aoAnexarNota }: {
             <label htmlFor="srv-prazo">Entrega combinada</label>
             <input id="srv-prazo" type="date" className="campo-caixa" value={prazo}
               onChange={(e) => setPrazo(e.target.value)} />
+          </div>
+          {/* Competência é o mês do trabalho; vencimento é quando o cliente
+              paga. Separados para a receita não mudar de mês com a agenda. */}
+          <div className="campo">
+            <label htmlFor="srv-venc">Vencimento do pagamento</label>
+            <input id="srv-venc" type="date" className="campo-caixa" value={vencimento}
+              onChange={(e) => setVencimento(e.target.value)} />
+            <span className="t-legenda">Vazio = vence na competência.</span>
           </div>
           <div className="campo">
             <span className="etiqueta-mini">Nota fiscal</span>
