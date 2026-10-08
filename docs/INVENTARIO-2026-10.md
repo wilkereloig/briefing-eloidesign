@@ -81,9 +81,9 @@ pendente de autorização quando indicado).
 | 6 | A | `resultado()` = liquidado filtrado por competência (mês corrente parece sem despesa; empréstimo recebido vira receita) | domínio | ✅ renomeado `resultadoLiquidadoPorCompetencia`; novos `resultadoPorCompetencia` (domínio) e perspectivas no banco. **Telas ainda usam o antigo** (Etapa 6/7) |
 | 7 | A | Arquivar conta/cartão com saldo ou dívida tirava o valor do patrimônio e da cobertura | domínio | ✅ `pesaNosTotais` |
 | 8 | A | Pagar conta "com o cartão" na folha de baixa marcava a conta paga dentro do cartão — não entrava em fatura, a dívida sumia | folha + edge | ✅ bloqueado com orientação; modelagem completa na Etapa 5 |
-| 9 | A | `vercel.json` publica o repositório inteiro (`outputDirectory: "."`), inclusive ZIP/PDF de entrega de cliente em `entregas-marca/` — o "gate" é só no navegador | hospedagem | ⏳ precisa de `.vercelignore` + mover para bucket — **pede decisão** (muda URLs) |
+| 9 | A | `vercel.json` publica o repositório inteiro (`outputDirectory: "."`), inclusive ZIP/PDF de entrega de cliente em `entregas-marca/` — o "gate" é só no navegador | hospedagem | ⏸ dono decidiu manter como está (2026-10-09) |
 | 10 | A | Briefing sem token grava direto em `/rest/v1/` com a chave pública — existe política de INSERT anônimo em produção (não estava em migração nenhuma) | páginas estáticas | ⏳ Etapa 9; agora registrada em migração |
-| 11 | A | Edges do app Financeiro (`categorize`, `reminders`, `recurrences`) sem checagem de chamador; `categorize` usa chave de IA | app Financeiro | ⏳ desligar/proteger pede autorização |
+| 11 | A | Edges do app Financeiro (`categorize`, `reminders`, `recurrences`) sem checagem de chamador; `categorize` usa chave de IA | app Financeiro | ✅ desativadas (410), cron desligado, site pausado — 2026-10-09 |
 | 12 | M | `pagar_fatura` não idempotente (duplo envio debitava de novo) | edge | ✅ chave + recusa sem compra em aberto |
 | 13 | M | Apagar/cancelar pagamento de fatura deixava compras quitadas sem saída de dinheiro | edge | ✅ bloqueado (409); estorno de pagamento de fatura na Etapa 5 |
 | 14 | M | Conferência e ajuste fora de transação; saldo do sistema vinha da tela | edge | ✅ RPC única; saldo recalculado no servidor; ajuste exige justificativa |
@@ -116,7 +116,15 @@ Inventário completo feito no clone; resumo do que importa para a consolidação
 - **Vale portar:** parser CSV/OFX tolerante (com FITID e sinal), categorização em
   camadas (regra → histórico → IA com confiança → pergunta), rateio de assinaturas
   (participantes e cotas), Web Push, busca global.
-- **Não há dado a migrar.** Desativar o app/cron dele é decisão do dono.
+- **Não há dado a migrar.**
+- **Desligado em 2026-10-09, a pedido do dono** (reversível, nada apagado):
+  - cron `recurrences-daily` e `reminders-daily` → `active = false` (`cron.alter_job`);
+  - edges `categorize`, `reminders` e `recurrences` → resposta 410 "app Financeiro
+    desativado" (verify_jwt mantido). O código original está no repo `app-financeiro`,
+    em `supabase/functions/`: para religar, basta redeployar de lá;
+  - projeto Vercel `eloi-financeiro` → pausado (religar: unpause no painel da Vercel).
+  - **Ficaram como estavam:** as tabelas dele (vazias ou quase), o trigger
+    `on_auth_user_created` e o bucket `anexos`. Apagar exige outra autorização.
 
 ## 7. Baseline e backup
 

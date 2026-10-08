@@ -99,10 +99,13 @@ de impacto:
    lançá-la na conta do cartão.
 7. A transferência de entrada da empresa em conta pessoal aparece em 9 lançamentos
    cujo contexto difere do da conta: definir a natureza (pró-labore, distribuição ou reembolso).
-8. Edges e cron do app Financeiro rodam todo dia sobre tabelas vazias, e uma delas usa
-   chave de IA sem autenticação. Desligar? (exige autorização)
+8. ~~Edges e cron do app Financeiro~~ — **desligados em 2026-10-09** a pedido do dono
+   (reversível; ver inventário §6).
 9. A edge legada `eloi-financeiro` continua ativa.
-10. Entregas de cliente servidas publicamente pelo `outputDirectory: "."`.
+10. Entregas de cliente servidas publicamente pelo `outputDirectory: "."` — dono decidiu
+    manter (2026-10-09).
+11. Backup restaurável: adiado pelo dono (2026-10-09). Continua pré-requisito para
+    aplicar as migrações em produção.
 
 ## Publicação — ordem, verificação e reversão
 
