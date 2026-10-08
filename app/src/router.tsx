@@ -21,6 +21,9 @@ const Orcamentos = lazy(() => import('./routes/admin/telas/Orcamentos'))
 const Clientes = lazy(() => import('./routes/admin/telas/Clientes'))
 const ClienteFicha = lazy(() => import('./routes/admin/telas/ClienteFicha'))
 const Dinheiro = lazy(() => import('./routes/admin/telas/Dinheiro'))
+const DinheiroLayout = lazy(() => import('./routes/admin/telas/dinheiro/Layout'))
+const EmBreve = lazy(() => import('./routes/admin/telas/dinheiro/Layout').then((m) => ({ default: m.EmBreve })))
+const VisaoGeral = lazy(() => import('./routes/admin/telas/dinheiro/VisaoGeral'))
 const Briefings = lazy(() => import('./routes/admin/telas/Briefings'))
 const Entregas = lazy(() => import('./routes/admin/telas/Entregas'))
 const Notas = lazy(() => import('./routes/admin/telas/Notas'))
@@ -51,7 +54,22 @@ export const router = createBrowserRouter([
       { path: 'orcamentos', element: <Orcamentos /> },
       { path: 'clientes', element: <Clientes /> },
       { path: 'clientes/:id', element: <ClienteFicha /> },
-      { path: 'dinheiro', element: <Dinheiro /> },
+      // Dinheiro tem sub-páginas (nav.ts NAV_DINHEIRO). A tela antiga segue
+      // montada nas que ainda não foram separadas; `key` força remontar ao
+      // trocar de sub-página, senão a aba inicial (lida do path) não muda.
+      // ponytail: contas/cartões apontam para a tela antiga (aba Contas) até
+      // as Tasks 3 e 4 do plano 2026-10-08 criarem as páginas próprias.
+      { path: 'dinheiro', element: <DinheiroLayout />, children: [
+        { index: true, element: <VisaoGeral /> },
+        { path: 'contas', element: <Dinheiro key="contas" /> },
+        { path: 'contas/:id', element: <EmBreve titulo="Conta" /> },
+        { path: 'cartoes', element: <Dinheiro key="cartoes" /> },
+        { path: 'cartoes/:id', element: <EmBreve titulo="Cartão" /> },
+        { path: 'lancamentos', element: <Dinheiro key="lancamentos" /> },
+        { path: 'agenda', element: <Dinheiro key="agenda" /> },
+        { path: 'emprestimos', element: <EmBreve titulo="Empréstimos" /> },
+        { path: 'planejamento', element: <Dinheiro key="planejamento" /> },
+      ] },
       { path: 'briefings', element: <Briefings /> },
       { path: 'entregas', element: <Entregas /> },
       { path: 'notas', element: <Notas /> },

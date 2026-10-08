@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { financas } from '../../../lib/api'
 import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
-import { hojeISO, rotuloMes, useFinancas, useNomes, useTransacoesDoMes } from '../../../lib/financas-store'
+import { hojeISO, useFinancas, useNomes, useTransacoesDoMes } from '../../../lib/financas-store'
 import {
   agruparPorPrazo, cicloFatura, diasDeAtraso, estaEmAberto, faturaAberta, limiteDisponivel,
   parceladoAberto, resultado, ROTULO_FAIXA, saldoConta, saldoAberto, totalEmAberto,
@@ -11,7 +12,7 @@ import type { Conferencia, Conta, Recorrencia, ServicoRow, Transacao } from '../
 import {
   Aviso, Botao, Campo, Card, Etiqueta, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
-import { Cabecalho, Carga, ChipMovimento, Dinheiro, Paginacao, SeletorLente, SeletorMes } from '../../../ui/painel'
+import { Carga, ChipMovimento, Dinheiro, Paginacao, SeletorMes } from '../../../ui/painel'
 import { usePaginacao } from '../../../ui/paginacao'
 import { custoAnual, custoMensal, dataCurta, rotuloConta, rotuloPeriodo } from '../../../ui/formato'
 import { FolhaTransacao } from '../FolhaTransacao'
@@ -42,9 +43,18 @@ const ABAS: { chave: Aba; label: string }[] = [
   { chave: 'movimentos', label: 'Movimentações' },
   { chave: 'receber', label: 'A receber' },
   { chave: 'pagar', label: 'A pagar' },
-  { chave: 'contas', label: 'Contas' },
   { chave: 'recorrencias', label: 'Recorrências' },
 ]
+
+/** Aba inicial pela sub-página em que a tela está montada (router.tsx).
+ *  Contas virou página própria e saiu da barra de abas; /contas e /cartoes
+ *  ainda caem aqui até as páginas próprias existirem. */
+function abaDoPath(pathname: string): Aba {
+  if (pathname.endsWith('/agenda')) return 'pagar'
+  if (pathname.endsWith('/planejamento')) return 'recorrencias'
+  if (pathname.endsWith('/contas') || pathname.endsWith('/cartoes')) return 'contas'
+  return 'movimentos'
+}
 
 export default function DinheiroTela() {
   const est = useFinancas()
@@ -54,7 +64,8 @@ export default function DinheiroTela() {
   const nomes = useNomes()
   const hoje = hojeISO()
 
-  const [aba, setAba] = useState<Aba>('movimentos')
+  const { pathname } = useLocation()
+  const [aba, setAba] = useState<Aba>(() => abaDoPath(pathname))
   const [busca, setBusca] = useState('')
   const [recorte, setRecorte] = useState<Recorte>('todos')
   const [folha, setFolha] = useState<
@@ -143,8 +154,8 @@ export default function DinheiroTela() {
 
   return (
     <div className="tela pilha" data-density="dense">
-      <Cabecalho secao="Financeiro" titulo={rotuloMes(mes)}>
-        <SeletorLente />
+      {/* Título e lente vêm do Layout de Dinheiro; aqui só o que é desta tela. */}
+      <div className="linha">
         <SeletorMes />
         <Botao onClick={() => setFolha({ tipo: 'importar' })} className="col-desktop">
           Importar extrato
@@ -152,7 +163,7 @@ export default function DinheiroTela() {
         <Botao variante="primario" onClick={() => setFolha({ tipo: 'nova' })}>
           <Icone nome="adicionar" tamanho={16} />Lançar
         </Botao>
-      </Cabecalho>
+      </div>
 
       <Carga linhas={6}>
         <Onboarding />

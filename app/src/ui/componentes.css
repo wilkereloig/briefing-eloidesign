@@ -190,6 +190,10 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   border-color:var(--cor-borda-sutil);background:transparent}
 [data-density='dense'] .lista-item:hover{background:var(--cor-superficie-hover)}
 .marca-cor{flex:none;width:10px;height:26px;border-radius:0}
+/* linha inteira clicável (<Link class="lista-item lista-link">): mantém a cor
+   do texto da linha em vez do acento de link */
+.lista-link{color:inherit}
+.lista-link:hover{background:var(--cor-superficie-hover)}
 /* cancelado/inativo continua legível e continua clicável: o estado aparece no
    chip escrito, e a opacidade só reforça — cor nunca informa sozinha */
 .lista-item[data-cancelado='true']{opacity:.55}
