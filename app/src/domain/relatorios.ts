@@ -3,8 +3,8 @@
 // cliente e marca entra uma vez (`aplicarFiltro`) e vale para todas as abas —
 // duas telas filtrando de jeitos diferentes dariam dois números para a
 // mesma pergunta.
-import type { NotaFiscal, ServicoRow, Transacao } from '../lib/tipos'
-import { competenciaDe, diasDeAtraso, estaCancelada, estaEmAberto, saldoAberto, valorLiquidado } from './financeiro'
+import type { Categoria, Contexto, NotaFiscal, ServicoRow, Transacao } from '../lib/tipos'
+import { competenciaDe, diasDeAtraso, estaCancelada, estaEmAberto, naturezaDaCategoria, saldoAberto, valorLiquidado } from './financeiro'
 import type { Projeto } from './projeto'
 
 export interface Filtro {
@@ -188,3 +188,89 @@ export function montarCsv(cabecalho: string[], linhas: (string | number | null |
 
 /** Cents → "1234,56" para planilha somar sem conversão. */
 export const reaisCsv = (cents: number) => (cents / 100).toFixed(2).replace('.', ',')
+
+// ── análise de gastos ────────────────────────────────────────────────────────
+// "Para onde está indo o dinheiro?" — pelo valor ORIGINAL (pago ou não) no mês
+// de competência: compra no cartão conta no mês da compra, mesmo com a fatura
+// em aberto. Transferência (inclusive pagar fatura) não é gasto.
+
+export type GrupoGasto = 'dia_a_dia' | 'divida' | 'juros' | 'cartao_sem_detalhe'
+
+/** Fatura lançada como total provisório (sem os itens): é gasto, mas sem "em quê". */
+const ehFaturaSemDetalhe = (t: Transacao) => /^fatura\b/i.test(t.descricao)
+/** Chave da linha "cartão sem detalhe" em `porCategoria`. */
+export const CARTAO_SEM_DETALHE = '__cartao_sem_detalhe'
+
+/** Nome curto do lugar/fornecedor para o ranking: "99 — corrida" → "99";
+ *  "PIX para Fulano" → "PIX para pessoas". */
+export function lugarDoGasto(t: Pick<Transacao, 'descricao' | 'fornecedor'>): string {
+  const d = (t.fornecedor || t.descricao).trim()
+  if (/^pix (para|no cartão)/i.test(d)) return 'PIX para pessoas'
+  return d.split(/ — | - | \(|\s\d+\/\d+/)[0].trim() || d
+}
+
+export interface AnaliseGastos {
+  meses: string[]
+  total_cents: number
+  media_mensal_cents: number
+  /** Entradas operacionais (o que é renda de verdade: sem empréstimo, sem
+   *  dinheiro vindo de outra conta, sem estorno, sem ajuste). */
+  renda_cents: number
+  renda_media_cents: number
+  /** Dívida + juros: o que se paga pelo passado. */
+  passado_cents: number
+  porGrupo: Record<GrupoGasto, number>
+  porMes: { mes: string; saidas_cents: number; renda_cents: number }[]
+  porCategoria: { categoria_id: string | null; total_cents: number; qtd: number; porMes: number[] }[]
+  lugares: { nome: string; total_cents: number; qtd: number }[]
+}
+
+export function analiseGastos(
+  transacoes: Transacao[], categorias: Categoria[], meses: string[], contexto?: Contexto,
+): AnaliseGastos {
+  const cat = new Map(categorias.map((c) => [c.id, c]))
+  const idx = new Map(meses.map((m, i) => [m, i]))
+  const porGrupo: Record<GrupoGasto, number> = { dia_a_dia: 0, divida: 0, juros: 0, cartao_sem_detalhe: 0 }
+  const porMes = meses.map((mes) => ({ mes, saidas_cents: 0, renda_cents: 0 }))
+  const porCat = new Map<string, AnaliseGastos['porCategoria'][number]>()
+  const lugares = new Map<string, { nome: string; total_cents: number; qtd: number }>()
+  let total = 0, renda = 0
+  for (const t of transacoes) {
+    if (t.tipo === 'transferencia' || estaCancelada(t) || t.origem === 'ajuste') continue
+    if (contexto && t.contexto !== contexto) continue
+    const m = competenciaDe(t)?.slice(0, 7)
+    const i = m == null ? undefined : idx.get(m)
+    if (i === undefined) continue
+    const c = t.categoria_id ? cat.get(t.categoria_id) : undefined
+    const nat = naturezaDaCategoria(c)
+    if (t.tipo === 'entrada') {
+      if (nat === 'operacional' && c?.nome !== 'Estornos e devoluções') { renda += t.valor_cents; porMes[i].renda_cents += t.valor_cents }
+      continue
+    }
+    total += t.valor_cents
+    porMes[i].saidas_cents += t.valor_cents
+    const grupo: GrupoGasto = ehFaturaSemDetalhe(t) ? 'cartao_sem_detalhe'
+      : nat === 'divida' ? 'divida' : nat === 'financeira' ? 'juros' : 'dia_a_dia'
+    porGrupo[grupo] += t.valor_cents
+    // Fatura provisória fica numa linha própria: somá-la em "Outros" esconderia
+    // que o gasto existe mas ainda não se sabe em quê.
+    const k = grupo === 'cartao_sem_detalhe' ? CARTAO_SEM_DETALHE : t.categoria_id ?? ''
+    const linha = porCat.get(k) ?? { categoria_id: grupo === 'cartao_sem_detalhe' ? CARTAO_SEM_DETALHE : t.categoria_id, total_cents: 0, qtd: 0, porMes: meses.map(() => 0) }
+    linha.total_cents += t.valor_cents; linha.qtd += 1; linha.porMes[i] += t.valor_cents
+    porCat.set(k, linha)
+    if (grupo === 'dia_a_dia') {
+      const nome = lugarDoGasto(t)
+      const l = lugares.get(nome.toLowerCase()) ?? { nome, total_cents: 0, qtd: 0 }
+      l.total_cents += t.valor_cents; l.qtd += 1
+      lugares.set(nome.toLowerCase(), l)
+    }
+  }
+  const n = Math.max(meses.length, 1)
+  return {
+    meses, total_cents: total, media_mensal_cents: Math.round(total / n),
+    renda_cents: renda, renda_media_cents: Math.round(renda / n),
+    passado_cents: porGrupo.divida + porGrupo.juros, porGrupo, porMes,
+    porCategoria: [...porCat.values()].sort((a, b) => b.total_cents - a.total_cents),
+    lugares: [...lugares.values()].sort((a, b) => b.total_cents - a.total_cents).slice(0, 10),
+  }
+}

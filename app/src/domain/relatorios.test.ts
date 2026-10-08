@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { aging, aplicarFiltro, montarCsv, porCliente, reaisCsv, resumoFiscal, resumoProjetos } from './relatorios'
-import type { NotaFiscal, ServicoRow, Transacao } from '../lib/tipos'
+import { aging, analiseGastos, aplicarFiltro, CARTAO_SEM_DETALHE, lugarDoGasto, montarCsv, porCliente, reaisCsv, resumoFiscal, resumoProjetos } from './relatorios'
+import type { Categoria, NotaFiscal, ServicoRow, Transacao } from '../lib/tipos'
 import type { Projeto } from './projeto'
 
 const tx = (p: Partial<Transacao> & { id: string }): Transacao => ({
@@ -107,5 +107,50 @@ describe('csv', () => {
     expect(csv.charCodeAt(0)).toBe(0xFEFF)
     expect(csv.slice(1)).toBe('a;b\n"x;y";1\nplain;')
     expect(reaisCsv(123456)).toBe('1234,56')
+  })
+})
+
+describe('análise de gastos', () => {
+  const cat = (id: string, nome: string, tipo: Categoria['tipo'] = 'saida'): Categoria =>
+    ({ id, nome, contexto: 'pessoal', tipo, pai_id: null, cor: null, icone: null, ativa: true })
+  const cats = [cat('ali', 'Alimentação'), cat('div', 'Empréstimos e dívidas'), cat('jur', 'Juros, tarifas e encargos'),
+    cat('out', 'Outros'), cat('ren', 'Projetos', 'entrada'), cat('emp', 'Empréstimos recebidos', 'entrada'),
+    cat('est', 'Estornos e devoluções', 'entrada'), cat('dco', 'Dinheiro de outras contas', 'entrada')]
+  const g = (p: Partial<Transacao> & { id: string }) => tx({ contexto: 'pessoal', tipo: 'saida', cliente_id: null, ...p })
+  const ts = [
+    // compra no cartão AINDA NÃO PAGA conta como gasto do mês da compra
+    g({ id: '1', categoria_id: 'ali', valor_cents: 3000, descricao: 'Padaria Central — Rio', data_competencia: '2026-08-05' }),
+    g({ id: '2', categoria_id: 'ali', valor_cents: 2000, descricao: 'Padaria Central — Rio', data_competencia: '2026-09-05', status: 'realizado', recebido_cents: 2000 }),
+    g({ id: '3', categoria_id: 'div', valor_cents: 10000, descricao: 'Empréstimo (3/12)', data_competencia: '2026-09-13' }),
+    g({ id: '4', categoria_id: 'jur', valor_cents: 500, descricao: 'IOF', data_competencia: '2026-09-02' }),
+    g({ id: '5', categoria_id: 'out', valor_cents: 7000, descricao: 'Fatura Cartão X out/2026 — parcial', data_competencia: '2026-09-30' }),
+    g({ id: '6', tipo: 'transferencia', valor_cents: 99999, descricao: 'Pagamento da fatura', data_competencia: '2026-09-09' }),
+    g({ id: '7', categoria_id: 'ali', valor_cents: 400, status: 'cancelado', data_competencia: '2026-09-01' }),
+    g({ id: 'r', tipo: 'entrada', categoria_id: 'ren', valor_cents: 20000, data_competencia: '2026-09-10' }),
+    g({ id: 'e', tipo: 'entrada', categoria_id: 'emp', valor_cents: 50000, data_competencia: '2026-09-10' }),
+    g({ id: 's', tipo: 'entrada', categoria_id: 'est', valor_cents: 100, data_competencia: '2026-09-10' }),
+    g({ id: 'd', tipo: 'entrada', categoria_id: 'dco', valor_cents: 9000, data_competencia: '2026-09-10' }),
+    g({ id: 'x', categoria_id: 'ali', valor_cents: 1, data_competencia: '2026-06-30' }), // fora do período
+  ]
+  const a = analiseGastos(ts, cats, ['2026-08', '2026-09'])
+  it('soma o valor original por competência; transferência, cancelado e fora do período não entram', () => {
+    expect(a.total_cents).toBe(3000 + 2000 + 10000 + 500 + 7000)
+    expect(a.media_mensal_cents).toBe(11250)
+    expect(a.porMes.map((m) => m.saidas_cents)).toEqual([3000, 19500])
+  })
+  it('separa o que paga o passado (dívida + juros) e o cartão sem detalhe', () => {
+    expect(a.porGrupo).toEqual({ dia_a_dia: 5000, divida: 10000, juros: 500, cartao_sem_detalhe: 7000 })
+    expect(a.passado_cents).toBe(10500)
+    expect(a.porCategoria.find((c) => c.categoria_id === CARTAO_SEM_DETALHE)?.total_cents).toBe(7000)
+    expect(a.porCategoria.find((c) => c.categoria_id === 'out')).toBeUndefined()
+  })
+  it('renda é só entrada operacional: empréstimo, dinheiro de outra conta e estorno ficam de fora', () => {
+    expect(a.renda_cents).toBe(20000)
+    expect(a.porMes[1].renda_cents).toBe(20000)
+  })
+  it('ranking de lugares junta pelo nome e só olha o dia a dia', () => {
+    expect(a.lugares).toEqual([{ nome: 'Padaria Central', total_cents: 5000, qtd: 2 }])
+    expect(lugarDoGasto({ descricao: '99 — corrida', fornecedor: null })).toBe('99')
+    expect(lugarDoGasto({ descricao: 'PIX para Fulano', fornecedor: null })).toBe('PIX para pessoas')
   })
 })

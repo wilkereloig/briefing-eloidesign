@@ -12,7 +12,7 @@
 //    Pagamento parcial é normal, não exceção;
 //  · competência (a que mês pertence) ≠ liquidação (quando o dinheiro andou).
 //    Resultado usa competência; saldo usa liquidação.
-import type { Transacao, Conta, Categoria, Contexto, Emprestimo, Meta, StatusMov, TipoMov } from '../lib/tipos'
+import type { Transacao, Conta, Categoria, Contexto, Emprestimo, Meta, Natureza, StatusMov, TipoMov } from '../lib/tipos'
 
 /** Status em que a transação ainda não liquidou e continua devida. */
 const EM_ABERTO: StatusMov[] = ['previsto', 'pendente', 'parcial', 'vencido']
@@ -668,7 +668,7 @@ export interface ResultadoCompetencia {
  * (é transferência). Espelha eloi_resultado_competencia (banco).
  */
 export function resultadoPorCompetencia(transacoes: Transacao[], categorias: Categoria[], contexto?: Contexto, mes?: string): ResultadoCompetencia {
-  const natureza = new Map(categorias.map((c) => [c.id, c.natureza ?? 'operacional']))
+  const natureza = new Map(categorias.map((c) => [c.id, naturezaDaCategoria(c)]))
   const r: ResultadoCompetencia = {
     receita_cents: 0, despesa_cents: 0, resultado_cents: 0, divida_cents: 0, financeiro_liquido_cents: 0,
     patrimonial_entradas_cents: 0, patrimonial_saidas_cents: 0, ajustes_cents: 0, a_receber_cents: 0, a_pagar_cents: 0,
@@ -690,3 +690,17 @@ export function resultadoPorCompetencia(transacoes: Transacao[], categorias: Cat
   r.resultado_cents = r.receita_cents - r.despesa_cents
   return r
 }
+
+/** Natureza da categoria. Usa a coluna `natureza` (migração 2026-10-09); antes
+ *  dela, cai na mesma regra de nome das categorias-padrão que a migração aplica. */
+export function naturezaDaCategoria(c: Pick<Categoria, 'nome' | 'natureza'> | undefined): Natureza {
+  if (c?.natureza) return c.natureza
+  switch (c?.nome) {
+    case 'Empréstimos e dívidas': return 'divida'
+    case 'Juros, tarifas e encargos': case 'Rendimentos': return 'financeira'
+    case 'Empréstimos recebidos': case 'Pró-labore': case 'Distribuição de lucro':
+    case 'Dinheiro de outras contas': return 'patrimonial'
+    default: return 'operacional'
+  }
+}
+

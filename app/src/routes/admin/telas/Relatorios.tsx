@@ -8,7 +8,7 @@ import {
   ticketMedio, valorLiquidado,
 } from '../../../domain/financeiro'
 import {
-  aging, aplicarFiltro, porCliente, reaisCsv, resumoFiscal, resumoProjetos, type Filtro,
+  aging, analiseGastos, aplicarFiltro, CARTAO_SEM_DETALHE, porCliente, reaisCsv, resumoFiscal, resumoProjetos, type Filtro,
 } from '../../../domain/relatorios'
 import { juntarProjetos } from '../../../domain/projeto'
 import { semNotaFiscal } from '../../../domain/decisoes'
@@ -17,8 +17,9 @@ import {
 } from '../../../ui/componentes'
 import { Cabecalho, Carga, Dinheiro, SeletorLente } from '../../../ui/painel'
 
-type Aba = 'resultado' | 'clientes' | 'projetos' | 'recebiveis' | 'fiscal' | 'categorias' | 'previsao'
+type Aba = 'gastos' | 'resultado' | 'clientes' | 'projetos' | 'recebiveis' | 'fiscal' | 'categorias' | 'previsao'
 const ABAS: { chave: Aba; label: string }[] = [
+  { chave: 'gastos', label: 'Gastos' },
   { chave: 'resultado', label: 'Resultado' },
   { chave: 'clientes', label: 'Clientes' },
   { chave: 'projetos', label: 'Projetos' },
@@ -34,11 +35,11 @@ const ROTULO_ETAPA = {
 
 export default function Relatorios() {
   const {
-    contas, transacoes, servicos, orcamentos, notas, clientes, subClientes, mes, contexto,
+    contas, transacoes, servicos, orcamentos, notas, clientes, subClientes, mes, contexto, categoriasTodas,
   } = useFinancas()
   const nomes = useNomes()
   const hoje = hojeISO()
-  const [aba, setAba] = useState<Aba>('resultado')
+  const [aba, setAba] = useState<Aba>('gastos')
   // Um filtro para todas as abas: período por competência, cliente, marca.
   // A lente pessoal/empresa continua no cabeçalho, como nas outras telas.
   const [filtro, setFiltro] = useState<Filtro>({})
@@ -84,6 +85,9 @@ export default function Relatorios() {
         ['Vencimento', 'Descrição', 'Cliente', 'Combinado', 'Recebido', 'Restante', 'Status'],
         abertas.map((t) => [t.data_vencimento, t.descricao, t.cliente_id ? nomes.cliente.get(t.cliente_id)?.nome : '',
           reaisCsv(t.valor_cents), reaisCsv(t.recebido_cents), reaisCsv(saldoAberto(t)), t.status]))
+    } else if (aba === 'gastos') {
+      baixarCsv(`gastos${sufixo}`, ['Categoria', ...gastos.meses, 'Total', 'Lançamentos'],
+        gastos.porCategoria.map((c) => [nomeCategoriaGasto(c.categoria_id), ...c.porMes.map(reaisCsv), reaisCsv(c.total_cents), c.qtd]))
     } else if (aba === 'categorias') {
       baixarCsv(`despesas-por-categoria${sufixo}`, ['Categoria', 'Total', 'Lançamentos'],
         porCategoria.map((f) => [nomes.categoria.get(f.chave)?.nome ?? 'Sem categoria', reaisCsv(f.total_cents), f.qtd]))
@@ -114,6 +118,21 @@ export default function Relatorios() {
   const teto = Math.max(...serie.map((s) => Math.max(s.receita_cents, s.despesa_cents)), 1)
 
   const porCategoria = useMemo(() => agrupar(base, (t) => t.categoria_id, 'saida'), [base])
+
+  // Gastos: os meses do período filtrado, ou os 3 últimos até o mês em foco.
+  // Usa a lista com cliente/marca mas SEM o corte de datas — o corte é `mesesGastos`.
+  const mesesGastos = useMemo(() => {
+    if (!filtro.de && !filtro.ate) return [deslocarMes(mes, -2), deslocarMes(mes, -1), mes]
+    const ini = (filtro.de ?? filtro.ate!).slice(0, 7), fim = (filtro.ate ?? filtro.de!).slice(0, 7)
+    const out: string[] = []
+    for (let m = ini; m <= fim && out.length < 24; m = deslocarMes(m, 1)) out.push(m)
+    return out
+  }, [filtro.de, filtro.ate, mes])
+  const gastos = useMemo(() => analiseGastos(baseSemPeriodo, categoriasTodas, mesesGastos, contexto),
+    [baseSemPeriodo, categoriasTodas, mesesGastos, contexto])
+  const nomeCategoriaGasto = (id: string | null) => id === CARTAO_SEM_DETALHE
+    ? 'Cartão — fatura sem detalhe'
+    : id ? nomes.categoria.get(id)?.nome ?? 'Categoria removida' : 'Sem categoria'
 
   const cenarios = useMemo(
     () => previsaoCaixa(contas, transacoes, hoje, 90, contexto), [contas, transacoes, hoje, contexto])
@@ -183,6 +202,85 @@ export default function Relatorios() {
           Metas e orçamentos estão em{' '}
           <Link to="/admin/dinheiro/planejamento?aba=metas">Dinheiro › Planejamento</Link>.
         </p>
+
+        {aba === 'gastos' && (
+          <>
+            <div className="grade-indicadores">
+              <Indicador rotulo={`Saiu em ${gastos.meses.length} ${gastos.meses.length === 1 ? 'mês' : 'meses'}`}
+                valor={fmtBRL(gastos.total_cents)} nota={`${fmtBRL(gastos.media_mensal_cents)} por mês, pago ou não`} />
+              <Indicador rotulo="Renda no período" valor={fmtBRL(gastos.renda_cents)}
+                nota={`${fmtBRL(gastos.renda_media_cents)} por mês · sem empréstimo nem dinheiro de outra conta`} />
+              <Indicador rotulo="Pagando o passado" valor={fmtBRL(gastos.passado_cents)}
+                cor={gastos.total_cents && gastos.passado_cents / gastos.total_cents >= 0.3 ? 'coral' : undefined}
+                nota={gastos.total_cents
+                  ? `${Math.round((gastos.passado_cents / gastos.total_cents) * 100)}% do que saiu · dívidas, juros e tarifas`
+                  : 'dívidas, juros e tarifas'} />
+              <Indicador rotulo="Saídas × renda" valor={gastos.renda_cents
+                  ? `${(gastos.total_cents / gastos.renda_cents).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}×` : '—'}
+                cor={gastos.total_cents > gastos.renda_cents ? 'coral' : 'acento'}
+                nota={gastos.total_cents > gastos.renda_cents
+                  ? `saiu ${fmtBRL(gastos.total_cents - gastos.renda_cents)} a mais do que entrou de renda`
+                  : 'a renda cobriu as saídas'} />
+            </div>
+            {gastos.porGrupo.cartao_sem_detalhe > 0 && (
+              <p className="t-legenda">
+                {fmtBRL(gastos.porGrupo.cartao_sem_detalhe)} são faturas lançadas só pelo total: o gasto existe, mas
+                ainda não se sabe em quê. Lançar os itens do PDF da fatura completa as categorias.
+              </p>
+            )}
+
+            <Painel titulo="Por categoria" acao={<span className="t-legenda">pelo mês da compra/competência</span>}>
+              {gastos.porCategoria.length === 0
+                ? <Vazio icone="grafico" titulo="Nenhum gasto no período" instrucao="Ajuste o período ou a lente." />
+                : <div className="rolagem-x">
+                  <table className="tabela tabela-cartoes">
+                    <thead>
+                      <tr><th>Categoria</th>
+                        {gastos.meses.map((m) => <th key={m} className="col-valor">{rotuloMesCurto(m)}</th>)}
+                        <th className="col-valor">Total</th><th className="col-valor">%</th></tr>
+                    </thead>
+                    <tbody>
+                      {gastos.porCategoria.map((c) => (
+                        <tr key={c.categoria_id ?? 'sem'}>
+                          <td className="t-ui" data-rotulo="">{nomeCategoriaGasto(c.categoria_id)}</td>
+                          {c.porMes.map((v, i) => (
+                            <td key={gastos.meses[i]} className="dinheiro" data-rotulo={rotuloMesCurto(gastos.meses[i])}>
+                              {v ? fmtBRL(v) : '—'}</td>
+                          ))}
+                          <td className="dinheiro" data-rotulo="Total">{fmtBRL(c.total_cents)}</td>
+                          <td className="col-valor" data-rotulo="%">
+                            {gastos.total_cents ? `${Math.round((c.total_cents / gastos.total_cents) * 100)}%` : '—'}</td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td className="t-ui" data-rotulo=""><strong>Total</strong></td>
+                        {gastos.porMes.map((m) => (
+                          <td key={m.mes} className="dinheiro" data-rotulo={rotuloMesCurto(m.mes)}><strong>{fmtBRL(m.saidas_cents)}</strong></td>
+                        ))}
+                        <td className="dinheiro" data-rotulo="Total"><strong>{fmtBRL(gastos.total_cents)}</strong></td>
+                        <td className="col-valor" data-rotulo="%">100%</td>
+                      </tr>
+                      <tr>
+                        <td className="t-sec" data-rotulo="">Renda do mês</td>
+                        {gastos.porMes.map((m) => (
+                          <td key={m.mes} className="dinheiro t-sec" data-rotulo={rotuloMesCurto(m.mes)}>{fmtBRL(m.renda_cents)}</td>
+                        ))}
+                        <td className="dinheiro t-sec" data-rotulo="Total">{fmtBRL(gastos.renda_cents)}</td>
+                        <td />
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>}
+            </Painel>
+
+            <Painel titulo="Onde mais se gasta no dia a dia"
+              acao={<span className="t-legenda">sem dívidas, juros e faturas sem detalhe</span>}>
+              {gastos.lugares.length === 0
+                ? <Vazio icone="grafico" titulo="Nada no período" instrucao="Os lugares aparecem quando há gasto do dia a dia." />
+                : <Ranking itens={gastos.lugares.map((l) => ({ chave: l.nome, total: l.total_cents, qtd: l.qtd }))} />}
+            </Painel>
+          </>
+        )}
 
         {aba === 'resultado' && (
           <>
@@ -405,6 +503,12 @@ function Ranking({ itens }: { itens: { chave: string; total: number; qtd: number
 
 
 // ── formatação de apresentação ───────────────────────────────────────────────
+
+/** 'AAAA-MM' → 'set/26'. */
+function rotuloMesCurto(mes: string): string {
+  return new Date(Date.UTC(+mes.slice(0, 4), +mes.slice(5, 7) - 1, 1))
+    .toLocaleDateString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' }).replace('. de ', '/').replace('.', '')
+}
 
 /** Valor curto para o topo da coluna do gráfico: 12,4 mil. */
 function fmtCompacto(cents: number): string {
