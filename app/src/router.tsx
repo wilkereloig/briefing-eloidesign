@@ -26,6 +26,8 @@ const EmBreve = lazy(() => import('./routes/admin/telas/dinheiro/Layout').then((
 const VisaoGeral = lazy(() => import('./routes/admin/telas/dinheiro/VisaoGeral'))
 const Contas = lazy(() => import('./routes/admin/telas/dinheiro/Contas'))
 const ContaDetalhe = lazy(() => import('./routes/admin/telas/dinheiro/ContaDetalhe'))
+const Cartoes = lazy(() => import('./routes/admin/telas/dinheiro/Cartoes'))
+const CartaoDetalhe = lazy(() => import('./routes/admin/telas/dinheiro/CartaoDetalhe'))
 const Briefings = lazy(() => import('./routes/admin/telas/Briefings'))
 const Entregas = lazy(() => import('./routes/admin/telas/Entregas'))
 const Notas = lazy(() => import('./routes/admin/telas/Notas'))
@@ -59,14 +61,12 @@ export const router = createBrowserRouter([
       // Dinheiro tem sub-páginas (nav.ts NAV_DINHEIRO). A tela antiga segue
       // montada nas que ainda não foram separadas; `key` força remontar ao
       // trocar de sub-página, senão a aba inicial (lida do path) não muda.
-      // ponytail: cartões aponta para a tela antiga (aba Contas) até a Task 4
-      // do plano 2026-10-08 criar a página própria.
       { path: 'dinheiro', element: <DinheiroLayout />, children: [
         { index: true, element: <VisaoGeral /> },
         { path: 'contas', element: <Contas /> },
         { path: 'contas/:id', element: <ContaDetalhe /> },
-        { path: 'cartoes', element: <Dinheiro key="cartoes" /> },
-        { path: 'cartoes/:id', element: <EmBreve titulo="Cartão" /> },
+        { path: 'cartoes', element: <Cartoes /> },
+        { path: 'cartoes/:id', element: <CartaoDetalhe /> },
         { path: 'lancamentos', element: <Dinheiro key="lancamentos" /> },
         { path: 'agenda', element: <Dinheiro key="agenda" /> },
         { path: 'emprestimos', element: <EmBreve titulo="Empréstimos" /> },

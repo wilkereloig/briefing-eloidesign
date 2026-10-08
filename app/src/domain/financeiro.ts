@@ -337,9 +337,12 @@ export function previsaoCaixa(
 
 export interface Fatia { chave: string; total_cents: number; qtd: number }
 
-/** Agrupa por uma chave da transação, do maior total pro menor. */
+/** Agrupa por uma chave da transação, do maior total pro menor. Soma o que
+ *  já liquidou (relatório de caixa); a fatura do cartão passa `valor` para
+ *  somar o combinado — compra em aberto também é gasto da fatura. */
 export function agrupar(
   transacoes: Transacao[], chave: (t: Transacao) => string | null, tipo: 'entrada' | 'saida',
+  valor: (t: Transacao) => number = valorLiquidado,
 ): Fatia[] {
   const mapa = new Map<string, Fatia>()
   for (const t of transacoes) {
@@ -347,7 +350,7 @@ export function agrupar(
     const k = chave(t)
     if (!k) continue
     const atual = mapa.get(k) || { chave: k, total_cents: 0, qtd: 0 }
-    atual.total_cents += valorLiquidado(t)
+    atual.total_cents += valor(t)
     atual.qtd += 1
     mapa.set(k, atual)
   }

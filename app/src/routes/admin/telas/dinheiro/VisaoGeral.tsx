@@ -9,19 +9,12 @@ import {
 } from '../../../../domain/financeiro'
 import type { Conta, StatusMov, Transacao } from '../../../../lib/tipos'
 import { fmtBRL } from '../../../../lib/dinheiro'
-import { Chip, Icone, Indicador, Painel, Vazio } from '../../../../ui/componentes'
+import { Icone, Indicador, Painel, Vazio } from '../../../../ui/componentes'
 import { Carga, ChipMovimento, Dinheiro } from '../../../../ui/painel'
-import type { EstadoChip } from '../../../../ui/tokens'
 import { dataCurta } from '../../../../ui/formato'
+import { ChipFatura } from './compartilhado'
 
 const DIAS = 7
-
-const CHIP_FATURA: Record<SituacaoFatura, { chip: EstadoChip; label: string }> = {
-  aberta: { chip: 'aberto', label: 'Aberta' },
-  fechada: { chip: 'aguardando', label: 'Fechada' },
-  paga: { chip: 'pago', label: 'Paga' },
-  atrasada: { chip: 'atrasado', label: 'Atrasada' },
-}
 
 /** Linha da lista "Próximos 7 dias": lançamento solto ou fatura de cartão
  *  inteira (as compras do cartão não aparecem uma a uma). */
@@ -110,7 +103,7 @@ export default function VisaoGeral() {
                       </span>
                       <Dinheiro cents={i.cents} sinal className="t-valor" />
                       {i.tipo === 'fatura'
-                        ? <Chip estado={CHIP_FATURA[i.situacao].chip}>{CHIP_FATURA[i.situacao].label}</Chip>
+                        ? <ChipFatura situacao={i.situacao} />
                         : <ChipMovimento status={i.status} />}
                     </li>
                   ))}

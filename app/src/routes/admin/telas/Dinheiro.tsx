@@ -1,27 +1,26 @@
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { financas } from '../../../lib/api'
-import { centsDeBRL, fmtBRL } from '../../../lib/dinheiro'
+import { fmtBRL } from '../../../lib/dinheiro'
 import { hojeISO, useFinancas, useNomes, useTransacoesDoMes } from '../../../lib/financas-store'
 import {
-  agruparPorPrazo, cicloFatura, diasDeAtraso, estaEmAberto, faturaAberta, limiteDisponivel,
-  parceladoAberto, resultado, ROTULO_FAIXA, saldoConta, totalEmAberto,
+  agruparPorPrazo, diasDeAtraso, estaEmAberto, resultado, ROTULO_FAIXA, totalEmAberto,
 } from '../../../domain/financeiro'
 import { semNotaFiscal } from '../../../domain/decisoes'
-import type { Conferencia, Conta, Recorrencia, Transacao } from '../../../lib/tipos'
+import type { Recorrencia, Transacao } from '../../../lib/tipos'
 import {
-  Aviso, Botao, Campo, Card, Etiqueta, Folha, Icone, Indicador, Painel, Pilula, Vazio,
+  Aviso, Botao, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
 import { Carga, Dinheiro, Paginacao, SeletorMes } from '../../../ui/painel'
 import { usePaginacao } from '../../../ui/paginacao'
-import { custoAnual, custoMensal, dataCurta, rotuloConta, rotuloPeriodo } from '../../../ui/formato'
+import { custoAnual, custoMensal, dataCurta, rotuloPeriodo } from '../../../ui/formato'
 import { FolhaTransacao } from '../FolhaTransacao'
-import { FolhaConta, FolhaRecorrencia } from '../folhas'
+import { FolhaRecorrencia } from '../folhas'
 import { Onboarding } from '../Onboarding'
-import { FolhaConferencia, FolhaImportar } from '../FolhasExtrato'
+import { FolhaImportar } from '../FolhasExtrato'
 import { alternarCancelamento, FolhasMov, LinhaMov, type FolhaMov } from './dinheiro/compartilhado'
 
-type Aba = 'movimentos' | 'receber' | 'pagar' | 'contas' | 'recorrencias'
+type Aba = 'movimentos' | 'receber' | 'pagar' | 'recorrencias'
 /** Recortes da fila de cobrança. São perguntas, não status: "o que está sem
  *  nota?" e "quem pagou só uma parte?" não existem como coluna. */
 type Recorte = 'todos' | 'vencidos' | 'sem_nf' | 'parciais' | 'recorrentes'
@@ -48,18 +47,16 @@ const ABAS: { chave: Aba; label: string }[] = [
 ]
 
 /** Aba inicial pela sub-página em que a tela está montada (router.tsx).
- *  Contas virou página própria (dinheiro/Contas.tsx); /cartoes ainda cai
- *  aqui, na aba Contas, até a página própria dele existir. */
+ *  Contas e cartões viraram páginas próprias (dinheiro/Contas, Cartoes). */
 function abaDoPath(pathname: string): Aba {
   if (pathname.endsWith('/agenda')) return 'pagar'
   if (pathname.endsWith('/planejamento')) return 'recorrencias'
-  if (pathname.endsWith('/cartoes')) return 'contas'
   return 'movimentos'
 }
 
 export default function DinheiroTela() {
   const est = useFinancas()
-  const { contas, transacoes, recorrencias, servicos, conferencias, mes, contexto, recarregar } = est
+  const { transacoes, recorrencias, servicos, mes, contexto, recarregar } = est
   const servicoPorId = useMemo(() => new Map(servicos.map((s) => [s.id, s])), [servicos])
   const doMes = useTransacoesDoMes()
   const nomes = useNomes()
@@ -72,9 +69,6 @@ export default function DinheiroTela() {
   const [folha, setFolha] = useState<
     | { tipo: 'nova' }
     | FolhaMov
-    | { tipo: 'conta'; c?: Conta }
-    | { tipo: 'fatura'; c: Conta }
-    | { tipo: 'conferir'; c: Conta }
     | { tipo: 'importar' }
     | { tipo: 'recorrencia'; r?: Recorrencia }
     | null>(null)
@@ -135,7 +129,6 @@ export default function DinheiroTela() {
 
   const pagMov = usePaginacao(movimentos, 'dinheiro-movimentos')
   const r = useMemo(() => resultado(transacoes, contexto, mes), [transacoes, contexto, mes])
-  const contasVisiveis = contas.filter((c) => c.ativa && (!contexto || c.contexto === contexto))
   const recVisiveis = recorrencias.filter((x) => !contexto || x.contexto === contexto)
   // Pausada não gera cobrança: não é custo do mês enquanto estiver parada.
   const recAtivas = recVisiveis.filter((x) => !x.pausada_em)
@@ -253,29 +246,6 @@ export default function DinheiroTela() {
           </>
         )}
 
-        {aba === 'contas' && (
-          <Painel titulo="Contas e cartões"
-            acao={<Botao compacto onClick={() => setFolha({ tipo: 'conta' })}>
-              <Icone nome="adicionar" tamanho={14} />Nova conta
-            </Botao>}>
-            {contasVisiveis.length === 0 ? (
-              <Vazio icone="caixa" titulo="Nenhuma conta cadastrada"
-                instrucao="Sem conta o painel não tem onde somar saldo."
-                acao={<Botao variante="primario" onClick={() => setFolha({ tipo: 'conta' })}>Cadastrar conta</Botao>} />
-            ) : (
-              <div className="grade-indicadores">
-                {contasVisiveis.map((c) => (
-                  <CartaoConta key={c.id} c={c} transacoes={transacoes} hoje={hoje}
-                    conferencia={conferencias.find((x) => x.conta_id === c.id)}
-                    aoEditar={() => setFolha({ tipo: 'conta', c })}
-                    aoConferir={() => setFolha({ tipo: 'conferir', c })}
-                    aoPagarFatura={() => setFolha({ tipo: 'fatura', c })} />
-                ))}
-              </div>
-            )}
-          </Painel>
-        )}
-
         {aba === 'recorrencias' && (
           <Painel titulo="Assinaturas e recorrências"
             acao={<Botao compacto onClick={() => setFolha({ tipo: 'recorrencia' })}>
@@ -337,12 +307,7 @@ export default function DinheiroTela() {
 
       {folha?.tipo === 'nova' && <FolhaTransacao aoFechar={fechar} aoSalvar={apos} />}
       {folha && 't' in folha && <FolhasMov folha={folha} aoFechar={fechar} aoSalvar={apos} />}
-      {folha?.tipo === 'conta' && <FolhaConta inicial={folha.c} aoFechar={fechar} aoSalvar={apos} />}
-      {folha?.tipo === 'fatura' && (
-        <FolhaPagarFatura cartao={folha.c} aoFechar={fechar} aoSalvar={apos} />
-      )}
       {folha?.tipo === 'recorrencia' && <FolhaRecorrencia inicial={folha.r} aoFechar={fechar} aoSalvar={apos} />}
-      {folha?.tipo === 'conferir' && <FolhaConferencia conta={folha.c} aoFechar={fechar} aoSalvar={apos} />}
       {folha?.tipo === 'importar' && <FolhaImportar aoFechar={fechar} aoSalvar={apos} />}
 
       {aviso && <Aviso texto={aviso.texto} tipo={aviso.tipo} aoSumir={() => setAviso(null)} />}
@@ -354,154 +319,3 @@ export default function DinheiroTela() {
 
 const porVencimento = (a: Transacao, b: Transacao) =>
   (a.data_vencimento ?? '9999').localeCompare(b.data_vencimento ?? '9999')
-
-function CartaoConta({ c, transacoes, hoje, conferencia, aoEditar, aoConferir, aoPagarFatura }: {
-  c: Conta
-  transacoes: Transacao[]
-  hoje: string
-  /** Última conferência desta conta, se houver. */
-  conferencia?: Conferencia
-  aoEditar: () => void
-  aoConferir: () => void
-  aoPagarFatura: () => void
-}) {
-  const ehCartao = c.tipo === 'cartao_credito'
-  const fatura = ehCartao ? faturaAberta(c, transacoes) : 0
-  const disponivel = ehCartao ? limiteDisponivel(c, transacoes) : null
-  const ciclo = ehCartao ? cicloFatura(c, hoje) : null
-  const parcelado = ehCartao ? parceladoAberto(c, transacoes) : null
-
-  return (
-    <Card className="conta-card">
-      <span className="linha" style={{ justifyContent: 'space-between' }}>
-        <Etiqueta mini>{rotuloConta(c.tipo)}</Etiqueta>
-        <span className="linha" style={{ gap: 'var(--espaco-02)' }}>
-          <span className="ponto-cor" style={{ background: c.cor || 'var(--roxo)' }} aria-hidden />
-          <Botao variante="icone" onClick={aoEditar} aria-label={`Editar ${c.nome}`}>
-            <Icone nome="editar" tamanho={16} />
-          </Botao>
-        </span>
-      </span>
-      <p className="t-card espremer" style={{ marginTop: 'var(--espaco-02)' }}>{c.nome}</p>
-      <p className="t-valor-g dinheiro" style={{ marginTop: 'var(--espaco-03)' }}>
-        {fmtBRL(ehCartao ? fatura : saldoConta(c, transacoes))}
-      </p>
-      <p className="t-legenda">
-        {ehCartao
-          ? disponivel == null
-            ? 'Fatura aberta · limite não informado'
-            : `Fatura aberta · ${fmtBRL(disponivel)} de ${fmtBRL(c.limite_cents ?? 0)} disponível`
-          : `${c.contexto}${c.instituicao ? ` · ${c.instituicao}` : ''}`}
-      </p>
-      {ciclo && (
-        <span className="conta-ciclo">
-          <span><span className="etiqueta-mini">Fecha</span><span className="t-ui">{dataCurta(ciclo.fechamento)}</span></span>
-          <span><span className="etiqueta-mini">Vence</span><span className="t-ui">{dataCurta(ciclo.vencimento)}</span></span>
-          <span>
-            <span className="etiqueta-mini">Parcelado</span>
-            <span className="t-ui">{parcelado!.qtd ? `${parcelado!.qtd}× · ${fmtBRL(parcelado!.cents)}` : '—'}</span>
-          </span>
-        </span>
-      )}
-      {/* Pagar fatura é TRANSFERÊNCIA (conta → cartão), nunca despesa nova: a
-          despesa já foi lançada em cada compra. Lançar de novo dobraria o gasto. */}
-      {ehCartao && fatura > 0 && (
-        <Botao compacto onClick={aoPagarFatura} style={{ marginTop: 'var(--espaco-04)' }}>
-          Pagar fatura
-        </Botao>
-      )}
-      {!ehCartao && (
-        <span className="linha" style={{ marginTop: 'var(--espaco-04)', justifyContent: 'space-between' }}>
-          <span className="t-legenda">
-            {conferencia
-              ? `Conferido ${dataCurta(conferencia.data)} · ${conferencia.diferenca_cents === 0 ? 'bateu' : `diferença ${fmtBRL(conferencia.diferenca_cents)}`}`
-              : 'Nunca conferido'}
-          </span>
-          <Botao compacto onClick={aoConferir}>Conferir</Botao>
-        </span>
-      )}
-    </Card>
-  )
-}
-
-/** Pagamento de fatura: o servidor cria a transferência conta → cartão (neutra
- *  no resultado, baixa o saldo da conta) e liquida as compras em aberto do
- *  cartão — é isso que zera a `faturaAberta`. Só a transferência deixava a
- *  fatura cheia para sempre. */
-function FolhaPagarFatura({ cartao, aoFechar, aoSalvar }: {
-  cartao: Conta
-  aoFechar: () => void
-  aoSalvar: (msg: string, tipo?: 'ok' | 'erro') => void
-}) {
-  const { contas, transacoes } = useFinancas()
-  const fatura = faturaAberta(cartao, transacoes)
-  const origens = contas.filter((c) => c.ativa && c.tipo !== 'cartao_credito')
-  const [contaId, setContaId] = useState(
-    origens.find((c) => c.contexto === cartao.contexto)?.id ?? origens[0]?.id ?? '')
-  const [valor, setValor] = useState(fmtBRL(fatura))
-  const [data, setData] = useState(hojeISO())
-  const [erro, setErro] = useState('')
-  const [salvando, setSalvando] = useState(false)
-  const cents = centsDeBRL(valor)
-
-  async function salvar() {
-    if (!contaId) return setErro('Escolha a conta que paga a fatura')
-    if (cents <= 0) return setErro('Informe um valor maior que zero')
-    if (cents > fatura) return setErro(`A fatura aberta é ${fmtBRL(fatura)}`)
-    setSalvando(true)
-    try {
-      const r = await financas.pagarFatura({ cartao_id: cartao.id, conta_id: contaId, valor_cents: cents, data })
-      const compras = `${r.liquidadas} ${r.liquidadas === 1 ? 'compra liquidada' : 'compras liquidadas'}`
-      // Sobra = pagou mais do que havia em aberto no servidor. O dinheiro saiu
-      // da conta; o excedente fica de crédito no cartão e merece conferência.
-      if (r.sobra_cents > 0) aoSalvar(`Fatura paga · ${compras} · sobraram ${fmtBRL(r.sobra_cents)} sem compra para abater`, 'erro')
-      else aoSalvar(`Fatura paga · ${compras}`)
-      aoFechar()
-    } catch (err) {
-      setErro((err as Error).message)
-    } finally {
-      setSalvando(false)
-    }
-  }
-
-  return (
-    <Folha titulo="Pagar fatura" aoFechar={aoFechar}
-      rodape={<>
-        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
-        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
-          style={{ flex: 2 }}>Confirmar</Botao>
-      </>}>
-      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
-        <div>
-          <p className="t-card">{cartao.nome}</p>
-          <p className="t-sec">Fatura aberta: <span className="dinheiro">{fmtBRL(fatura)}</span></p>
-        </div>
-
-        <div className="campo">
-          <label htmlFor="fat-conta">Pagar com</label>
-          <select id="fat-conta" className="campo-caixa" value={contaId}
-            onChange={(e) => setContaId(e.target.value)}>
-            <option value="">Selecione…</option>
-            {origens.map((c) => (
-              <option key={c.id} value={c.id}>{c.nome} · {c.contexto}</option>
-            ))}
-          </select>
-        </div>
-
-        <Campo rotulo="Valor" value={valor} inputMode="decimal" erro={erro}
-          onChange={(e) => { setValor(e.target.value); setErro('') }} />
-
-        <div className="campo">
-          <label htmlFor="fat-data">Data</label>
-          <input id="fat-data" type="date" className="campo-caixa" value={data}
-            onChange={(e) => setData(e.target.value)} />
-        </div>
-
-        <p className="t-legenda">
-          O pagamento entra como transferência e liquida as compras em aberto do cartão:
-          sai do saldo da conta sem contar como despesa nova — a despesa já foi lançada em cada compra.
-        </p>
-      </div>
-    </Folha>
-  )
-}

@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { financas } from '../../../../lib/api'
-import { fmtBRL } from '../../../../lib/dinheiro'
-import type { useNomes } from '../../../../lib/financas-store'
-import { chequeEspecialUsado, diasDeAtraso, estaEmAberto, saldoAberto } from '../../../../domain/financeiro'
+import { centsDeBRL, fmtBRL } from '../../../../lib/dinheiro'
+import { hojeISO, useFinancas, type useNomes } from '../../../../lib/financas-store'
+import {
+  chequeEspecialUsado, diasDeAtraso, estaEmAberto, faturaAberta, saldoAberto, type SituacaoFatura,
+} from '../../../../domain/financeiro'
 import { semNotaFiscal } from '../../../../domain/decisoes'
-import type { ServicoRow, Transacao } from '../../../../lib/tipos'
-import { Botao, Icone } from '../../../../ui/componentes'
+import type { Conta, ServicoRow, Transacao } from '../../../../lib/tipos'
+import { Botao, Campo, Chip, Folha, Icone } from '../../../../ui/componentes'
+import type { EstadoChip } from '../../../../ui/tokens'
 import { ChipMovimento, Dinheiro } from '../../../../ui/painel'
 import { dataCurta } from '../../../../ui/formato'
 import { FolhaTransacao } from '../../FolhaTransacao'
@@ -28,6 +32,18 @@ export async function alternarCancelamento(
     await financas.cancelar(t.id, !cancelando)
     await apos(cancelando ? 'Lançamento cancelado' : 'Lançamento reaberto')
   } catch (e) { erro(e) }
+}
+
+const CHIP_FATURA: Record<SituacaoFatura, { chip: EstadoChip; label: string }> = {
+  aberta: { chip: 'aberto', label: 'Aberta' },
+  fechada: { chip: 'aguardando', label: 'Fechada' },
+  paga: { chip: 'pago', label: 'Paga' },
+  atrasada: { chip: 'atrasado', label: 'Atrasada' },
+}
+
+/** Situação de uma fatura de cartão — Visão geral, lista e página do cartão. */
+export function ChipFatura({ situacao }: { situacao: SituacaoFatura }) {
+  return <Chip estado={CHIP_FATURA[situacao].chip}>{CHIP_FATURA[situacao].label}</Chip>
 }
 
 /** "Cheque especial: R$ usado de R$ limite" — no card da lista e na página da conta. */
@@ -151,5 +167,87 @@ export function LinhaMov({
         <Icone nome="excluir" tamanho={16} />
       </Botao>
     </li>
+  )
+}
+
+/** Pagamento de fatura: o servidor cria a transferência conta → cartão (neutra
+ *  no resultado, baixa o saldo da conta) e liquida as compras em aberto do
+ *  cartão — é isso que zera a `faturaAberta`. Só a transferência deixava a
+ *  fatura cheia para sempre. */
+export function FolhaPagarFatura({ cartao, aoFechar, aoSalvar }: {
+  cartao: Conta
+  aoFechar: () => void
+  aoSalvar: (msg: string, tipo?: 'ok' | 'erro') => void
+}) {
+  const { contas, transacoes } = useFinancas()
+  const fatura = faturaAberta(cartao, transacoes)
+  const origens = contas.filter((c) => c.ativa && c.tipo !== 'cartao_credito')
+  const [contaId, setContaId] = useState(
+    origens.find((c) => c.contexto === cartao.contexto)?.id ?? origens[0]?.id ?? '')
+  const [valor, setValor] = useState(fmtBRL(fatura))
+  const [data, setData] = useState(hojeISO())
+  const [erro, setErro] = useState('')
+  const [salvando, setSalvando] = useState(false)
+  const cents = centsDeBRL(valor)
+
+  async function salvar() {
+    if (!contaId) return setErro('Escolha a conta que paga a fatura')
+    if (cents <= 0) return setErro('Informe um valor maior que zero')
+    if (cents > fatura) return setErro(`A fatura aberta é ${fmtBRL(fatura)}`)
+    setSalvando(true)
+    try {
+      const r = await financas.pagarFatura({ cartao_id: cartao.id, conta_id: contaId, valor_cents: cents, data })
+      const compras = `${r.liquidadas} ${r.liquidadas === 1 ? 'compra liquidada' : 'compras liquidadas'}`
+      // Sobra = pagou mais do que havia em aberto no servidor. O dinheiro saiu
+      // da conta; o excedente fica de crédito no cartão e merece conferência.
+      if (r.sobra_cents > 0) aoSalvar(`Fatura paga · ${compras} · sobraram ${fmtBRL(r.sobra_cents)} sem compra para abater`, 'erro')
+      else aoSalvar(`Fatura paga · ${compras}`)
+      aoFechar()
+    } catch (err) {
+      setErro((err as Error).message)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <Folha titulo="Pagar fatura" aoFechar={aoFechar}
+      rodape={<>
+        <Botao variante="secundario" onClick={aoFechar}>Cancelar</Botao>
+        <Botao variante="destaque" onClick={() => void salvar()} carregando={salvando}
+          style={{ flex: 2 }}>Confirmar</Botao>
+      </>}>
+      <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
+        <div>
+          <p className="t-card">{cartao.nome}</p>
+          <p className="t-sec">Fatura aberta: <span className="dinheiro">{fmtBRL(fatura)}</span></p>
+        </div>
+
+        <div className="campo">
+          <label htmlFor="fat-conta">Pagar com</label>
+          <select id="fat-conta" className="campo-caixa" value={contaId}
+            onChange={(e) => setContaId(e.target.value)}>
+            <option value="">Selecione…</option>
+            {origens.map((c) => (
+              <option key={c.id} value={c.id}>{c.nome} · {c.contexto}</option>
+            ))}
+          </select>
+        </div>
+
+        <Campo rotulo="Valor" value={valor} inputMode="decimal" erro={erro}
+          onChange={(e) => { setValor(e.target.value); setErro('') }} />
+
+        <div className="campo">
+          <label htmlFor="fat-data">Data</label>
+          <input id="fat-data" type="date" className="campo-caixa" value={data}
+            onChange={(e) => setData(e.target.value)} />
+        </div>
+
+        <p className="t-legenda">
+          O pagamento entra como transferência e liquida as compras em aberto do cartão:
+          sai do saldo da conta sem contar como despesa nova — a despesa já foi lançada em cada compra.
+        </p>
+      </div>
+    </Folha>
   )
 }

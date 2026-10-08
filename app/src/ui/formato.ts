@@ -7,6 +7,13 @@ export const dataCurta = (iso: string) =>
   new Date(iso + 'T12:00:00Z').toLocaleDateString('pt-BR',
     { day: '2-digit', month: 'short', timeZone: 'UTC' })
 
+/** 'AAAA-MM-DD' → '04/08'. */
+export const diaMes = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`
+
+/** 'AAAA-MM-DD' → 'agosto'. */
+export const mesPorExtenso = (iso: string) =>
+  new Date(iso + 'T12:00:00Z').toLocaleDateString('pt-BR', { month: 'long', timeZone: 'UTC' })
+
 /** 'AAAA-MM-DD' → '04/08/2026'. */
 export const dataLonga = (iso: string) =>
   new Date(iso + 'T12:00:00Z').toLocaleDateString('pt-BR', { timeZone: 'UTC' })

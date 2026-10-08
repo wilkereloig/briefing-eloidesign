@@ -311,6 +311,19 @@ describe('agregação', () => {
       { chave: 'a', total_cents: 400_00, qtd: 2 },
     ])
   })
+
+  it('soma o valor combinado quando a fatura pede (compra em aberto conta)', () => {
+    const fatura = [
+      tx({ id: '5', tipo: 'saida', categoria_id: 'mercado', valor_cents: 80_00, status: 'pendente' }),
+      tx({ id: '6', tipo: 'saida', categoria_id: 'mercado', valor_cents: 20_00, status: 'realizado' }),
+    ]
+    expect(agrupar(fatura, (t) => t.categoria_id, 'saida')).toEqual([
+      { chave: 'mercado', total_cents: 20_00, qtd: 2 },
+    ])
+    expect(agrupar(fatura, (t) => t.categoria_id, 'saida', (t) => t.valor_cents)).toEqual([
+      { chave: 'mercado', total_cents: 100_00, qtd: 2 },
+    ])
+  })
 })
 
 describe('orçamento de gasto', () => {

@@ -28,8 +28,10 @@ import { corCliente } from '../../ui/tokens'
 const TIPOS_CONTA: TipoConta[] = ['corrente', 'digital', 'poupanca', 'dinheiro',
   'cartao_credito', 'investimento', 'reserva', 'outro']
 
-export function FolhaConta({ inicial, contextoInicial, aoFechar, aoSalvar }: {
+export function FolhaConta({ inicial, contextoInicial, tipoInicial, aoFechar, aoSalvar }: {
   inicial?: Conta
+  /** "Novo cartão" já abre com o tipo cartão — sem isso nascia conta corrente. */
+  tipoInicial?: TipoConta
   /** Contexto do painel que abriu a folha — "Nova" em Contas pessoais nascia
    *  como empresa e o Wilke só descobria depois de salvar. */
   contextoInicial?: Contexto
@@ -37,7 +39,7 @@ export function FolhaConta({ inicial, contextoInicial, aoFechar, aoSalvar }: {
   aoSalvar: (msg: string) => void
 }) {
   const [nome, setNome] = useState(inicial?.nome ?? '')
-  const [tipo, setTipo] = useState<TipoConta>(inicial?.tipo ?? 'corrente')
+  const [tipo, setTipo] = useState<TipoConta>(inicial?.tipo ?? tipoInicial ?? 'corrente')
   const [contexto, setContexto] = useState<Contexto>(inicial?.contexto ?? contextoInicial ?? 'empresa')
   const [instituicao, setInstituicao] = useState(inicial?.instituicao ?? '')
   const [saldoInicial, setSaldoInicial] = useState(
