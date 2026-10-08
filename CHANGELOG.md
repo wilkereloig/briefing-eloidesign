@@ -2,6 +2,20 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Etapa 7: tema claro, navegação por tarefa, ocultar valores
+
+- **Tema claro, escuro ou do sistema** (Configurações › Aparência). Sem piscar no
+  tema errado ao abrir; a barra do navegador acompanha. Contraste conferido nos
+  pares de texto do claro (texto fraco ~5,2:1, erro ~5,3:1, acento ~7:1).
+- **Navegação agrupada por tarefa:** Hoje · Financeiro (Dinheiro, Relatórios) ·
+  Trabalho e clientes (Projetos, Clientes, Orçamentos, Briefings, Entregas,
+  Calendário) · Documentos (Notas fiscais, Arquivos) · Configurações. No computador,
+  as páginas de Dinheiro aparecem dentro do trilho (sem fileira de abas); no celular,
+  barra inferior com os principais e menu **Mais** com os mesmos grupos. Rotas iguais.
+- **Ocultar valores:** botão **R$** na barra do topo (ou em Configurações) desfoca os
+  números de dinheiro.
+- Chips de estado e marca legíveis no claro; cores soltas do CSS viraram token.
+
 ## 2026-10-09 — Etapa 6: um "resultado" só, previsão e revisão na Visão geral
 
 - **Dinheiro › Visão geral:** "Resultado do mês" agora é pelo mês da compra e pela

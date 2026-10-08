@@ -60,6 +60,11 @@ export const chipIcone = {
   fila: 'pendente', aberto: 'pendente', previsto: 'pendente', rascunho: 'info'
 } as const satisfies Record<keyof typeof chip, string>;
 
+/** Cor da barra do navegador (meta theme-color) por tema = --cor-fundo-primario
+ *  de cada tema. O index.html repete os dois valores no script de antes do
+ *  primeiro desenho. */
+export const corBarraNavegador = { claro: '#FAF8FC', escuro: '#08011A' } as const;
+
 /** Cor identificadora de cliente, na ordem em que devem ser distribuídas. */
 export const corCliente = ['#7D2AE8', '#DFF806', '#5B7CFD', '#EEB4E7', '#FD4400'] as const;
 

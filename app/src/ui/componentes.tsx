@@ -43,7 +43,8 @@ export function Botao({ variante = 'secundario', compacto, carregando, children,
 export function Chip({ estado, children }: { estado: EstadoChip; children: ReactNode }) {
   const [fundo, texto] = chipCores[estado]
   return (
-    <span className="chip" data-estado={estado} style={{ background: fundo, color: texto }}>
+    <span className="chip" data-estado={estado}
+      style={{ '--chip-fundo': fundo, '--chip-texto': texto } as React.CSSProperties}>
       <Icone nome={chipIcone[estado]} tamanho={12} />
       {children}
     </span>

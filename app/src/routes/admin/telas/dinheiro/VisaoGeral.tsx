@@ -101,7 +101,7 @@ export default function VisaoGeral() {
               </p>
               {cob.falta_cents > 0 && (
                 <p className="t-msg linha" role="alert" style={{ gap: 'var(--espaco-02)', marginTop: 'var(--espaco-02)' }}>
-                  <Icone nome="alerta" tamanho={16} />Faltam {fmtBRL(cob.falta_cents)} para cobrir
+                  <Icone nome="alerta" tamanho={16} />Faltam <Dinheiro cents={cob.falta_cents} /> para cobrir
                 </p>
               )}
               {itens.length === 0

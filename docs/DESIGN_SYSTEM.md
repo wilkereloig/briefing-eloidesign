@@ -94,6 +94,25 @@ lugares; alias antigo só existe no `admin.css` e não cresce.
    não existe, ou se usa um rótulo escrito ou se desenha seguindo o `ICON_GUIDELINES`.
 7. Tela nova segue o KV. Não criar interface genérica de dashboard.
 
+## Tema claro, escuro e do sistema (Etapa 7, 2026-10-09)
+
+- Escuro é o padrão da marca; claro existe por escolha (Configurações › Aparência)
+  ou pela preferência do sistema. `data-tema` no `<html>` fixa; sem ele vale
+  `prefers-color-scheme`. O `index.html` aplica antes do primeiro desenho.
+- Só **tokens semânticos** mudam entre temas (`ui/tokens.css`, bloco TEMA). A paleta
+  fica, com uma exceção: **Coral escurece no claro** (`#C43400`), porque texto de erro
+  precisa de 4,5:1 sobre fundo claro.
+- **Lima nunca é texto no claro.** O sinal (`--acento`, `--cor-texto-acento`, foco)
+  vira Roxo; Lima continua como fundo com Tinta (botão destaque, chip concluído).
+- Chips: as cores continuam em `tokens.ts`; o tema claro troca pelas variáveis
+  `--chip-*-tema` em `componentes.css` (pares 14 % + cor cheia não fecham AA no claro).
+- **Ocultar valores** (`data-ocultar-valores`): desfoca `.dinheiro`, `.t-valor` e
+  `.t-valor-g`. Número dentro de frase só some se passar por `<Dinheiro>`.
+- Navegação por tarefa (`nav.ts` › `NAV_GRUPOS`): Hoje · Financeiro · Trabalho e
+  clientes · Documentos · Configurações. No trilho aberto (≥1280) as sub-páginas de
+  Dinheiro aparecem aninhadas e a fileira de pílulas da área some; no celular e no
+  trilho recolhido as pílulas continuam. Menu do celular = "Mais", com os mesmos grupos.
+
 ## Marca
 
 - Nome oficial: **ELOI Studio**.

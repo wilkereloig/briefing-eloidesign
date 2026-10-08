@@ -48,7 +48,7 @@ a:hover{color:var(--cor-texto-primario)}
 .marca{display:inline-flex;align-items:baseline;font-family:var(--fonte-titulo);
   font-size:20px;line-height:1.24;user-select:none}
 .marca b{font-variation-settings:'wdth' var(--marca-wdth),'wght' 700;font-weight:400;
-  letter-spacing:-.02em;color:var(--rosa)}
+  letter-spacing:-.02em;color:var(--cor-texto-primario)}
 .marca i{font-variation-settings:'wdth' var(--marca-wdth),'wght' 700;font-weight:400;
   font-style:normal;color:var(--acento)}
 
@@ -77,8 +77,9 @@ a:hover{color:var(--cor-texto-primario)}
   background:var(--cor-fundo-secundario);border-top:1px solid var(--cor-borda-padrao);user-select:none;
 }
 /* display:contents faz os links do <nav> virarem colunas da grade da barra */
-.trilho nav{display:contents}
-.trilho-marca,.trilho-rotulo,.trilho-rodape,.trilho-ferramentas,
+.trilho nav,.trilho-grupo,.trilho-entrada{display:contents}
+.trilho-sub{display:none}
+.trilho-marca,.trilho-rotulo,.trilho-rodape,
 .trilho-item .rotulo-longo,.trilho-criar .rotulo-longo,
 .trilho-rodape .rotulo-longo{display:none}
 /* fora da barra (sem data-barra) o destino vive no menu em folha do Shell */
@@ -200,7 +201,7 @@ a:hover{color:var(--cor-texto-primario)}
   font-size:13px;line-height:1.45;font-weight:600}
 .acesso-nota{background:var(--cor-fundo-elevado);color:var(--cor-texto-secundario)}
 .acesso-nota .eloi-icon{color:var(--azul);margin-top:1px}
-.acesso-erro{margin-top:0;background:rgba(253,68,0,.12);color:var(--coral)}
+.acesso-erro{margin-top:0;background:rgba(253,68,0,.12);color:var(--cor-feedback-erro)}
 .acesso-erro .eloi-icon{margin-top:1px}
 
 .acesso-link{display:inline-flex;align-items:center;margin-top:var(--espaco-05);
@@ -273,7 +274,7 @@ a:hover{color:var(--cor-texto-primario)}
   .app-shell{grid-template-columns:72px minmax(0,1fr);
     grid-template-rows:auto 1fr;grid-template-areas:"lado topo" "lado main"}
   .app-main{padding:var(--espaco-05) var(--margem) var(--espaco-09)}
-  .trilho{grid-area:lado;position:sticky;top:0;bottom:auto;height:100dvh;
+  .trilho{grid-area:lado;position:sticky;top:0;bottom:auto;height:100dvh;overflow-y:auto;
     display:flex;flex-direction:column;gap:var(--espaco-01);
     padding:var(--espaco-05) var(--espaco-04) var(--espaco-05);
     border-top:0;border-right:1px solid var(--cor-borda-padrao)}
@@ -281,7 +282,9 @@ a:hover{color:var(--cor-texto-primario)}
   /* No trilho recolhido (72 px) a assinatura não cabe: ela vazava 78 px e
      aparecia cortada. Só entra a partir de 1024, quando o trilho tem 236. */
   .trilho-marca{display:none}
-  .trilho-ferramentas{display:block;margin-top:var(--espaco-04)}
+  .trilho-grupo{display:flex;flex-direction:column;gap:var(--espaco-01);align-self:stretch}
+  .trilho-grupo nav{align-self:stretch}
+  .trilho-grupo+.trilho-grupo{margin-top:var(--espaco-03)}
   .trilho-item:not([data-barra]){display:flex}
   .trilho-item[data-barra],.trilho-criar{order:0}
   .trilho-item .rotulo-curto{display:none}
@@ -292,10 +295,10 @@ a:hover{color:var(--cor-texto-primario)}
     font-size:var(--tipo-corpo-pequeno-tamanho);font-weight:600;color:var(--cor-texto-secundario);
     transition:background var(--movimento-rapido) var(--curva-padrao),color var(--movimento-rapido) var(--curva-padrao)}
   .trilho-item:hover{background:var(--cor-superficie-hover);color:var(--cor-texto-primario)}
-  .trilho-item.ativo{color:var(--cor-texto-primario);background:rgba(223,248,6,.06)}
+  .trilho-item.ativo{color:var(--cor-texto-primario);background:var(--cor-trilho-ativo)}
   .trilho-item .marca-ativa{display:block;position:absolute;left:0;top:0;bottom:0;
     width:2px;background:transparent;border-radius:0}
-  .trilho-item.ativo .marca-ativa{background:var(--cor-acento-sinal)}
+  .trilho-item.ativo .marca-ativa{background:var(--acento)}
   /* no trilho recolhido o rótulo vira tooltip à direita (§9), em movimento padrão */
   .trilho-item[data-label]{position:relative}
   .trilho-item[data-label]::after{content:attr(data-label);position:absolute;left:calc(100% + 10px);top:50%;
@@ -326,6 +329,15 @@ a:hover{color:var(--cor-texto-primario)}
   .trilho-rotulo{display:block;padding:var(--espaco-04) var(--espaco-03) var(--espaco-02);
     color:var(--cor-texto-fraco)}
   .trilho-criar{justify-content:flex-start;gap:11px;padding:11px 16px}
+  /* Sub-páginas de Dinheiro aninhadas no trilho aberto; a fileira de pílulas
+     da área sai (no celular e no trilho recolhido ela continua). */
+  .trilho-sub{display:flex;flex-direction:column;margin:2px 0 var(--espaco-02) 27px;
+    padding-left:var(--espaco-03);border-left:1px solid var(--cor-borda-sutil)}
+  .trilho-subitem{display:flex;align-items:center;min-height:40px;padding:8px 10px;border-radius:var(--raio-controle);
+    font-size:var(--tipo-legenda-tamanho);font-weight:600;color:var(--cor-texto-secundario);text-decoration:none}
+  .trilho-subitem:hover{background:var(--cor-superficie-hover);color:var(--cor-texto-primario)}
+  .trilho-subitem.ativo{color:var(--cor-texto-primario);background:var(--cor-trilho-ativo)}
+  .abas-dinheiro{display:none}
   /* KPI dominante de dashboard sobe pra data.xl (§10) */
   .card-dominante .t-valor-g{font-size:var(--tipo-dado-xl-tamanho);letter-spacing:var(--tipo-dado-xl-rastreio)}
 }

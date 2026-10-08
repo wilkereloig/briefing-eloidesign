@@ -8,24 +8,38 @@ export interface ItemNav {
   barra?: boolean
 }
 
-// Máximo 7 destinos na primária (COMPONENT_INVENTORY): acima disso, agrupa.
-export const NAV_PRIMARIA: ItemNav[] = [
-  { path: '/admin', label: 'Hoje', icone: 'resultados', barra: true },
-  { path: '/admin/dinheiro', label: 'Dinheiro', icone: 'dinheiro', barra: true },
-  { path: '/admin/projetos', label: 'Projetos', icone: 'projetos', barra: true },
-  { path: '/admin/clientes', label: 'Clientes', icone: 'cliente', barra: true },
-  { path: '/admin/orcamentos', label: 'Orçamentos', icone: 'documentos' },
-  { path: '/admin/notas', label: 'Notas fiscais', icone: 'nota-fiscal' },
-  { path: '/admin/relatorios', label: 'Relatórios', icone: 'grafico' },
+/** Navegação agrupada por TAREFA (Etapa 7): visão geral, financeiro, trabalho
+ *  e clientes, documentos, configurações. Fonte única — trilho, barra inferior,
+ *  menu "Mais" e trilha da barra do topo leem daqui. `barra` marca os 4 da
+ *  barra inferior do celular (a coluna do meio é Criar). */
+export interface GrupoNav { titulo: string | null; itens: ItemNav[] }
+
+export const NAV_GRUPOS: GrupoNav[] = [
+  { titulo: null, itens: [
+    { path: '/admin', label: 'Hoje', icone: 'resultados', barra: true },
+  ] },
+  { titulo: 'Financeiro', itens: [
+    { path: '/admin/dinheiro', label: 'Dinheiro', icone: 'dinheiro', barra: true },
+    { path: '/admin/relatorios', label: 'Relatórios', icone: 'grafico' },
+  ] },
+  { titulo: 'Trabalho e clientes', itens: [
+    { path: '/admin/projetos', label: 'Projetos', icone: 'projetos', barra: true },
+    { path: '/admin/clientes', label: 'Clientes', icone: 'cliente', barra: true },
+    { path: '/admin/orcamentos', label: 'Orçamentos', icone: 'documentos' },
+    { path: '/admin/briefings', label: 'Briefings', icone: 'briefing' },
+    { path: '/admin/entregas', label: 'Entregas', icone: 'entrega' },
+    { path: '/admin/calendario', label: 'Calendário', icone: 'calendario' },
+  ] },
+  { titulo: 'Documentos', itens: [
+    { path: '/admin/notas', label: 'Notas fiscais', icone: 'nota-fiscal' },
+    { path: '/admin/arquivos', label: 'Arquivos', icone: 'documentos' },
+  ] },
+  { titulo: null, itens: [
+    { path: '/admin/config', label: 'Configurações', icone: 'configuracoes' },
+  ] },
 ]
 
-export const NAV_FERRAMENTAS: ItemNav[] = [
-  { path: '/admin/briefings', label: 'Briefings', icone: 'briefing' },
-  { path: '/admin/entregas', label: 'Entregas', icone: 'entrega' },
-  { path: '/admin/calendario', label: 'Calendário', icone: 'calendario' },
-  { path: '/admin/arquivos', label: 'Arquivos', icone: 'documentos' },
-  { path: '/admin/config', label: 'Configurações', icone: 'configuracoes' },
-]
+export const NAV_ITENS: ItemNav[] = NAV_GRUPOS.flatMap((g) => g.itens)
 
 /** Opções da folha "Criar", aberta pelo botão central da barra inferior. */
 // Ações rápidas do botão central. `sinal` é a cor do ponto de sinal do ícone:

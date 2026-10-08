@@ -303,3 +303,17 @@ Regra do dono ao importar extrato: dinheiro de pessoa física entra como entrada
 entradas" no geral), não como estorno. Transferência entre as próprias contas é
 `transferencia`. PIX no cartão (PIX CARTAO + CREDITO LIBERAD) é neutro na conta:
 a despesa é do cartão.
+
+### Tema claro por tokens, não por segunda folha de estilo (2026-10-09)
+O briefing da Etapa 7 pede tema claro, escuro e do sistema. Os componentes já liam
+só tokens semânticos; o tema claro redefine esses tokens (e quatro cores cruas que
+ainda estavam soltas no CSS viraram token: véu, item ativo do trilho, traço).
+Uma folha separada duplicaria o sistema e divergiria. Coral escurece no claro por
+contraste; Lima sai do papel de texto. Preferência fica no navegador (não é dado do
+estúdio), por isso não vai ao servidor nem sai no logout.
+
+### Um "resultado" só (2026-10-09)
+"Resultado do mês" passou a ser competência + natureza (Visão geral). O número
+recebido − pago, que antes também se chamava resultado no Hoje, em Lançamentos e em
+Relatórios, virou "Sobra". Dois números diferentes com o mesmo nome confundiam a
+leitura do mês.
