@@ -854,7 +854,6 @@ Deno.serve(async (req: Request) => {
     if (cartao_id === conta_id) return json({ error: "conta de origem e cartao precisam ser diferentes" }, 400);
     if (!ehCents(valor_cents, 1)) return json({ error: "valor_cents deve ser inteiro maior que zero" }, 400);
     if (!ehData(data)) return json({ error: "data invalida" }, 400);
-
     const { data: contas, error: eContas } = await supabase.from("eloi_contas")
       .select("id,nome,tipo,contexto").in("id", [cartao_id, conta_id]);
     if (eContas) return json({ error: eContas.message }, 500);
