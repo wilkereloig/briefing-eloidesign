@@ -4,7 +4,7 @@
 // builda). Este script falha alto em cada um desses casos.
 // Uso:  npm run release:check
 import { execSync } from 'node:child_process'
-import { readdirSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 
 const sh = (c) => execSync(c, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
 const falhas = []
@@ -27,6 +27,15 @@ const distSujo = sh('git status --porcelain app/dist')
 if (distSujo) falhas.push('app/dist não corresponde ao build atual de app/src — commite o dist junto:\n  ' + distSujo.split('\n').join('\n  '))
 
 // 4. Edge alterada desde o último deploy registrado em DEPLOYS.json.
+function importadosDeShared(arquivo, vistos = new Set()) {
+  for (const [, nome] of readFileSync(arquivo, 'utf8').matchAll(/from\s+["']\.\/(?:_shared\/)?([\w-]+\.ts)["']/g)) {
+    const caminho = `edge-functions/_shared/${nome}`
+    if (vistos.has(caminho) || !existsSync(caminho)) continue
+    vistos.add(caminho)
+    importadosDeShared(caminho, vistos)
+  }
+  return vistos
+}
 const registro = JSON.parse(readFileSync('edge-functions/DEPLOYS.json', 'utf8'))
 const edges = readdirSync('edge-functions').filter((f) => f.endsWith('.ts')).map((f) => f.slice(0, -3))
 const pendentes = []
@@ -34,9 +43,9 @@ for (const fn of edges) {
   if (registro.ignorar?.[fn]) continue
   const rec = registro.edges[fn]
   if (!rec) { avisos.push(`${fn}: nenhum deploy registrado em DEPLOYS.json`); continue }
-  // _shared vai no bundle do deploy — só conta pra quem importa de lá.
-  const alvos = `edge-functions/${fn}.ts` +
-    (readFileSync(`edge-functions/${fn}.ts`, 'utf8').includes('./_shared/') ? ' edge-functions/_shared' : '')
+  // _shared vai no bundle do deploy — só conta o que a edge importa (direto ou
+  // por outro _shared): arquivo novo em _shared não suja edge que não o usa.
+  const alvos = [`edge-functions/${fn}.ts`, ...importadosDeShared(`edge-functions/${fn}.ts`)].join(' ')
   let diff = ''
   try { diff = sh(`git diff --name-only ${rec.commit} HEAD -- ${alvos}`) }
   catch { avisos.push(`${fn}: commit ${rec.commit} do registro não existe neste clone`); continue }

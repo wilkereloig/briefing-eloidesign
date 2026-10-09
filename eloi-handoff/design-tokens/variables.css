@@ -77,6 +77,12 @@
   --cor-feedback-info: var(--azul);
   --cor-feedback-neutro: rgba(253, 213, 211, .14);
 
+  /* ========== CAMADA E TRAÇO — véu de modal, item ativo do trilho, linha tracejada ========== */
+  --cor-veu: rgba(8, 1, 26, .72);
+  --cor-trilho-ativo: rgba(223, 248, 6, .06);
+  --cor-traco: rgba(253, 213, 211, .22);
+  color-scheme: dark;
+
   /* ========== TIPOGRAFIA ========== */
   --fonte-titulo: 'Archivo', system-ui, sans-serif;
   --fonte-corpo: 'Manrope', system-ui, sans-serif;
@@ -163,6 +169,72 @@
   --margem: var(--grade-margem-mobile);
   --gap-grade: var(--espaco-03);
   --preenchimento-cartao: var(--espaco-04); /* fase 2 sobe pra 24/32 junto do resto do card */
+}
+
+/* ========== TEMA — escuro é o padrão; claro por escolha ou pelo sistema ==========
+   `data-tema` no <html> fixa o tema (Configurações › Aparência); sem ele vale
+   a preferência do sistema. Só tokens SEMÂNTICOS mudam: a paleta é a mesma,
+   com uma exceção — Coral escurece, porque o texto de erro precisa de 4,5:1
+   sobre fundo claro. Lima nunca vira texto no claro: o sinal passa a ser Roxo. */
+:root[data-tema='claro'] {
+  --cor-fundo-primario: #FAF8FC;
+  --cor-fundo-secundario: #FFFFFF;
+  --cor-fundo-elevado: #FFFFFF;
+  --cor-superficie-hover: #F1ECF8;
+  --cor-superficie-selecionada: rgba(125, 42, 232, .10);
+  --cor-superficie-desabilitada: rgba(27, 6, 71, .06);
+  --cor-borda-sutil: rgba(27, 6, 71, .08);
+  --cor-borda-padrao: rgba(27, 6, 71, .14);
+  --cor-borda-forte: rgba(27, 6, 71, .26);
+  --cor-borda-ativa: var(--roxo);
+  --cor-borda-foco: var(--roxo);
+  --cor-texto-primario: var(--tinta);
+  --cor-texto-secundario: rgba(27, 6, 71, .74);
+  --cor-texto-fraco: rgba(27, 6, 71, .62);
+  --cor-texto-fraco-35: rgba(27, 6, 71, .42);
+  --cor-texto-acento: var(--roxo-hover);
+  --acento: var(--roxo);
+  --acento-texto: var(--cor-texto-sobre-acento);
+  --cor-feedback-sucesso: #3F7A00;
+  --cor-feedback-aviso: #9A6400;
+  --cor-feedback-erro: #C43400;
+  --cor-feedback-neutro: rgba(27, 6, 71, .08);
+  --coral: #C43400; /* coral da marca escurecido: texto sobre claro precisa de 4,5:1 */
+  --cor-veu: rgba(27, 6, 71, .40);
+  --cor-trilho-ativo: rgba(125, 42, 232, .08);
+  --cor-traco: rgba(27, 6, 71, .24);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-tema='escuro']) {
+    --cor-fundo-primario: #FAF8FC;
+    --cor-fundo-secundario: #FFFFFF;
+    --cor-fundo-elevado: #FFFFFF;
+    --cor-superficie-hover: #F1ECF8;
+    --cor-superficie-selecionada: rgba(125, 42, 232, .10);
+    --cor-superficie-desabilitada: rgba(27, 6, 71, .06);
+    --cor-borda-sutil: rgba(27, 6, 71, .08);
+    --cor-borda-padrao: rgba(27, 6, 71, .14);
+    --cor-borda-forte: rgba(27, 6, 71, .26);
+    --cor-borda-ativa: var(--roxo);
+    --cor-borda-foco: var(--roxo);
+    --cor-texto-primario: var(--tinta);
+    --cor-texto-secundario: rgba(27, 6, 71, .74);
+    --cor-texto-fraco: rgba(27, 6, 71, .62);
+    --cor-texto-fraco-35: rgba(27, 6, 71, .42);
+    --cor-texto-acento: var(--roxo-hover);
+    --acento: var(--roxo);
+    --acento-texto: var(--cor-texto-sobre-acento);
+    --cor-feedback-sucesso: #3F7A00;
+    --cor-feedback-aviso: #9A6400;
+    --cor-feedback-erro: #C43400;
+    --cor-feedback-neutro: rgba(27, 6, 71, .08);
+    --coral: #C43400; /* coral da marca escurecido: texto sobre claro precisa de 4,5:1 */
+    --cor-veu: rgba(27, 6, 71, .40);
+    --cor-trilho-ativo: rgba(125, 42, 232, .08);
+    --cor-traco: rgba(27, 6, 71, .24);
+    color-scheme: light;
+  }
 }
 
 /* ========== DENSIDADE (§1) — respiro, corpo de texto, altura de linha.

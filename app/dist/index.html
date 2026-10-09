@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/app/dist/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#08011A" />
+    <!-- Tema e "ocultar valores" antes do primeiro desenho (sem piscar no tema
+         errado). Mesmas chaves e cores de src/lib/preferencias.ts. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('eloi_tema'), r = document.documentElement
+          if (t === 'claro' || t === 'escuro') r.setAttribute('data-tema', t)
+          if (localStorage.getItem('eloi_ocultar_valores') === '1') r.setAttribute('data-ocultar-valores', '')
+          var claro = t === 'claro' || (t !== 'escuro' && matchMedia('(prefers-color-scheme: light)').matches)
+          if (claro) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#FAF8FC')
+        } catch (e) { /* armazenamento bloqueado: tema do sistema */ }
+      })()
+    </script>
     <link rel="manifest" href="/app/dist/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/app/dist/icone-app.svg" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -13,8 +26,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Manrope:wght@300..800&display=swap" />
     <title>ELOI Studio</title>
-    <script type="module" crossorigin src="/app/dist/assets/index-CGuIC9A5.js"></script>
-    <link rel="stylesheet" crossorigin href="/app/dist/assets/index-B0RM_Lo9.css">
+    <script type="module" crossorigin src="/app/dist/assets/index-Dkt06yk0.js"></script>
+    <link rel="stylesheet" crossorigin href="/app/dist/assets/index-CjhWodOT.css">
   </head>
   <body>
     <div id="root"></div>

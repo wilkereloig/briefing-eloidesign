@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { financas } from '../../../../lib/api'
 import { useFinancas } from '../../../../lib/financas-store'
-import type { Categoria, Contexto, TipoMov } from '../../../../lib/tipos'
+import { naturezaDaCategoria } from '../../../../domain/financeiro'
+import type { Categoria, Contexto, Natureza, TipoMov } from '../../../../lib/tipos'
 import { Aviso, Botao, Campo, Etiqueta, Folha, Icone, Painel, Pilula, Vazio } from '../../../../ui/componentes'
 import { corCliente } from '../../../../ui/tokens'
 
@@ -10,6 +11,14 @@ const CONTEXTOS: { chave: Contexto; label: string }[] = [
 ]
 const TIPOS: { chave: TipoMov; label: string }[] = [
   { chave: 'saida', label: 'Despesas' }, { chave: 'entrada', label: 'Receitas' },
+]
+/** Natureza decide se a categoria entra no resultado (operacional) ou só
+ *  move dinheiro de lugar. Escolher aqui tira da fila de revisão. */
+const NATUREZAS: { chave: Natureza; label: string; ajuda: string }[] = [
+  { chave: 'operacional', label: 'Dia a dia', ajuda: 'receita ou gasto que entra no resultado do mês' },
+  { chave: 'financeira', label: 'Juros e tarifas', ajuda: 'juros, IOF, tarifas, rendimentos — fora do resultado operacional' },
+  { chave: 'divida', label: 'Dívida', ajuda: 'parcela de empréstimo, rotativo, parcelamento de fatura' },
+  { chave: 'patrimonial', label: 'Patrimonial', ajuda: 'empréstimo recebido, aporte, retirada, pró-labore, distribuição' },
 ]
 const corDoTipo = (c: Categoria) => c.cor || (c.tipo === 'entrada' ? 'var(--acento)' : 'var(--coral)')
 
@@ -39,9 +48,14 @@ export function Categorias() {
       <span className="marca-cor" aria-hidden style={{ background: corDoTipo(c) }} />
       <span className="celula">
         <span className="t-ui espremer">{c.nome}</span>
-        {c.ativa === false && (
+        {c.ativa === false ? (
           <span className="t-legenda">
             {CONTEXTOS.find((x) => x.chave === c.contexto)?.label} · {c.tipo === 'entrada' ? 'receita' : 'despesa'} · inativa
+          </span>
+        ) : (naturezaDaCategoria(c) !== 'operacional' || !c.natureza_definida_por) && (
+          <span className="t-legenda">
+            {NATUREZAS.find((n) => n.chave === naturezaDaCategoria(c))?.label}
+            {!c.natureza_definida_por ? ' · natureza a confirmar' : ''}
           </span>
         )}
       </span>
@@ -120,6 +134,7 @@ function FolhaCategoria({ inicial, contextoInicial, aoFechar, aoSalvar }: {
   const [tipo, setTipo] = useState<TipoMov>(inicial?.tipo ?? 'saida')
   // null = sem cor própria: a lista usa a cor do tipo.
   const [cor, setCor] = useState<string | null>(inicial?.cor ?? null)
+  const [natureza, setNatureza] = useState<Natureza>(naturezaDaCategoria(inicial))
   const [erro, setErro] = useState('')
   const [salvando, setSalvando] = useState(false)
 
@@ -127,7 +142,7 @@ function FolhaCategoria({ inicial, contextoInicial, aoFechar, aoSalvar }: {
     if (!nome.trim()) return setErro('Dê um nome à categoria')
     setSalvando(true)
     try {
-      await financas.salvarCategoria({ id: inicial?.id, nome: nome.trim(), contexto, tipo, cor })
+      await financas.salvarCategoria({ id: inicial?.id, nome: nome.trim(), contexto, tipo, cor, natureza })
       aoSalvar(inicial ? 'Categoria atualizada' : 'Categoria criada')
       aoFechar()
     } catch (err) {
@@ -171,6 +186,17 @@ function FolhaCategoria({ inicial, contextoInicial, aoFechar, aoSalvar }: {
             </div>
           </>
         )}
+        <div className="campo">
+          <label htmlFor="natureza-categoria">Natureza</label>
+          <select id="natureza-categoria" className="campo-caixa" value={natureza}
+            onChange={(e) => setNatureza(e.target.value as Natureza)}>
+            {NATUREZAS.map((n) => <option key={n.chave} value={n.chave}>{n.label}</option>)}
+          </select>
+          <span className="t-legenda">
+            {NATUREZAS.find((n) => n.chave === natureza)?.ajuda}
+            {inicial && !inicial.natureza_definida_por ? '. Ainda não confirmada: salvar confirma esta escolha.' : ''}
+          </span>
+        </div>
         <div className="campo">
           <label htmlFor="cor-categoria">Cor de identificação</label>
           <input id="cor-categoria" type="color" className="campo-cor" value={cor ?? corCliente[0]}

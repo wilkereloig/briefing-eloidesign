@@ -24,11 +24,11 @@ Financeiro separado está vazio.
 | 3. Obrigações × liquidações × resultados | ✅ núcleo publicado · ⏳ telas | `eloi_liquidacoes`, natureza das categorias, 3 perspectivas no banco, `resultadoPorCompetencia` no domínio, relatório de diferenças |
 | 4. Revisão de dados e consolidação | ✅ no essencial | não há dado a migrar do app Financeiro (desligado); "Outros"/"Outras entradas" revisados com decisão delegada pelo dono (24 lançamentos, reversível); natureza das categorias confirmada |
 | 5. Contas, cartões, dívidas, conciliação | ✅ publicado | saldo inicial com data e arquivamento preservando saldo; empréstimo com taxa efetiva e valor para quitar hoje; OFX com FITID; **pagamentos ligados às faturas que quitaram** (`pagamento_id`) e **estorno de pagamento de fatura** (compras voltam a dever, nada é apagado); **importação em lote** (`eloi_importacoes`) com **desfazer** recusado quando algo do lote já foi pago/ligado. Limitação: pagamentos e importações anteriores não têm rastro (sem estorno/desfazer automático) |
-| 6. Gestão integrada | ⏳ parcial | **Dinheiro › Análise de gastos** (pedido do dono): saídas × renda, pagando o passado, comprometido por mês, categorias mês a mês, onde mais se gasta |
-| 7. Novo visual | ⏳ | — |
-| 8. Acesso e automação | ⏳ parcial | rotina diária (pg_cron), limpeza no logout, auditoria |
-| 9. Site e portal | ⏳ | política de INSERT anônimo em `briefings` documentada |
-| 10. Homologação e publicação | ⏳ parcial | testes de banco em Postgres local; reversão testada |
+| 6. Gestão integrada | ✅ código + testes | **Dinheiro › Análise de gastos**; **Visão geral** com resultado do mês por competência e natureza (dia a dia × dívida × juros × patrimonial × ajustes), dinheiro entre empresa e pessoal (neutro no consolidado), caixa previsto em 7/30/90 dias e fila "precisa de revisão" com links; natureza editável na categoria (decisão do dono). Os números de caixa (recebido − pago) foram renomeados para "Sobra" no Hoje, Lançamentos e Relatórios — "Resultado" agora é um só |
+| 7. Novo visual | ✅ código + capturas | tema claro/escuro/sistema por tokens (contraste AA nos pares de texto), navegação por tarefa (`NAV_GRUPOS`) com sub-páginas de Dinheiro no trilho, menu "Mais" no celular, ocultar valores. Não refeito: formulários, tabelas configuráveis, ações em lote — o sistema anterior (KV aprovado) foi mantido nos componentes |
+| 8. Acesso e automação | ✅ documentado e conferido | `docs/ACESSO.md`: como é hoje (senha única, sessões, limitador, portal separado), matriz de acesso alvo (5 papéis; pessoal só do proprietário, filtrado no servidor), plano de identidades/MFA/recuperação/revogação (não implementado), auditoria, rotina diária idempotente e comportamento em falha. Conferido em produção: todas as edges sem token → 401/410; crons do app antigo desligados; conteúdo de cliente escapado nas páginas públicas |
+| 9. Site e portal | ✅ | Home reescrita com o que o estúdio de fato faz: apresentação, serviços do catálogo real, processo e contato; **portfólio omitido** (não há projeto autorizado para divulgação — nada inventado, sem depoimento nem número); acesso ao portal discreto no rodapé. Briefing sem token passa pela edge `briefing-submit` (mesmo limite por IP do link) e o INSERT anônimo pelo REST foi fechado. Preservados: tokens, backup Formspree, orçamento, portal, entregas, URLs e sitemap |
+| 10. Homologação e publicação | ✅ publicado | `npm run verify` (lint, tipos, 247 testes do painel, build, 53 testes de edge), `testar.sh` (95 afirmações em dados sintéticos + concorrência), `release-check` ok, CI verde. Publicado em 2026-10-09 na ordem: edge `briefing-submit` v7 (conferida byte a byte, smoke 400) → merge (painel, Home, briefings) → migração do briefing fechado. Reversões por etapa em `database/homologacao/` |
 
 ## Contratos de cálculo
 
@@ -110,11 +110,11 @@ de impacto:
    cujo contexto difere do da conta: definir a natureza (pró-labore, distribuição ou reembolso).
 8. ~~Edges e cron do app Financeiro~~ — **desligados em 2026-10-09** a pedido do dono
    (reversível; ver inventário §6).
-9. A edge legada `eloi-financeiro` continua ativa.
+9. ~~Edge legada `eloi-financeiro`~~ — responde 410 (fora de uso; conferido em 2026-10-09).
 10. Entregas de cliente servidas publicamente pelo `outputDirectory: "."` — dono decidiu
     manter (2026-10-09).
-11. Backup restaurável: adiado pelo dono (2026-10-09). Continua pré-requisito para
-    aplicar as migrações em produção.
+11. Backup restaurável externo: adiado pelo dono (2026-10-09), que autorizou publicar
+    com o backup interno (`eloi_backup_20261009`). Continua recomendado.
 
 ## Publicação — ordem, verificação e reversão
 
@@ -135,7 +135,9 @@ de cada migração.
    (no-op), `2026-10-09-liquidacoes-e-operacoes-atomicas.sql`,
    `2026-10-09-natureza-e-perspectivas.sql`, `2026-10-09-rotina-diaria-cron.sql`;
    etapa 5: `2026-10-09-estorno-fatura-e-lotes-importacao.sql` (reversão própria:
-   `database/homologacao/reverter-2026-10-09-etapa5.sql`).
+   `database/homologacao/reverter-2026-10-09-etapa5.sql`); etapa 9:
+   `2026-10-09-briefing-sem-insert-anonimo.sql` **só depois** de a edge `briefing-submit`
+   nova e as páginas de briefing estarem no ar (reversão: `reverter-2026-10-09-etapa9.sql`).
    Antes, rodar no banco real: duplicidade de `(recorrencia_id, data_competencia)` = 0
    (era 0 em 2026-10-09).
 2. **Verificar:** invariante soma(liquidações) = `recebido_cents` para todas as linhas;
@@ -156,7 +158,7 @@ Preserva transações e projeções; perde o detalhe por pagamento e a trilha (e
   compara com produção.
 - `database/homologacao/testar.sh` semeia dados **sintéticos** no formato legado, aplica a
   migração de liquidações (testa o backfill) e roda as afirmações de
-  `testes/10`, `20` e `30` (etapa 5: estorno e lotes) + 2 cenários de concorrência (baixas simultâneas, três gerações de recorrência simultâneas).
+  `testes/10`, `20`, `30` (etapa 5: estorno e lotes) e `40` (etapa 9: briefing só pela edge) + 2 cenários de concorrência (baixas simultâneas, três gerações de recorrência simultâneas).
 - O painel em `localhost` ou em preview da Vercel **não grava em produção**: escrita
   bloqueada no cliente, a menos que `VITE_FUNCTIONS_URL` aponte para outro backend
   ou `VITE_PERMITIR_ESCRITA_PRODUCAO=1`.
@@ -165,8 +167,8 @@ Preserva transações e projeções; perde o detalhe por pagamento e a trilha (e
 
 - Backup só interno (`eloi_backup_20261009`, mesmo banco): protege contra erro de
   migração, não contra perda do projeto. Apagar o schema quando houver backup externo.
-- As telas ainda mostram o critério legado de resultado. Trocar é Etapa 6/7, junto do
-  novo visual, para não mudar o número na frente do dono sem a explicação na tela.
+- "Resultado do mês" (Visão geral) usa competência + natureza. Hoje, Lançamentos e
+  Relatórios mostram "Sobra" (recebido − pago), que é caixa, não resultado.
 - Estorno só para pagamento de fatura gravado depois da etapa 5 (com `pagamento_id`); os
   anteriores continuam bloqueados para apagar/cancelar — correção por outra transferência.
 - Desfazer importação só para lotes gravados depois da etapa 5.

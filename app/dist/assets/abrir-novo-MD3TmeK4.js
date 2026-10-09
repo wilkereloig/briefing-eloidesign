@@ -1,0 +1,1 @@
+import{B as e,H as t,V as n}from"./index-Dkt06yk0.js";var r=t(n(),1);function i(t){let[n,i]=e(),a=n.get(`novo`);(0,r.useEffect)(()=>{if(!a)return;t();let e=new URLSearchParams(n);e.delete(`novo`),i(e,{replace:!0})},[a])}export{i as t};

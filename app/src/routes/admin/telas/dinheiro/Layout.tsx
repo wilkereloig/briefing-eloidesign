@@ -27,7 +27,7 @@ export default function DinheiroLayout() {
       </Cabecalho>
       {/* Links, não abas: cada item é um endereço. `nav` + aria-current (que o
           NavLink já põe) é a semântica certa — tablist pediria setas no teclado. */}
-      <nav className="abas" aria-label="Seções do dinheiro">
+      <nav className="abas abas-dinheiro" aria-label="Seções do dinheiro">
         {NAV_DINHEIRO.map((i) => (
           <NavLink key={i.path} to={i.path} end={i.fim}
             className={({ isActive }) => `pilula${isActive ? ' ativa' : ''}`}>{i.label}</NavLink>

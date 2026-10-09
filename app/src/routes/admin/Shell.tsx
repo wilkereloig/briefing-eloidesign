@@ -2,7 +2,8 @@ import { Suspense, useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { useAdmin } from '../../auth/AdminAuth'
-import { CRIAR, NAV_FERRAMENTAS, NAV_PRIMARIA, type ChaveCriar } from './nav'
+import { CRIAR, NAV_GRUPOS, NAV_ITENS, type ChaveCriar } from './nav'
+import { definirPreferencias, usePreferencias } from '../../lib/preferencias'
 import { Aviso, Botao, Esqueleto, Folha, Icone, Marca } from '../../ui/componentes'
 import { FinancasProvider, useFinancas } from '../../lib/financas-store'
 import { FolhaTransacao } from './FolhaTransacao'
@@ -50,13 +51,17 @@ function ShellInterno() {
     return () => window.removeEventListener('keydown', aoTeclar)
   }, [folha, busca])
 
-  // A barra inferior só comporta 4 destinos: o resto vive no menu de toque.
-  const foraDaBarra = [...NAV_PRIMARIA.filter((i) => !i.barra), ...NAV_FERRAMENTAS]
+  // A barra inferior só comporta 4 destinos: o resto vive no menu "Mais",
+  // com os mesmos grupos do trilho.
+  const gruposForaDaBarra = NAV_GRUPOS
+    .map((g) => ({ ...g, itens: g.itens.filter((i) => !i.barra) }))
+    .filter((g) => g.itens.length)
+  const pref = usePreferencias()
 
   // Trilha da barra do topo (§9): "Painel / Seção". Quem decide o nome da seção
   // é o nav.ts — a barra não inventa rótulo.
   const { pathname } = useLocation()
-  const secao = [...NAV_PRIMARIA, ...NAV_FERRAMENTAS].find((i) =>
+  const secao = NAV_ITENS.find((i) =>
     i.path === '/admin' ? pathname === '/admin' : pathname.startsWith(i.path))
 
   return (
@@ -76,6 +81,12 @@ function ShellInterno() {
           <Icone nome="pesquisa" tamanho={16} />Buscar<kbd>Ctrl K</kbd>
         </button>
         <div className="barra-topo-acoes">
+          <Botao variante="fantasma" compacto aria-pressed={pref.ocultarValores}
+            aria-label={pref.ocultarValores ? 'Mostrar valores' : 'Ocultar valores'}
+            title={pref.ocultarValores ? 'Mostrar valores' : 'Ocultar valores'}
+            onClick={() => definirPreferencias({ ocultarValores: !pref.ocultarValores })}>
+            <span className={pref.ocultarValores ? 'valor-oculto-icone' : undefined} aria-hidden>R$</span>
+          </Botao>
           <Botao variante="icone" className="barra-topo-menu" onClick={() => setBusca(true)} aria-label="Buscar">
             <Icone nome="pesquisa" />
           </Botao>
@@ -95,15 +106,19 @@ function ShellInterno() {
       </main>
 
       {folha === 'menu' && (
-        <Folha titulo="Menu" aoFechar={fechar}>
-          <nav className="lista" aria-label="Mais destinos">
-            {foraDaBarra.map((item) => (
-              <NavLink key={item.path} to={item.path} onClick={fechar} className="lista-item">
-                <Icone nome={item.icone} tamanho={20} />
-                <span className="t-ui">{item.label}</span>
-              </NavLink>
-            ))}
-          </nav>
+        <Folha titulo="Mais" aoFechar={fechar}>
+          {gruposForaDaBarra.map((g, n) => (
+            <nav key={g.titulo ?? `g${n}`} className="lista" aria-label={g.titulo ?? 'Sistema'}
+              style={{ marginTop: n ? 'var(--espaco-04)' : undefined }}>
+              {g.titulo && <span className="etiqueta-mini">{g.titulo}</span>}
+              {g.itens.map((item) => (
+                <NavLink key={item.path} to={item.path} onClick={fechar} className="lista-item">
+                  <Icone nome={item.icone} tamanho={20} />
+                  <span className="t-ui">{item.label}</span>
+                </NavLink>
+              ))}
+            </nav>
+          ))}
           <Botao variante="secundario" onClick={sair}
             style={{ marginTop: 'var(--espaco-05)', width: '100%' }}>
             <Icone nome="sair" tamanho={16} />Sair

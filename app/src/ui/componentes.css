@@ -66,6 +66,26 @@
 /* Coral como texto so a partir de 24px (secao 14): no chip de atraso quem carrega
    a cor e o icone, e o texto fica em rosa para continuar legivel em 12px. */
 .chip[data-estado='atrasado'] .eloi-icon{color:var(--cor-feedback-erro)}
+/* As cores do chip vêm de tokens.ts (inline, uma fonte só). No tema claro os
+   pares de 14 % + cor cheia não fecham 4,5:1 — o tema troca pelas variáveis
+   abaixo, que o .chip lê antes do inline. Lima cheio com Tinta vale nos dois. */
+.chip{background:var(--chip-fundo-tema, var(--chip-fundo));color:var(--chip-texto-tema, var(--chip-texto))}
+:root[data-tema='claro'] .chip[data-estado='execucao'],:root[data-tema='claro'] .chip[data-estado='enviado']{--chip-fundo-tema:rgba(91,124,253,.14);--chip-texto-tema:#2F48B8}
+:root[data-tema='claro'] .chip[data-estado='aguardando'],:root[data-tema='claro'] .chip[data-estado='parcial']{--chip-fundo-tema:rgba(245,163,0,.18);--chip-texto-tema:#7A4F00}
+:root[data-tema='claro'] .chip[data-estado='atrasado']{--chip-fundo-tema:rgba(253,68,0,.12);--chip-texto-tema:#A82D00}
+:root[data-tema='claro'] .chip:is([data-estado='fila'],[data-estado='aberto'],[data-estado='previsto'],[data-estado='rascunho']){--chip-fundo-tema:rgba(27,6,71,.07);--chip-texto-tema:#3E2F63}
+@media (prefers-color-scheme: light){
+  :root:not([data-tema='escuro']) .chip[data-estado='execucao'],:root:not([data-tema='escuro']) .chip[data-estado='enviado']{--chip-fundo-tema:rgba(91,124,253,.14);--chip-texto-tema:#2F48B8}
+  :root:not([data-tema='escuro']) .chip[data-estado='aguardando'],:root:not([data-tema='escuro']) .chip[data-estado='parcial']{--chip-fundo-tema:rgba(245,163,0,.18);--chip-texto-tema:#7A4F00}
+  :root:not([data-tema='escuro']) .chip[data-estado='atrasado']{--chip-fundo-tema:rgba(253,68,0,.12);--chip-texto-tema:#A82D00}
+  :root:not([data-tema='escuro']) .chip:is([data-estado='fila'],[data-estado='aberto'],[data-estado='previsto'],[data-estado='rascunho']){--chip-fundo-tema:rgba(27,6,71,.07);--chip-texto-tema:#3E2F63}
+}
+
+/* Ocultar valores (Configurações › Aparência e botão da barra do topo): todo
+   número de dinheiro desfoca até a pessoa desligar. Não esconde de leitor de
+   tela — é proteção contra quem olha por cima do ombro. */
+[data-ocultar-valores] :is(.dinheiro,.t-valor,.t-valor-g){filter:blur(7px);user-select:none}
+.valor-oculto-icone{text-decoration:line-through;text-decoration-thickness:2px}
 
 /* pílula de aba / filtro */
 .pilula{display:inline-flex;align-items:center;justify-content:center;
@@ -107,7 +127,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   display:grid;place-content:center;transition:background var(--movimento-rapido) var(--curva-padrao)}
 .caixa-marcar:checked{background:var(--acento);border-color:var(--acento)}
 .caixa-marcar:checked::after{content:'';width:10px;height:6px;
-  border-left:2px solid var(--tinta);border-bottom:2px solid var(--tinta);
+  border-left:2px solid var(--acento-texto);border-bottom:2px solid var(--acento-texto);
   transform:rotate(-45deg) translate(1px,-1px)}
 
 .campo[data-erro='true'] .campo-caixa{border-color:var(--cor-feedback-erro)}
@@ -132,6 +152,14 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 
 .indicador{display:flex;flex-direction:column;min-height:150px}
 .indicador .valor{margin-top:auto;padding-top:var(--espaco-03)}
+/* Valor nunca quebra (o sinal de menos ia sozinho para a linha de cima): o
+   tamanho encolhe com a largura do card até caber "−R$ 000.000,00". */
+.indicador{container-type:inline-size}
+.indicador .valor{white-space:nowrap}
+@supports (font-size:1cqi){
+  .indicador .t-valor-g{font-size:min(var(--tipo-dado-grande-tamanho),12cqi)}
+  .card-dominante.indicador .t-valor-g{font-size:min(var(--tipo-dado-xl-tamanho),12cqi)}
+}
 .grade-indicadores{display:grid;gap:var(--gap-grade);
   grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
 
@@ -238,7 +266,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 @keyframes esqueleto{0%,100%{opacity:.5}50%{opacity:.8}}
 
 /* ── Folha: modal (≤560, §9) no desktop, altura total no toque (§6) ──────── */
-.veu{position:fixed;inset:0;z-index:var(--z-veu);background:rgba(8,1,26,.72);
+.veu{position:fixed;inset:0;z-index:var(--z-veu);background:var(--cor-veu);
   animation:aparecer var(--movimento-padrao) var(--curva-entrada);
   display:flex;align-items:flex-end;justify-content:center}
 @keyframes aparecer{from{opacity:0}to{opacity:1}}
@@ -318,9 +346,9 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 /* ícone de movimento: entrada sobe em Lima, saída desce em Coral */
 .mov-icone{display:flex;align-items:center;justify-content:center;flex:none;
   width:34px;height:34px;border-radius:var(--raio-controle);
-  background:rgba(253,213,211,.12);color:var(--cor-texto-primario)}
-.mov-icone[data-tipo='entrada']{background:var(--acento);color:var(--tinta);--eloi-signal:currentColor}
-.mov-icone[data-tipo='saida']{background:var(--coral);color:#FFF;--eloi-signal:currentColor}
+  background:var(--cor-feedback-neutro);color:var(--cor-texto-primario)}
+.mov-icone[data-tipo='entrada']{background:var(--acento);color:var(--acento-texto);--eloi-signal:currentColor}
+.mov-icone[data-tipo='saida']{background:var(--coral);color:var(--cor-texto-sobre-acento);--eloi-signal:currentColor}
 .mov-icone[data-tipo='entrada'] .eloi-icon{transform:rotate(-90deg)}
 .mov-icone[data-tipo='saida'] .eloi-icon{transform:rotate(-90deg)}
 
@@ -373,7 +401,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   border:1.5px solid var(--cor-borda-padrao);border-radius:var(--raio-controle);background:none;
   color:var(--cor-texto-primario);cursor:pointer}
 .tarefa-check:hover{background:var(--cor-fundo-elevado)}
-.tarefa-check[data-feita='true']{background:var(--acento);border-color:var(--acento);color:var(--tinta)}
+.tarefa-check[data-feita='true']{background:var(--acento);border-color:var(--acento);color:var(--acento-texto)}
 .lista-item[data-prioridade='alta'] .t-ui::before{content:'!';display:inline-block;margin-right:6px;
   font-family:var(--fonte-titulo);font-weight:700;color:var(--coral)}
 /* Coral como texto só a partir de 24px (§14): o atraso é um ponto de 7px na
@@ -382,7 +410,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 .lista-item[data-atrasada='true'] .t-legenda::before{content:'';display:inline-block;
   width:7px;height:7px;margin-right:6px;border-radius:var(--raio-etiqueta);
   background:var(--cor-feedback-erro);vertical-align:middle}
-.passos .lista-item[data-feito] .passo-num{background:var(--acento);color:var(--tinta)}
+.passos .lista-item[data-feito] .passo-num{background:var(--acento);color:var(--acento-texto)}
 
 /* ── cliente ────────────────────────────────────────────────────────────── */
 .grade-clientes{display:grid;gap:var(--gap-grade);
@@ -415,7 +443,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
   justify-content:center}
 .barra{width:12px;border-radius:0;min-height:2px}
 .barra-receita{background:var(--roxo)}
-.barra-despesa{background:var(--cor-fundo-elevado);border:1px solid rgba(253,213,211,.22)}
+.barra-despesa{background:var(--cor-fundo-elevado);border:1px solid var(--cor-traco)}
 @media (max-width:767px){ .grafico{height:140px} .grafico-valor{display:none} }
 
 .legenda-item{display:inline-flex;align-items:center;gap:var(--espaco-02);
@@ -461,7 +489,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 /* ── upload e chips de categoria ────────────────────────────────────────── */
 .area-upload{display:flex;flex-direction:column;align-items:center;gap:var(--espaco-02);
   width:100%;padding:var(--espaco-06) var(--espaco-04);cursor:pointer;color:var(--cor-texto-secundario);
-  background:none;border:1px dashed rgba(253,213,211,.2);border-radius:var(--raio-painel);
+  background:none;border:1px dashed var(--cor-traco);border-radius:var(--raio-painel);
   transition:border-color var(--movimento-rapido) var(--curva-padrao)}
 .area-upload:hover{border-color:var(--acento);color:var(--cor-texto-primario)}
 .area-upload .eloi-icon{color:var(--cor-texto-fraco)}
@@ -503,7 +531,7 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 /* ── busca global ──────────────────────────────────────────────────────────
    Alinhada ao topo (não centralizada): a lista cresce para baixo e o campo
    não pula de lugar conforme o número de resultados muda. */
-.busca-fundo{position:fixed;inset:0;z-index:60;background:rgba(9,3,25,.72);
+.busca-fundo{position:fixed;inset:0;z-index:60;background:var(--cor-veu);
   display:flex;justify-content:center;align-items:flex-start;padding:var(--espaco-05) var(--espaco-03)}
 @media (max-width:767px){ .busca-fundo{padding:var(--espaco-03) 0 0} }
 

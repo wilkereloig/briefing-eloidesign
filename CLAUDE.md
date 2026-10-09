@@ -22,6 +22,7 @@ Leia, nesta ordem, o que for do assunto:
 | Como adicionar tela/briefing/edge | `docs/DEVELOPMENT_GUIDE.md` |
 | Por que algo está assim | `docs/DECISIONS.md` |
 | Plano em curso do financeiro (etapas, contratos, publicação) | `docs/EVOLUCAO-FINANCEIRO.md` · `docs/INVENTARIO-2026-10.md` |
+| Quem acessa o quê, auditoria, rotinas automáticas | `docs/ACESSO.md` |
 
 **Não re-investigue do zero e não diga "não sei como funciona".** O mapa está aqui.
 

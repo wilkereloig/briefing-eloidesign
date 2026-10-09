@@ -7,6 +7,7 @@ import {
   totalEmAberto, serieResultado, ticketMedio, periodoDaMeta, consumoDaMeta,
   faturasDoCartao, indiceFaturaAtual, extratoDaConta, cobertura, saidasDaCobertura, patrimonioLiquido,
   chequeEspecialUsado, filtrarLancamentos, resumoEmprestimo, pesaNosTotais, taxaMensalEmprestimo, resultadoPorCompetencia, resultadoLiquidadoPorCompetencia,
+  movimentoEntreContextos, pendenciasDeRevisao,
 } from './financeiro'
 import type { Categoria, Conta, Emprestimo, Meta, Transacao } from '../lib/tipos'
 
@@ -791,5 +792,38 @@ describe('custo real do empréstimo (2026-10-09)', () => {
     expect(r.quitar_hoje_cents!).toBeLessThan(200_000)
     expect(r.quitar_hoje_cents!).toBeGreaterThan(197_000) // ~1 mês de desconto a ~2,9%
     expect(resumoEmprestimo(e, ps).quitar_hoje_cents).toBeNull() // sem "hoje", não estima
+  })
+})
+
+describe('entre contextos e revisão', () => {
+  const contas = [conta({ id: 'e', contexto: 'empresa' }), conta({ id: 'p', contexto: 'pessoal' }), conta({ id: 'p2', contexto: 'pessoal' })]
+  const tr = (p: Partial<Transacao> & { id: string }) =>
+    tx({ tipo: 'transferencia', valor_cents: 1000_00, recebido_cents: 1000_00, data_liquidacao: '2026-10-05', ...p })
+
+  it('soma o que andou entre empresa e pessoal no mês; mesma lente e cancelada ficam fora', () => {
+    const r = movimentoEntreContextos(contas, [
+      tr({ id: '1', conta_id: 'e', conta_destino_id: 'p' }),
+      tr({ id: '2', conta_id: 'p', conta_destino_id: 'e', valor_cents: 300_00, recebido_cents: 300_00 }),
+      tr({ id: '3', conta_id: 'p', conta_destino_id: 'p2' }),
+      tr({ id: '4', conta_id: 'e', conta_destino_id: 'p', status: 'cancelado' }),
+      tr({ id: '5', conta_id: 'e', conta_destino_id: 'p', data_liquidacao: '2026-09-30' }),
+    ], '2026-10')
+    expect(r).toEqual({ empresa_para_pessoal_cents: 1000_00, pessoal_para_empresa_cents: 300_00, qtd: 2 })
+  })
+
+  it('conta pendências sem decidir nada', () => {
+    const cats = [
+      { id: 'a', nome: 'Alimentação', natureza: 'operacional', natureza_definida_por: 'dono' },
+      { id: 'o', nome: 'Outros', natureza: 'operacional', natureza_definida_por: null },
+      { id: 'n', nome: 'Nunca usada', natureza: 'operacional', natureza_definida_por: null },
+    ] as unknown as Categoria[]
+    const r = pendenciasDeRevisao([
+      tx({ id: '1', tipo: 'saida', categoria_id: 'o', observacoes: 'PIX de origem incerta — Confirmar' }),
+      tx({ id: '2', tipo: 'saida', categoria_id: null }),
+      tx({ id: '3', tipo: 'transferencia' }),
+      tx({ id: '4', tipo: 'saida', categoria_id: 'a' }),
+      tx({ id: '5', tipo: 'saida', categoria_id: null, status: 'cancelado', observacoes: 'confirmar' }),
+    ], cats)
+    expect(r).toEqual({ confirmar: 1, sem_categoria: 1, natureza_pendente: 1, total: 3 })
   })
 })

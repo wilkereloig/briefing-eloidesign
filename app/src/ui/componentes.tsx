@@ -43,7 +43,8 @@ export function Botao({ variante = 'secundario', compacto, carregando, children,
 export function Chip({ estado, children }: { estado: EstadoChip; children: ReactNode }) {
   const [fundo, texto] = chipCores[estado]
   return (
-    <span className="chip" data-estado={estado} style={{ background: fundo, color: texto }}>
+    <span className="chip" data-estado={estado}
+      style={{ '--chip-fundo': fundo, '--chip-texto': texto } as React.CSSProperties}>
       <Icone nome={chipIcone[estado]} tamanho={12} />
       {children}
     </span>
@@ -109,7 +110,9 @@ export function Indicador({ rotulo, valor, nota, cor, dominante }:
     <Card dominante={dominante} className="indicador">
       <Etiqueta mini>{rotulo}</Etiqueta>
       <span className="valor t-valor-g dinheiro" aria-label={valor}
-        style={cor ? { color: `var(--${cor === 'acento' ? 'acento' : 'coral'})` } : undefined}>{valor}</span>
+        // No card dominante (fundo de acento) a cor semântica perde contraste: o
+        // sinal do número já informa.
+        style={cor && !dominante ? { color: `var(--${cor === 'acento' ? 'acento' : 'coral'})` } : undefined}>{valor}</span>
       {nota && <span className="t-legenda" style={{ marginTop: 'var(--espaco-02)' }}>{nota}</span>}
     </Card>
   )

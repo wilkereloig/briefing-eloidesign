@@ -36,6 +36,7 @@ Atualizado: 2026-10-08.
 - **Fila de cobrança:** A receber / A pagar agrupadas por faixa de prazo (`agruparPorPrazo`) com recortes Vencidos · Sem NF · Recorrentes · Parciais
 - **Visão geral e contas:** `patrimonioLiquido`, `cobertura`/`saidasDaCobertura` (próximos 7 dias), `extratoDaConta` (saldo após cada linha); arquivar conta/cartão em vez de apagar
 - **Empréstimos:** `resumoEmprestimo` (pago, falta, juros, próxima, quitação, progresso) · cadastro gera só as parcelas que faltam; estrutura imutável depois (encerrar e cadastrar outro) · saldo devedor entra no patrimônio líquido
+- **Visão geral:** resultado por competência e natureza (`resultadoPorCompetencia`), entre contextos (`movimentoEntreContextos`), caixa previsto 7/30/90 (`previsaoCaixa`), revisão (`pendenciasDeRevisao`)
 - **Cartão:** `faturasDoCartao` (uma fatura por mês) · pagamentos e de quais faturas tiraram (`faturasQuitadasPor`, painel na página do cartão) · fatura aberta, limite disponível, ciclo (`cicloFatura`), parcelado em aberto (`parceladoAberto`)
 - **Onboarding:** `routes/admin/Onboarding.tsx` (Hoje e Dinheiro) enquanto faltar conta ou lançamento — `domain/onboarding.ts`
 - **Conferência e importação:** `routes/admin/FolhasExtrato.tsx` — `FolhaConferencia` (sistema × extrato, ajuste identificado) e `FolhaImportar` (CSV/OFX, `domain/importacao.ts`); cada arquivo vira um lote, listado e desfeito em `PainelImportacoes` (página da conta e do cartão)
@@ -190,10 +191,10 @@ Atualizado: 2026-10-08.
 ## Cliente
 
 ### Briefing de identidade visual — `/briefing/`
-Concluído. Grava em `briefings` + e-mail Formspree. Público.
+Concluído. Grava em `briefings` pela edge `briefing-submit` (limite por IP) + e-mail Formspree. Público.
 
 ### Briefing de e-commerce — `/briefing-ecommerce/`
-Concluído. Base genérica de 5 etapas, grava em `ecommerce_briefings`. Público.
+Concluído. Base genérica de 5 etapas, grava em `ecommerce_briefings` pela edge `briefing-submit`. Público.
 
 ### Briefings direcionados — `/briefing-solarium/`, `/briefing-guia-viver-bem/`
 Concluído. Token `?t=` → `briefing-submit` → `briefing_links`; backup Formspree.

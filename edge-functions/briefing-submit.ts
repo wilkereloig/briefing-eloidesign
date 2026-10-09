@@ -2,8 +2,13 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { ipDaRequisicao } from "./_shared/ip.ts";
 import { JANELA_MS } from "./_shared/throttle.ts";
+import { linhaBriefingAberto } from "./_shared/briefing.ts";
 
-// Endpoint PUBLICO: o cliente envia a resposta do briefing pelo token.
+// Endpoint PUBLICO. Dois caminhos:
+//  · com `token` (link gerado no painel): grava em briefing_links;
+//  · sem token (`formulario`: briefing | ecommerce): grava em briefings /
+//    ecommerce_briefings. Até 2026-10-09 este caminho ia direto pelo REST com a
+//    chave pública (INSERT anônimo, sem limite) — agora passa por aqui.
 // Duas defesas (2026-09-03): throttle por IP e "respondido não se sobrescreve".
 const TABELA_TENTATIVAS = "briefing_submit_ip_attempts";
 // Envios legítimos por IP em 15 min: um formulário e alguns reenvios por
@@ -30,7 +35,10 @@ Deno.serve(async (req: Request) => {
 
   const token = (body?.token || "").toString();
   const raw = body?.raw && typeof body.raw === "object" ? body.raw : null;
-  if (!token || !raw) return json({ error: "token e raw obrigatorios" }, 400);
+  // Sem token: valida a forma ANTES de gastar uma tentativa do throttle.
+  const aberto = token ? null : linhaBriefingAberto(body?.formulario, body?.raw, body?.empresa);
+  if (aberto && "erro" in aberto) return json({ error: aberto.erro }, 400);
+  if (token && !raw) return json({ error: "token e raw obrigatorios" }, 400);
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -52,6 +60,15 @@ Deno.serve(async (req: Request) => {
   if (erroRegistro) {
     console.error("não registrou a tentativa", erroRegistro);
     return json({ error: "não foi possível receber agora, tente de novo" }, 503);
+  }
+
+  if (aberto) {
+    const { error } = await supabase.from(aberto.tabela).insert(aberto.linha);
+    if (error) {
+      console.error("briefing aberto não gravou", error);
+      return json({ error: "não foi possível receber agora, tente de novo" }, 500);
+    }
+    return json({ ok: true });
   }
 
   // Respondido não se sobrescreve: link vazado ou reenvio acidental não apaga

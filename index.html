@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ELOI Studio — identidade visual, sites e campanhas</title>
-<meta name="description" content="O site do estúdio está em construção. Já no ar: portal do cliente, painel do estúdio e contato direto — contato@eloidesign.com.br · (84) 99115-0600.">
+<meta name="description" content="ELOI Studio: identidade visual, sites, social, motion e campanhas. Comece pelo briefing guiado — contato@eloidesign.com.br · (84) 99115-0600.">
 <link rel="canonical" href="https://briefing-eloidesign.vercel.app/">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="ELOI Studio">
 <meta property="og:locale" content="pt_BR">
-<meta property="og:title" content="ELOI Studio — site em construção">
-<meta property="og:description" content="Site em construção. O portal do cliente e o contato direto já funcionam.">
+<meta property="og:title" content="ELOI Studio — identidade visual, sites e campanhas">
+<meta property="og:description" content="Identidade, web, social, motion e campanha. Do briefing à entrega pelo portal do cliente.">
 <meta property="og:url" content="https://briefing-eloidesign.vercel.app/">
 <meta property="og:image" content="https://briefing-eloidesign.vercel.app/assets/og-eloi.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -132,8 +132,8 @@ h3{font-family:var(--fonte-titulo);font-variation-settings:'wdth' 100,'wght' 600
   background:
     radial-gradient(circle at 22% 18%,rgba(125,42,232,.32) 0 34%,transparent 34%),
     radial-gradient(circle at 82% 78%,rgba(91,124,253,.22) 0 30%,transparent 30%)}
-/* obra: as barras do KV em alturas desiguais, como andaime. Não é barra de
-   progresso — não promete uma porcentagem que ninguém mediu. */
+/* as barras do KV em alturas desiguais, inclinadas. Não é gráfico nem barra de
+   progresso — não promete número nenhum. */
 .obra{display:flex;align-items:flex-end;gap:8px;height:54%;transform:rotate(-8deg)}
 .obra i{display:block;width:26px;border-radius:3px}
 
@@ -145,23 +145,20 @@ section[id]{scroll-margin-top:90px}
   gap:32px;flex-wrap:wrap;border-bottom:1px solid var(--linha);padding-bottom:18px}
 .secao-topo p{font-size:14px;color:var(--texto-3);max-width:40ch}
 
-/* acessos — os dois portais que já funcionam */
-.acessos{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.acesso{border-radius:16px;background:var(--chao-2);padding:32px;
-  display:flex;flex-direction:column;gap:20px;min-height:210px;color:var(--texto);
-  transition:background .2s}
-.acesso:hover{background:var(--chao-3);color:var(--texto)}
-.acesso-corpo{display:flex;flex-direction:column;gap:10px}
-.acesso h3{font-size:24px}
-.acesso p{font-size:14px;line-height:1.55;color:var(--texto-2);max-width:34ch}
-/* a seta reforça "isto abre"; quem informa é o texto, nunca a cor sozinha */
-.acesso-ir{margin-top:auto;display:inline-flex;align-items:center;gap:10px;
-  font-size:14px;font-weight:700;color:var(--acento)}
-.acesso-ir svg{width:18px;height:18px}
-.acesso-selo{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;
-  padding:6px 12px;border-radius:999px;background:var(--chao);
-  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--texto-3)}
+/* serviços — catálogo ativo, sem preço */
+.servicos{list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.servico{border-radius:16px;background:var(--chao-2);padding:28px;display:flex;flex-direction:column;gap:12px}
+.servico h3{font-size:22px}
+.servico p{font-size:14px;line-height:1.55;color:var(--texto-2)}
+.servico-cor{display:block;width:28px;height:6px}
+
+/* processo */
+.passos{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;counter-reset:none}
+.passos li{border-top:2px solid var(--linha-forte);padding-top:20px;display:flex;flex-direction:column;gap:10px}
+.passo-n{font-family:var(--fonte-titulo);font-variation-settings:'wdth' 100,'wght' 700;
+  font-size:14px;color:var(--acento);letter-spacing:.1em}
+.passos h3{font-size:22px}
+.passos p{font-size:14px;line-height:1.55;color:var(--texto-2);max-width:32ch}
 
 /* contato */
 .contato{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
@@ -196,7 +193,9 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
   .capa{grid-template-columns:1fr;gap:36px;padding-block:48px 64px}
   .quadro{aspect-ratio:16/10}
   .obra{height:62%}
-  .acessos,.contato{grid-template-columns:1fr}
+  .contato{grid-template-columns:1fr}
+  .servicos{grid-template-columns:1fr 1fr}
+  .passos{grid-template-columns:1fr 1fr;row-gap:28px}
 }
 @media (max-width:720px){
   .faixa{padding-inline:20px}
@@ -206,7 +205,8 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
   .topo .btn{padding:11px 16px}
   .topo .btn .longo{display:none}
   .secao{padding-top:56px}
-  .acesso,.contato-principal,.contato-lado{padding:28px}
+  .servicos,.passos{grid-template-columns:1fr}
+  .servico,.contato-principal,.contato-lado{padding:28px}
   footer{margin-top:56px}
 }
 </style>
@@ -225,11 +225,11 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
 
   <section class="faixa capa">
     <div class="capa-texto">
-      <span class="etiqueta">Site em construção</span>
-      <h1>O site do estúdio está sendo desenhado.</h1>
-      <p class="chamada">A vitrine com projetos, serviços e processo entra no ar em breve.
-        Enquanto isso, os dois portais abaixo já funcionam — e para começar um projeto,
-        você fala direto comigo.</p>
+      <span class="etiqueta">Estúdio de design</span>
+      <h1>Identidade visual, sites e campanhas.</h1>
+      <p class="chamada">Marca, presença digital e peças de campanha desenhadas sob
+        medida — do briefing à entrega, com arquivos e orçamentos acompanhados pelo
+        portal do cliente.</p>
       <div class="acoes">
         <a href="/briefing/" class="btn btn-roxo">Começar um projeto</a>
         <a href="https://wa.me/5584991150600" class="btn btn-linha"
@@ -253,35 +253,57 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
     </div>
   </section>
 
-  <section class="faixa secao" id="acessos">
+  <!-- Serviços = catálogo ativo do estúdio (tabela catalogo_servicos). Mudou o
+       catálogo, muda aqui. Sem preço: o valor sai do orçamento. -->
+  <section class="faixa secao" id="servicos">
     <div class="secao-topo">
-      <h2>Acessos</h2>
-      <p>Os dois já estão no ar. Cada um pede a sua própria entrada.</p>
+      <h2>Serviços</h2>
+      <p>Cada projeto começa pelo briefing; o escopo e o valor saem no orçamento.</p>
     </div>
-    <div class="acessos">
-      <a class="acesso" href="/portal/">
-        <span class="acesso-selo">Para o cliente</span>
-        <span class="acesso-corpo">
-          <h3>Portal do cliente</h3>
-          <p>Seus arquivos, orçamentos e entregas no mesmo lugar. Entre com a senha
-            que você recebeu do estúdio.</p>
-        </span>
-        <span class="acesso-ir">Abrir o portal
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter" aria-hidden="true"><path d="M5 12h13"/><path d="M12 5l7 7-7 7"/></svg>
-        </span>
-      </a>
-      <a class="acesso" href="/admin/">
-        <span class="acesso-selo">Acesso restrito</span>
-        <span class="acesso-corpo">
-          <h3>Painel do estúdio</h3>
-          <p>Área administrativa da ELOI: briefings, projetos, orçamentos e finanças.
-            Uso interno.</p>
-        </span>
-        <span class="acesso-ir">Entrar no painel
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter" aria-hidden="true"><path d="M5 12h13"/><path d="M12 5l7 7-7 7"/></svg>
-        </span>
-      </a>
+    <ul class="servicos">
+      <li class="servico">
+        <span class="servico-cor" style="background:var(--roxo)" aria-hidden="true"></span>
+        <h3>Identidade</h3>
+        <p>Logo e marca essencial, identidade visual completa e naming.</p>
+      </li>
+      <li class="servico">
+        <span class="servico-cor" style="background:var(--azul)" aria-hidden="true"></span>
+        <h3>Web</h3>
+        <p>Landing page e site institucional.</p>
+      </li>
+      <li class="servico">
+        <span class="servico-cor" style="background:var(--lima)" aria-hidden="true"></span>
+        <h3>Social</h3>
+        <p>Gestão mensal e kit de templates para redes sociais.</p>
+      </li>
+      <li class="servico">
+        <span class="servico-cor" style="background:var(--lilas)" aria-hidden="true"></span>
+        <h3>Motion</h3>
+        <p>Motion, animação e edição de vídeo.</p>
+      </li>
+      <li class="servico">
+        <span class="servico-cor" style="background:var(--coral)" aria-hidden="true"></span>
+        <h3>Campanha</h3>
+        <p>Branding pré-campanha e acompanhamento mensal de campanha.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="faixa secao" id="processo">
+    <div class="secao-topo">
+      <h2>Como funciona</h2>
+      <p>Quatro passos. Tudo o que é seu fica no portal do cliente.</p>
     </div>
+    <ol class="passos">
+      <li><span class="passo-n">1</span><h3>Briefing</h3>
+        <p>Um formulário guiado conta o que você precisa: escopo, prazo e referências.</p></li>
+      <li><span class="passo-n">2</span><h3>Orçamento</h3>
+        <p>A proposta chega por link próprio. Você aprova ou recusa ali mesmo.</p></li>
+      <li><span class="passo-n">3</span><h3>Produção</h3>
+        <p>O projeto anda com você acompanhando serviços, prazos e notas fiscais no portal.</p></li>
+      <li><span class="passo-n">4</span><h3>Entrega</h3>
+        <p>Arquivos finais, manual de marca e fontes ficam no portal para baixar quando quiser.</p></li>
+    </ol>
   </section>
 
   <section class="faixa secao" id="contato">
@@ -325,6 +347,8 @@ footer .faixa{padding-block:44px;display:flex;align-items:flex-end;
       <span style="font-size:13px;color:var(--texto-3)">Identidade, sites e campanhas · eloidesign.com.br</span>
     </div>
     <nav class="rodape-links" aria-label="Rodapé">
+      <a href="#servicos">Serviços</a>
+      <a href="#processo">Como funciona</a>
       <a href="/briefing/">Briefing</a>
       <a href="#contato">Contato</a>
       <a href="/portal/">Portal do cliente</a>

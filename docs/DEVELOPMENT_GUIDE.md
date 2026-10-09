@@ -50,6 +50,9 @@ Padrão já validado duas vezes (Solarium, Guia Viver Bem):
 3. No `<script>` do formulário:
    - token da URL `?t=` → `POST {SUPA_URL}/functions/v1/briefing-submit` com
      `{ token, raw: obj }` → grava em `briefing_links` → aparece no painel;
+   - sem token: mesma edge com `{ formulario: 'briefing' | 'ecommerce', raw: obj }`
+     (grava em `briefings`/`ecommerce_briefings`). **Nunca** `/rest/v1/` com a
+     chave pública — o INSERT anônimo foi fechado em 2026-10-09;
    - **backup Formspree `xpqeraow` sempre** — é o que salva a resposta se o
      Supabase estiver pausado;
    - `?mode=admin` pula a validação, para preview;

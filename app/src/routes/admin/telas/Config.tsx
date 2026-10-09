@@ -1,13 +1,42 @@
 import { Link } from 'react-router-dom'
-import { Painel } from '../../../ui/componentes'
+import { definirPreferencias, usePreferencias, type Tema } from '../../../lib/preferencias'
+import { Painel, Pilula } from '../../../ui/componentes'
 import { Cabecalho, Carga } from '../../../ui/painel'
 
+const TEMAS: { chave: Tema; label: string }[] = [
+  { chave: 'sistema', label: 'Do sistema' }, { chave: 'claro', label: 'Claro' }, { chave: 'escuro', label: 'Escuro' },
+]
+
 export default function Config() {
+  const pref = usePreferencias()
   return (
     <div className="tela pilha">
       <Cabecalho secao="Sistema" titulo="Configurações" />
 
       <Carga linhas={4}>
+        {/* Preferência deste navegador: não vai ao servidor nem sai no logout. */}
+        <Painel titulo="Aparência">
+          <div className="pilha" style={{ gap: 'var(--espaco-04)' }}>
+            <div>
+              <p className="t-ui" id="rotulo-tema">Tema</p>
+              <div className="linha" role="group" aria-labelledby="rotulo-tema" style={{ marginTop: 'var(--espaco-02)' }}>
+                {TEMAS.map((t) => (
+                  <Pilula key={t.chave} ativa={pref.tema === t.chave}
+                    onClick={() => definirPreferencias({ tema: t.chave })}>{t.label}</Pilula>
+                ))}
+              </div>
+            </div>
+            <label className="linha" style={{ gap: 'var(--espaco-03)', minHeight: 'var(--alvo-toque)', cursor: 'pointer' }}>
+              <input type="checkbox" className="caixa-marcar" checked={pref.ocultarValores}
+                onChange={(e) => definirPreferencias({ ocultarValores: e.target.checked })} />
+              <span className="celula">
+                <span className="t-ui">Ocultar valores</span>
+                <span className="t-legenda">Desfoca os números de dinheiro na tela. Atalho no botão R$ da barra do topo.</span>
+              </span>
+            </label>
+          </div>
+        </Painel>
+
         {/* Contas moram em Dinheiro → Contas (página por conta, extrato,
             arquivar). Aqui fica só o atalho, para não haver dois cadastros. */}
         <Painel titulo="Contas e cartões">

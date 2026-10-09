@@ -19,3 +19,4 @@ create table if not exists storage.objects (id uuid primary key default gen_rand
 grant usage on schema public to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables to service_role;
 alter default privileges in schema public grant all on functions to service_role;
+alter default privileges in schema public grant all on sequences to service_role;

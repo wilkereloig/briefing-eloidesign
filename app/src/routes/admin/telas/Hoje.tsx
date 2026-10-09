@@ -140,9 +140,11 @@ export default function Hoje() {
                 nota={variacao(r.receita_cents, anterior.receita_cents)} />
               <Indicador rotulo="Gasto no mês" valor={fmtBRL(r.despesa_cents)}
                 nota={variacao(r.despesa_cents, anterior.despesa_cents)} />
-              <Indicador rotulo="Resultado do mês" valor={fmtBRL(r.lucro_cents)}
+              {/* Caixa (recebido − pago). O resultado por competência e natureza
+                  fica em Dinheiro › Visão geral — nomes diferentes de propósito. */}
+              <Indicador rotulo="Sobra do mês" valor={fmtBRL(r.lucro_cents)}
                 cor={r.lucro_cents < 0 ? 'coral' : undefined}
-                nota={r.receita_cents > 0 ? `Margem de ${(r.margem * 100).toFixed(0)}%` : 'Sem receita no mês'} />
+                nota={r.receita_cents > 0 ? `recebido − pago · ${(r.margem * 100).toFixed(0)}% do recebido` : 'Sem recebimento no mês'} />
             </div>
 
             <div className="grade-indicadores">

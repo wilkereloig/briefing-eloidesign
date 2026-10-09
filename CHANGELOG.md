@@ -2,6 +2,53 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Etapa 9: site e briefing pela edge
+
+- **Home** (`/`): diz o que o estúdio faz — serviços do catálogo (identidade visual,
+  sites, social, motion, campanha), como o trabalho anda (briefing, orçamento,
+  produção, entrega) e contato. Sem portfólio, depoimento ou número inventado; o
+  acesso ao portal fica no rodapé. URLs e sitemap iguais.
+- **Briefing sem link** (`/briefing/`, `/briefing-ecommerce/`, `/briefing-solarium/`)
+  agora envia pela edge `briefing-submit`, com o mesmo limite por IP do briefing por
+  link. O banco deixou de aceitar gravação direta com a chave pública. Backup
+  Formspree continua em todos.
+
+## 2026-10-09 — Etapa 8: acesso, auditoria e automação documentados
+
+- `docs/ACESSO.md`: quem entra e como, matriz de acesso para identidades individuais
+  (proprietário, administrador, operador, contador, visualizador — pessoal só do
+  proprietário), plano de MFA/recuperação/revogação, o que a auditoria registra, o
+  que roda sozinho e o que acontece quando falha.
+- Conferido em produção: todas as funções sem login respondem 401 (ou 410, as
+  desligadas); crons do app Financeiro antigo continuam desligados.
+
+## 2026-10-09 — Etapa 7: tema claro, navegação por tarefa, ocultar valores
+
+- **Tema claro, escuro ou do sistema** (Configurações › Aparência). Sem piscar no
+  tema errado ao abrir; a barra do navegador acompanha. Contraste conferido nos
+  pares de texto do claro (texto fraco ~5,2:1, erro ~5,3:1, acento ~7:1).
+- **Navegação agrupada por tarefa:** Hoje · Financeiro (Dinheiro, Relatórios) ·
+  Trabalho e clientes (Projetos, Clientes, Orçamentos, Briefings, Entregas,
+  Calendário) · Documentos (Notas fiscais, Arquivos) · Configurações. No computador,
+  as páginas de Dinheiro aparecem dentro do trilho (sem fileira de abas); no celular,
+  barra inferior com os principais e menu **Mais** com os mesmos grupos. Rotas iguais.
+- **Ocultar valores:** botão **R$** na barra do topo (ou em Configurações) desfoca os
+  números de dinheiro.
+- Chips de estado e marca legíveis no claro; cores soltas do CSS viraram token.
+
+## 2026-10-09 — Etapa 6: um "resultado" só, previsão e revisão na Visão geral
+
+- **Dinheiro › Visão geral:** "Resultado do mês" agora é pelo mês da compra e pela
+  natureza da categoria (só o dia a dia entra). Painel do resultado mostra à parte
+  parcelas de dívida, juros e tarifas, empréstimos recebidos/aportes/retiradas, ajustes
+  e o dinheiro que passou entre empresa e pessoal. Novo **Caixa previsto** (7/30/90 dias,
+  com faixa) e **Precisa de revisão** (marcados "confirmar", sem categoria, natureza a
+  confirmar), cada um levando à lista que explica.
+- **Categorias:** campo **Natureza** (dia a dia, juros e tarifas, dívida, patrimonial);
+  salvar confirma a escolha e tira da fila de revisão.
+- Hoje, Lançamentos e Relatórios: o número recebido − pago passa a se chamar **Sobra**.
+- Valor de indicador não quebra mais linha; card de destaque sem cor semântica sobre o roxo.
+
 ## 2026-10-09 — Etapa 5: estorno de pagamento de fatura e importação que se desfaz
 
 - **Página do cartão › Pagamentos ao cartão:** cada pagamento mostra de quais faturas
