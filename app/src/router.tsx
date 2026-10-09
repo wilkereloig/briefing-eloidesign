@@ -31,6 +31,7 @@ const Agenda = lazy(() => import('./routes/admin/telas/dinheiro/Agenda'))
 const Emprestimos = lazy(() => import('./routes/admin/telas/dinheiro/Emprestimos'))
 const Planejamento = lazy(() => import('./routes/admin/telas/dinheiro/Planejamento'))
 const Gastos = lazy(() => import('./routes/admin/telas/dinheiro/Gastos'))
+const Plano = lazy(() => import('./routes/admin/telas/dinheiro/Plano'))
 const Briefings = lazy(() => import('./routes/admin/telas/Briefings'))
 const Entregas = lazy(() => import('./routes/admin/telas/Entregas'))
 const Notas = lazy(() => import('./routes/admin/telas/Notas'))
@@ -73,6 +74,7 @@ export const router = createBrowserRouter([
         { path: 'agenda', element: <Agenda /> },
         { path: 'emprestimos', element: <Emprestimos /> },
         { path: 'planejamento', element: <Planejamento /> },
+        { path: 'plano', element: <Plano /> },
       ] },
       { path: 'briefings', element: <Briefings /> },
       { path: 'entregas', element: <Entregas /> },

@@ -65,6 +65,7 @@ export const NAV_DINHEIRO: { path: string; label: string; fim?: boolean }[] = [
   { path: '/admin/dinheiro/cartoes', label: 'Cartões' },
   { path: '/admin/dinheiro/lancamentos', label: 'Lançamentos' },
   { path: '/admin/dinheiro/agenda', label: 'A pagar e receber' },
+  { path: '/admin/dinheiro/plano', label: 'Plano de pagamentos' },
   { path: '/admin/dinheiro/emprestimos', label: 'Empréstimos' },
   { path: '/admin/dinheiro/planejamento', label: 'Planejamento' },
 ]

@@ -179,6 +179,22 @@ Contrato de empréstimo (migração `2026-10-08-emprestimos.sql`). `nome`,
   `resumoEmprestimo` (`domain/financeiro.ts`); o saldo devedor dos ativos entra no
   `patrimonioLiquido`.
 
+### `eloi_relatorios` *(2026-10-09)*
+Relatório gerado **sob pedido** (migração `2026-10-09-relatorios-plano.sql`). Hoje só
+`tipo='plano_pagamento'`. `contexto`, `titulo`, `dados` (jsonb, objeto), `gerado_em`.
+- É **retrato**, não cálculo ao vivo: o plano carrega decisões (pagar só o mínimo,
+  adiar uma conta, de onde sai cada pagamento) que não existem nos lançamentos.
+- Quem grava é o assistente, direto no banco, quando o dono pede "gera o plano". Nada
+  edita nem apaga pelo painel; plano novo é linha nova, a tela lê a mais recente
+  (`planos.list`, índice `tipo, contexto, gerado_em desc`).
+- Formato de `dados` (cents inteiros): `de`, `ate`, `limite_cheque_cents`,
+  `taxa_cheque_mensal`, `premissas[]`, `decisoes[]` (`titulo`, `texto`, `prazo`,
+  `urgente`), `dias[]` (`data`, `caixa_cents`, `cheque_cents` — fim do dia) e
+  `eventos[]` (`data`, `descricao`, `nota`, `tipo` paga|recebe|decisao, `valor_cents`,
+  `caixa_cents`, `cheque_cents`, `quita_cheque_cents`). Saída: conta + cheque = valor;
+  entrada: conta + devolução do cheque = valor. Conferido por `lerPlano`
+  (`domain/plano.ts`) — fora do formato, a tela recusa o retrato inteiro.
+
 ### `eloi_metas`
 Meta e orçamento de gasto na mesma tabela, discriminados por `especie`.
 Desativar preserva o histórico do planejado.

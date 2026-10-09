@@ -113,7 +113,7 @@ O painel também guarda o financeiro **pessoal** do Wilker (lente "pessoal").
   dívida ou saldo real **nunca** vão para arquivo versionado (doc, teste, spec,
   commit). O dado vive no banco; o contexto, na memória local do assistente.
 - Área: `/admin/dinheiro/*` (visão geral, contas, cartões, lançamentos, a pagar e
-  receber, empréstimos, planejamento). Mapa em `docs/ROUTE_MAP.md`.
+  receber, empréstimos, planejamento, plano de pagamentos). Mapa em `docs/ROUTE_MAP.md`.
 - **Fatura de cartão (PDF):** cada linha é `saida` no cartão (`conta_id` = cartão),
   `data_competencia` = data da compra, `data_vencimento` = vencimento da fatura,
   `origem='importacao'`, `importacao_chave` (`AAAA-MM-DD|-cents|descrição`, `#n` se
@@ -134,6 +134,12 @@ O painel também guarda o financeiro **pessoal** do Wilker (lente "pessoal").
   DIA". Transferência entre contas próprias = uma linha `transferencia`. PIX no
   cartão (PIX CARTAO + CREDITO LIBERAD) é neutro na conta. PIX que entrou é entrada.
 - **Empréstimo:** cadastro em `eloi_emprestimos` gera as parcelas (`emprestimo_id`).
+- **Plano de pagamentos** (dono pede "gera o plano"): simular dia a dia com o que
+  está no banco (saldos, contas em aberto, `eloi_servicos` a receber, decisões do
+  dono) e gravar **uma linha nova** em `eloi_relatorios` (`tipo='plano_pagamento'`,
+  formato em `docs/DATA_MODEL.md`). Conferir o JSON com `lerPlano`
+  (`app/src/domain/plano.ts`) antes de gravar. A aba `/admin/dinheiro/plano` mostra
+  o mais recente — sem deploy.
 - Lançamento incerto ganha "confirmar" em `observacoes` e vai para a lista de
   pendências do dono — nunca chutar categoria em silêncio.
 

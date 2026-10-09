@@ -202,6 +202,20 @@ Deno.serve(async (req: Request) => {
     return json({ caixa: caixa.data ?? [], competencia: competencia.data ?? [], obrigacoes: obrigacoes.data ?? [], hoje });
   }
 
+  // Plano de pagamentos mais recente (retrato gravado sob pedido em
+  // eloi_relatorios). Só leitura: quem grava é o assistente, direto no banco.
+  // O formato é conferido na tela (app/src/domain/plano.ts).
+  if (action === "planos.list") {
+    const { contexto } = body ?? {};
+    if (contexto != null && !CONTEXTOS.includes(contexto)) return json({ error: "contexto invalido" }, 400);
+    let q = supabase.from("eloi_relatorios").select("id,contexto,titulo,dados,gerado_em")
+      .eq("tipo", "plano_pagamento").order("gerado_em", { ascending: false }).limit(1);
+    if (contexto) q = q.eq("contexto", contexto);
+    const { data, error } = await q;
+    if (error) return json({ error: error.message }, 500);
+    return json({ plano: data?.[0] ?? null });
+  }
+
   // Liquidações de uma transação (detalhe/histórico). Mais antiga primeiro.
   if (action === "transacoes.liquidacoes") {
     const { id } = body ?? {};

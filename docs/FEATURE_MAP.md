@@ -28,8 +28,8 @@ Atualizado: 2026-10-08.
 - **Objetivo:** lançar, liquidar, parcelar, estornar e acompanhar todo movimento.
 - **Estado:** Em andamento — fases 1 a 4 entregues (estrutura, visão geral, contas, cartões, lançamentos com filtros, agenda, empréstimos, planejamento com recorrências, metas e categorias); falta a revisão final do plano
 - **Telas:** `telas/dinheiro/` (Layout, VisaoGeral, Contas, ContaDetalhe, Cartoes, CartaoDetalhe, Lancamentos, Agenda, Emprestimos, Planejamento com abas Recorrências · Metas e orçamentos (`Metas.tsx`) · Categorias (`Categorias.tsx`); peças comuns em `compartilhado.tsx`), `FolhaTransacao.tsx`, `folhas.tsx`
-- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar/pagar_fatura/estornar_pagamento_fatura`, `cartoes.pagamentos`, `importacoes.list/reverter`, `conferencias.registrar`, `contas.*`, `recorrencias.*`, `metas.*`, `categorias.upsert`, `emprestimos.upsert/encerrar`
-- **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_metas`, `eloi_conferencias`, `eloi_emprestimos`
+- **Endpoints:** `eloi-financas` — `transacoes.upsert/list/liquidar/reagendar/cancelar/parcelar/remover/importar/pagar_fatura/estornar_pagamento_fatura`, `cartoes.pagamentos`, `importacoes.list/reverter`, `conferencias.registrar`, `contas.*`, `recorrencias.*`, `metas.*`, `categorias.upsert`, `emprestimos.upsert/encerrar`, `planos.list`
+- **Tabelas:** `eloi_transacoes`, `eloi_contas`, `eloi_categorias`, `eloi_recorrencias`, `eloi_metas`, `eloi_conferencias`, `eloi_emprestimos`, `eloi_relatorios`
 - **Categorias:** desativar, nunca apagar — `bootstrap` devolve ativas e inativas; o store expõe `categorias` (ativas, para seletores) e `categoriasTodas` (nomeia o histórico). Contexto e tipo não mudam depois de criada (a edge recusa).
 - **Permissão:** admin
 - **Fluxos:** receita · despesa · transferência · parcelamento · pagamento parcial (com conta e observação) · reagendar · estorno · pagar fatura de cartão · estornar pagamento de fatura · desfazer importação · recorrência (pausar/retomar/encerrar)

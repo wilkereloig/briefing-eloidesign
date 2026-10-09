@@ -41,3 +41,4 @@ eloi-entregas-bucket.sql
 2026-10-09-rotina-diaria-cron.sql
 2026-10-09-estorno-fatura-e-lotes-importacao.sql
 2026-10-09-briefing-sem-insert-anonimo.sql
+2026-10-09-relatorios-plano.sql

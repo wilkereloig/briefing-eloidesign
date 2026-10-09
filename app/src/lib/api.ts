@@ -290,6 +290,11 @@ export const financas = {
    *  calculados no banco sobre o histórico inteiro. */
   perspectivas: (de: string, ate: string, contexto?: Contexto) =>
     call<Perspectivas>('eloi-financas', 'relatorios.perspectivas', { de, ate, ...(contexto ? { contexto } : {}) }),
+  /** Plano de pagamentos mais recente (retrato gravado sob pedido). `dados`
+   *  chega cru: a tela confere com lerPlano (domain/plano.ts). */
+  planoPagamento: (contexto?: Contexto) =>
+    call<{ plano: { id: string; contexto: Contexto; titulo: string; dados: unknown; gerado_em: string } | null }>(
+      'eloi-financas', 'planos.list', contexto ? { contexto } : {}).then((r) => r.plano),
   /** Pagamentos/recebimentos de uma transação, mais antigo primeiro. */
   liquidacoes: (id: string) =>
     call<{ liquidacoes: Liquidacao[] }>('eloi-financas', 'transacoes.liquidacoes', { id }).then((r) => r.liquidacoes),

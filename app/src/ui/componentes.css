@@ -446,6 +446,16 @@ select.campo-caixa option{background:var(--cor-fundo-secundario);color:var(--cor
 .barra-despesa{background:var(--cor-fundo-elevado);border:1px solid var(--cor-traco)}
 @media (max-width:767px){ .grafico{height:140px} .grafico-valor{display:none} }
 
+/* Plano de pagamentos: uma barra por dia, conta acima da linha, cheque abaixo.
+   SVG esticado (preserveAspectRatio none): traço com non-scaling-stroke. */
+.plano-grafico svg{display:block;width:100%;min-width:480px;height:218px}
+.plano-conta{fill:var(--roxo);background:var(--roxo)}
+.plano-cheque{fill:var(--coral);background:var(--coral)}
+.plano-marca{fill:var(--cor-texto-fraco);background:var(--cor-texto-fraco)}
+.plano-zero{stroke:var(--cor-traco);stroke-width:1;vector-effect:non-scaling-stroke}
+.plano-limite{stroke:var(--coral);stroke-width:1;stroke-dasharray:4 4;vector-effect:non-scaling-stroke}
+.plano-fontes{flex-wrap:wrap;gap:var(--espaco-02);justify-content:flex-end}
+
 .legenda-item{display:inline-flex;align-items:center;gap:var(--espaco-02);
   font-size:12px;color:var(--cor-texto-fraco)}
 

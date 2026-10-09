@@ -2,6 +2,15 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-09 — Plano de pagamentos
+
+- Nova aba **Plano de pagamentos** em Dinheiro (`/admin/dinheiro/plano`): dia a dia,
+  quanto sai, quanto entra e de onde vem o dinheiro de cada conta (dinheiro em conta
+  ou cheque especial), com o gráfico do saldo, o pico do cheque especial, os juros
+  estimados e as decisões pendentes.
+- O plano é gerado sob pedido (o dono pede, o assistente calcula com os dados do
+  painel) e gravado na tabela nova `eloi_relatorios`; a tela mostra o mais recente.
+
 ## 2026-10-09 — Etapa 9: site e briefing pela edge
 
 - **Home** (`/`): diz o que o estúdio faz — serviços do catálogo (identidade visual,
