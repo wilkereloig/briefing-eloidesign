@@ -28,7 +28,7 @@ Financeiro separado está vazio.
 | 7. Novo visual | ✅ código + capturas | tema claro/escuro/sistema por tokens (contraste AA nos pares de texto), navegação por tarefa (`NAV_GRUPOS`) com sub-páginas de Dinheiro no trilho, menu "Mais" no celular, ocultar valores. Não refeito: formulários, tabelas configuráveis, ações em lote — o sistema anterior (KV aprovado) foi mantido nos componentes |
 | 8. Acesso e automação | ✅ documentado e conferido | `docs/ACESSO.md`: como é hoje (senha única, sessões, limitador, portal separado), matriz de acesso alvo (5 papéis; pessoal só do proprietário, filtrado no servidor), plano de identidades/MFA/recuperação/revogação (não implementado), auditoria, rotina diária idempotente e comportamento em falha. Conferido em produção: todas as edges sem token → 401/410; crons do app antigo desligados; conteúdo de cliente escapado nas páginas públicas |
 | 9. Site e portal | ✅ | Home reescrita com o que o estúdio de fato faz: apresentação, serviços do catálogo real, processo e contato; **portfólio omitido** (não há projeto autorizado para divulgação — nada inventado, sem depoimento nem número); acesso ao portal discreto no rodapé. Briefing sem token passa pela edge `briefing-submit` (mesmo limite por IP do link) e o INSERT anônimo pelo REST foi fechado. Preservados: tokens, backup Formspree, orçamento, portal, entregas, URLs e sitemap |
-| 10. Homologação e publicação | ⏳ parcial | testes de banco em Postgres local; reversão testada |
+| 10. Homologação e publicação | ✅ publicado | `npm run verify` (lint, tipos, 247 testes do painel, build, 53 testes de edge), `testar.sh` (95 afirmações em dados sintéticos + concorrência), `release-check` ok, CI verde. Publicado em 2026-10-09 na ordem: edge `briefing-submit` v7 (conferida byte a byte, smoke 400) → merge (painel, Home, briefings) → migração do briefing fechado. Reversões por etapa em `database/homologacao/` |
 
 ## Contratos de cálculo
 
@@ -110,11 +110,11 @@ de impacto:
    cujo contexto difere do da conta: definir a natureza (pró-labore, distribuição ou reembolso).
 8. ~~Edges e cron do app Financeiro~~ — **desligados em 2026-10-09** a pedido do dono
    (reversível; ver inventário §6).
-9. A edge legada `eloi-financeiro` continua ativa.
+9. ~~Edge legada `eloi-financeiro`~~ — responde 410 (fora de uso; conferido em 2026-10-09).
 10. Entregas de cliente servidas publicamente pelo `outputDirectory: "."` — dono decidiu
     manter (2026-10-09).
-11. Backup restaurável: adiado pelo dono (2026-10-09). Continua pré-requisito para
-    aplicar as migrações em produção.
+11. Backup restaurável externo: adiado pelo dono (2026-10-09), que autorizou publicar
+    com o backup interno (`eloi_backup_20261009`). Continua recomendado.
 
 ## Publicação — ordem, verificação e reversão
 
