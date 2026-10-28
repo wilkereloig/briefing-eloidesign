@@ -9,7 +9,7 @@ import { hojeISO } from '../../../domain/datas'
 import {
   Aviso, Botao, Campo, Esqueleto, Folha, Icone, Indicador, Painel, Pilula, Vazio,
 } from '../../../ui/componentes'
-import { Cabecalho, Carga, ChipNota, Dinheiro, Paginacao, SeletorMes } from '../../../ui/painel'
+import { Cabecalho, Carga, ChipNota, Dinheiro, IndicadorMei, Paginacao, SeletorMes } from '../../../ui/painel'
 import { usePaginacao } from '../../../ui/paginacao'
 import { dataCurta } from '../../../ui/formato'
 import { FolhaExcluir } from '../folhas'
@@ -59,6 +59,9 @@ export default function Notas() {
 
   const emitidas = notas.filter((n) => n.status === 'emitida' || n.status === 'enviada')
   const totalImposto = emitidas.reduce((s, n) => s + n.imposto_cents, 0)
+  // Conferência: nota emitida precisa do PDF guardado e do recebimento ligado.
+  const semPdf = emitidas.filter((n) => !n.arquivo_path)
+  const semRecebimento = emitidas.filter((n) => !n.transacao_id)
 
   return (
     <div className="tela pilha" data-density="dense">
@@ -72,14 +75,15 @@ export default function Notas() {
         <div className="grade-indicadores">
           <Indicador dominante rotulo="Emitidas" valor={String(emitidas.length)}
             nota={fmtBRL(emitidas.reduce((s, n) => s + n.valor_cents, 0))} />
-          <Indicador rotulo="Sem PDF anexado"
-            valor={String(notas.filter((n) => n.status === 'pendente' || n.status === 'pronta').length)}
-            cor={notas.some((n) => n.status === 'pronta') ? 'coral' : undefined}
-            nota="Pendentes e prontas" />
+          <Indicador rotulo="Emitidas sem PDF" valor={String(semPdf.length)}
+            cor={semPdf.length ? 'coral' : undefined} nota="Falta anexar o arquivo da prefeitura" />
+          <Indicador rotulo="Sem recebimento ligado" valor={String(semRecebimento.length)}
+            cor={semRecebimento.length ? 'coral' : undefined} nota="Emitidas sem entrada vinculada" />
           <Indicador rotulo="Serviços sem nota" valor={String(semNota.length)}
             cor={semNota.length ? 'coral' : undefined} nota="Concluídos e não faturados" />
           <Indicador rotulo="Imposto estimado" valor={fmtBRL(totalImposto)}
             nota="Sobre as notas emitidas" />
+          <IndicadorMei notas={notas} ano={Number(hojeISO().slice(0, 4))} />
         </div>
 
         {semNota.length > 0 && (
@@ -151,8 +155,12 @@ export default function Notas() {
                       {n.cliente_id ? nomes.cliente.get(n.cliente_id)?.nome ?? '' : 'Sem cliente'}
                       {n.competencia ? ` · ${n.competencia.slice(0, 7)}` : ''}
                       {n.emitida_em ? ` · emitida em ${dataCurta(n.emitida_em)}` : ''}
-                      {n.arquivo_path ? ' · PDF anexado' : ''}
+                      {n.arquivo_path ? ' · PDF anexado' : ' · sem PDF'}
+                      {n.transacao_id ? ' · recebimento ligado' : ' · sem recebimento'}
                     </span>
+                    {n.chave_acesso && (
+                      <span className="t-legenda espremer">chave {n.chave_acesso}</span>
+                    )}
                     <span className="t-legenda espremer">
                       {n.servicos?.length
                         ? n.servicos.length === 1

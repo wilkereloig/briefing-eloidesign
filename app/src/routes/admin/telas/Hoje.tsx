@@ -11,7 +11,7 @@ import { ACAO, decisoesDoDia, pendenciasDeServicos } from '../../../domain/decis
 import { Botao, Etiqueta, Icone, Indicador, Painel } from '../../../ui/componentes'
 import { Onboarding } from '../Onboarding'
 import { PainelTarefas } from '../Tarefas'
-import { Cabecalho, Carga, ChipMovimento, Dinheiro, SeletorLente, SeletorMes } from '../../../ui/painel'
+import { Cabecalho, Carga, ChipMovimento, Dinheiro, IndicadorMei, SeletorLente, SeletorMes } from '../../../ui/painel'
 import { dataCurta, rotuloConta, variacao } from '../../../ui/formato'
 import { fmtBRL } from '../../../lib/dinheiro'
 
@@ -84,6 +84,7 @@ export default function Hoje() {
           <Indicador rotulo="Em execução"
             valor={String(servicos.filter((s) => s.status_execucao === 'em_execucao').length)}
             nota={`${servicos.filter((s) => s.status_execucao === 'aguardando_inicio').length} na fila`} />
+          <IndicadorMei notas={notas} ano={Number(hoje.slice(0, 4))} />
         </div>
 
         <Painel titulo="Precisa de você"

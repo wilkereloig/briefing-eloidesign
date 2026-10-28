@@ -4,8 +4,9 @@
 import type { ReactNode } from 'react'
 import { fmtBRL } from '../lib/dinheiro'
 import { deslocarMes, ROTULO_PARTE, rotuloMes, useFinancas, type Lente, type Parte } from '../lib/financas-store'
-import type { StatusMov, StatusNF } from '../lib/tipos'
-import { Botao, Chip, Erro, Esqueleto, Etiqueta, Icone, Pilula } from './componentes'
+import type { NotaFiscal, StatusMov, StatusNF } from '../lib/tipos'
+import { faturamentoMei, situacaoMei } from '../domain/mei'
+import { Botao, Chip, Erro, Esqueleto, Etiqueta, Icone, Indicador, Pilula } from './componentes'
 import type { EstadoChip } from './tokens'
 import { TAMANHOS, type usePaginacao } from './paginacao'
 
@@ -180,5 +181,20 @@ export function Ranking({ itens }: { itens: { chave: string; total: number; qtd:
         </li>
       ))}
     </ul>
+  )
+}
+
+/** Faturamento do ano contra o teto do MEI. Passou do teto = coral; a nota diz
+ *  quanto falta para a linha de 20%, a partir da qual o desenquadramento é retroativo. */
+export function IndicadorMei({ notas, ano }: { notas: NotaFiscal[]; ano: number }) {
+  const s = situacaoMei(faturamentoMei(notas, ano))
+  const nota = s.estado === 'desenquadra'
+    ? `Passou de 20%: desenquadramento retroativo (${fmtBRL(-s.folga_limite_cents)} acima)`
+    : s.estado === 'acima'
+      ? `${fmtBRL(-s.folga_teto_cents)} acima do teto · faltam ${fmtBRL(s.folga_limite_cents)} para os 20%`
+      : `Faltam ${fmtBRL(s.folga_teto_cents)} para o teto de ${fmtBRL(s.teto_cents)}`
+  return (
+    <Indicador rotulo={`Teto do MEI ${ano}`} valor={fmtBRL(s.faturado_cents)}
+      cor={s.estado === 'dentro' ? undefined : 'coral'} nota={nota} />
   )
 }

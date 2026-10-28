@@ -409,6 +409,8 @@ export interface NotaFiscal {
   enviada_em: string | null
   arquivo_path: string | null
   observacoes: string | null
+  /** Chave de 50 dígitos da NFS-e, pra conferir no portal nacional. Só leitura na tela. */
+  chave_acesso?: string | null
   /** Preenchido por `nf.list`. Vazio quando a nota ainda não cobre serviço nenhum. */
   servicos?: ServicoDaNota[]
 }

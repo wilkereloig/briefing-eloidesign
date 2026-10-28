@@ -125,6 +125,7 @@ Atualizado: 2026-10-08.
 - **Regra:** nota `emitida`/`enviada` exige número — validado no servidor; número é único por emissor
 - **Cobre (2026-09-03):** uma nota cobre vários serviços, escolhidos na folha · filtro de mês opcional · lista mostra os serviços de cada nota · "concluídos sem nota" lê `nota_fiscal_id`
 - **Anexo (2026-08-07):** o PDF da nota já emitida sobe pelo painel (`arquivos.upload_url` → `arquivo_path`). O painel **não emite** nota: guarda a que foi emitida fora dele.
+- **Teto do MEI (2026-10-28):** card em Hoje e Notas, `domain/mei.ts` (testado): notas emitidas/enviadas do ano × R$ 81 mil (proporcional a R$ 6.750/mês se o CNPJ abriu no ano); acima do teto = coral; acima de +20% = desenquadramento retroativo. Só leitura, não grava no banco.
 - **Portal (2026-09-03):** o cliente baixa o PDF pela nota vinculada ao serviço dele (`nota_fiscal_id` → `arquivo_path`). A coluna antiga `eloi_servicos.nf_arquivo_url` está nula em toda linha e não é mais lida.
 
 ### Relatórios

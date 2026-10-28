@@ -2,6 +2,21 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-28 — Teto do MEI
+
+- Novo card **"Teto do MEI {ano}"** em `/admin` (Hoje) e em `/admin/notas`: soma as notas
+  `emitida`/`enviada` do ano e mostra quanto falta para o teto de R$ 81.000 e quanto passou
+  (coral). Passando de 20% do teto o desenquadramento é retroativo — a nota avisa.
+  Cálculo em `domain/mei.ts` (puro, com teste); não grava nada no banco.
+
+## 2026-10-14 — Documento do cliente e chave da nota
+
+- `eloi_clientes` ganha `documento` (CNPJ/CPF que fatura) e `razao_social`;
+  `eloi_notas_fiscais` ganha `chave_acesso` (única) pra conferir a NFS-e no portal
+  nacional. O dado entra pelo assistente.
+- **Notas fiscais** (`/admin/dinheiro` › Fiscal): painel de conferência com "Emitidas sem PDF" e
+  "Sem recebimento ligado"; cada nota mostra se tem PDF, recebimento e a chave de acesso.
+
 ## 2026-10-09 — Plano de pagamentos
 
 - Nova aba **Plano de pagamentos** em Dinheiro (`/admin/dinheiro/plano`): dia a dia,

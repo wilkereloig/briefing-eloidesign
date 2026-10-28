@@ -154,7 +154,7 @@ depois de fevereiro). Falha fica em `ultimo_erro`. Retomar uma pausada não cobr
 período pausado.
 
 ### `eloi_notas_fiscais` *(42 linhas após o backfill de 2026-09-03)*
-**Fonte única da nota fiscal** (D-22). Ligada a Cliente e Transação
+**Fonte única da nota fiscal** (D-22). `chave_acesso` (2026-10-14, única): chave de 50 dígitos da NFS-e, pra conferir no portal nacional. Ligada a Cliente e Transação
 (`SET NULL`). Serviços apontam pra ela por `eloi_servicos.nota_fiscal_id` —
 1 nota : N serviços. `servico_id` aqui é legado 1:1, sempre nulo; sai quando
 nenhuma edge ler. `numero` é único por emissor (índice parcial); mudar o
@@ -210,6 +210,8 @@ porque um arquivo que documenta algo apagado não documenta mais nada.
 ### `eloi_clientes` *(2 linhas)*
 Dono de projetos, do acesso ao portal e de sub-clientes.
 `portal_senha_hash` (PBKDF2), `marca_slug`, `marca_publicada`, `cor`.
+`documento` / `razao_social` (2026-10-14): CNPJ/CPF e nome com que o cliente é faturado
+(tomador da NFS-e); só no banco.
 `arquivado_em` (2026-09-03): nulo = ativo. Arquivar tira da carteira sem
 apagar nada — é o caminho para cliente com histórico, já que a FK de
 `eloi_servicos` é `RESTRICT` (D-23).
