@@ -235,6 +235,7 @@ describe('semNotaFiscal', () => {
   it('vale o vínculo nota_fiscal_id, não o número legado', () => {
     expect(semNotaFiscal(srv({ nf_numero: '123', nota_fiscal_id: null }))).toBe(true)
     expect(semNotaFiscal(srv({ nf_numero: null, nota_fiscal_id: 'nf1' }))).toBe(false)
+    expect(semNotaFiscal(srv({ nota_fiscal_id: null, dispensa_nf: true }))).toBe(false)
   })
 })
 

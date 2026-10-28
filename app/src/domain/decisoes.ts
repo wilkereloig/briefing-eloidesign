@@ -60,8 +60,10 @@ function servicoVencido(s: Pick<ServicoRow, 'data_vencimento' | 'data_competenci
 }
 
 /** Critério único de "sem nota": o vínculo real é `nota_fiscal_id` (1 nota :
- *  N serviços, D-22). `nf_numero` é texto legado e pode existir sem nota. */
-export const semNotaFiscal = (s: Pick<ServicoRow, 'nota_fiscal_id'>) => !s.nota_fiscal_id
+ *  N serviços, D-22). `nf_numero` é texto legado e pode existir sem nota.
+ *  `dispensa_nf` é a decisão do dono de não faturar: não conta como pendência. */
+export const semNotaFiscal = (s: Pick<ServicoRow, 'nota_fiscal_id' | 'dispensa_nf'>) =>
+  !s.nota_fiscal_id && !s.dispensa_nf
 
 export interface PendenciasServicos {
   a_receber_cents: number; a_receber_qtd: number

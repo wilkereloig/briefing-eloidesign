@@ -48,6 +48,8 @@ export interface ServicoRow {
   /** Espelho de sub_cliente_id, mantido por trigger. Só leitura — quem grava é o banco. */
   sub_cliente: string | null
   nota_fiscal_id: string | null
+  /** Dono decidiu não faturar (cliente não pediu nota): sai do alerta "sem nota". Só leitura na tela. */
+  dispensa_nf?: boolean
   descricao: string
   valor_cents: number
   status_execucao: StatusExecucao

@@ -2,6 +2,11 @@
 
 Só o que muda comportamento, dado ou interface do produto. Ordem: mais recente primeiro.
 
+## 2026-10-28 — Serviço dispensado de nota
+
+- `eloi_servicos.dispensa_nf` (boolean, default false): serviço que o dono decidiu não
+  faturar sai do alerta "concluído sem nota" (Hoje e Notas). Gravado pelo assistente.
+
 ## 2026-10-28 — Teto do MEI
 
 - Novo card **"Teto do MEI {ano}"** em `/admin` (Hoje) e em `/admin/notas`: soma as notas

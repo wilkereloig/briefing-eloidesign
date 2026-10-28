@@ -241,6 +241,7 @@ legado sem id tenta se adotar pelo nome; id que não pertence ao `cliente_id`
 `nota_fiscal_id` → `eloi_notas_fiscais` (`SET NULL`), **1 nota : N serviços**
 (D-22). `nf_numero` é espelho de `numero` pelo mesmo trigger; sem nota
 vinculada aceita texto legado até `FolhaServico` perder o campo.
+`dispensa_nf` (bool, default false, 2026-10-28): serviço que o dono não vai faturar; fora do alerta "sem nota".
 `nf_arquivo_url` está sempre nulo — PDF vive em `eloi_notas_fiscais.arquivo_path`.
 `prazo` (date, nulo = sem prazo) é a entrega combinada. "Atrasado" = `prazo < hoje`
 e não concluída — derivado, nunca gravado. `data_competencia` é outra coisa: a

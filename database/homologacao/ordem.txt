@@ -43,3 +43,4 @@ eloi-entregas-bucket.sql
 2026-10-09-briefing-sem-insert-anonimo.sql
 2026-10-09-relatorios-plano.sql
 2026-10-14-cliente-documento-e-chave-nf.sql
+2026-10-28-servico-dispensa-nota.sql
